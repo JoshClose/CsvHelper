@@ -63,14 +63,20 @@ public sealed record ExcelSheetOptions
 	public int FreezeColumns { get; init; }
 
 	/// <summary>
-	/// Whether the header has filter buttons, over it and every row below. Off by default. With a <see cref="Table"/>, the
-	/// table's buttons are the filter.
+	/// Whether the header has filter buttons, over the header's columns from it down to the last row written, as Excel's
+	/// filter is, with Excel's hidden <c>_FilterDatabase</c> name for it. Off by default. With a <see cref="Table"/>, the
+	/// table's buttons are the filter, since Excel opens no sheet with both. With <see cref="ExcelRowLimit.NewSheet"/>, each
+	/// new sheet has its own.
 	/// </summary>
 	public bool AutoFilter { get; init; }
 
 	/// <summary>
 	/// The header and the rows below it as an Excel table, with a name, a style, banded rows and filter buttons; or
-	/// <see langword="null"/>, the default, for none. With <see cref="ExcelRowLimit.NewSheet"/>, each new sheet has its own
+	/// <see langword="null"/>, the default, for none. The table spans the header's columns, down to the last row written,
+	/// and one row below the header at least. Its header's cells are text, named as Excel names a table's columns: an
+	/// empty field is <c>Column</c> and a number, and a name a column to its left has gets a number (<c>Name2</c>), so
+	/// that the table's columns' names are unique ignoring case; a field of more than 255 characters throws. No range may be
+	/// merged in its columns at or below its header. With <see cref="ExcelRowLimit.NewSheet"/>, each new sheet has its own
 	/// table, with a number after the first's name.
 	/// </summary>
 	public ExcelTableOptions? Table { get; init; }

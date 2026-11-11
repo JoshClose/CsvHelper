@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -31,10 +32,13 @@ internal static class PackageParts
 	/// <param name="sheetNames">The sheets' names, in tab order: sheet <c>n</c> is <see cref="SheetPart"/>(<c>n</c>).</param>
 	/// <param name="strings">The shared strings, or <see langword="null"/> when cells hold their own.</param>
 	/// <param name="styles">The cell formats.</param>
+	/// <param name="filters">The sheets' filters: each sheet's place in tab order, from 0, and the filter's range.</param>
+	/// <param name="tables">The number of tables, whose parts are <see cref="TableWriter.PartName"/>(1) on.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when the parts are written.</returns>
-	public static async ValueTask WriteAsync(PackageWriter package, IReadOnlyList<string> sheetNames, SharedStringTable? strings, StyleRegistry styles, bool async, CancellationToken cancellationToken)
+	public static async ValueTask WriteAsync(PackageWriter package, IReadOnlyList<string> sheetNames, SharedStringTable? strings, StyleRegistry styles,
+		IReadOnlyList<(int Sheet, ExcelRange Range)> filters, int tables, bool async, CancellationToken cancellationToken)
 	{
 		using var xml = new XmlOutput(4096);
 		if (strings is not null)
@@ -47,7 +51,7 @@ internal static class PackageParts
 		await package.WritePartAsync("xl/styles.xml", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
-		WriteWorkbook(xml, sheetNames);
+		WriteWorkbook(xml, sheetNames, filters);
 		await package.WritePartAsync("xl/workbook.xml", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
@@ -61,7 +65,7 @@ internal static class PackageParts
 		await package.WritePartAsync("_rels/.rels", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
-		WriteContentTypes(xml, sheetNames.Count, strings is not null);
+		WriteContentTypes(xml, sheetNames.Count, strings is not null, tables);
 		await package.WritePartAsync("[Content_Types].xml", xml, async, cancellationToken).ConfigureAwait(false);
 	}
 
@@ -134,10 +138,15 @@ internal static class PackageParts
 		xml.Append("</styleSheet>"u8);
 	}
 
-	/// <summary>Writes the workbook part: its sheets, in tab order, each with its relationship.</summary>
+	/// <summary>
+	/// Writes the workbook part: its sheets, in tab order, each with its relationship; and, for each sheet with a filter,
+	/// Excel's hidden <c>_xlnm._FilterDatabase</c> name of the sheet's own, over the filter's range, as Excel writes it
+	/// (<c>'Q1 Orders'!$A$1:$C$4</c>).
+	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	/// <param name="sheetNames">The sheets' names.</param>
-	private static void WriteWorkbook(XmlOutput xml, IReadOnlyList<string> sheetNames)
+	/// <param name="filters">The sheets' filters.</param>
+	private static void WriteWorkbook(XmlOutput xml, IReadOnlyList<string> sheetNames, IReadOnlyList<(int Sheet, ExcelRange Range)> filters)
 	{
 		xml.Append("<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets>"u8);
 		for (var i = 0; i < sheetNames.Count; i++)
@@ -152,7 +161,25 @@ internal static class PackageParts
 			xml.Append("\"/>"u8);
 		}
 
-		xml.Append("</sheets></workbook>"u8);
+		xml.Append("</sheets>"u8);
+		if (filters.Count > 0)
+		{
+			xml.Append("<definedNames>"u8);
+			foreach (var (sheet, range) in filters)
+			{
+				xml.Append("<definedName name=\"_xlnm._FilterDatabase\" localSheetId=\""u8);
+				xml.AppendNumber(sheet);
+				xml.Append("\" hidden=\"1\">"u8);
+				var reference = SheetLocation.Quote(sheetNames[sheet]) + "!$" + CellReference.ColumnName(range.FirstColumnIndex) + "$" + range.FirstRow.ToString(CultureInfo.InvariantCulture) +
+					":$" + CellReference.ColumnName(range.LastColumnIndex) + "$" + range.LastRow.ToString(CultureInfo.InvariantCulture);
+				xml.AppendText(Encoding.UTF8.GetBytes(reference));
+				xml.Append("</definedName>"u8);
+			}
+
+			xml.Append("</definedNames>"u8);
+		}
+
+		xml.Append("</workbook>"u8);
 	}
 
 	/// <summary>Writes the workbook's relationships: <c>rId1</c> on for the sheets, then the styles and the shared strings.</summary>
@@ -188,7 +215,8 @@ internal static class PackageParts
 	/// <param name="xml">The buffer.</param>
 	/// <param name="sheets">The number of sheets.</param>
 	/// <param name="shared">Whether there is a shared-strings part.</param>
-	private static void WriteContentTypes(XmlOutput xml, int sheets, bool shared)
+	/// <param name="tables">The number of tables.</param>
+	private static void WriteContentTypes(XmlOutput xml, int sheets, bool shared, int tables)
 	{
 		xml.Append("<Types xmlns=\"http://schemas.openxmlformats.org/package/2006/content-types\">"u8);
 		xml.Append("<Default Extension=\"rels\" ContentType=\"application/vnd.openxmlformats-package.relationships+xml\"/>"u8);
@@ -205,6 +233,13 @@ internal static class PackageParts
 		if (shared)
 		{
 			xml.Append("<Override PartName=\"/xl/sharedStrings.xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml\"/>"u8);
+		}
+
+		for (var i = 1; i <= tables; i++)
+		{
+			xml.Append("<Override PartName=\"/xl/tables/table"u8);
+			xml.AppendNumber(i);
+			xml.Append(".xml\" ContentType=\"application/vnd.openxmlformats-officedocument.spreadsheetml.table+xml\"/>"u8);
 		}
 
 		xml.Append("</Types>"u8);

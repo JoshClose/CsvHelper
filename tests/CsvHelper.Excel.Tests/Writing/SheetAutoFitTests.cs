@@ -218,15 +218,17 @@ public class SheetAutoFitTests
 	[MemberData(nameof(Modes))]
 	public async Task WidensTheHeaderForItsFilterButtons(bool async)
 	{
-		// With a filter, or a table with filter buttons, each of the header's cells has a button, an empty one too.
+		// With a filter, or a table with filter buttons, each of the header's cells has a button, an empty one too; a
+		// table's empty one is named Column1, as Excel names it.
 		var filtered = await Written.RowsAsync([["Name", "", "Code"], ["a", "b", "c"]], async, new ExcelWriterOptions { Sheets = new ExcelSheetOptions { AutoFilter = true } });
 		var table = await Written.RowsAsync([["Name", "", "Code"], ["a", "b", "c"]], async, new ExcelWriterOptions { Sheets = new ExcelSheetOptions { Table = new ExcelTableOptions { Style = null } } });
 		var plain = await Written.RowsAsync([["Name", "", "Code"], ["a", "b", "c"]], async);
 
 		var name = Fit(Text("Name", bold: true) + ColumnWidths.FilterButtonPixels);
 		var empty = Fit(Math.Max(Text("b"), ColumnWidths.FilterButtonPixels));
-		Assert.Equal([name, empty, Fit(Text("Code", bold: true) + ColumnWidths.FilterButtonPixels)], Widths(filtered, 3));
-		Assert.Equal(Widths(filtered, 3), Widths(table, 3));
+		var code = Fit(Text("Code", bold: true) + ColumnWidths.FilterButtonPixels);
+		Assert.Equal([name, empty, code], Widths(filtered, 3));
+		Assert.Equal([name, Fit(Text("Column1", bold: true) + ColumnWidths.FilterButtonPixels), code], Widths(table, 3));
 		Assert.Equal([Fit(Text("Name", bold: true)), Fit(Text("b")), Fit(Text("Code", bold: true))], Widths(plain, 3));
 	}
 

@@ -39,11 +39,11 @@ public class AutoFitTests
 	public void FitsEachColumnToItsWidestCell()
 	{
 		var fit = new AutoFit();
-		fit.Add(0, 20, typed: false);
-		fit.Add(2, 30, typed: true);
+		fit.Add(0, 1, 20, typed: false);
+		fit.Add(2, 1, 30, typed: true);
 		fit.EndRecord();
-		fit.Add(0, 50, typed: false);
-		fit.Add(2, 10, typed: true);
+		fit.Add(0, 1, 50, typed: false);
+		fit.Add(2, 1, 10, typed: true);
 		fit.EndRecord();
 
 		var widths = fit.Widths(fit: true, ColumnWidths.FromCharacters(60))!;
@@ -57,11 +57,11 @@ public class AutoFitTests
 	public void CapsTextButNotTypedCells()
 	{
 		var fit = new AutoFit();
-		fit.Add(0, 1000, typed: false);
-		fit.Add(1, 1000, typed: true);
-		fit.Add(2, 1000, typed: false);
-		fit.Add(2, 30, typed: true);
-		fit.Add(3, 5000, typed: true);
+		fit.Add(0, 1, 1000, typed: false);
+		fit.Add(1, 1, 1000, typed: true);
+		fit.Add(2, 1, 1000, typed: false);
+		fit.Add(2, 1, 30, typed: true);
+		fit.Add(3, 1, 5000, typed: true);
 		fit.EndRecord();
 		var cap = ColumnWidths.FromCharacters(10);
 
@@ -75,8 +75,8 @@ public class AutoFitTests
 	public void GivesTypedCellsAWidthPastTheDefaultWithoutAutoFit()
 	{
 		var fit = new AutoFit();
-		fit.Add(0, ColumnWidths.DateTimePixels, typed: true);
-		fit.Add(1, ColumnWidths.TimePixels, typed: true);
+		fit.Add(0, 1, ColumnWidths.DateTimePixels, typed: true);
+		fit.Add(1, 1, ColumnWidths.TimePixels, typed: true);
 		fit.EndRecord();
 
 		// Phase 4's widths: none for a time, which fits the default column.
@@ -88,11 +88,11 @@ public class AutoFitTests
 	{
 		// Each of the header's fields has a button, its empty ones too; the records' cells don't.
 		var fit = new AutoFit();
-		fit.Add(0, 40, typed: false);
-		fit.Add(2, 20, typed: false);
-		fit.AddFilterButtons(4);
+		fit.Add(0, 1, 40, typed: false);
+		fit.Add(2, 1, 20, typed: false);
+		fit.AddFilterButtons(4, 1);
 		fit.EndRecord();
-		fit.Add(0, 50, typed: false);
+		fit.Add(0, 1, 50, typed: false);
 		fit.EndRecord();
 
 		var widths = fit.Widths(fit: true, ColumnWidths.FromCharacters(60))!;
@@ -107,25 +107,46 @@ public class AutoFitTests
 	{
 		// A formula's value isn't known: its column is the default column, or its other cells' if wider.
 		var fit = new AutoFit();
-		fit.Add(0, 20, typed: false);
-		fit.AddFormula(0);
-		fit.AddFormula(1);
-		fit.Add(1, 200, typed: false);
+		fit.Add(0, 1, 20, typed: false);
+		fit.AddFormula(0, 1);
+		fit.AddFormula(1, 1);
+		fit.Add(1, 1, 200, typed: false);
 		fit.EndRecord();
 
 		Assert.Equal([ColumnWidths.Default, ColumnWidths.Fit(200)], fit.Widths(fit: true, ColumnWidths.FromCharacters(60))!);
 	}
 
 	[Fact]
+	public void LeavesOutCellsMergedAcrossColumns()
+	{
+		// Row 2's cells in A2:B2 count nothing, as in Excel's AutoFit; C2:C3 is down one column, and its cells count.
+		var fit = new AutoFit();
+		fit.Add(0, 1, 20, typed: false);
+		fit.Add(1, 1, 20, typed: false);
+		fit.Add(2, 1, 20, typed: false);
+		fit.EndRecord();
+		fit.Add(0, 2, 90, typed: false);
+		fit.Add(1, 2, 90, typed: false);
+		fit.Add(2, 3, 70, typed: false);
+		fit.AddFormula(1, 2);
+		fit.EndRecord();
+		var merged = new MergedRanges();
+		merged.Add(ExcelRange.Parse("A2:B2"));
+		merged.Add(ExcelRange.Parse("C2:C3"));
+
+		Assert.Equal([ColumnWidths.Fit(20), ColumnWidths.Fit(20), ColumnWidths.Fit(70)], fit.Widths(fit: true, ColumnWidths.FromCharacters(60), merged)!);
+	}
+
+	[Fact]
 	public void DropsADiscardedRecordsCells()
 	{
 		var fit = new AutoFit();
-		fit.Add(0, 20, typed: false);
+		fit.Add(0, 1, 20, typed: false);
 		fit.EndRecord();
-		fit.Add(0, 90, typed: false);
-		fit.Add(1, 90, typed: false);
+		fit.Add(0, 1, 90, typed: false);
+		fit.Add(1, 1, 90, typed: false);
 		fit.DiscardRecord();
-		fit.Add(0, 30, typed: false);
+		fit.Add(0, 1, 30, typed: false);
 		fit.EndRecord();
 
 		Assert.Equal([ColumnWidths.Fit(30)], fit.Widths(fit: true, ColumnWidths.FromCharacters(60))!);

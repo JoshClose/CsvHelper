@@ -27,8 +27,11 @@ public sealed record ExcelTableOptions
 
 	/// <summary>
 	/// The table's name, which formulas use (<c>=SUM(Orders[Total])</c>), or <see langword="null"/>, the default, for the
-	/// sheet's name made into one: <c>_</c> for each character a name can't have, <c>_</c> first when it needs to be, and a
-	/// number after it while the workbook has a table of that name.
+	/// sheet's name made into one: <c>_</c> for each character a name can't have, <c>_</c> first when it needs to be
+	/// (<c>Q1 Orders</c> gives <c>Q1_Orders</c>, <c>2024</c> gives <c>_2024</c>), and a number after it while the workbook
+	/// has a table of that name (<c>Q1_Orders2</c>). A name given that the workbook has, ignoring case, throws when the
+	/// sheet is added. The new sheets of <see cref="ExcelRowLimit.NewSheet"/> have the first's name with a number after it
+	/// (<c>Orders2</c>, or <c>AB_2</c> where <c>AB2</c> would be a cell reference).
 	/// </summary>
 	public string? Name { get; init; }
 
@@ -62,6 +65,22 @@ public sealed record ExcelTableOptions
 		}
 
 		return false;
+	}
+
+	/// <summary>A built-in table style's name as Excel writes it: <c>tablestylemedium2</c> as <c>TableStyleMedium2</c>.</summary>
+	/// <param name="style">The style's name, which <see cref="IsBuiltInStyle"/> accepts.</param>
+	/// <returns>The name.</returns>
+	internal static string BuiltInStyleName(string style)
+	{
+		foreach (var (kind, _) in BuiltInStyles)
+		{
+			if (style.StartsWith(kind, StringComparison.OrdinalIgnoreCase))
+			{
+				return kind + style.Substring(kind.Length);
+			}
+		}
+
+		return style;
 	}
 
 	/// <summary>What is wrong with the options, if anything.</summary>

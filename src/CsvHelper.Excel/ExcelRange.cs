@@ -147,6 +147,14 @@ public readonly struct ExcelRange : IEquatable<ExcelRange>
 		return first + ":" + CellReference.ColumnName(lastColumn) + Number(LastRow);
 	}
 
+	/// <summary>
+	/// The block as its two corners, as a written sheet's merged cells, filter and table name it: <c>B5:F200</c>, and
+	/// <c>B1:F1048576</c> for whole columns, which <see cref="ToString"/> writes <c>B:F</c>.
+	/// </summary>
+	/// <returns>The text.</returns>
+	internal string Corners() =>
+		CellReference.ColumnName(firstColumn) + Number(FirstRow) + ":" + CellReference.ColumnName(lastColumn) + Number(LastRow);
+
 	/// <summary>Whether a cell is in the block.</summary>
 	/// <param name="row">The cell's row, from 1.</param>
 	/// <param name="column">The cell's column, from 0.</param>

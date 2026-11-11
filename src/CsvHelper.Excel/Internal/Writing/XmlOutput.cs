@@ -123,7 +123,8 @@ internal sealed class XmlOutput : IDisposable
 	/// characters but tab and LF, U+FFFE and U+FFFF as <c>_xHHHH_</c> escapes; and <c>_x005F_</c> (an escaped <c>_</c>) for
 	/// an <c>_</c> that starts text that reads as an escape, so that it reads back as written: <c>_x0041_</c>, and
 	/// <c>_x0041</c> before a character written as an escape, whose <c>_</c> would close it. Tab and LF are written as
-	/// they are.
+	/// they are in text, and as escapes in an attribute value, where XML would read them back as spaces: a table's column
+	/// name with a line break opens in Excel so (checked on 2026-11-08).
 	/// </summary>
 	/// <remarks>
 	/// A literal CR would read back as LF, as XML's line ends do, in Excel and LibreOffice; a reference to a control
@@ -163,7 +164,7 @@ internal sealed class XmlOutput : IDisposable
 					break;
 				case (byte)'_':
 					// The '_' itself becomes the escape of a '_', and what follows it stays literal.
-					Append(ReadsAsEscape(text.Slice(i)) ? "_x005F_"u8 : "_"u8);
+					Append(ReadsAsEscape(text.Slice(i), attribute) ? "_x005F_"u8 : "_"u8);
 					break;
 				case 0xEF:
 					if (i + 2 < text.Length && text[i + 1] == 0xBF && text[i + 2] is 0xBE or 0xBF)
@@ -305,13 +306,14 @@ internal sealed class XmlOutput : IDisposable
 	/// has at most 31), while Excel's count the characters.
 	/// </summary>
 	/// <param name="text">The text, which must be valid UTF-8 (<see cref="IsValidUtf8"/>).</param>
+	/// <param name="attribute">Whether the text is written as an attribute value, where tab and LF are escapes too.</param>
 	/// <returns>The number of code units.</returns>
-	public static int WrittenLength(ReadOnlySpan<byte> text)
+	public static int WrittenLength(ReadOnlySpan<byte> text, bool attribute = false)
 	{
 		var units = Utf16Length(text);
 		for (var i = 0; i < text.Length; i++)
 		{
-			if ((text[i] == (byte)'_' && ReadsAsEscape(text.Slice(i))) || IsWrittenAsEscape(text.Slice(i)))
+			if ((text[i] == (byte)'_' && ReadsAsEscape(text.Slice(i), attribute)) || IsWrittenAsEscape(text.Slice(i), attribute))
 			{
 				units += 6;
 			}
@@ -340,9 +342,10 @@ internal sealed class XmlOutput : IDisposable
 	/// <c>_x0041_x0000_</c>, which reads as <c>A</c> and <c>x0000_</c>.
 	/// </summary>
 	/// <param name="text">The text, from an <c>_</c>.</param>
+	/// <param name="attribute">Whether the text is written as an attribute value, where tab and LF are escapes too.</param>
 	/// <returns>Whether its <c>_</c> must be written as <c>_x005F_</c>.</returns>
-	private static bool ReadsAsEscape(ReadOnlySpan<byte> text) =>
-		text.Length >= 7 && HasEscapeStart(text) && (text[6] == (byte)'_' || IsWrittenAsEscape(text.Slice(6)));
+	private static bool ReadsAsEscape(ReadOnlySpan<byte> text, bool attribute) =>
+		text.Length >= 7 && HasEscapeStart(text) && (text[6] == (byte)'_' || IsWrittenAsEscape(text.Slice(6), attribute));
 
 	/// <summary>Whether text starts with <c>_x</c> and four hexadecimal digits, of either case.</summary>
 	/// <param name="text">The text, at least 6 bytes long.</param>
@@ -367,12 +370,13 @@ internal sealed class XmlOutput : IDisposable
 
 	/// <summary>
 	/// Whether text starts with a character that <see cref="AppendText"/> writes as an <c>_xHHHH_</c> escape: a control
-	/// character other than tab and LF, U+FFFE or U+FFFF.
+	/// character other than tab and LF (and those too in an attribute value), U+FFFE or U+FFFF.
 	/// </summary>
 	/// <param name="text">The text, which isn't empty.</param>
+	/// <param name="attribute">Whether the text is written as an attribute value.</param>
 	/// <returns>Whether it does.</returns>
-	private static bool IsWrittenAsEscape(ReadOnlySpan<byte> text) =>
-		(text[0] < 0x20 && text[0] is not ((byte)'\t' or (byte)'\n')) || (text.Length >= 3 && text[0] == 0xEF && text[1] == 0xBF && text[2] is 0xBE or 0xBF);
+	private static bool IsWrittenAsEscape(ReadOnlySpan<byte> text, bool attribute) =>
+		(text[0] < 0x20 && (attribute || text[0] is not ((byte)'\t' or (byte)'\n'))) || (text.Length >= 3 && text[0] == 0xEF && text[1] == 0xBF && text[2] is 0xBE or 0xBF);
 
 	/// <summary>Whether text starts or ends with what Excel trims from text without <c>xml:space="preserve"</c>.</summary>
 	/// <param name="text">The text.</param>
@@ -433,7 +437,7 @@ internal sealed class XmlOutput : IDisposable
 #endif
 		if (attribute)
 		{
-			var quote = (i < 0 ? text : text.Slice(0, i)).IndexOf((byte)'"');
+			var quote = (i < 0 ? text : text.Slice(0, i)).IndexOfAny((byte)'"', (byte)'\t', (byte)'\n');
 			if (quote >= 0)
 			{
 				return quote;

@@ -31,19 +31,35 @@ internal sealed class SheetSettings
 	/// <param name="columns">The columns' options, copied and checked, or <see langword="null"/>.</param>
 	/// <param name="members">The record type's members' formats, or <see langword="null"/>.</param>
 	/// <param name="hasHeader">Whether the sheet's first record is its header.</param>
-	private SheetSettings(ExcelSheetOptions sheet, Dictionary<string, ExcelColumnOptions>? columns, MemberFormats? members, bool hasHeader)
+	/// <param name="origin">Where the options came from, as a message names them.</param>
+	/// <param name="given">Whether they were given when the sheet was added, rather than an attribute's or the workbook's.</param>
+	private SheetSettings(ExcelSheetOptions sheet, Dictionary<string, ExcelColumnOptions>? columns, MemberFormats? members, bool hasHeader, string origin, bool given)
 	{
 		Sheet = sheet;
 		this.columns = columns;
 		this.members = members;
 		HasHeader = hasHeader;
+		Origin = origin;
+		Given = given;
 	}
 
 	/// <summary>
 	/// The settings of the empty sheet that a workbook without sheets gets: nothing to show, so nothing shown, whatever
 	/// <see cref="ExcelWriterOptions.Sheets"/> says.
 	/// </summary>
-	public static SheetSettings Empty { get; } = new(new ExcelSheetOptions { BoldHeader = false, FreezeHeader = false, AutoFit = 0 }, null, null, false);
+	public static SheetSettings Empty { get; } = new(new ExcelSheetOptions { BoldHeader = false, FreezeHeader = false, AutoFit = 0 }, null, null, false, "", false);
+
+	/// <summary>
+	/// Where the options came from, as a message names them: <c>ExcelSheetOptions</c>, <c>The [ExcelSheet] of Order</c>
+	/// or <c>ExcelWriterOptions.Sheets</c>.
+	/// </summary>
+	public string Origin { get; }
+
+	/// <summary>
+	/// Whether the options were given when the sheet was added, so that a problem with them is the argument's
+	/// (<see cref="ArgumentException"/>) rather than an attribute's or the workbook's (<see cref="InvalidOperationException"/>).
+	/// </summary>
+	public bool Given { get; }
 
 	/// <summary>The sheet's options, as given: <see cref="ExcelSheetOptions.Columns"/> is read from a copy, through <see cref="ColumnsFor"/>.</summary>
 	public ExcelSheetOptions Sheet { get; }
@@ -108,17 +124,18 @@ internal sealed class SheetSettings
 				throw new ArgumentException("ExcelSheetOptions: " + problem, nameof(options));
 			}
 
-			return new SheetSettings(options, copy, members, hasHeader);
+			return new SheetSettings(options, copy, members, hasHeader, nameof(ExcelSheetOptions), true);
 		}
 
 		if (members?.Sheet is { } sheet)
 		{
+			var origin = $"The [ExcelSheet] of {recordType?.Name}";
 			if (sheet.HeaderProblem(hasHeader) is { } problem)
 			{
-				throw new InvalidOperationException($"The [ExcelSheet] of {recordType?.Name}: {problem}");
+				throw new InvalidOperationException($"{origin}: {problem}");
 			}
 
-			return new SheetSettings(sheet, null, members, hasHeader);
+			return new SheetSettings(sheet, null, members, hasHeader, origin, false);
 		}
 
 		var defaults = writerOptions.Sheets;
@@ -128,7 +145,7 @@ internal sealed class SheetSettings
 			throw new InvalidOperationException("ExcelWriterOptions.Sheets' columns were changed after the writer was created: " + changed);
 		}
 
-		return new SheetSettings(defaults, columns, members, hasHeader);
+		return new SheetSettings(defaults, columns, members, hasHeader, "ExcelWriterOptions.Sheets", false);
 	}
 
 	/// <summary>

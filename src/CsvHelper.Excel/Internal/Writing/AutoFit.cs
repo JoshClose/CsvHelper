@@ -21,7 +21,9 @@ namespace CsvHelper.Excel;
 /// default column is too narrow for them.
 /// </para>
 /// <para>
-/// A record's cells are measured as it is written; a record that is discarded drops them.
+/// A record's cells are measured as it is written; a record that is discarded drops them. A cell in a range merged across
+/// two columns or more (<see cref="ExcelWriterExtensions.MergeCells"/>) counts nothing, as in Excel's AutoFit, so each
+/// cell keeps its row, and the ranges merged by the time the widths are known leave theirs out.
 /// </para>
 /// </remarks>
 internal sealed class AutoFit
@@ -91,23 +93,26 @@ internal sealed class AutoFit
 
 	/// <summary>Measures a cell of the current record.</summary>
 	/// <param name="column">The cell's column.</param>
+	/// <param name="row">The cell's row.</param>
 	/// <param name="pixels">Its text's pixels, without the padding.</param>
 	/// <param name="typed">Whether it is a typed cell, which <see cref="ExcelSheetOptions.MaxAutoFitWidth"/> doesn't cap.</param>
-	public void Add(int column, double pixels, bool typed) => Add(new Cell(column, pixels, typed ? CellWidth.Typed : CellWidth.Text));
+	public void Add(int column, long row, double pixels, bool typed) => Add(new Cell(column, row, pixels, typed ? CellWidth.Typed : CellWidth.Text));
 
 	/// <summary>
 	/// Notes a formula cell of the current record: its value isn't known, so its column is at least the default column,
 	/// as without auto-fit.
 	/// </summary>
 	/// <param name="column">The cell's column.</param>
-	public void AddFormula(int column) => Add(new Cell(column, 0, CellWidth.Default));
+	/// <param name="row">The cell's row.</param>
+	public void AddFormula(int column, long row) => Add(new Cell(column, row, 0, CellWidth.Default));
 
 	/// <summary>
 	/// Adds a filter button to each of the current record's cells, the header's, in its columns: its empty fields too,
 	/// which have the button alone.
 	/// </summary>
 	/// <param name="columns">The header's fields.</param>
-	public void AddFilterButtons(int columns)
+	/// <param name="row">The header's row.</param>
+	public void AddFilterButtons(int columns, long row)
 	{
 		var measured = new bool[columns];
 		for (var i = recordStart; i < count; i++)
@@ -121,7 +126,7 @@ internal sealed class AutoFit
 		{
 			if (!measured[column])
 			{
-				Add(column, ColumnWidths.FilterButtonPixels, typed: false);
+				Add(column, row, ColumnWidths.FilterButtonPixels, typed: false);
 			}
 		}
 	}
@@ -147,9 +152,28 @@ internal sealed class AutoFit
 	/// <summary>The columns' widths, from the cells measured.</summary>
 	/// <param name="fit">Whether this is auto-fit, rather than the first data record's typed cells.</param>
 	/// <param name="maxTextWidth">The widest auto-fit makes a column for its text (<see cref="ExcelSheetOptions.MaxAutoFitWidth"/>'s width).</param>
-	/// <returns>Each column's width, by its index, or 0 for none; <see langword="null"/> when no cell was measured.</returns>
-	public double[]? Widths(bool fit, double maxTextWidth)
+	/// <param name="merged">
+	/// The sheet's merged ranges, whose cells count nothing when a range is across two columns or more, as in Excel's
+	/// AutoFit (<see cref="MergedRanges.HidesWidth"/>); or <see langword="null"/> for none.
+	/// </param>
+	/// <returns>Each column's width, by its index, or 0 for none; <see langword="null"/> when no cell counts.</returns>
+	public double[]? Widths(bool fit, double maxTextWidth, MergedRanges? merged = null)
 	{
+		if (merged is not null)
+		{
+			var kept = 0;
+			for (var i = 0; i < count; i++)
+			{
+				if (!merged.HidesWidth(cells[i].Row, cells[i].Column))
+				{
+					cells[kept++] = cells[i];
+				}
+			}
+
+			count = kept;
+			recordStart = Math.Min(recordStart, count);
+		}
+
 		if (count == 0)
 		{
 			return null;
@@ -210,9 +234,10 @@ internal sealed class AutoFit
 
 	/// <summary>A cell measured.</summary>
 	/// <param name="Column">Its column.</param>
+	/// <param name="Row">Its row.</param>
 	/// <param name="Pixels">Its text's pixels, without the padding.</param>
 	/// <param name="Kind">What its width is.</param>
-	private readonly record struct Cell(int Column, double Pixels, CellWidth Kind);
+	private readonly record struct Cell(int Column, long Row, double Pixels, CellWidth Kind);
 
 	/// <summary>What a cell measured gives its column.</summary>
 	private enum CellWidth

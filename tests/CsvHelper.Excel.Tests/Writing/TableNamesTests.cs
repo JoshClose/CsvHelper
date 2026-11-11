@@ -106,6 +106,75 @@ public class TableNamesTests
 		Assert.Null(TableNames.Problem("TRUE1"));
 	}
 
+	[Theory]
+	[InlineData("Orders", "Orders")]
+	[InlineData("Q1 Orders", "Q1_Orders")]
+	[InlineData("2024", "_2024")]
+	[InlineData("A1", "_A1")]
+	[InlineData("R2D2", "_R2D2")]
+	[InlineData("r", "_r")]
+	[InlineData("TRUE", "_TRUE")]
+	[InlineData("Orders (2)", "Orders__2_")]
+	[InlineData(".x", "_.x")]
+	[InlineData("_xlnm.x", "__xlnm.x")]
+	[InlineData("Bob's-sheet", "Bob_s_sheet")]
+	public void MakesANameFromTheSheets(string sheet, string name)
+	{
+		// The table names made in the step's workbooks opened in Excel (Csv\_bench\results\phase5\step4, answers.txt).
+		Assert.Equal(name, TableNames.FromSheetName(sheet));
+		Assert.Null(TableNames.Problem(name));
+	}
+
+	[Fact]
+	public void PutsAnUnderscoreFirstBeforeACharacterPastThePlane()
+	{
+		var emoji = char.ConvertFromUtf32(0x1F600);
+
+		Assert.Equal("_" + emoji + "x", TableNames.FromSheetName(emoji + "x"));
+
+		// A letter past ASCII stays; a symbol doesn't.
+		Assert.Equal("Bestellungen" + (char)0xFC + "_", TableNames.FromSheetName("Bestellungen" + (char)0xFC + (char)0x20AC));
+	}
+
+	[Theory]
+	[InlineData("Orders", 2, "Orders2")]
+	[InlineData("Q1.Orders", 10, "Q1.Orders10")]
+	[InlineData("AB", 2, "AB_2")]
+	[InlineData("XFD", 1048576, "XFD_1048576")]
+	[InlineData("R", 3, "R_3")]
+	[InlineData("RC", 3, "RC_3")]
+	[InlineData("ABCD", 2, "ABCD2")]
+	public void NumbersANameAsExcelDoesACopysTable(string name, long number, string numbered)
+	{
+		// Excel named the copies of AB's sheet AB_3 and AB_4, and R's R__3 (rename.txt); the rules need one _.
+		Assert.Equal(numbered, TableNames.Numbered(name, number));
+		Assert.Null(TableNames.Problem(numbered));
+	}
+
+	[Fact]
+	public void CutsANameToNumberIt()
+	{
+		var name = new string('T', 255);
+
+		Assert.Equal(new string('T', 254) + "2", TableNames.Numbered(name, 2));
+		Assert.Equal(new string('T', 252) + "100", TableNames.Numbered(name, 100));
+	}
+
+	[Fact]
+	public void KeepsAWorkbooksNamesIgnoringCase()
+	{
+		var names = new TableNames();
+		names.Add("Orders");
+		names.Add("Orders2");
+
+		Assert.Equal("Orders", names.Existing("ORDERS"));
+		Assert.Null(names.Existing("Orders3"));
+		Assert.Equal("orders3", names.Unique("orders"));
+		Assert.Equal("Sales", names.Unique("Sales"));
+		Assert.Equal("Orders3", names.Next("Orders"));
+		Assert.Equal("Sales2", names.Next("Sales"));
+	}
+
 	[Fact]
 	public void SaysWhatIsWrong()
 	{

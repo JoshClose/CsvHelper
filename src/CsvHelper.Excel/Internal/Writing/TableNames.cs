@@ -1,4 +1,7 @@
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
 
 namespace CsvHelper.Excel;
 
@@ -24,8 +27,12 @@ namespace CsvHelper.Excel;
 /// that aren't letters, a cell reference whose row is past Excel's last (<c>A1048577</c>) or has leading zeros
 /// (<c>A01</c>), and names that start with <c>_xlnm.</c>, which Excel keeps for its own names.
 /// </para>
+/// <para>
+/// An instance holds a workbook's table names, which are unique ignoring case as Excel compares them: by
+/// <see cref="SheetNames.Key"/>, which Excel refused two names of in every pair checked (<c>Orders</c> and <c>ORDERS</c>).
+/// </para>
 /// </remarks>
-internal static class TableNames
+internal sealed class TableNames
 {
 	/// <summary>The most characters a table's name has.</summary>
 	public const int MaxLength = 255;
@@ -35,6 +42,57 @@ internal static class TableNames
 
 	/// <summary>The last column's number, <c>XFD</c>.</summary>
 	private const int MaxColumn = 16384;
+
+	// The workbook's table names, by their keys.
+	private readonly Dictionary<string, string> names = new(StringComparer.Ordinal);
+
+	/// <summary>
+	/// A table's name made from its sheet's (Phase 5's decision 8): <c>_</c> for each character a table's name can't have,
+	/// and <c>_</c> first when the name would still break a rule (<c>2024</c>, <c>A1</c>, <c>R2D2</c>, <c>TRUE</c>), so
+	/// <c>Q1 Orders</c> gives <c>Q1_Orders</c> and <c>2024</c> gives <c>_2024</c>.
+	/// </summary>
+	/// <param name="sheetName">The sheet's name, which <see cref="SheetNames.Check"/> accepted: 1 to 31 characters, no lone surrogates.</param>
+	/// <returns>The name, which <see cref="Problem"/> accepts.</returns>
+	public static string FromSheetName(string sheetName)
+	{
+		var name = new StringBuilder(sheetName.Length + 1);
+		for (var i = 0; i < sheetName.Length; i++)
+		{
+			var c = sheetName[i];
+			if (char.IsHighSurrogate(c) && i + 1 < sheetName.Length && char.IsLowSurrogate(sheetName[i + 1]))
+			{
+				name.Append(c).Append(sheetName[++i]);
+
+				continue;
+			}
+
+			name.Append(char.IsLetter(c) || c is (>= '0' and <= '9') or '_' or '.' or '?' or '\\' ? c : '_');
+		}
+
+		var made = name.ToString();
+
+		return Problem(made) is null ? made : "_" + made;
+	}
+
+	/// <summary>
+	/// A name with a number after it: <c>Orders2</c>; or <c>AB_2</c> when the name and the number would be a reference or
+	/// break another rule (<c>AB2</c>, <c>R2</c>), as Excel puts an <c>_</c> between them when it names a copied sheet's table
+	/// (<c>AB_3</c>). The name is cut, between characters, to keep it within 255.
+	/// </summary>
+	/// <param name="name">The name, which <see cref="Problem"/> accepts.</param>
+	/// <param name="number">The number, 2 or more.</param>
+	/// <returns>The numbered name, which <see cref="Problem"/> accepts.</returns>
+	public static string Numbered(string name, long number)
+	{
+		var digits = number.ToString(CultureInfo.InvariantCulture);
+		var numbered = Cut(name, MaxLength - digits.Length) + digits;
+		if (Problem(numbered) is null)
+		{
+			return numbered;
+		}
+
+		return Cut(name, MaxLength - digits.Length - 1) + "_" + digits;
+	}
 
 	/// <summary>What is wrong with a table's name, if Excel wouldn't open it.</summary>
 	/// <param name="name">The name.</param>
@@ -152,6 +210,49 @@ internal static class TableNames
 		}
 
 		return at == name.Length || name[at] is >= '0' and <= '9';
+	}
+
+	/// <summary>The table of the workbook's that Excel takes a name to be, if it has one.</summary>
+	/// <param name="name">The name.</param>
+	/// <returns>The table's name as it was added, or <see langword="null"/>.</returns>
+	public string? Existing(string name) => names.TryGetValue(SheetNames.Key(name), out var existing) ? existing : null;
+
+	/// <summary>Adds a table's name to the workbook's.</summary>
+	/// <param name="name">The name, which <see cref="Existing"/> doesn't find.</param>
+	public void Add(string name) => names.Add(SheetNames.Key(name), name);
+
+	/// <summary>A name, or, while the workbook has it, the name with the first number from 2 that it doesn't have (<see cref="Numbered"/>).</summary>
+	/// <param name="name">The name, which <see cref="Problem"/> accepts.</param>
+	/// <returns>The name, which the workbook doesn't have.</returns>
+	public string Unique(string name) => Existing(name) is null ? name : Next(name);
+
+	/// <summary>The name with the first number from 2 that the workbook doesn't have (<see cref="Numbered"/>): <c>Orders2</c>.</summary>
+	/// <param name="name">The name, which <see cref="Problem"/> accepts.</param>
+	/// <returns>The numbered name, which the workbook doesn't have.</returns>
+	public string Next(string name)
+	{
+		for (var number = 2L; ; number++)
+		{
+			var numbered = Numbered(name, number);
+			if (Existing(numbered) is null)
+			{
+				return numbered;
+			}
+		}
+	}
+
+	/// <summary>A name's first characters, not between a surrogate pair's halves.</summary>
+	/// <param name="name">The name.</param>
+	/// <param name="length">The most characters to keep.</param>
+	/// <returns>The name, or its first characters.</returns>
+	private static string Cut(string name, int length)
+	{
+		if (name.Length <= length)
+		{
+			return name;
+		}
+
+		return name.Substring(0, char.IsHighSurrogate(name[length - 1]) ? length - 1 : length);
 	}
 
 	/// <summary>Whether a character is an ASCII letter.</summary>

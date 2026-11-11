@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -36,12 +37,20 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <summary>The buffer of a file the writer creates: the zip writes headers in small pieces.</summary>
 	private const int FileBufferSize = 64 * 1024;
 
+	/// <summary>The sink of each sheet's writer, for <see cref="ExcelWriterExtensions.MergeCells"/>: weak, so that it goes with the writer.</summary>
+	private static readonly ConditionalWeakTable<CsvWriter, SheetSink> Sinks = new();
+
 	private readonly PackageWriter package;
 	private readonly List<string> sheetNames = [];
 	// The name each key belongs to (SheetNames.Key), to refuse names that Excel takes to be the same.
 	private readonly Dictionary<string, string> namesByKey = new(StringComparer.Ordinal);
 	private readonly SharedStringTable? strings;
 	private readonly StyleRegistry styles = new();
+	// The workbook's tables' names, and the number of tables written, whose ids are 1 to it.
+	private readonly TableNames tableNames = new();
+	private int tables;
+	// The sheets' filters, for the workbook's _xlnm._FilterDatabase names: each sheet's place in tab order, from 0, and range.
+	private readonly List<(int Sheet, ExcelRange Range)> filters = [];
 	// The sheet being written, and its writer.
 	private SheetSink? openSheet;
 	private CsvWriter? openWriter;
@@ -143,7 +152,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="records"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
 	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
-	/// are not valid.
+	/// are not valid or name a table the workbook has.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
 	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, a record can't be written
@@ -174,7 +183,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="records"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
 	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
-	/// are not valid.
+	/// are not valid or name a table the workbook has.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
 	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, or a record can't be
@@ -206,7 +215,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="records"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
 	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
-	/// are not valid.
+	/// are not valid or name a table the workbook has.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
 	/// Another sheet's writer is open, <typeparamref name="T"/>'s Excel attributes are not valid, or a record can't be
@@ -275,7 +284,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
 	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
-	/// are not valid.
+	/// are not valid or name a table the workbook has.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
 	/// Another sheet's writer is open (a workbook is written one sheet at a time), or the sheet has no header
@@ -288,8 +297,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var key = CheckNewSheet(name);
 		var settings = SheetSettings.Resolve(options, null, null, Options);
 		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(null);
+		var table = TableName(name, settings);
 
-		return Open(NewSheet(name, key, settings, null, null, columns));
+		return Open(NewSheet(name, key, settings, null, null, columns, table));
 	}
 
 	/// <summary>
@@ -333,7 +343,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
 	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
-	/// are not valid.
+	/// are not valid or name a table the workbook has.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">
 	/// Another sheet's writer is open (a workbook is written one sheet at a time); <typeparamref name="T"/>'s
@@ -352,8 +362,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		// Without a header, the names T's record writer writes say which column each member's and each option's is.
 		var headerNames = !Options.Csv.HasHeader && (formats is not null || settings.HasColumns) ? HeaderCapture.Of<T>() : null;
 		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(headerNames);
+		var table = TableName(name, settings);
 
-		return Open(NewSheet(name, key, settings, formats, headerNames, columns));
+		return Open(NewSheet(name, key, settings, formats, headerNames, columns, table));
 	}
 
 	/// <summary>
@@ -368,8 +379,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var key = CheckNewSheet(name);
 		var settings = SheetSettings.Resolve(null, null, members, Options);
 		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(null);
+		var table = TableName(name, settings);
 
-		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null, columns));
+		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null, columns, table));
 	}
 
 	/// <summary>
@@ -409,6 +421,39 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 			return (copy, PackageParts.SheetPart(sheetNames.Count));
 		}
+	}
+
+	/// <summary>
+	/// The sink of a sheet's writer, which <see cref="AddSheet(string, ExcelSheetOptions)"/> and the other methods returned, for
+	/// <see cref="ExcelWriterExtensions.MergeCells"/>.
+	/// </summary>
+	/// <param name="writer">The writer.</param>
+	/// <returns>The sink, or <see langword="null"/> for a writer of CSV.</returns>
+	internal static SheetSink? SinkOf(CsvWriter writer) => Sinks.TryGetValue(writer, out var sink) ? sink : null;
+
+	/// <summary>
+	/// Called by the sheet being written when it ends with a filter: the workbook gets Excel's hidden
+	/// <c>_xlnm._FilterDatabase</c> name for it, as Excel writes one.
+	/// </summary>
+	/// <param name="range">The filter's range: the header and the rows below it.</param>
+	internal void AddFilter(ExcelRange range) => filters.Add((sheetNames.Count - 1, range));
+
+	/// <summary>Called by the sheet being written when it ends with a table, for the table's id and part.</summary>
+	/// <returns>The table's id, from 1, unique in the workbook.</returns>
+	internal int AddTable() => ++tables;
+
+	/// <summary>
+	/// The name of the table of a new sheet of <see cref="ExcelRowLimit.NewSheet"/>: the first sheet's table's, with the
+	/// first number from 2 that the workbook doesn't have (<c>Orders2</c>), which the workbook then has.
+	/// </summary>
+	/// <param name="first">The first sheet's table's name.</param>
+	/// <returns>The name.</returns>
+	internal string NextTableName(string first)
+	{
+		var name = tableNames.Next(first);
+		tableNames.Add(name);
+
+		return name;
 	}
 
 	/// <summary>Called by a sheet's sink when it completes: another sheet can then be added.</summary>
@@ -490,6 +535,37 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		return key;
 	}
 
+	/// <summary>
+	/// The name of a new sheet's table: the one its options give, which the workbook mustn't have; else the sheet's name
+	/// made into one (<see cref="TableNames.FromSheetName"/>), with a number after it while the workbook has it (decision 8).
+	/// </summary>
+	/// <param name="sheetName">The sheet's name.</param>
+	/// <param name="settings">How the sheet looks.</param>
+	/// <returns>The name, or <see langword="null"/> when the sheet has no table.</returns>
+	/// <exception cref="ArgumentException">The options given name a table the workbook has, ignoring case.</exception>
+	/// <exception cref="InvalidOperationException">The record type's <see cref="ExcelSheetAttribute"/>, or <see cref="ExcelWriterOptions.Sheets"/>, names a table the workbook has.</exception>
+	private string? TableName(string sheetName, SheetSettings settings)
+	{
+		if (settings.Table is not { } table || !settings.HasHeader)
+		{
+			return null;
+		}
+
+		if (table.Name is not { } name)
+		{
+			return tableNames.Unique(TableNames.FromSheetName(sheetName));
+		}
+
+		if (tableNames.Existing(name) is { } existing)
+		{
+			var message = $"{settings.Origin}: the workbook already has the table \"{existing}\", which Excel takes \"{name}\" to be: a workbook's tables have names unique ignoring case. Leave the table's name out for one made from the sheet's.";
+
+			throw settings.Given ? new ArgumentException(message, "options") : new InvalidOperationException(message);
+		}
+
+		return name;
+	}
+
 	/// <summary>Adds a sheet whose name is checked, with its sink.</summary>
 	/// <param name="name">The name.</param>
 	/// <param name="key">The name's key.</param>
@@ -497,12 +573,17 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <param name="members">The formats of the record type's members, or <see langword="null"/> when none has one.</param>
 	/// <param name="headerNames">Without a header, the names the record writer writes in its header, or <see langword="null"/>.</param>
 	/// <param name="columns">Without a header, each column's options, or <see langword="null"/> for none.</param>
+	/// <param name="table">The name of the sheet's table (<see cref="TableName"/>), which the workbook then has; or <see langword="null"/>.</param>
 	/// <returns>The sheet's sink.</returns>
-	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns)
+	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns, string? table)
 	{
-		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, settings, members, headerNames, columns);
+		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, settings, members, headerNames, columns, table);
 		namesByKey.Add(key, name);
 		sheetNames.Add(name);
+		if (table is not null)
+		{
+			tableNames.Add(table);
+		}
 
 		return sink;
 	}
@@ -513,6 +594,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	private CsvWriter Open(SheetSink sink)
 	{
 		var writer = new CsvWriter(sink, Options.Csv);
+		Sinks.Add(writer, sink);
 		openSheet = sink;
 		openWriter = writer;
 
@@ -546,10 +628,10 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 			if (sheetNames.Count == 0)
 			{
-				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null).CompleteAsync(async).ConfigureAwait(false);
+				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null, null).CompleteAsync(async).ConfigureAwait(false);
 			}
 
-			await PackageParts.WriteAsync(package, sheetNames, strings, styles, async, CancellationToken.None).ConfigureAwait(false);
+			await PackageParts.WriteAsync(package, sheetNames, strings, styles, filters, tables, async, CancellationToken.None).ConfigureAwait(false);
 		}
 		catch
 		{

@@ -61,12 +61,22 @@ namespace CsvHelper.Excel;
 /// style, so that a sheet without either tests one flag per cell.
 /// </para>
 /// <para>
+/// A filter (<see cref="SheetSettings.AutoFilter"/>) spans the header's fields, from the header to the last row with a
+/// cell, and the workbook gets its hidden <c>_xlnm._FilterDatabase</c> name. A table (<see cref="SheetSettings.Table"/>)
+/// spans them from the header to the last row, one row below the header at least: its header's cells wait for the
+/// header's end, when every name is known, and are written as text named as Excel names a table's columns
+/// (<see cref="TableWriter.ColumnNames"/>). Its part and the sheet's relationships part are written after the sheet's
+/// entry is closed. The ranges merged (<see cref="MergeCells"/>) are checked as they are added, and written after the
+/// rows, after the title's.
+/// </para>
+/// <para>
 /// A record past the sheet's last row follows <see cref="ExcelWriterOptions.RowLimit"/>. Its first field finds it, through
 /// the field limit that <see cref="EndRecord"/> lowers to 0 once the sheet is full, so that the test of the column limit
 /// is the only one per field. With <see cref="ExcelRowLimit.NewSheet"/>, the full sheet's end goes into the buffer, and the
-/// next sheet's rows after it, the header's first; the next flush, which <see cref="EndRecord"/> asks for, writes the full
-/// sheet, closes its entry and opens the next one's. So no I/O happens in <see cref="WriteField"/>, and the switch is sync
-/// or async as the caller is.
+/// next sheet's rows after it, the title's and the header's first; the next flush, which <see cref="EndRecord"/> asks
+/// for, writes the full sheet, closes its entry, writes its table's parts and opens the next one's. Each new sheet has
+/// its own filter, and its own table, named with a number after the first's, and no merged ranges but the title's. So no
+/// I/O happens in <see cref="WriteField"/>, and the switch is sync or async as the caller is.
 /// </para>
 /// </remarks>
 internal sealed class SheetSink : CsvCellSink
@@ -136,6 +146,17 @@ internal sealed class SheetSink : CsvCellSink
 	private bool styling;
 	// The title's merge: the last column of the first record, which it spans; -1 until known, or without a title.
 	private int titleLastColumn = -1;
+	// The first sheet's table's name, and the name of the table of the sheet being written (a number after the first's in
+	// the new sheets of NewSheet); null without a table. And its columns' names, once the header has ended.
+	private readonly string? firstTableName;
+	private string? tableName;
+	private string[]? tableColumns;
+	// The header's fields, which the filter and the table span; 0 until the header has ended.
+	private int headerColumns;
+	// The ranges merged in the sheet being written (MergeCells), or null for none.
+	private MergedRanges? merges;
+	// The parts to write once the sheet's entry is closed: its relationships and its table's; null for none.
+	private List<(string Part, byte[] Xml)>? partsAfter;
 	// The part of the sheet being written, and its entry once a flush opened it.
 	private string partName;
 	private Stream? entry;
@@ -194,8 +215,9 @@ internal sealed class SheetSink : CsvCellSink
 	/// Without <see cref="CsvWriterOptions.HasHeader"/>, each column's options (<see cref="SheetSettings.ColumnsFor"/>), or
 	/// <see langword="null"/> for none. With a header, they are resolved when the header record ends.
 	/// </param>
+	/// <param name="tableName">The name of the sheet's table, which the workbook doesn't have; <see langword="null"/> without a table.</param>
 	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows,
-		SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns)
+		SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns, string? tableName)
 	{
 		this.workbook = workbook;
 		this.package = package;
@@ -217,9 +239,10 @@ internal sealed class SheetSink : CsvCellSink
 		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
+		firstTableName = this.tableName = options.Csv.HasHeader ? tableName : null;
 		if (options.Csv.HasHeader)
 		{
-			if (members is not null || settings.HasColumns)
+			if (members is not null || settings.HasColumns || this.tableName is not null)
 			{
 				this.members = members;
 				header = [];
@@ -266,8 +289,13 @@ internal sealed class SheetSink : CsvCellSink
 			OnLimit(at);
 		}
 
-		// The header record's names, which say which member each column is.
-		header?.Add(Encoding.UTF8.GetString(utf8.ToArray()));
+		// The header record's names, which say which member each column is, and name a table's columns, whose cells are
+		// written when the header ends.
+		if (header is not null && AddHeaderName(utf8, at))
+		{
+			return;
+		}
+
 		if (utf8.IsEmpty)
 		{
 			return;
@@ -341,7 +369,12 @@ internal sealed class SheetSink : CsvCellSink
 
 		if (header is not null)
 		{
-			ResolveColumns(header);
+			EndHeader(header);
+		}
+
+		if (row == headerRowNumber)
+		{
+			headerColumns = column;
 		}
 
 		var hasRow = rowOpen;
@@ -378,7 +411,7 @@ internal sealed class SheetSink : CsvCellSink
 		{
 			if (filterButtons && row == headerRowNumber)
 			{
-				measured.AddFilterButtons(column);
+				measured.AddFilterButtons(column, row);
 			}
 
 			measured.EndRecord();
@@ -469,6 +502,7 @@ internal sealed class SheetSink : CsvCellSink
 			recordStart = output.Length;
 			await FlushAsync(async, CancellationToken.None).ConfigureAwait(false);
 			await PackageWriter.CloseAsync(entry!, async).ConfigureAwait(false);
+			await WritePartsAfterAsync(async, CancellationToken.None).ConfigureAwait(false);
 		}
 		finally
 		{
@@ -561,6 +595,13 @@ internal sealed class SheetSink : CsvCellSink
 		var (name, part) = workbook.ContinueSheet(Location.Name);
 		Location = new SheetLocation(name);
 		nextPartName = part;
+		merges = null;
+		if (tableColumns is not null)
+		{
+			// Each sheet has its own table, named with a number after the first's.
+			tableName = workbook.NextTableName(firstTableName!);
+		}
+
 		row = 1;
 		lastRow = 0;
 		lastColumn = -1;
@@ -947,7 +988,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		var value = double.Parse(Encoding.ASCII.GetString(invariant.ToArray()), NumberStyles.Float, CultureInfo.InvariantCulture);
 		var pixels = format?.NumberPixels(value) ?? NumberFormatWidth.GeneralPixels(value);
-		measured.Add(at, pixels, typed: true);
+		measured.Add(at, row, pixels, typed: true);
 	}
 
 	/// <summary>Measures a boolean cell: <c>TRUE</c> or <c>FALSE</c>, in its column format's text section if it has one.</summary>
@@ -962,7 +1003,7 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		var pixels = ColumnWidths.TextPixels((value ? "TRUE" : "FALSE").AsSpan(), MeasuresBold);
-		measured.Add(at, format?.TextPixels(pixels) ?? pixels, typed: true);
+		measured.Add(at, row, format?.TextPixels(pixels) ?? pixels, typed: true);
 	}
 
 	/// <summary>Measures a date, time or duration cell: in its column's format, else in its own.</summary>
@@ -978,7 +1019,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		if (pixels > 0)
 		{
-			measured.Add(at, pixels, typed: true);
+			measured.Add(at, row, pixels, typed: true);
 		}
 	}
 
@@ -997,7 +1038,7 @@ internal sealed class SheetSink : CsvCellSink
 			pixels = format.TextPixels(pixels);
 		}
 
-		measured.Add(at, pixels, typed: false);
+		measured.Add(at, row, pixels, typed: false);
 	}
 
 	/// <summary>
@@ -1012,7 +1053,7 @@ internal sealed class SheetSink : CsvCellSink
 	{
 		widthsKnown = true;
 		measuring = false;
-		columnWidths = measured.Widths(fits, ColumnWidths.FromCharacters(Settings.MaxAutoFitWidth));
+		columnWidths = measured.Widths(fits, ColumnWidths.FromCharacters(Settings.MaxAutoFitWidth), merges);
 	}
 
 	/// <summary>Writes a number cell of a serial, in a cell format, and measures it.</summary>
@@ -1050,7 +1091,7 @@ internal sealed class SheetSink : CsvCellSink
 		output.Append("</f></c>"u8);
 		if (measuring && fits)
 		{
-			measured.AddFormula(at);
+			measured.AddFormula(at, row);
 		}
 	}
 
@@ -1163,23 +1204,77 @@ internal sealed class SheetSink : CsvCellSink
 		styling = font != CellFont.Regular || columnStyles is not null;
 	}
 
-	/// <summary>Resolves the columns' options and formats by the header's names, when the header record ends.</summary>
+	/// <summary>
+	/// Adds a header field's text to the header's names. With a table, the text is its column's name, checked, and its cell
+	/// is written when the header ends, once every column's name is known (<see cref="EndHeader"/>).
+	/// </summary>
+	/// <param name="utf8">The field's text.</param>
+	/// <param name="at">The field's column.</param>
+	/// <returns>Whether the field's cell waits for the header's end: with a table.</returns>
+	/// <exception cref="InvalidOperationException">With a table, the text has more than 255 characters; the field has no cell, as any field that fails.</exception>
+	private bool AddHeaderName(ReadOnlySpan<byte> utf8, int at)
+	{
+		var name = Encoding.UTF8.GetString(utf8.ToArray());
+		header!.Add(name);
+		if (tableName is null)
+		{
+			return false;
+		}
+
+		if (name.Length > TableNames.MaxLength)
+		{
+			// The field has no cell, so its column is named as an empty one's if the header goes on.
+			header[header.Count - 1] = "";
+
+			throw new InvalidOperationException(
+				$"Cell {Location.Cell(at, row)} has {name.Length.ToString(CultureInfo.InvariantCulture)} characters, and the header's cells name the table's columns, which Excel opens with {TableNames.MaxLength} at most.");
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// Ends the header record: checks the columns' options by the header's names and, with a table, the ranges merged before
+	/// it; writes a table's header cells, named as Excel names a table's columns (<see cref="TableWriter.ColumnNames"/>);
+	/// and resolves the columns' options and formats.
+	/// </summary>
 	/// <param name="names">The header's names.</param>
 	/// <exception cref="InvalidOperationException">
-	/// <see cref="ExcelSheetOptions.Columns"/> names a column the header doesn't have; the header record is discarded.
+	/// <see cref="ExcelSheetOptions.Columns"/> names a column the header doesn't have, or a range merged before the header
+	/// is in the table's columns at or below it; the header record is discarded.
 	/// </exception>
-	private void ResolveColumns(List<string> names)
+	private void EndHeader(List<string> names)
 	{
 		ExcelColumnOptions?[]? columns;
 		try
 		{
 			columns = Settings.ColumnsFor(names);
+			if (tableName is not null && merges is not null)
+			{
+				foreach (var range in merges.Ranges)
+				{
+					if (InTable(range, names.Count))
+					{
+						throw new InvalidOperationException(TableMergeProblem(range, names.Count));
+					}
+				}
+			}
 		}
 		catch
 		{
 			DiscardRecord();
 
 			throw;
+		}
+
+		if (tableName is not null)
+		{
+			// Before the columns' styles, which the header's cells don't take.
+			tableColumns = TableWriter.ColumnNames(names);
+			for (var at = 0; at < tableColumns.Length; at++)
+			{
+				WriteText(Encoding.UTF8.GetBytes(tableColumns[at]), at);
+			}
 		}
 
 		if (members is not null)
@@ -1189,6 +1284,55 @@ internal sealed class SheetSink : CsvCellSink
 
 		SetColumns(columns);
 		header = null;
+	}
+
+	/// <summary>Whether a range has a cell in the table's columns, at or below its header.</summary>
+	/// <param name="range">The range.</param>
+	/// <param name="columns">The table's columns.</param>
+	/// <returns>Whether it has.</returns>
+	private bool InTable(ExcelRange range, int columns) => range.LastRow >= headerRowNumber && range.FirstColumnIndex < columns;
+
+	/// <summary>What is wrong with a range merged in the table.</summary>
+	/// <param name="range">The range.</param>
+	/// <param name="columns">The table's columns.</param>
+	/// <returns>The message.</returns>
+	private string TableMergeProblem(ExcelRange range, int columns) =>
+		$"The range {range.Corners()} is merged in the columns of the table of the sheet {Location.QuotedName} (A to {CellReference.ColumnName(columns - 1)}), at or below its header in row {headerRowNumber.ToString(CultureInfo.InvariantCulture)}: Excel opens no table with merged cells.";
+
+	/// <summary>
+	/// Merges a range of the sheet being written: written with the sheet's other merged ranges after its rows. Its cells
+	/// count nothing in auto-fit when it is across two columns or more.
+	/// </summary>
+	/// <param name="range">The range, of two cells or more.</param>
+	/// <exception cref="ObjectDisposedException">The sheet is complete.</exception>
+	/// <exception cref="ArgumentException">
+	/// The range overlaps one merged before, is in row 1 under a title, or is in the table's columns at or below its header,
+	/// which has ended; Excel would refuse the workbook.
+	/// </exception>
+	public void MergeCells(ExcelRange range)
+	{
+		if (completed)
+		{
+			throw new ObjectDisposedException(nameof(CsvWriter), $"The sheet {Location.QuotedName} is complete: merge its cells before disposing its CsvWriter.");
+		}
+
+		if (title is not null && range.FirstRow == 1)
+		{
+			throw new ArgumentException($"The range {range.Corners()} is in row 1, which holds the title of the sheet {Location.QuotedName}, merged across the header's columns.", nameof(range));
+		}
+
+		if (tableColumns is not null && InTable(range, tableColumns.Length))
+		{
+			throw new ArgumentException(TableMergeProblem(range, tableColumns.Length), nameof(range));
+		}
+
+		merges ??= new MergedRanges();
+		if (merges.Overlapping(range) is { } other)
+		{
+			throw new ArgumentException($"The range {range.Corners()} overlaps {other.Corners()}, merged before in the sheet {Location.QuotedName}: Excel opens no sheet whose merged cells overlap.", nameof(range));
+		}
+
+		merges.Add(range);
 	}
 
 	/// <summary>Takes the columns' options, and makes the styles of those with a format or wrap.</summary>
@@ -1369,18 +1513,48 @@ internal sealed class SheetSink : CsvCellSink
 	}
 
 	/// <summary>
-	/// Writes the XML after the sheet's rows into the buffer: the end of <c>sheetData</c>, the title's merge, the page
-	/// margins, <c>ignoredErrors</c> over the used range when a text cell starts like a number, and the worksheet's end, in
-	/// the schema's order, which Excel keeps to.
+	/// Writes the XML after the sheet's rows into the buffer, in the schema's order, which Excel keeps to: the end of
+	/// <c>sheetData</c>; the filter over the header's columns, from the header down to the last row (and the workbook's
+	/// hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the page margins;
+	/// <c>ignoredErrors</c> over the used range when a text cell starts like a number; the table's part; and the
+	/// worksheet's end. The sheet's relationships and its table's part are kept to write once its entry is closed.
 	/// </summary>
 	private void AppendEnd()
 	{
 		output.Append("</sheetData>"u8);
-		if (titleLastColumn > 0)
+		if (Settings.AutoFilter && headerColumns > 0)
 		{
-			output.Append("<mergeCells count=\"1\"><mergeCell ref=\"A1:"u8);
-			output.AppendReference(ColumnName(titleLastColumn), 1);
-			output.Append("\"/></mergeCells>"u8);
+			var filter = new ExcelRange((int)headerRowNumber, 1, (int)Math.Max(lastRow, headerRowNumber), headerColumns);
+			output.Append("<autoFilter ref=\""u8);
+			output.Append(Encoding.ASCII.GetBytes(filter.Corners()));
+			output.Append("\"/>"u8);
+			workbook.AddFilter(filter);
+		}
+
+		var mergeCount = (titleLastColumn > 0 ? 1 : 0) + (merges?.Count ?? 0);
+		if (mergeCount > 0)
+		{
+			output.Append("<mergeCells count=\""u8);
+			output.AppendNumber(mergeCount);
+			output.Append("\">"u8);
+			if (titleLastColumn > 0)
+			{
+				output.Append("<mergeCell ref=\"A1:"u8);
+				output.AppendReference(ColumnName(titleLastColumn), 1);
+				output.Append("\"/>"u8);
+			}
+
+			if (merges is not null)
+			{
+				foreach (var range in merges.Ranges)
+				{
+					output.Append("<mergeCell ref=\""u8);
+					output.Append(Encoding.ASCII.GetBytes(range.Corners()));
+					output.Append("\"/>"u8);
+				}
+			}
+
+			output.Append("</mergeCells>"u8);
 		}
 
 		output.Append(PageMargins);
@@ -1392,7 +1566,63 @@ internal sealed class SheetSink : CsvCellSink
 			output.Append("\" numberStoredAsText=\"1\"/></ignoredErrors>"u8);
 		}
 
+		if (tableColumns is not null)
+		{
+			// The header and the rows below it, one row at least, as Excel opens no table of a header alone.
+			output.Append("<tableParts count=\"1\"><tablePart r:id=\"rId1\"/></tableParts>"u8);
+			AddTableParts(new ExcelRange((int)headerRowNumber, 1, (int)Math.Max(lastRow, headerRowNumber + 1), tableColumns.Length));
+		}
+
 		output.Append("</worksheet>"u8);
+	}
+
+	/// <summary>Keeps the sheet's relationships and its table's part, to write once its entry is closed.</summary>
+	/// <param name="range">The table's cells.</param>
+	private void AddTableParts(ExcelRange range)
+	{
+		var id = workbook.AddTable();
+		using var xml = new XmlOutput(1024);
+		TableWriter.WriteSheetRelationships(xml, id);
+		var number = partName.Substring("xl/worksheets/".Length);
+		partsAfter ??= [];
+		partsAfter.Add(("xl/worksheets/_rels/" + number + ".rels", xml.Written.ToArray()));
+		xml.Truncate(0);
+		TableWriter.Write(xml, id, tableName!, range, tableColumns!, Settings.Table!);
+		partsAfter.Add((TableWriter.PartName(id), xml.Written.ToArray()));
+	}
+
+	/// <summary>Writes the parts kept to write once the sheet's entry is closed, each in an entry of its own.</summary>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
+	/// <returns>A task that completes when they are written.</returns>
+	private async ValueTask WritePartsAfterAsync(bool async, CancellationToken cancellationToken)
+	{
+		if (partsAfter is null)
+		{
+			return;
+		}
+
+		foreach (var (part, xml) in partsAfter)
+		{
+			var entry = await package.OpenPartAsync(part, async, cancellationToken).ConfigureAwait(false);
+			try
+			{
+				if (async)
+				{
+					await entry.WriteAsync(xml, 0, xml.Length, cancellationToken).ConfigureAwait(false);
+				}
+				else
+				{
+					entry.Write(xml, 0, xml.Length);
+				}
+			}
+			finally
+			{
+				await PackageWriter.CloseAsync(entry, async).ConfigureAwait(false);
+			}
+		}
+
+		partsAfter = null;
 	}
 
 	/// <summary>
@@ -1414,6 +1644,7 @@ internal sealed class SheetSink : CsvCellSink
 		{
 			await WriteBufferAsync(sheetEnd, async, cancellationToken).ConfigureAwait(false);
 			await PackageWriter.CloseAsync(entry!, async).ConfigureAwait(false);
+			await WritePartsAfterAsync(async, cancellationToken).ConfigureAwait(false);
 			entry = null;
 			startWritten = false;
 			partName = nextPartName!;

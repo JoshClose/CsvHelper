@@ -75,18 +75,32 @@ public class XmlOutputTests
 	}
 
 	[Theory]
-	[InlineData("abc", 3)]
-	[InlineData("_x0041_", 13)]
-	[InlineData("_x0041", 6)]
-	[InlineData("_x0041\r", 19)]
-	[InlineData("a&b<c>\"d", 8)]
-	[InlineData("\t\n", 2)]
-	[InlineData("a\rb", 9)]
-	public void CountsTextAsWritten(string text, int length)
+	[InlineData("abc", 3, 3)]
+	[InlineData("_x0041_", 13, 13)]
+	[InlineData("_x0041", 6, 6)]
+	[InlineData("_x0041\r", 19, 19)]
+	[InlineData("a&b<c>\"d", 8, 8)]
+	[InlineData("\t\n", 2, 14)]
+	[InlineData("_x0041\n", 7, 19)]
+	[InlineData("a\rb", 9, 9)]
+	public void CountsTextAsWritten(string text, int length, int attributeLength)
 	{
-		// The text as AppendText writes it, once XML's entities are read.
+		// The text as AppendText writes it, once XML's entities are read: in an attribute, tab and LF are escapes.
 		Assert.Equal(length, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(text)));
-		Assert.Equal(length, System.Net.WebUtility.HtmlDecode(Escaped(text, attribute: true)).Length);
+		Assert.Equal(length, System.Net.WebUtility.HtmlDecode(Escaped(text, attribute: false)).Length);
+		Assert.Equal(attributeLength, XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(text), attribute: true));
+		Assert.Equal(attributeLength, System.Net.WebUtility.HtmlDecode(Escaped(text, attribute: true)).Length);
+	}
+
+	[Fact]
+	public void EscapesTabsAndLineBreaksInAttributes()
+	{
+		// XML reads them back as spaces in an attribute: a table's column name with a line break must keep it, and an _
+		// before one, which would start an escape with the line break's, is escaped itself.
+		Assert.Equal("a_x0009_b_x000A_c", Escaped("a\tb\nc", attribute: true));
+		Assert.Equal("a\tb\nc", Escaped("a\tb\nc", attribute: false));
+		Assert.Equal("_x005F_x0041_x000A_", Escaped("_x0041\n", attribute: true));
+		Assert.Equal("_x0041\n", Escaped("_x0041\n", attribute: false));
 	}
 
 	[Fact]
