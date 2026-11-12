@@ -257,8 +257,10 @@ var orders = csv.GetRecords<Order>().ToList();
 
 - **A type without a mapper throws.** `GetRecords<T>` on a type that is not `[CsvRecord]` (or mapped by
   `[CsvRecordMap]`, or a [hand-written mapper](../../pages/records.md#hand-written-mappers)) throws
-  `InvalidOperationException`. It also throws when the project does not run the generator, such as with a compiler
-  older than Roslyn 4.3.
+  `InvalidOperationException`. It also throws when the project does not run the generator: with a compiler older than
+  Roslyn 4.3, or in a legacy `packages.config` project, which does not pick the generator up
+  from the package on its own. In that project, add the generator to the `.csproj`:
+  `<Analyzer Include="..\packages\CsvHelper.34.0.0\analyzers\dotnet\cs\CsvHelper.Generators.dll" />`
 - **More members are read:** public and internal properties and fields that can be set, those of base classes too,
   and the parameters of the constructor. 33 read only public properties by default, so a public field or an internal
   property is now a required column too: mark it `[CsvIgnore]` if the file has no column for it. A private member, or
