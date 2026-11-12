@@ -61,15 +61,17 @@ public sealed class CsvRecordGenerator : IIncrementalGenerator
 			foreach (var diagnostic in diagnostics) context.ReportDiagnostic(diagnostic.ToDiagnostic());
 		});
 
-		var generated = recordsWithProjections.Where(static i => !i.Left.HasErrors).Select(static (i, _) => Registration(i.Left, i.Right)).Collect();
-		var mapped = mapsWithProjections.Where(static i => !i.Left.HasErrors).Select(static (i, _) => Registration(i.Left, i.Right)).Collect();
+		var generated = recordsWithProjections.Where(static i => !i.Left.HasErrors).Select(static (i, _) => Registration(i.Left, i.Right, map: false)).Collect();
+		var mapped = mapsWithProjections.Where(static i => !i.Left.HasErrors).Select(static (i, _) => Registration(i.Left, i.Right, map: true)).Collect();
 		var handWritten = mappers.Where(static m => m.Registration is not null).Select(static (m, _) => m.Registration!).Collect();
 		var needsPolyfill = context.CompilationProvider.Select(static (c, _) => c.GetTypeByMetadataName(ModuleInitializer) is null);
 		context.RegisterSourceOutput(generated.Combine(mapped).Combine(handWritten).Combine(needsPolyfill), static (context, input) =>
 		{
 			var (((records, maps), mappers), polyfill) = input;
 			if (records.IsEmpty && maps.IsEmpty && mappers.IsEmpty) return;
-			var registrations = records.Concat(maps).Concat(mappers).OrderBy(r => r.FullName, System.StringComparer.Ordinal);
+			// The maps of one type are ordered too, for a stable file; the order no longer decides which map is used.
+			var registrations = records.Concat(maps).Concat(mappers)
+				.OrderBy(r => r.FullName, System.StringComparer.Ordinal).ThenBy(r => r.MapHost ?? "", System.StringComparer.Ordinal);
 			context.AddSource("CsvRecordRegistrations.g.cs", RecordEmitter.EmitRegistrations(registrations, polyfill));
 		});
 	}
@@ -83,11 +85,11 @@ public sealed class CsvRecordGenerator : IIncrementalGenerator
 
 	/// <summary>
 	/// The registration of the generated mapper, record writer, options and projections of a record type, made in the
-	/// type that holds them.
+	/// type that holds them: the record type, or the map class when <paramref name="map"/> is set.
 	/// </summary>
-	private static RegistrationModel Registration(RecordModel model, bool projections) =>
+	private static RegistrationModel Registration(RecordModel model, bool projections, bool map) =>
 		new(model.FullName, model.HostFullName + ".CreateCsvMapper", model.FieldWidths, model.HostFullName + ".CreateCsvWriter",
-			model.Options is null ? null : model.HostFullName, projections ? model.HostFullName : null);
+			model.Options is null ? null : model.HostFullName, projections ? model.HostFullName : null, map ? model.HostFullName : null);
 
 	/// <summary>
 	/// Whether to generate projections: the assembly references CsvHelper.Linq, which reads only the members a query

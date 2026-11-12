@@ -1052,6 +1052,14 @@ List<Supplier> suppliers = reader.GetRecords<Supplier>().ToList();
 - `GetRecords<T>()`, `WriteRecords<T>()` and the other record methods find the mapper as they find those of
   `[CsvRecord]` types. A mapped type cannot be a [nested record](#nested-records) of another record type yet; a
   [hand-written mapper](#hand-written-mappers) can.
+- A type can have one map class. With several, `GetRecords<T>()`, `WriteRecords<T>()`, `CsvReaderOptions.For<T>()`
+  and the other methods that would use one throw an `InvalidOperationException` that names the maps, rather than use
+  one of them. A mapper, record writer or options registered with `CsvRecordMapper.Register`,
+  `CsvRecordWriter.Register` or `CsvRecordMapper.RegisterOptions` is still used.
+  - Maps in other assemblies count once their assembly has loaded: with one map in each of two assemblies, the type
+    reads with the map of the first assembly loaded, and throws once the second has loaded.
+  - An assembly built with the 34.0 generator registers its map with `CsvRecordMapper.Register`, so that map is used
+    whatever other maps the type has. Rebuild it with 34.1 or later.
 
 ## Hand-written mappers
 

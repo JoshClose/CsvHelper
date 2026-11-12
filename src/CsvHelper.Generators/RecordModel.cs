@@ -272,8 +272,14 @@ internal sealed record NestedModel(string Field, string Type, string Prefix, Equ
 /// The type whose <c>GetCsvMembers</c> and <c>CreateCsvProjection</c> describe the members and create projections, or
 /// <see langword="null"/> when no projections are generated.
 /// </param>
+/// <param name="MapHost">
+/// The [CsvRecordMap] class that maps the record type, fully qualified with <c>global::</c>, whose registration is made
+/// with <c>CsvRecordMapper.RegisterMap</c> so that several maps of one type leave it without a default; or
+/// <see langword="null"/> for a [CsvRecord] type or a hand-written mapper.
+/// </param>
 internal sealed record RegistrationModel(
-	string FullName, string Factory, EquatableArray<int> FieldWidths, string? WriterFactory, string? OptionsHost = null, string? ProjectionHost = null);
+	string FullName, string Factory, EquatableArray<int> FieldWidths, string? WriterFactory, string? OptionsHost = null, string? ProjectionHost = null,
+	string? MapHost = null);
 
 /// <summary>A type with a [CsvConverter] that names its hand-written mapper: its registration, unless it has errors.</summary>
 /// <param name="Registration">The registration of the mapper, or <see langword="null"/> when it cannot be registered.</param>

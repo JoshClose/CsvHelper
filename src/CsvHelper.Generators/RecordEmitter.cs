@@ -132,6 +132,19 @@ internal static class RecordEmitter
 			var widths = r.FieldWidths.Length == 0
 				? ""
 				: ", new int[] { " + string.Join(", ", r.FieldWidths.Select(n => n.ToString(CultureInfo.InvariantCulture))) + " }";
+			if (r.MapHost is { } map)
+			{
+				// One call for the map's mapper, record writer and options, so that a type with several maps has no default
+				// of any of them, rather than the mapper of one map and the options of another.
+				var call = new StringBuilder($"global::CsvHelper.CsvRecordMapper.RegisterMap<{r.FullName}>(typeof({map}), {r.Factory}, {r.WriterFactory}");
+				if (widths.Length > 0) call.Append(", fieldWidths: ").Append(widths.Substring(2));
+				if (r.ProjectionHost is { } host) call.Append($", members: {host}.GetCsvMembers, projection: {host}.CreateCsvProjection");
+				if (r.OptionsHost is { } options) call.Append($", readerOptions: {options}.CreateCsvReaderOptions, writerOptions: {options}.CreateCsvWriterOptions");
+				w.Line(call.Append(");").ToString());
+
+				continue;
+			}
+
 			if (r.ProjectionHost is { } projectionHost)
 			{
 				var layout = widths.Length == 0 ? ", null" : widths;

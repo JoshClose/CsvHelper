@@ -41,6 +41,80 @@ internal partial class SupplierMap
 	private static bool IsRating(decimal rating) => rating is >= 0 and <= 5;
 }
 
+/// <summary>A type of another library with two map classes, which leave it without a default.</summary>
+public sealed class Vendor
+{
+	public Vendor(string code) => Code = code;
+
+	public string Code { get; }
+
+	public string Name { get; set; } = "";
+
+	public DateTime Since { get; set; }
+}
+
+/// <summary>One map of <see cref="Vendor"/>.</summary>
+[CsvRecordMap(typeof(Vendor))]
+[CsvOptions(Separator = ';')]
+internal partial class VendorMap
+{
+	[CsvColumn("Vendor Code")]
+	public string Code { get; set; } = "";
+
+	[CsvFormat("yyyy-MM-dd")]
+	public DateTime Since { get; set; }
+}
+
+/// <summary>Another map of <see cref="Vendor"/>.</summary>
+[CsvRecordMap(typeof(Vendor))]
+internal partial class LegacyVendorMap
+{
+	[CsvColumn("VEND_CD")]
+	public string Code { get; set; } = "";
+
+	[CsvColumn("VEND_NM")]
+	public string Name { get; set; } = "";
+}
+
+/// <summary>A type whose maps are registered by hand, to check how maps and explicit registrations decide its defaults.</summary>
+public sealed record Crate(string Label);
+
+internal sealed class CrateMapA
+{
+}
+
+internal sealed class CrateMapB
+{
+}
+
+internal sealed class CrateMapC
+{
+}
+
+/// <summary>Reads a <see cref="Crate"/> from the column of a given name.</summary>
+internal sealed class CrateMapper : CsvRecordMapper<Crate>
+{
+	private readonly int label;
+
+	public CrateMapper(CsvReader reader, string column)
+	{
+		label = Column(reader, column, -1, false, "Crate.Label");
+		ThrowIfColumnsMissing(reader);
+	}
+
+	public override Crate Read(CsvReader reader) => new(reader.GetString(label));
+}
+
+/// <summary>Writes a <see cref="Crate"/> to a column of a given name.</summary>
+internal sealed class CrateWriter(string column) : CsvRecordWriter<Crate>
+{
+	public override int FieldCount => 1;
+
+	public override void WriteHeader(CsvWriter writer) => WriteColumnName(writer, column);
+
+	public override void Write(CsvWriter writer, Crate record) => writer.WriteField(record.Label);
+}
+
 /// <summary>Members checked by methods of the type.</summary>
 [CsvRecord]
 public partial class Signup
@@ -149,6 +223,87 @@ public class RecordMapTests
 		}
 
 		Assert.Equal("Supplier Code;Full Name;Rating;Since\r\nS1;Acme;4.5;20200115\r\n", output.ToString());
+	}
+
+	[Fact]
+	public void SeveralMapsThrow()
+	{
+		using var reader = CsvReader.FromText("Vendor Code;Name;Since\nV1;Acme;2020-01-15\n");
+		var e = Assert.Throws<InvalidOperationException>(() => reader.GetRecords<Vendor>());
+
+		Assert.StartsWith("CsvHelper.Tests.Vendor is mapped by several [CsvRecordMap] classes (", e.Message);
+		Assert.Contains("CsvHelper.Tests.VendorMap", e.Message);
+		Assert.Contains("CsvHelper.Tests.LegacyVendorMap", e.Message);
+		Assert.Contains("so it has no default mapper", e.Message);
+		Assert.Contains("CsvRecordMapper.Register", e.Message);
+
+		// Every other default of the type throws too, rather than coming from one map or another.
+		Assert.Contains("CsvRecordMapper.RegisterOptions", Assert.Throws<InvalidOperationException>(() => CsvReaderOptions.For<Vendor>()).Message);
+		Assert.Contains("CsvRecordMapper.RegisterOptions", Assert.Throws<InvalidOperationException>(() => CsvWriterOptions.For<Vendor>()).Message);
+		Assert.Contains("CsvRecordWriter.Register", Assert.Throws<InvalidOperationException>(() => CsvRecordWriter.Create<Vendor>()).Message);
+		Assert.Contains("no default fixed-width layout", Assert.Throws<InvalidOperationException>(() => CsvRecordMapper.GetFieldWidths<Vendor>()).Message);
+		Assert.Contains("no default mapper", Assert.Throws<InvalidOperationException>(() => CsvRecordMapper.CreateProjection<Vendor>(reader, ["Code"])).Message);
+		Assert.Throws<InvalidOperationException>(() => reader.GetRecord<Vendor>());
+		using var output = new StringWriter();
+		using var writer = CsvWriter.Create(output);
+		Assert.Throws<InvalidOperationException>(() => writer.WriteRecords([new Vendor("V1")]));
+
+		// The type still has record writers, so that callers do not write its records some other way.
+		Assert.True(CsvRecordWriter.IsRegistered<Vendor>());
+		Assert.False(CsvRecordMapper.TryGetMembers<Vendor>(out _));
+	}
+
+	[Fact]
+	public void RegistrationsDecideTheDefaults()
+	{
+		static void Map<TMap>(string column) =>
+			CsvRecordMapper.RegisterMap<Crate>(typeof(TMap), (reader, _) => new CrateMapper(reader, column), _ => new CrateWriter(column));
+
+		static string Read(string text)
+		{
+			using var reader = CsvReader.FromText(text);
+
+			return Assert.Single(reader.GetRecords<Crate>()).Label;
+		}
+
+		// The only map is the default, and registering it again replaces it.
+		Map<CrateMapA>("A");
+		Assert.Equal("1", Read("A\n1\n"));
+		Map<CrateMapA>("Alpha");
+		Assert.Equal("2", Read("Alpha\n2\n"));
+		Assert.Equal(1, CsvRecordWriter.Create<Crate>().FieldCount);
+		Assert.Same(CsvReaderOptions.Default, CsvReaderOptions.For<Crate>());
+
+		// A second map leaves the type without a default.
+		Map<CrateMapB>("B");
+		Assert.Throws<InvalidOperationException>(() => Read("B\n3\n"));
+		Assert.Throws<InvalidOperationException>(() => CsvRecordWriter.Create<Crate>());
+		Assert.Throws<InvalidOperationException>(() => CsvReaderOptions.For<Crate>());
+
+		// An explicit registration is the default whatever maps come after it.
+		CsvRecordMapper.Register<Crate>(reader => new CrateMapper(reader, "B"));
+		Assert.Equal("5", Read("B\n5\n"));
+		Map<CrateMapC>("C");
+		Assert.Equal("6", Read("B\n6\n"));
+
+		// The record writer and options are registered on their own.
+		Assert.Throws<InvalidOperationException>(() => CsvRecordWriter.Create<Crate>());
+		CsvRecordWriter.Register<Crate>(_ => new CrateWriter("C"));
+		using var output = new StringWriter();
+		using (var writer = CsvWriter.Create(output))
+		{
+			writer.WriteRecords([new Crate("x")]);
+		}
+
+		Assert.Equal("C\r\nx\r\n", output.ToString());
+		CsvRecordMapper.RegisterOptions<Crate>(() => CsvReaderOptions.Default with { Separator = ';' }, () => CsvWriterOptions.Default);
+		Assert.Equal(';', CsvReaderOptions.For<Crate>().Separator);
+
+		// The pairs of factories go together.
+		Assert.Throws<ArgumentException>(() => CsvRecordMapper.RegisterMap<Crate>(typeof(CrateMapA), (r, _) => new CrateMapper(r, "A"), _ => new CrateWriter("A"),
+			readerOptions: () => CsvReaderOptions.Default));
+		Assert.Throws<ArgumentException>(() => CsvRecordMapper.RegisterMap<Crate>(typeof(CrateMapA), (r, _) => new CrateMapper(r, "A"), _ => new CrateWriter("A"),
+			members: () => []));
 	}
 
 	[Fact]
