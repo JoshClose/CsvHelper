@@ -17,9 +17,11 @@
   "cultureData": "3751ce771a135e8b16355426d03483e2c6b473e25e205e99c4cd96892ea51203",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
+  "names": [],
   "sheets": [
     {
       "name": "Standard",
+      "used": "A1:AJ4",
       "widths": [
         10.55,
         29.18,
@@ -1247,10 +1249,58 @@
           "category": "G",
           "elapsed": "1900年1月"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        10.64,
+        27.73,
+        36.09,
+        38.73,
+        17.36,
+        19.91,
+        10.82,
+        10.64,
+        13.82,
+        15.36,
+        25.91,
+        31,
+        33.64,
+        14.36,
+        17.55,
+        15.55,
+        15,
+        16.45,
+        14.27,
+        24.27,
+        29.45,
+        32,
+        14.91,
+        17.55,
+        14.45,
+        13.91,
+        15.27,
+        16.36,
+        19.36,
+        24.55,
+        27.09,
+        14.91,
+        18.45,
+        16.55,
+        15.91,
+        17.36
       ]
     },
     {
       "name": "Custom",
+      "used": "A1:N4",
       "widths": [
         8.64,
         26.36,
@@ -1694,10 +1744,36 @@
           "type": "text",
           "numberFormat": "General"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        17.27,
+        24.27,
+        16.09,
+        19.55,
+        15,
+        12,
+        26.82,
+        13.18,
+        18.18,
+        14.55,
+        20.55,
+        13.82,
+        14.91,
+        9
       ]
     },
     {
       "name": "Kinds",
+      "used": "A1:T4",
       "widths": [
         10.55,
         29.18,
@@ -2381,10 +2457,42 @@
           "category": "D8",
           "elapsed": "12:00:00"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        8.82,
+        27.73,
+        10.82,
+        25.91,
+        9.82,
+        24.27,
+        13.73,
+        11.73,
+        19.36,
+        8.09,
+        10.64,
+        11,
+        15,
+        9.91,
+        13.91,
+        11.91,
+        15.91,
+        14.36,
+        24.27,
+        13
       ]
     },
     {
       "name": "Numbers",
+      "used": "A1:I4",
       "widths": [
         8.09,
         8.09,
@@ -2685,6 +2793,26 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        7.18,
+        10.18,
+        13,
+        7.82,
+        7.82,
+        7.18,
+        7.82,
+        7.64,
+        11.18
       ]
     }
   ]

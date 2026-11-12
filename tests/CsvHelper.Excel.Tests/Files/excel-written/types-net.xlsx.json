@@ -4,9 +4,11 @@
   "sha256": "e9bb49cbe4f86fa90f6fff37c7cae4eb0e2b9bbc76b0f1ff1bb070336833477b",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
+  "names": [],
   "sheets": [
     {
       "name": "Newer",
+      "used": "A1:F6",
       "widths": [
         8.09,
         10.09,
@@ -268,10 +270,28 @@
           "type": "text",
           "numberFormat": "General"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        15.55,
+        9.45,
+        10.82,
+        10.18,
+        40.45,
+        39.82
       ]
     },
     {
       "name": "Formats",
+      "used": "A1:G4",
       "widths": [
         9.91,
         16.64,
@@ -513,6 +533,24 @@
           "category": "D8",
           "elapsed": "12:00:00"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        9.27,
+        15,
+        27.27,
+        8.09,
+        10.82,
+        4.73,
+        7.27
       ]
     }
   ]

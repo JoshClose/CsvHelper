@@ -1,0 +1,1174 @@
+{
+  "file": "columns.xlsx",
+  "description": "columns' formats (numbers, percents, exponents, currency, fractions, leading zeros, a date's, a boolean's text section, text), widths, wrap and hidden columns, from [ExcelColumn] and from ExcelSheetOptions.Columns, which replaces it whole",
+  "sha256": "64818ded8ad998b903f4e3c415558cbcd347b3a8aeae1c515bdc00b515303d9c",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Attributes",
+      "used": "A1:M4",
+      "widths": [
+        6.55,
+        7.82,
+        6.55,
+        8.55,
+        8.82,
+        4.64,
+        7.64,
+        15.82,
+        10.18,
+        5.55,
+        20.09,
+        0,
+        30.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Amount",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Rate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Big",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "Price",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "Part",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "Paid",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "J1",
+          "value2": "Zip",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K1",
+          "value2": "Notes",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L1",
+          "value2": "Secret",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M1",
+          "value2": "Wide",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "first",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 1234.5,
+          "type": "number",
+          "text": "1,234.50",
+          "numberFormat": "#,##0.00",
+          "category": ",2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "C2",
+          "value2": 0.125,
+          "type": "number",
+          "text": "12.5%",
+          "numberFormat": "0.0%",
+          "category": "P1",
+          "elapsed": "150.0%"
+        },
+        {
+          "cell": "D2",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.50E+20",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "E2",
+          "value2": 1234.5,
+          "type": "currency",
+          "text": "$1,234.50",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "F2",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1 1/2",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "G2",
+          "value2": 123,
+          "type": "number",
+          "text": "000123",
+          "numberFormat": "000000",
+          "category": "F0",
+          "elapsed": "000002"
+        },
+        {
+          "cell": "H2",
+          "value2": 45306.43755929398,
+          "type": "date",
+          "text": "15/01/2024 10:30",
+          "numberFormat": "dd/mm/yyyy hh:mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "I2",
+          "value2": true,
+          "type": "boolean",
+          "text": "Paid: TRUE",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "J2",
+          "value2": "00123",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "K2",
+          "value2": "short",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L2",
+          "value2": "hidden",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M2",
+          "value2": "wide",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "second",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 0,
+          "type": "number",
+          "text": "0.00",
+          "numberFormat": "#,##0.00",
+          "category": ",2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "C3",
+          "value2": 1,
+          "type": "number",
+          "text": "100.0%",
+          "numberFormat": "0.0%",
+          "category": "P1",
+          "elapsed": "150.0%"
+        },
+        {
+          "cell": "D3",
+          "value2": 12345,
+          "type": "number",
+          "text": "1.23E+04",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "E3",
+          "value2": -42,
+          "type": "currency",
+          "text": "-$42.00",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "F3",
+          "value2": 0.25,
+          "type": "number",
+          "text": " 1/4",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "G3",
+          "value2": 0,
+          "type": "number",
+          "text": "000000",
+          "numberFormat": "000000",
+          "category": "F0",
+          "elapsed": "000002"
+        },
+        {
+          "cell": "H3",
+          "value2": 1,
+          "type": "date",
+          "text": "01/01/1900 00:00",
+          "numberFormat": "dd/mm/yyyy hh:mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "I3",
+          "value2": false,
+          "type": "boolean",
+          "text": "Paid: FALSE",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "J3",
+          "value2": "007",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "K3",
+          "value2": "a line\nand another line",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L3",
+          "value2": "s",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "third",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": -0.125,
+          "type": "number",
+          "text": "-0.13",
+          "numberFormat": "#,##0.00",
+          "category": ",2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "C4",
+          "value2": -0.0123,
+          "type": "number",
+          "text": "-1.2%",
+          "numberFormat": "0.0%",
+          "category": "P1",
+          "elapsed": "150.0%"
+        },
+        {
+          "cell": "D4",
+          "value2": -0.001,
+          "type": "number",
+          "text": "-1.00E-03",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "E4",
+          "value2": 0,
+          "type": "currency",
+          "text": "$0.00",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "F4",
+          "value2": 2.75,
+          "type": "number",
+          "text": "2 3/4",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "G4",
+          "value2": 1234567,
+          "type": "number",
+          "text": "1234567",
+          "numberFormat": "000000",
+          "category": "F0",
+          "elapsed": "000002"
+        },
+        {
+          "cell": "H4",
+          "value2": 45657.99998842592,
+          "type": "date",
+          "text": "31/12/2024 23:59",
+          "numberFormat": "dd/mm/yyyy hh:mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "I4",
+          "value2": true,
+          "type": "boolean",
+          "text": "Paid: TRUE",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "K4",
+          "value2": "This note is long enough to wrap across several lines in a column twenty characters wide.",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L4",
+          "value2": "x",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M4",
+          "value2": "text",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [
+        "L"
+      ],
+      "standardHeight": 14.5,
+      "heights": [
+        {
+          "row": 3,
+          "height": 29
+        },
+        {
+          "row": 4,
+          "height": 72.5
+        }
+      ],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        },
+        {
+          "cell": "D1",
+          "bold": true
+        },
+        {
+          "cell": "E1",
+          "bold": true
+        },
+        {
+          "cell": "F1",
+          "bold": true
+        },
+        {
+          "cell": "G1",
+          "bold": true
+        },
+        {
+          "cell": "H1",
+          "bold": true
+        },
+        {
+          "cell": "I1",
+          "bold": true
+        },
+        {
+          "cell": "J1",
+          "bold": true
+        },
+        {
+          "cell": "K1",
+          "bold": true
+        },
+        {
+          "cell": "L1",
+          "bold": true
+        },
+        {
+          "cell": "M1",
+          "bold": true
+        },
+        {
+          "cell": "K2",
+          "wrap": true
+        },
+        {
+          "cell": "K3",
+          "wrap": true
+        },
+        {
+          "cell": "J4",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "K4",
+          "wrap": true
+        },
+        {
+          "cell": "B5",
+          "numberFormat": "#,##0.00"
+        },
+        {
+          "cell": "C5",
+          "numberFormat": "0.0%"
+        },
+        {
+          "cell": "D5",
+          "numberFormat": "0.00E+00"
+        },
+        {
+          "cell": "E5",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00"
+        },
+        {
+          "cell": "F5",
+          "numberFormat": "# ?/?"
+        },
+        {
+          "cell": "G5",
+          "numberFormat": "000000"
+        },
+        {
+          "cell": "H5",
+          "numberFormat": "dd/mm/yyyy hh:mm"
+        },
+        {
+          "cell": "I5",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "J5",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "K5",
+          "wrap": true
+        }
+      ],
+      "autoFit": [
+        6.09,
+        7.18,
+        6.18,
+        8,
+        8.18,
+        4.45,
+        7.18,
+        14.91,
+        9.55,
+        5.18,
+        19.27,
+        null,
+        4.55
+      ]
+    },
+    {
+      "name": "Options",
+      "used": "A1:M4",
+      "widths": [
+        0,
+        7.55,
+        6.55,
+        8.55,
+        8.82,
+        4.64,
+        7.64,
+        15.82,
+        10.18,
+        5.55,
+        60.09,
+        8.09,
+        30.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Amount",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Rate",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Big",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "Price",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "Part",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I1",
+          "value2": "Paid",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "J1",
+          "value2": "Zip",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K1",
+          "value2": "Notes",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L1",
+          "value2": "Secret",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M1",
+          "value2": "Wide",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "first",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 1234.5,
+          "type": "number",
+          "text": "1234.50",
+          "numberFormat": "0.00",
+          "category": "F2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "C2",
+          "value2": 0.125,
+          "type": "number",
+          "text": "12.5%",
+          "numberFormat": "0.0%",
+          "category": "P1",
+          "elapsed": "150.0%"
+        },
+        {
+          "cell": "D2",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.50E+20",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "E2",
+          "value2": 1234.5,
+          "type": "currency",
+          "text": "$1,234.50",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "F2",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1 1/2",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "G2",
+          "value2": 123,
+          "type": "number",
+          "text": "000123",
+          "numberFormat": "000000",
+          "category": "F0",
+          "elapsed": "000002"
+        },
+        {
+          "cell": "H2",
+          "value2": 45306.43755929398,
+          "type": "date",
+          "text": "15/01/2024 10:30",
+          "numberFormat": "dd/mm/yyyy hh:mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "I2",
+          "value2": true,
+          "type": "boolean",
+          "text": "Paid: TRUE",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "J2",
+          "value2": "00123",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "K2",
+          "value2": "short",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L2",
+          "value2": "hidden",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M2",
+          "value2": "wide",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "second",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 0,
+          "type": "number",
+          "text": "0.00",
+          "numberFormat": "0.00",
+          "category": "F2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "C3",
+          "value2": 1,
+          "type": "number",
+          "text": "100.0%",
+          "numberFormat": "0.0%",
+          "category": "P1",
+          "elapsed": "150.0%"
+        },
+        {
+          "cell": "D3",
+          "value2": 12345,
+          "type": "number",
+          "text": "1.23E+04",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "E3",
+          "value2": -42,
+          "type": "currency",
+          "text": "-$42.00",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "F3",
+          "value2": 0.25,
+          "type": "number",
+          "text": " 1/4",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "G3",
+          "value2": 0,
+          "type": "number",
+          "text": "000000",
+          "numberFormat": "000000",
+          "category": "F0",
+          "elapsed": "000002"
+        },
+        {
+          "cell": "H3",
+          "value2": 1,
+          "type": "date",
+          "text": "01/01/1900 00:00",
+          "numberFormat": "dd/mm/yyyy hh:mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "I3",
+          "value2": false,
+          "type": "boolean",
+          "text": "Paid: FALSE",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "J3",
+          "value2": "007",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "K3",
+          "value2": "a line\nand another line",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L3",
+          "value2": "s",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "third",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": -0.125,
+          "type": "number",
+          "text": "-0.13",
+          "numberFormat": "0.00",
+          "category": "F2",
+          "elapsed": "1.50"
+        },
+        {
+          "cell": "C4",
+          "value2": -0.0123,
+          "type": "number",
+          "text": "-1.2%",
+          "numberFormat": "0.0%",
+          "category": "P1",
+          "elapsed": "150.0%"
+        },
+        {
+          "cell": "D4",
+          "value2": -0.001,
+          "type": "number",
+          "text": "-1.00E-03",
+          "numberFormat": "0.00E+00",
+          "category": "S2",
+          "elapsed": "1.50E+00"
+        },
+        {
+          "cell": "E4",
+          "value2": 0,
+          "type": "currency",
+          "text": "$0.00",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "F4",
+          "value2": 2.75,
+          "type": "number",
+          "text": "2 3/4",
+          "numberFormat": "# ?/?",
+          "category": "G",
+          "elapsed": "1 1/2"
+        },
+        {
+          "cell": "G4",
+          "value2": 1234567,
+          "type": "number",
+          "text": "1234567",
+          "numberFormat": "000000",
+          "category": "F0",
+          "elapsed": "000002"
+        },
+        {
+          "cell": "H4",
+          "value2": 45657.99998842592,
+          "type": "date",
+          "text": "31/12/2024 23:59",
+          "numberFormat": "dd/mm/yyyy hh:mm",
+          "category": "D1",
+          "elapsed": "01/01/1900 12:00"
+        },
+        {
+          "cell": "I4",
+          "value2": true,
+          "type": "boolean",
+          "text": "Paid: TRUE",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "K4",
+          "value2": "This note is long enough to wrap across several lines in a column twenty characters wide.",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L4",
+          "value2": "x",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M4",
+          "value2": "text",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [
+        "A"
+      ],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        },
+        {
+          "cell": "D1",
+          "bold": true
+        },
+        {
+          "cell": "E1",
+          "bold": true
+        },
+        {
+          "cell": "F1",
+          "bold": true
+        },
+        {
+          "cell": "G1",
+          "bold": true
+        },
+        {
+          "cell": "H1",
+          "bold": true
+        },
+        {
+          "cell": "I1",
+          "bold": true
+        },
+        {
+          "cell": "J1",
+          "bold": true
+        },
+        {
+          "cell": "K1",
+          "bold": true
+        },
+        {
+          "cell": "L1",
+          "bold": true
+        },
+        {
+          "cell": "M1",
+          "bold": true
+        },
+        {
+          "cell": "J4",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "B5",
+          "numberFormat": "0.00"
+        },
+        {
+          "cell": "C5",
+          "numberFormat": "0.0%"
+        },
+        {
+          "cell": "D5",
+          "numberFormat": "0.00E+00"
+        },
+        {
+          "cell": "E5",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00"
+        },
+        {
+          "cell": "F5",
+          "numberFormat": "# ?/?"
+        },
+        {
+          "cell": "G5",
+          "numberFormat": "000000"
+        },
+        {
+          "cell": "H5",
+          "numberFormat": "dd/mm/yyyy hh:mm"
+        },
+        {
+          "cell": "I5",
+          "numberFormat": "0;-0;0;\"Paid: \"@"
+        },
+        {
+          "cell": "J5",
+          "numberFormat": "@"
+        }
+      ],
+      "autoFit": [
+        null,
+        7,
+        6.18,
+        8,
+        8.18,
+        4.45,
+        7.18,
+        14.91,
+        9.55,
+        5.18,
+        75.36,
+        6,
+        4.55
+      ]
+    },
+    {
+      "name": "Mixed",
+      "used": "A1:B6",
+      "widths": [
+        7.55,
+        8.82
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "number",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 1234567,
+          "type": "number",
+          "text": "1,234,567",
+          "numberFormat": "#,##0",
+          "category": ",0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "A3",
+          "value2": "text",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "n/a",
+          "type": "text",
+          "numberFormat": "#,##0"
+        },
+        {
+          "cell": "A4",
+          "value2": "boolean",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "#,##0"
+        },
+        {
+          "cell": "A5",
+          "value2": "date",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 45306,
+          "type": "number",
+          "text": "45,306",
+          "numberFormat": "#,##0",
+          "category": ",0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "A6",
+          "value2": "decimal",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": 2.5,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "#,##0",
+          "category": ",0",
+          "elapsed": "2"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "B7",
+          "numberFormat": "#,##0"
+        }
+      ],
+      "autoFit": [
+        7,
+        8.09
+      ]
+    }
+  ]
+}

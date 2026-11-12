@@ -29,6 +29,9 @@ internal static class LibreOffice
 	/// <summary>The written set's other workbooks, converted to <c>.xlsx</c>.</summary>
 	private static readonly Lazy<string> WrittenXlsx = new(() => Convert(Written.Workbooks.Where(w => !CanExport(w)).Select(w => (w.Name, Written.Write(w))), XlsxFilter));
 
+	/// <summary>Every workbook of the written set, converted to <c>.xlsx</c>, for what LibreOffice keeps of its look.</summary>
+	private static readonly Lazy<string> WrittenLooks = new(() => Convert(Written.Workbooks.Select(w => (w.Name, Written.Write(w))), XlsxFilter));
+
 	/// <summary>LibreOffice's <c>soffice</c>: <c>CSVHELPER_SOFFICE</c>, or the default install's; <see langword="null"/> when there is none.</summary>
 	public static string? Program { get; } = new[] { Environment.GetEnvironmentVariable("CSVHELPER_SOFFICE"), @"C:\Program Files\LibreOffice\program\soffice.exe" }
 		.FirstOrDefault(p => !string.IsNullOrEmpty(p) && File.Exists(p));
@@ -50,6 +53,11 @@ internal static class LibreOffice
 	/// <param name="workbook">The workbook of the written set.</param>
 	/// <returns>The file LibreOffice saved.</returns>
 	public static string WrittenAsXlsx(WrittenWorkbook workbook) => Path.Combine(WrittenXlsx.Value, workbook.Name);
+
+	/// <summary>A written workbook as LibreOffice saves it in <c>.xlsx</c>, for what it keeps of its look.</summary>
+	/// <param name="workbook">The workbook of the written set.</param>
+	/// <returns>The file LibreOffice saved.</returns>
+	public static string WrittenLook(WrittenWorkbook workbook) => Path.Combine(WrittenLooks.Value, workbook.Name);
 
 	/// <summary>Whether LibreOffice can export every sheet of a written workbook as a CSV file named after it.</summary>
 	/// <param name="workbook">The workbook.</param>

@@ -1,0 +1,800 @@
+{
+  "file": "autofit.xlsx",
+  "description": "auto-fit's widths: later values wider than the first, General numbers, text capped at 60 characters and on one line, a capped sheet that measures two records, a bold header wider than its cells, formulas, and dates at midnight",
+  "sha256": "d3b78be5ccb4f0420472ef83d5ba84dc72e3e04daa8bf4fd3d6510d9a34ef7d5",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Widths",
+      "used": "A1:C3",
+      "widths": [
+        10.64,
+        21.91,
+        19.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Took",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "narrow first",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "C2",
+          "value2": 0.041666666666666664,
+          "type": "number",
+          "text": "1:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "A3",
+          "value2": "wider after",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 45306.437501423614,
+          "type": "date",
+          "text": "2024-01-15 10:30:00.123",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "C3",
+          "value2": 10675199.11673007,
+          "type": "number",
+          "text": "###################",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        10,
+        20.82,
+        6.27
+      ]
+    },
+    {
+      "name": "General",
+      "used": "A1:B11",
+      "widths": [
+        7.91,
+        12.64
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "small",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 0.000123456789,
+          "type": "number",
+          "text": "0.000123457",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "pi",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 3.14159265358979,
+          "type": "number",
+          "text": "3.141592654",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "negative",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": -1234567.891,
+          "type": "number",
+          "text": "-1234567.891",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": "decimals",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 123456.123456,
+          "type": "number",
+          "text": "123456.1235",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A6",
+          "value2": "large",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": 1.5E+20,
+          "type": "number",
+          "text": "1.5E+20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A7",
+          "value2": "tiny",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": 1E-05,
+          "type": "number",
+          "text": "0.00001",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A8",
+          "value2": "11 digits",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": 12345678901,
+          "type": "number",
+          "text": "12345678901",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A9",
+          "value2": "12 digits",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": 123456789012,
+          "type": "number",
+          "text": "1.23457E+11",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A10",
+          "value2": "a half",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B10",
+          "value2": -0.5,
+          "type": "number",
+          "text": "-0.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A11",
+          "value2": "17 digits",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B11",
+          "value2": 0.30000000000000004,
+          "type": "number",
+          "text": "0.3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        7.45,
+        11.82
+      ]
+    },
+    {
+      "name": "Text",
+      "used": "A1:D3",
+      "widths": [
+        5.09,
+        60.09,
+        25.09,
+        19.36
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Short",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Long",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Lines",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Wide",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "This text is a hundred characters long, which is more than the sixty that auto-fit takes at most.",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "first line\nsecond, longer line",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D2",
+          "value2": "日本語のテキスト\uD83D\uDE00",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "short",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C3",
+          "value2": "one line",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D3",
+          "value2": "ascii",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        },
+        {
+          "cell": "D1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        4.73,
+        79.27,
+        23.73,
+        19.09
+      ]
+    },
+    {
+      "name": "Capped",
+      "used": "A1:B4",
+      "widths": [
+        20.09,
+        8.64
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "short",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": "a name of thirty characters ok",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 123456.5,
+          "type": "number",
+          "text": "123456.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A4",
+          "value2": "past the held rows, a much longer name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 2.5,
+          "type": "number",
+          "text": "2.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        34,
+        8.18
+      ]
+    },
+    {
+      "name": "Header",
+      "used": "A1:B3",
+      "widths": [
+        30.82,
+        1.36
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "A header much wider than its cells",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "B",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A3",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": 4,
+          "type": "number",
+          "text": "4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        29.27,
+        1.27
+      ]
+    },
+    {
+      "name": "Formulas",
+      "used": "A1:D3",
+      "widths": [
+        2.18,
+        2.18,
+        8.55,
+        5.91
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "B",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Sum",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Shows",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A2+B2"
+        },
+        {
+          "cell": "D2",
+          "value2": "3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": 20,
+          "type": "number",
+          "text": "20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 200,
+          "type": "number",
+          "text": "200",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5",
+          "formula": "=A3*B3"
+        },
+        {
+          "cell": "D3",
+          "value2": "200",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        },
+        {
+          "cell": "D1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        2.18,
+        2.18,
+        3.82,
+        5.55
+      ]
+    },
+    {
+      "name": "Midnight",
+      "used": "A1:A3",
+      "widths": [
+        18.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Day",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "A3",
+          "value2": 45307,
+          "type": "date",
+          "text": "2024-01-16",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        9.45
+      ]
+    }
+  ]
+}

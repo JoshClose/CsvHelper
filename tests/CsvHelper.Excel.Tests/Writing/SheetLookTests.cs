@@ -280,6 +280,36 @@ public class SheetLookTests
 
 	[Theory]
 	[MemberData(nameof(Modes))]
+	public async Task SaysAHeaderCellIsInGeneralWhenItsColumnsMayHaveStyles(bool async)
+	{
+		var columns = new Dictionary<string, ExcelColumnOptions> { ["Amount"] = new() { Format = "#,##0.00" }, ["Note"] = new() { Wrap = true } };
+
+		var plain = await Write(Orders, async, new ExcelSheetOptions { BoldHeader = false, Columns = columns });
+		var table = await Write(Orders, async, new ExcelSheetOptions { Table = new(), Columns = columns });
+		var unstyled = await Write(Orders, async, new ExcelSheetOptions { BoldHeader = false });
+
+		// LibreOffice gives a written cell without a style its column's, where Excel gives it General: a header cell that
+		// isn't bold says s="0", in a plain header and in a styled table's, so that neither takes its column's format or
+		// wrap. Below it, cells keep their own; without columns' options, the header says nothing.
+		const string Header = "<row r=\"1\"><c r=\"A1\" s=\"0\" t=\"inlineStr\"><is><t>Name</t></is></c><c r=\"B1\" s=\"0\" t=\"inlineStr\"><is><t>Amount</t></is></c>";
+		var sheet = Written.Entry(plain, "xl/worksheets/sheet1.xml");
+		Assert.Contains(Header, sheet);
+		Assert.Contains("<c r=\"E1\" s=\"0\" t=\"inlineStr\"><is><t>Code</t></is></c></row>", sheet);
+		Assert.Matches("<row r=\"2\"><c r=\"A2\" t=\"inlineStr\"><is><t>apple</t></is></c><c r=\"B2\" s=\"[1-9]\"><v>1234.5</v></c>", sheet);
+		Assert.Contains(Header, Written.Entry(table, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>Name</t></is></c>", Written.Entry(unstyled, "xl/worksheets/sheet1.xml"));
+		foreach (var workbook in new[] { plain, table, unstyled })
+		{
+			Assert.Empty(Written.ValidationErrors(workbook));
+			using var book = new XLWorkbook(new MemoryStream(workbook));
+			Assert.Equal((0, false), (book.Worksheet(1).Cell("B1").Style.NumberFormat.NumberFormatId, book.Worksheet(1).Cell("D1").Style.Alignment.WrapText));
+		}
+
+		await ReadsBackAsWithoutTheLook(plain, async);
+	}
+
+	[Theory]
+	[MemberData(nameof(Modes))]
 	public async Task StylesColumnsByTheirMembersAttributesUnlessColumnsHasThem(bool async)
 	{
 		AttributedLookOrder[] records = [new() { Name = "a", Rate = 0.125, Code = "X" }];

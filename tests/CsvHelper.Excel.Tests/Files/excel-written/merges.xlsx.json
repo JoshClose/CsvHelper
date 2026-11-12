@@ -1,0 +1,411 @@
+{
+  "file": "merges.xlsx",
+  "description": "merged cells: down a column before the header and while the rows are written, down and across columns after them, past the rows, under a title, and beside a table",
+  "sha256": "0c6ca59167eb069fcfe1572928e5eba2fac8a5d5865e1d9fbbf56f119a541b84",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Report",
+      "used": "A1:E10",
+      "widths": [
+        6.18,
+        2.64,
+        2.64,
+        2.64,
+        7.18
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Quarterly report",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "Region",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "Q1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "Q2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D2",
+          "value2": "Q3",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E2",
+          "value2": "Notes",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "North",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": 20,
+          "type": "number",
+          "text": "20",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D3",
+          "value2": 30,
+          "type": "number",
+          "text": "30",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E3",
+          "value2": "steady",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 11,
+          "type": "number",
+          "text": "11",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C4",
+          "value2": 21,
+          "type": "number",
+          "text": "21",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D4",
+          "value2": 31,
+          "type": "number",
+          "text": "31",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A5",
+          "value2": "South",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 5,
+          "type": "number",
+          "text": "5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C5",
+          "value2": 6,
+          "type": "number",
+          "text": "6",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D5",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E5",
+          "value2": "growing",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": 8,
+          "type": "number",
+          "text": "8",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C6",
+          "value2": 9,
+          "type": "number",
+          "text": "9",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D6",
+          "value2": 10,
+          "type": "number",
+          "text": "10",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "A7",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": 34,
+          "type": "number",
+          "text": "34",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C7",
+          "value2": 56,
+          "type": "number",
+          "text": "56",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "D7",
+          "value2": 78,
+          "type": "number",
+          "text": "78",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 2,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [
+        "A1:E1",
+        "A3:A4",
+        "E3:E6",
+        "A5:A6",
+        "B9:D10"
+      ],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [
+        {
+          "row": 1,
+          "height": 18.5
+        }
+      ],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "A2",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "bold": true
+        },
+        {
+          "cell": "C2",
+          "bold": true
+        },
+        {
+          "cell": "D2",
+          "bold": true
+        },
+        {
+          "cell": "E2",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        5.82,
+        2.55,
+        2.55,
+        2.55,
+        6.82
+      ]
+    },
+    {
+      "name": "Beside",
+      "used": "A1:F7",
+      "widths": [
+        7.82,
+        7.64,
+        7.18,
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Code",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C2",
+          "value2": "x",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": "y",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "c",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 3,
+          "type": "number",
+          "text": "3",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C4",
+          "value2": "z",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [
+        {
+          "name": "Beside",
+          "range": "A1:C4",
+          "style": "TableStyleMedium2",
+          "stripes": true,
+          "buttons": true,
+          "columns": [
+            "Name",
+            "Value",
+            "Code"
+          ]
+        }
+      ],
+      "merged": [
+        "E2:F3",
+        "D6:D7"
+      ],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        7.36,
+        7.18,
+        6.73,
+        8.09,
+        8.09,
+        8.09
+      ]
+    }
+  ]
+}

@@ -1,0 +1,727 @@
+{
+  "file": "links.xlsx",
+  "description": "links by the default policy, Web: http, https and mailto URIs are links in the Hyperlink style, one shared by two cells, and file, relative and urn URIs text; in a table, in a column's format and wrap, and a header's URI as text",
+  "sha256": "c239bccb4246d1fd764754a2d32ea78f4575d91df34b156b1ebf04344cfc9d31",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Sites",
+      "used": "A1:B10",
+      "widths": [
+        9.91,
+        47.18
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Link",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "https",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "https://example.com/a?b=1&c=2#frag",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "mailto",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "mailto:someone@example.com?subject=Hi%20there",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "upper case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "HTTP://Example.COM",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": "again",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "https://example.com/a?b=1&c=2#frag",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A6",
+          "value2": "past ASCII",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": "https://example.com/caf%C3%A9",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A7",
+          "value2": "file",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": "file:///C:/Temp/report.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A8",
+          "value2": "relative",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": "docs/report.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A9",
+          "value2": "urn",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": "urn:isbn:0451450523",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A10",
+          "value2": "none",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [
+        {
+          "cell": "B2",
+          "address": "https://example.com/a?b=1&c=2",
+          "subAddress": "frag"
+        },
+        {
+          "cell": "B3",
+          "address": "mailto:someone@example.com?subject=Hi%20there",
+          "subAddress": null
+        },
+        {
+          "cell": "B4",
+          "address": "http://example.com/",
+          "subAddress": null
+        },
+        {
+          "cell": "B5",
+          "address": "https://example.com/a?b=1&c=2",
+          "subAddress": "frag"
+        },
+        {
+          "cell": "B6",
+          "address": "https://example.com/café",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B5",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B6",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        9.27,
+        45
+      ]
+    },
+    {
+      "name": "Table",
+      "used": "A1:B10",
+      "widths": [
+        9.91,
+        47.18
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Link",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "https",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "https://example.com/a?b=1&c=2#frag",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "mailto",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "mailto:someone@example.com?subject=Hi%20there",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "upper case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "HTTP://Example.COM",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": "again",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "https://example.com/a?b=1&c=2#frag",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A6",
+          "value2": "past ASCII",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": "https://example.com/caf%C3%A9",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A7",
+          "value2": "file",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": "file:///C:/Temp/report.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A8",
+          "value2": "relative",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": "docs/report.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A9",
+          "value2": "urn",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": "urn:isbn:0451450523",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A10",
+          "value2": "none",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [
+        {
+          "name": "Table",
+          "range": "A1:B10",
+          "style": "TableStyleMedium2",
+          "stripes": true,
+          "buttons": true,
+          "columns": [
+            "Name",
+            "Link"
+          ]
+        }
+      ],
+      "merged": [],
+      "links": [
+        {
+          "cell": "B2",
+          "address": "https://example.com/a?b=1&c=2",
+          "subAddress": "frag"
+        },
+        {
+          "cell": "B3",
+          "address": "mailto:someone@example.com?subject=Hi%20there",
+          "subAddress": null
+        },
+        {
+          "cell": "B4",
+          "address": "http://example.com/",
+          "subAddress": null
+        },
+        {
+          "cell": "B5",
+          "address": "https://example.com/a?b=1&c=2",
+          "subAddress": "frag"
+        },
+        {
+          "cell": "B6",
+          "address": "https://example.com/café",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "B2",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B5",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B6",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        9.27,
+        45
+      ]
+    },
+    {
+      "name": "Styled",
+      "used": "A1:B10",
+      "widths": [
+        9.91,
+        47.18
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Link",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "https",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "https://example.com/a?b=1&c=2#frag",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A3",
+          "value2": "mailto",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "mailto:someone@example.com?subject=Hi%20there",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A4",
+          "value2": "upper case",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "HTTP://Example.COM",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A5",
+          "value2": "again",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "https://example.com/a?b=1&c=2#frag",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A6",
+          "value2": "past ASCII",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": "https://example.com/caf%C3%A9",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A7",
+          "value2": "file",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": "file:///C:/Temp/report.txt",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A8",
+          "value2": "relative",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B8",
+          "value2": "docs/report.txt",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A9",
+          "value2": "urn",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B9",
+          "value2": "urn:isbn:0451450523",
+          "type": "text",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "A10",
+          "value2": "none",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [
+        {
+          "cell": "B2",
+          "address": "https://example.com/a?b=1&c=2",
+          "subAddress": "frag"
+        },
+        {
+          "cell": "B3",
+          "address": "mailto:someone@example.com?subject=Hi%20there",
+          "subAddress": null
+        },
+        {
+          "cell": "B4",
+          "address": "http://example.com/",
+          "subAddress": null
+        },
+        {
+          "cell": "B5",
+          "address": "https://example.com/a?b=1&c=2",
+          "subAddress": "frag"
+        },
+        {
+          "cell": "B6",
+          "address": "https://example.com/café",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink",
+          "wrap": true
+        },
+        {
+          "cell": "B3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink",
+          "wrap": true
+        },
+        {
+          "cell": "B4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink",
+          "wrap": true
+        },
+        {
+          "cell": "B5",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink",
+          "wrap": true
+        },
+        {
+          "cell": "B6",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink",
+          "wrap": true
+        },
+        {
+          "cell": "B7",
+          "wrap": true
+        },
+        {
+          "cell": "B8",
+          "wrap": true
+        },
+        {
+          "cell": "B9",
+          "wrap": true
+        },
+        {
+          "cell": "B10",
+          "wrap": true,
+          "numberFormat": "@"
+        },
+        {
+          "cell": "B11",
+          "wrap": true,
+          "numberFormat": "@"
+        }
+      ],
+      "autoFit": [
+        9.27,
+        45
+      ]
+    },
+    {
+      "name": "Header",
+      "used": "A1:B2",
+      "widths": [
+        26.36,
+        5.36
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "https://example.com/header",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "https://example.com/row",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [
+        {
+          "cell": "A2",
+          "address": "https://example.com/row",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "A2",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        25.09,
+        5.09
+      ]
+    }
+  ]
+}

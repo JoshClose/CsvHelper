@@ -366,7 +366,7 @@ internal static class ExcelOracle
 	/// <summary>A column's letters.</summary>
 	/// <param name="column">The 1-based column.</param>
 	/// <returns>The letters, such as <c>XFD</c>.</returns>
-	private static string ColumnName(int column)
+	internal static string ColumnName(int column)
 	{
 		var name = "";
 		for (; column > 0; column = (column - 1) / 26)
@@ -383,7 +383,7 @@ internal static class ExcelOracle
 	/// </summary>
 	/// <param name="json">The JSON.</param>
 	/// <param name="used">The worksheet's used range.</param>
-	private static void WriteMerged(Utf8JsonWriter json, dynamic used)
+	internal static void WriteMerged(Utf8JsonWriter json, dynamic used)
 	{
 		json.WriteStartArray("merged");
 
@@ -416,7 +416,7 @@ internal static class ExcelOracle
 	/// </summary>
 	/// <param name="json">The JSON.</param>
 	/// <param name="workbook">The workbook.</param>
-	private static void WriteNames(Utf8JsonWriter json, dynamic workbook)
+	internal static void WriteNames(Utf8JsonWriter json, dynamic workbook)
 	{
 		foreach (var sheet in workbook.Worksheets)
 		{

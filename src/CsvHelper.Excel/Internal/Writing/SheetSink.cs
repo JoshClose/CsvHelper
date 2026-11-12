@@ -151,6 +151,9 @@ internal sealed class SheetSink : CsvCellSink
 	// whether a cell's style is more than its own number format: in those rows, and in a sheet whose columns have styles.
 	private CellFont rowFont;
 	private bool styling;
+	// In the header's row of a sheet whose columns may have styles: the header's cells say their style, General's (s="0")
+	// too, since LibreOffice gives a written cell without one its column's style, where Excel gives it General.
+	private bool headerSaysStyle;
 	// The title's merge: the last column of the first record, which it spans; -1 until known, or without a title.
 	private int titleLastColumn = -1;
 	// The first sheet's table's name, and the name of the table of the sheet being written (a number after the first's in
@@ -248,6 +251,7 @@ internal sealed class SheetSink : CsvCellSink
 		boldHeaderWidths = settings.BoldHeader || (settings.HasHeader && settings.Table?.Style is not null);
 		filterButtons = settings.HasHeader && (settings.AutoFilter || settings.Table is { FilterButtons: true });
 		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
+		headerSaysStyle = options.Csv.HasHeader && settings.HasColumns;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
 		firstTableName = this.tableName = options.Csv.HasHeader ? tableName : null;
@@ -449,9 +453,10 @@ internal sealed class SheetSink : CsvCellSink
 			UpdateMeasuring();
 		}
 
-		if (rowFont != CellFont.Regular)
+		if (rowFont != CellFont.Regular || headerSaysStyle)
 		{
 			// The header's row is over.
+			headerSaysStyle = false;
 			SetRowFont(CellFont.Regular);
 		}
 
@@ -1216,6 +1221,10 @@ internal sealed class SheetSink : CsvCellSink
 		if (styling)
 		{
 			style = StyleOf(at, style);
+			if (style == 0 && headerSaysStyle)
+			{
+				output.Append("\" s=\"0"u8);
+			}
 		}
 
 		if (style != 0)
@@ -1246,7 +1255,7 @@ internal sealed class SheetSink : CsvCellSink
 	private void SetRowFont(CellFont font)
 	{
 		rowFont = font;
-		styling = font != CellFont.Regular || columnStyles is not null;
+		styling = font != CellFont.Regular || columnStyles is not null || headerSaysStyle;
 	}
 
 	/// <summary>

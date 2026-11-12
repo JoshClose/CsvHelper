@@ -40,8 +40,12 @@ internal sealed class ExpectedCell
 	/// <summary>A number's <c>Value2</c>, or the serial a formatted value's text reads back as (<see cref="double.NaN"/> when it doesn't).</summary>
 	public double Number { get; init; }
 
-	/// <summary>The type of Excel's <c>Value</c> for a number: <c>number</c>, or <c>date</c> for a value with a day, a month or a year.</summary>
-	public string NumberType { get; init; } = "number";
+	/// <summary>
+	/// The type of Excel's <c>Value</c> for a number: <c>number</c>, or <c>date</c> for a value with a day, a month or a
+	/// year; <see langword="null"/> for any of them and <c>currency</c>, for a number in its column's Excel format, which
+	/// <see cref="Shows"/> checks.
+	/// </summary>
+	public string? NumberType { get; init; } = "number";
 
 	/// <summary>
 	/// Whether a formatted value is a typed cell: its format is one Excel shows the same, and its text reads back, from
@@ -62,10 +66,17 @@ internal sealed class ExpectedCell
 	public string Source { get; init; } = "";
 }
 
+/// <summary>What the writer put in a sheet's parts that Excel's answers are compared with.</summary>
+/// <param name="Codes">Each cell's number format code, by row and 0-based column.</param>
+/// <param name="Widths">Each column's width, by 0-based column.</param>
+/// <param name="Hidden">The hidden columns, 0-based.</param>
+/// <param name="Fitted">The columns auto-fit sized (<c>bestFit</c>), 0-based.</param>
+internal sealed record WrittenParts(Dictionary<(long Row, int Column), string> Codes, Dictionary<int, double> Widths, HashSet<int> Hidden, HashSet<int> Fitted);
+
 /// <summary>
 /// The written set's workbooks as Excel should read them, by rules of their own: every cell from the value the content set
-/// wrote and its column's format and culture, as Phase 4's "What a field becomes" says, and the widths and number formats
-/// from the workbook's own parts.
+/// wrote and its column's format and culture, as Phase 4's "What a field becomes" says, each sheet's look from its
+/// settings, as Phase 5's "What a sheet gets" says, and the widths and number formats from the workbook's own parts.
 /// </summary>
 internal static class WrittenOracle
 {
@@ -95,15 +106,17 @@ internal static class WrittenOracle
 	];
 
 	/// <summary>The built-in number formats the writer uses by id.</summary>
-	private static readonly Dictionary<uint, string> BuiltIn = new()
+	internal static readonly Dictionary<uint, string> BuiltIn = new()
 	{
 		[0] = "General", [1] = "0", [2] = "0.00", [3] = "#,##0", [4] = "#,##0.00", [9] = "0%", [10] = "0.00%", [11] = "0.00E+00", [12] = "# ?/?",
 		[13] = "# ??/??", [46] = "[h]:mm:ss", [48] = "##0.0E+0", [49] = "@",
 	};
 
 	/// <summary>
-	/// The cells of each Excel sheet a workbook becomes, by sheet name, then by row and 0-based column: each sheet's header in
-	/// row 1, repeated in the sheets <see cref="ExcelRowLimit.NewSheet"/> adds, and its rows after it.
+	/// The cells of each Excel sheet a workbook becomes, by sheet name, then by row and 0-based column: each sheet's title in
+	/// row 1 when it has one, its header next (named as its table's columns are, in a table), repeated with the title in the
+	/// sheets <see cref="ExcelRowLimit.NewSheet"/> adds, and its rows after it, a value in a column's Excel format showing
+	/// the text its look says.
 	/// </summary>
 	/// <param name="workbook">The workbook.</param>
 	/// <returns>The cells.</returns>
@@ -113,25 +126,35 @@ internal static class WrittenOracle
 		var options = workbook.Options;
 		foreach (var sheet in workbook.Sheets)
 		{
+			var settings = Settings(workbook, sheet);
+			var columns = ColumnOptions(workbook, sheet);
 			var header = options.Csv.HasHeader ? sheet.Rows[0] : null;
-			var data = sheet.Rows.Skip(header is null ? 0 : 1).ToList();
-			var perSheet = workbook.MaxRows is { } rows ? rows - (header is null ? 0 : 1) : int.MaxValue;
-			var chunks = Enumerable.Range(0, Math.Max(1, (data.Count + perSheet - 1) / perSheet)).Select(i => data.Skip(i * perSheet).Take(perSheet).ToList()).ToList();
-			Assert.True(chunks.Count == sheet.Names.Count, $"{sheet.Name} becomes {chunks.Count} sheets, and the content set names {sheet.Names.Count}.");
+			var firstRow = settings.Title is null ? 1 : 2;
 			var shows = sheet.Columns.Select(c => c.Name).ToList().IndexOf("Shows");
-			for (var i = 0; i < chunks.Count; i++)
+			var data = 0;
+			foreach (var (name, chunk) in Chunks(workbook, sheet))
 			{
-				var name = sheet.Names[i];
 				var cells = new Dictionary<(long, int), ExpectedCell>();
-				var lines = header is null ? chunks[i] : [header, .. chunks[i]];
+				if (settings.Title is { } title)
+				{
+					cells[(1, 0)] = Text(title, $"{new SheetLocation(name).Cell(0, 1)} the title");
+				}
+
+				var lines = header is null ? chunk : [header, .. chunk];
 				for (var r = 0; r < lines.Count; r++)
 				{
+					var row = firstRow + r;
 					var isHeader = header is not null && r == 0;
 					for (var c = 0; c < lines[r].Count; c++)
 					{
 						var column = sheet.Columns[c];
-						var source = $"{new SheetLocation(name).Cell(c, r + 1)} [{column.Format}] [{column.Culture}] {lines[r][c]?.GetType().Name ?? "null"}";
-						var expected = isHeader ? Expect(lines[r][c], null, null, options, source) : Expect(lines[r][c], column.Format, column.Culture, options, source);
+						var value = lines[r][c];
+						var source = $"{new SheetLocation(name).Cell(c, row)} [{column.Format}] [{column.Culture}] {value?.GetType().Name ?? "null"}";
+						var expected = isHeader
+							? settings.Table is null ? Expect(value, null, null, options, source) : Text(sheet.Look.TableColumns?[c] ?? (string)value!, source + " a table's column")
+							: columns[c]?.Format is { } code
+								? InFormat(value, code, sheet.Look.Shows.TryGetValue(column.Name, out var texts) ? texts[data + r - (header is null ? 0 : 1)] : null, options, source + $" in {code}")
+								: Expect(value, column.Format, column.Culture, options, source);
 						if (expected is { Kind: ExpectedKind.Formula })
 						{
 							Assert.True(shows >= 0, $"{sheet.Name} has a formula, and no Shows column for the text Excel shows of it.");
@@ -140,16 +163,121 @@ internal static class WrittenOracle
 
 						if (expected is not null)
 						{
-							cells[(r + 1, c)] = expected;
+							cells[(row, c)] = expected;
 						}
 					}
 				}
 
+				data += chunk.Count;
 				result.Add((name, cells));
 			}
 		}
 
 		return result;
+	}
+
+	/// <summary>
+	/// The sheets a sheet of the set becomes, with their data rows: each holds the workbook's <see cref="WrittenWorkbook.MaxRows"/>
+	/// less its title's and header's rows, and the content set must name each.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="sheet">The sheet.</param>
+	/// <returns>Each sheet's name and data rows.</returns>
+	public static List<(string Name, List<IReadOnlyList<object?>> Rows)> Chunks(WrittenWorkbook workbook, WrittenSheet sheet)
+	{
+		var hasHeader = workbook.Options.Csv.HasHeader;
+		var data = sheet.Rows.Skip(hasHeader ? 1 : 0).ToList();
+		var perSheet = workbook.MaxRows is { } rows ? rows - (hasHeader ? 1 : 0) - (Settings(workbook, sheet).Title is null ? 0 : 1) : int.MaxValue;
+		var chunks = Enumerable.Range(0, Math.Max(1, (data.Count + perSheet - 1) / perSheet)).Select(i => data.Skip(i * perSheet).Take(perSheet).ToList()).ToList();
+		Assert.True(chunks.Count == sheet.Names.Count, $"{sheet.Name} becomes {chunks.Count} sheets, and the content set names {sheet.Names.Count}.");
+
+		return [.. chunks.Select((c, i) => (sheet.Names[i], c))];
+	}
+
+	/// <summary>
+	/// A sheet's settings, as the plan's "Where the settings come from" says: the options it is added with, else its record
+	/// type's <see cref="ExcelSheetAttribute"/>, else the workbook's <see cref="ExcelWriterOptions.Sheets"/>, each whole.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="sheet">The sheet.</param>
+	/// <returns>The settings.</returns>
+	public static ExcelSheetOptions Settings(WrittenWorkbook workbook, WrittenSheet sheet)
+	{
+		if (sheet.Look.Options is { } given)
+		{
+			return given;
+		}
+
+		if (sheet.Attribute is { } attribute)
+		{
+			return new ExcelSheetOptions
+			{
+				Title = attribute.Title,
+				BoldHeader = attribute.BoldHeader,
+				FreezeHeader = attribute.FreezeHeader,
+				FreezeColumns = attribute.FreezeColumns,
+				AutoFilter = attribute.AutoFilter,
+				Table = attribute.Table ? new ExcelTableOptions { Name = attribute.TableName, Style = attribute.TableStyle } : null,
+				AutoFit = attribute.AutoFit,
+				MaxAutoFitWidth = attribute.MaxAutoFitWidth,
+			};
+		}
+
+		return workbook.Options.Sheets;
+	}
+
+	/// <summary>
+	/// Each column's options, as the plan says: its entry in the settings' <see cref="ExcelSheetOptions.Columns"/> by its
+	/// header's name, else its member's <see cref="ExcelColumnAttribute"/> (a width of 0 for none), each whole.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="sheet">The sheet.</param>
+	/// <returns>Each column's options, or <see langword="null"/> for none.</returns>
+	public static ExcelColumnOptions?[] ColumnOptions(WrittenWorkbook workbook, WrittenSheet sheet)
+	{
+		var given = Settings(workbook, sheet).Columns;
+
+		return
+		[
+			.. sheet.Columns.Select(c => given is not null && given.TryGetValue(c.Name, out var options)
+				? options
+				: c.Excel is { } attribute
+					? new ExcelColumnOptions { Width = attribute.Width == 0 ? null : attribute.Width, Format = attribute.Format, Wrap = attribute.Wrap, Hidden = attribute.Hidden }
+					: null),
+		];
+	}
+
+	/// <summary>
+	/// A field's cell in its column's Excel format: a number, a date (its serial, rounded to the millisecond), a boolean or
+	/// text, as without the format, showing the text the content set says.
+	/// </summary>
+	/// <param name="value">The value written.</param>
+	/// <param name="code">The column's format code.</param>
+	/// <param name="shows">The text Excel shows, or <see langword="null"/> where the content set doesn't say.</param>
+	/// <param name="options">The workbook's options.</param>
+	/// <param name="source">What the cell holds, for messages.</param>
+	/// <returns>The cell, or <see langword="null"/> for none.</returns>
+	private static ExpectedCell? InFormat(object? value, string code, string? shows, ExcelWriterOptions options, string source)
+	{
+		var plain = value switch
+		{
+			DateTime date => new ExpectedCell { Kind = ExpectedKind.Number, Number = Serial(Round(date)), Source = source },
+			_ => Expect(value, null, null, options, source),
+		};
+		if (plain is null)
+		{
+			return null;
+		}
+
+		Assert.True(plain.Kind == ExpectedKind.Text || shows is not null, $"{source}: the content set doesn't say what Excel shows in {code}.");
+
+		return plain.Kind switch
+		{
+			ExpectedKind.Number => new ExpectedCell { Kind = ExpectedKind.Number, Number = plain.Number, NumberType = null, Shows = shows, Source = source },
+			ExpectedKind.Boolean => new ExpectedCell { Kind = ExpectedKind.Boolean, Boolean = plain.Boolean, Shows = shows, Source = source },
+			ExpectedKind.Text => new ExpectedCell { Kind = ExpectedKind.Text, Text = plain.Text, Shows = shows, Source = source },
+			_ => plain,
+		};
 	}
 
 	/// <summary>A field's cell, from its value, its column's format and culture, and the options.</summary>
@@ -216,9 +344,243 @@ internal static class WrittenOracle
 				return Float(double.Parse(Shortest(number), CultureInfo.InvariantCulture), number.ToString(CultureInfo.InvariantCulture), source);
 			case sbyte or byte or short or ushort or int or uint or long or ulong or decimal:
 				return Integer((IFormattable)value, provider, options, source);
+			case Uri uri:
+				// The URI as given, whether a link or not; the written set's URIs written by hand are the same as their text.
+				return Text(uri.OriginalString, source);
 			default:
 				return Text(value.ToString()!, source);
 		}
+	}
+
+	/// <summary>
+	/// Each Excel sheet's look, as the plan's "What a sheet gets" says, from each sheet's settings and the values written:
+	/// the frozen pane over the header's rows and the frozen columns; the filter over the header and the rows below it,
+	/// without a table; the table, named as its look says; the title's merge over the header's columns, and the ranges
+	/// merged by hand; a link in each cell of a URI the policy takes, outside the header; the hidden columns; the title's row
+	/// and the rows whose text wraps (a line break, or more characters than its column's width) taller than standard; and
+	/// each cell's look from row 1 to the row below the used range: the title in bold Calibri 14, the header bold but in a
+	/// styled table, a link's cell in the <c>Hyperlink</c> style, and a column's wrap in its cells, and its format and wrap
+	/// in a cell not written.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="used">The used range of each sheet as Excel answered it, by name: the last row and 0-based column.</param>
+	/// <returns>Each sheet's name and look.</returns>
+	public static List<(string Sheet, SheetLook Look)> Looks(WrittenWorkbook workbook, IReadOnlyDictionary<string, (long Row, int Column)> used)
+	{
+		var result = new List<(string, SheetLook)>();
+		var cells = Cells(workbook).ToDictionary(s => s.Sheet, s => s.Cells);
+		foreach (var sheet in workbook.Sheets)
+		{
+			var settings = Settings(workbook, sheet);
+			var columns = ColumnOptions(workbook, sheet);
+			var count = sheet.Rows[0].Count;
+			var last = CellReference.ColumnName(count - 1);
+			var header = settings.Title is null ? 1 : 2;
+			var chunks = Chunks(workbook, sheet);
+			for (var i = 0; i < chunks.Count; i++)
+			{
+				var (name, rows) = chunks[i];
+				var lastRow = header + rows.Count;
+				var written = cells[name];
+				var merged = new List<string>();
+				if (settings.Title is not null && count > 1)
+				{
+					merged.Add($"A1:{last}1");
+				}
+
+				if (i == 0)
+				{
+					merged.AddRange(sheet.Look.Merges.Select(m => m.Range));
+				}
+
+				var links = new List<SheetLink>();
+				var tall = new List<long>();
+				if (settings.Title is not null)
+				{
+					tall.Add(1);
+				}
+
+				for (var r = 0; r < rows.Count; r++)
+				{
+					var row = header + 1 + r;
+					for (var c = 0; c < rows[r].Count; c++)
+					{
+						if (rows[r][c] is Uri uri && Takes(workbook.Options.Links, uri))
+						{
+							var (address, subAddress) = LinkOf(uri);
+							links.Add(new SheetLink(CellReference.ColumnName(c) + row.ToString(CultureInfo.InvariantCulture), address, subAddress));
+						}
+
+						if (columns[c] is { Wrap: true } wrap && rows[r][c] is string text && (text.Contains('\n') || text.Length > (wrap.Width ?? double.MaxValue)))
+						{
+							tall.Add(row);
+						}
+					}
+				}
+
+				var looks = new Dictionary<string, string>(StringComparer.Ordinal);
+				var (usedRow, usedColumn) = used[name];
+				for (var row = 1L; row <= usedRow + 1; row++)
+				{
+					for (var c = 0; c <= usedColumn; c++)
+					{
+						var column = c < columns.Length ? columns[c] : null;
+						var reference = CellReference.ColumnName(c) + row.ToString(CultureInfo.InvariantCulture);
+						string[] parts = !written.ContainsKey((row, c))
+							? [column is { Wrap: true } ? "wrap" : "", column?.Format is { } code ? "format " + ExcelCode(code) : ""]
+							: row == 1 && settings.Title is not null
+								? ["bold", "size 14"]
+								: row == header
+									? [settings.BoldHeader && settings.Table?.Style is null ? "bold" : ""]
+									: [links.Any(l => l.Cell == reference) ? "Hyperlink" : "", column is { Wrap: true } ? "wrap" : ""];
+						var look = string.Join(", ", parts.Where(p => p.Length > 0));
+						if (look.Length > 0)
+						{
+							looks[reference] = look;
+						}
+					}
+				}
+
+				result.Add((name, new SheetLook
+				{
+					Freeze = (settings.FreezeHeader ? header : 0, settings.FreezeColumns) is var (frozenRows, frozenColumns) && (frozenRows > 0 || frozenColumns > 0) ? (frozenRows, frozenColumns) : null,
+					Filter = settings.AutoFilter && settings.Table is null ? $"A{header}:{last}{Math.Max(lastRow, header)}" : null,
+					Tables = settings.Table is { } table
+						?
+						[
+							new SheetTable(
+								sheet.Look.Tables![i], $"A{header}:{last}{Math.Max(lastRow, header + 1)}", StyleName(table.Style), table.BandedRows, table.FilterButtons,
+								sheet.Look.TableColumns ?? [.. sheet.Rows[0].Select(n => (string)n!)]),
+						]
+						: [],
+					Merged = merged,
+					Links = links,
+					HiddenColumns = [.. columns.Select((o, c) => (o, c)).Where(x => x.o is { Hidden: true }).Select(x => CellReference.ColumnName(x.c))],
+					TallRows = tall,
+					Cells = looks,
+				}));
+			}
+		}
+
+		return result;
+	}
+
+	/// <summary>
+	/// The hidden names Excel gives the workbook's filters, as Excel writes them: <c>_FilterDatabase</c> of each filtered
+	/// sheet, over the filter's range, with the sheet's name quoted as in formulas.
+	/// </summary>
+	/// <param name="looks">Each sheet's look (<see cref="Looks"/>).</param>
+	/// <returns>The names.</returns>
+	public static List<WrittenName> FilterNames(IEnumerable<(string Sheet, SheetLook Look)> looks) =>
+	[
+		.. looks.Where(l => l.Look.Filter is not null).Select(l =>
+		{
+			var sheet = SheetLocation.Quote(l.Sheet);
+			var corners = l.Look.Filter!.Split(':');
+
+			return new WrittenName(sheet + "!_FilterDatabase", $"={sheet}!{Absolute(corners[0])}:{Absolute(corners[1])}", false);
+		}),
+	];
+
+	/// <summary>
+	/// A format code as Excel's <c>NumberFormat</c> gives it: a dollar sign in quotes, which needs none, without them. The
+	/// written set's codes need no other change.
+	/// </summary>
+	/// <param name="code">The code written.</param>
+	/// <returns>The code Excel gives.</returns>
+	public static string ExcelCode(string code) => code.Replace("\"$\"", "$");
+
+	/// <summary>Whether a policy makes a URI a link: <see cref="ExcelLinks.Web"/> an absolute http, https or mailto URI, <see cref="ExcelLinks.All"/> any.</summary>
+	/// <param name="links">The policy.</param>
+	/// <param name="uri">The URI.</param>
+	/// <returns>Whether it is a link.</returns>
+	private static bool Takes(ExcelLinks links, Uri uri) => links switch
+	{
+		ExcelLinks.All => true,
+		ExcelLinks.Web => uri.IsAbsoluteUri && uri.Scheme is "http" or "https" or "mailto",
+		_ => false,
+	};
+
+	/// <summary>
+	/// A link's <c>Address</c> and <c>SubAddress</c> as Excel shows them, by the test's own rules: a jump within the
+	/// workbook (<c>#Other!B2</c>) has no address; a relative URI's address is its text; a file's is its local path; and
+	/// another's is its absolute form, its fragment the sub-address. Escaped letters past ASCII show as the letters.
+	/// </summary>
+	/// <param name="uri">The URI.</param>
+	/// <returns>The address and sub-address.</returns>
+	internal static (string? Address, string? SubAddress) LinkOf(Uri uri)
+	{
+		if (!uri.IsAbsoluteUri)
+		{
+			return uri.OriginalString.StartsWith("#", StringComparison.Ordinal) ? (null, uri.OriginalString.Substring(1)) : (PastAscii(uri.OriginalString), null);
+		}
+
+		if (uri.IsFile)
+		{
+			return (uri.LocalPath, null);
+		}
+
+		var absolute = uri.AbsoluteUri;
+		var hash = absolute.IndexOf('#');
+
+		return hash < 0 ? (PastAscii(absolute), null) : (PastAscii(absolute.Substring(0, hash)), absolute.Substring(hash + 1));
+	}
+
+	/// <summary>A text with its escapes of UTF-8 past ASCII (<c>%C3%A9</c>) decoded, and its escapes of ASCII kept.</summary>
+	/// <param name="text">The text.</param>
+	/// <returns>The text decoded.</returns>
+	private static string PastAscii(string text)
+	{
+		var result = new StringBuilder();
+		var bytes = new List<byte>();
+		for (var i = 0; i < text.Length; i++)
+		{
+			if (text[i] == '%' && i + 2 < text.Length && byte.TryParse(text.Substring(i + 1, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var b) && b >= 0x80)
+			{
+				bytes.Add(b);
+				i += 2;
+
+				continue;
+			}
+
+			result.Append(Encoding.UTF8.GetString([.. bytes]));
+			bytes.Clear();
+			result.Append(text[i]);
+		}
+
+		return result.Append(Encoding.UTF8.GetString([.. bytes])).ToString();
+	}
+
+	/// <summary>A table style's name as Excel gives it: a built-in's in Excel's case, or <see langword="null"/> for none.</summary>
+	/// <param name="style">The style given.</param>
+	/// <returns>The name.</returns>
+	private static string? StyleName(string? style)
+	{
+		if (style is null)
+		{
+			return null;
+		}
+
+		foreach (var kind in new[] { "Light", "Medium", "Dark" })
+		{
+			var prefix = "TableStyle" + kind;
+			if (style.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+			{
+				return prefix + style.Substring(prefix.Length);
+			}
+		}
+
+		return style;
+	}
+
+	/// <summary>A cell reference made absolute, as Excel writes a defined name's.</summary>
+	/// <param name="reference">The reference, such as <c>A1</c>.</param>
+	/// <returns>The reference, such as <c>$A$1</c>.</returns>
+	private static string Absolute(string reference)
+	{
+		var letters = new string([.. reference.TakeWhile(char.IsLetter)]);
+
+		return "$" + letters + "$" + reference.Substring(letters.Length);
 	}
 
 	/// <summary>
@@ -243,19 +605,20 @@ internal static class WrittenOracle
 	}
 
 	/// <summary>
-	/// The number format code and the column widths the writer gave each sheet, from the workbook's parts (through the Open
-	/// XML SDK): each cell's code by row and 0-based column, and each column's width, 0-based.
+	/// The number format code and the columns the writer gave each sheet, from the workbook's parts (through the Open XML
+	/// SDK): each cell's code by row and 0-based column, and each column's width, whether it is hidden, and whether auto-fit
+	/// sized it (<c>bestFit</c>), 0-based.
 	/// </summary>
 	/// <param name="workbook">The workbook's bytes.</param>
-	/// <returns>Each sheet's codes and widths, by name.</returns>
-	public static Dictionary<string, (Dictionary<(long Row, int Column), string> Codes, Dictionary<int, double> Widths)> Parts(byte[] workbook)
+	/// <returns>Each sheet's parts, by name.</returns>
+	public static Dictionary<string, WrittenParts> Parts(byte[] workbook)
 	{
 		using var document = SpreadsheetDocument.Open(new MemoryStream(workbook), false);
 		var part = document.WorkbookPart!;
 		var stylesheet = part.WorkbookStylesPart!.Stylesheet!;
 		var custom = stylesheet.NumberingFormats?.Elements<NumberingFormat>().ToDictionary(n => n.NumberFormatId!.Value, n => n.FormatCode!.Value!) ?? [];
 		var formats = stylesheet.CellFormats!.Elements<CellFormat>().Select(f => f.NumberFormatId?.Value ?? 0).ToList();
-		var result = new Dictionary<string, (Dictionary<(long, int), string>, Dictionary<int, double>)>();
+		var result = new Dictionary<string, WrittenParts>();
 		foreach (var sheet in part.Workbook!.Sheets!.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>())
 		{
 			var worksheet = ((WorksheetPart)part.GetPartById(sheet.Id!)).Worksheet!;
@@ -270,15 +633,26 @@ internal static class WrittenOracle
 			}
 
 			var widths = new Dictionary<int, double>();
+			var hidden = new HashSet<int>();
+			var fitted = new HashSet<int>();
 			foreach (var column in worksheet.Descendants<Column>())
 			{
-				for (var c = column.Min!.Value; c <= column.Max!.Value; c++)
+				for (var c = (int)column.Min!.Value - 1; c < column.Max!.Value; c++)
 				{
-					widths[(int)c - 1] = column.Width!.Value;
+					widths[c] = column.Width!.Value;
+					if (column.Hidden?.Value == true)
+					{
+						hidden.Add(c);
+					}
+
+					if (column.BestFit?.Value == true)
+					{
+						fitted.Add(c);
+					}
 				}
 			}
 
-			result[DecodeName(sheet.Name!.Value!)] = (codes, widths);
+			result[DecodeName(sheet.Name!.Value!)] = new WrittenParts(codes, widths, hidden, fitted);
 		}
 
 		return result;

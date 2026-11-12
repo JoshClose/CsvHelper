@@ -1,0 +1,950 @@
+{
+  "file": "filters.xlsx",
+  "description": "autofilters, with their hidden _FilterDatabase names: over the rows, under a title in a sheet whose name needs quotes, over a header alone with an empty field at its end, and with a frozen column in a sheet whose name reads as an escape",
+  "sha256": "8af2fff7fd4757afd5acac55797ef8ec332076388ab3c83f64bbead5cecf116d",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [
+    {
+      "name": "a_x0041_b!_FilterDatabase",
+      "refersTo": "=a_x0041_b!$A$1:$B$2",
+      "sheet": "a_x0041_b",
+      "range": "A1:B2",
+      "visible": false
+    },
+    {
+      "name": "'Bob''s orders'!_FilterDatabase",
+      "refersTo": "='Bob''s orders'!$A$2:$H$5",
+      "sheet": "Bob's orders",
+      "range": "A2:H5",
+      "visible": false
+    },
+    {
+      "name": "Header!_FilterDatabase",
+      "refersTo": "=Header!$A$1:$C$1",
+      "sheet": "Header",
+      "range": "A1:C1",
+      "visible": false
+    },
+    {
+      "name": "Orders!_FilterDatabase",
+      "refersTo": "=Orders!$A$1:$H$6",
+      "sheet": "Orders",
+      "range": "A1:H6",
+      "visible": false
+    }
+  ],
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:H6",
+      "widths": [
+        5.55,
+        12.55,
+        21.91,
+        11.91,
+        6.55,
+        11.55,
+        40.18,
+        26.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Id",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Customer",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Placed",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "Paid",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "Took",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "Site",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "Note",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": "Ada",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "D2",
+          "value2": 12.5,
+          "type": "number",
+          "text": "12.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E2",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F2",
+          "value2": 0.041666666666666664,
+          "type": "number",
+          "text": "1:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "G2",
+          "value2": "https://example.com/orders/1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H2",
+          "value2": "first",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": 22,
+          "type": "number",
+          "text": "22",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": "Grace Hopper",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C3",
+          "value2": 45307.43755787037,
+          "type": "date",
+          "text": "2024-01-16 10:30:05",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "D3",
+          "value2": 1234567.891,
+          "type": "number",
+          "text": "1234567.891",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E3",
+          "value2": false,
+          "type": "boolean",
+          "text": "FALSE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F3",
+          "value2": 1.08546875,
+          "type": "number",
+          "text": "26:03:04.500",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "G3",
+          "value2": "https://example.com/orders/22",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": 333,
+          "type": "number",
+          "text": "333",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B4",
+          "value2": "Ken",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C4",
+          "value2": 45351.999999988424,
+          "type": "date",
+          "text": "2024-02-29 23:59:59.999",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "D4",
+          "value2": -0.5,
+          "type": "number",
+          "text": "-0.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E4",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F4",
+          "value2": 400,
+          "type": "number",
+          "text": "9600:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "G4",
+          "value2": "mailto:ken@example.com",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H4",
+          "value2": "a note longer than the others",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": 4444,
+          "type": "number",
+          "text": "4444",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B5",
+          "value2": "名前",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C5",
+          "value2": 45657.5,
+          "type": "date",
+          "text": "2024-12-31 12:00:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "D5",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E5",
+          "value2": false,
+          "type": "boolean",
+          "text": "FALSE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F5",
+          "value2": 0,
+          "type": "number",
+          "text": "0:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "A6",
+          "value2": 55555,
+          "type": "number",
+          "text": "55555",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B6",
+          "value2": "Zoë",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C6",
+          "value2": 61,
+          "type": "date",
+          "text": "1900-03-01",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "D6",
+          "value2": 99999999.99,
+          "type": "number",
+          "text": "99999999.99",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E6",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F6",
+          "value2": 0.0625,
+          "type": "number",
+          "text": "1:30:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "G6",
+          "value2": "https://example.com/orders/55555?x=1#top",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H6",
+          "value2": "last",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": "A1:H6",
+      "tables": [],
+      "merged": [],
+      "links": [
+        {
+          "cell": "G2",
+          "address": "https://example.com/orders/1",
+          "subAddress": null
+        },
+        {
+          "cell": "G3",
+          "address": "https://example.com/orders/22",
+          "subAddress": null
+        },
+        {
+          "cell": "G4",
+          "address": "mailto:ken@example.com",
+          "subAddress": null
+        },
+        {
+          "cell": "G6",
+          "address": "https://example.com/orders/55555?x=1",
+          "subAddress": "top"
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        },
+        {
+          "cell": "D1",
+          "bold": true
+        },
+        {
+          "cell": "E1",
+          "bold": true
+        },
+        {
+          "cell": "F1",
+          "bold": true
+        },
+        {
+          "cell": "G1",
+          "bold": true
+        },
+        {
+          "cell": "H1",
+          "bold": true
+        },
+        {
+          "cell": "G2",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "G3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "G4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "G6",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        5.18,
+        11.73,
+        20.82,
+        11.18,
+        6.09,
+        10.82,
+        38.18,
+        24.82
+      ]
+    },
+    {
+      "name": "Bob's orders",
+      "used": "A1:H5",
+      "widths": [
+        4.36,
+        12.55,
+        21.91,
+        11.91,
+        6.55,
+        11.55,
+        28.82,
+        26.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Bob's orders",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "Id",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "Customer",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "Placed",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D2",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E2",
+          "value2": "Paid",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F2",
+          "value2": "Took",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G2",
+          "value2": "Site",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H2",
+          "value2": "Note",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": "Ada",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C3",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "D3",
+          "value2": 12.5,
+          "type": "number",
+          "text": "12.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E3",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F3",
+          "value2": 0.041666666666666664,
+          "type": "number",
+          "text": "1:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "G3",
+          "value2": "https://example.com/orders/1",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H3",
+          "value2": "first",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": 22,
+          "type": "number",
+          "text": "22",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B4",
+          "value2": "Grace Hopper",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C4",
+          "value2": 45307.43755787037,
+          "type": "date",
+          "text": "2024-01-16 10:30:05",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "D4",
+          "value2": 1234567.891,
+          "type": "number",
+          "text": "1234567.891",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E4",
+          "value2": false,
+          "type": "boolean",
+          "text": "FALSE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F4",
+          "value2": 1.08546875,
+          "type": "number",
+          "text": "26:03:04.500",
+          "numberFormat": "[h]:mm:ss.000",
+          "category": "G",
+          "elapsed": "36:00:00.000"
+        },
+        {
+          "cell": "G4",
+          "value2": "https://example.com/orders/22",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": 333,
+          "type": "number",
+          "text": "333",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B5",
+          "value2": "Ken",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C5",
+          "value2": 45351.999999988424,
+          "type": "date",
+          "text": "2024-02-29 23:59:59.999",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss.000",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00.000"
+        },
+        {
+          "cell": "D5",
+          "value2": -0.5,
+          "type": "number",
+          "text": "-0.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "E5",
+          "value2": true,
+          "type": "boolean",
+          "text": "TRUE",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F5",
+          "value2": 400,
+          "type": "number",
+          "text": "9600:00:00",
+          "numberFormat": "[h]:mm:ss",
+          "category": "G",
+          "elapsed": "36:00:00"
+        },
+        {
+          "cell": "G5",
+          "value2": "mailto:ken@example.com",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H5",
+          "value2": "a note longer than the others",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 2,
+        "columns": 0
+      },
+      "filter": "A2:H5",
+      "tables": [],
+      "merged": [
+        "A1:H1"
+      ],
+      "links": [
+        {
+          "cell": "G3",
+          "address": "https://example.com/orders/1",
+          "subAddress": null
+        },
+        {
+          "cell": "G4",
+          "address": "https://example.com/orders/22",
+          "subAddress": null
+        },
+        {
+          "cell": "G5",
+          "address": "mailto:ken@example.com",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [
+        {
+          "row": 1,
+          "height": 18.5
+        }
+      ],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "A2",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "bold": true
+        },
+        {
+          "cell": "C2",
+          "bold": true
+        },
+        {
+          "cell": "D2",
+          "bold": true
+        },
+        {
+          "cell": "E2",
+          "bold": true
+        },
+        {
+          "cell": "F2",
+          "bold": true
+        },
+        {
+          "cell": "G2",
+          "bold": true
+        },
+        {
+          "cell": "H2",
+          "bold": true
+        },
+        {
+          "cell": "G3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "G4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "G5",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        4.09,
+        11.73,
+        20.82,
+        11.18,
+        6.09,
+        10.82,
+        27.27,
+        24.82
+      ]
+    },
+    {
+      "name": "Header",
+      "used": "A1:B1",
+      "widths": [
+        7.82,
+        7.64
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": "A1:C1",
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        7.36,
+        7.18
+      ]
+    },
+    {
+      "name": "a_x0041_b",
+      "used": "A1:B2",
+      "widths": [
+        3.82,
+        3.82
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "A",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "B",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": 2,
+          "type": "number",
+          "text": "2",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 1
+      },
+      "filter": "A1:B2",
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        3.64,
+        3.55
+      ]
+    }
+  ]
+}

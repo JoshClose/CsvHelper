@@ -4,9 +4,11 @@
   "sha256": "4216341d65697e7320e4c946d8d559b3ad92365944a820c38e80c0feb5b4e3cf",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
+  "names": [],
   "sheets": [
     {
       "name": "Q&A <1>",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -26,10 +28,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        7.55
       ]
     },
     {
       "name": "\"Quoted\"",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -49,10 +64,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        8.09
       ]
     },
     {
       "name": "a_x0041_b",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -72,10 +100,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        9.18
       ]
     },
     {
       "name": "History",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -95,10 +136,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        6.09
       ]
     },
     {
       "name": "日本",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -118,10 +172,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        4.18
       ]
     },
     {
       "name": " spaced ",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -141,10 +208,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        6.91
       ]
     },
     {
       "name": "TRUE",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -164,10 +244,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        4.55
       ]
     },
     {
       "name": "A1",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -187,10 +280,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        2.36
       ]
     },
     {
       "name": "R1C1",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -210,10 +316,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        4.36
       ]
     },
     {
       "name": "123",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -233,10 +352,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        3.18
       ]
     },
     {
       "name": "=a",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -256,10 +388,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        2.18
       ]
     },
     {
       "name": "+a",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -279,10 +424,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        2.18
       ]
     },
     {
       "name": "!#$%&;,",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -302,10 +460,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        6.64
       ]
     },
     {
       "name": "Bob's",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -325,10 +496,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        4.73
       ]
     },
     {
       "name": "ab",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -348,10 +532,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        2.27
       ]
     },
     {
       "name": "a​b",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -371,10 +568,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        2.27
       ]
     },
     {
       "name": "Ａ",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -394,10 +604,23 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        2.18
       ]
     },
     {
       "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\uD83D\uDE00",
+      "used": "A1:A2",
       "widths": [
         8.09
       ],
@@ -417,6 +640,18 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        29.73
       ]
     }
   ]

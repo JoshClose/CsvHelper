@@ -4,9 +4,22 @@
   "sha256": "dd858907d371a52256ef0835f5ea3edfc97331c12b96bed538e5124bf2ed31c6",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
+  "names": [
+    {
+      "name": "_xlfn.SINGLE",
+      "refersTo": "=#NAME?",
+      "visible": false
+    },
+    {
+      "name": "_xlfn.XLOOKUP",
+      "refersTo": "=#NAME?",
+      "visible": false
+    }
+  ],
   "sheets": [
     {
       "name": "Calc",
+      "used": "A1:E18",
       "widths": [
         8.09,
         8.09,
@@ -431,10 +444,27 @@
           "type": "text",
           "numberFormat": "General"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        24.09,
+        1.36,
+        1.27,
+        12.64,
+        12.64
       ]
     },
     {
       "name": "Q1 Data",
+      "used": "A1",
       "widths": [
         8.09
       ],
@@ -445,10 +475,23 @@
           "type": "text",
           "numberFormat": "General"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        6.18
       ]
     },
     {
       "name": "Records",
+      "used": "A1:D4",
       "widths": [
         8.09,
         8.09,
@@ -566,6 +609,21 @@
           "category": "G",
           "elapsed": "1.5"
         }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "autoFit": [
+        1.36,
+        1.27,
+        4.36,
+        5.55
       ]
     }
   ]

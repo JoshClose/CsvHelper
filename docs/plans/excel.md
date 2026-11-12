@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -5221,7 +5221,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 5: presentation (M)
 
-Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show. Step 3 (auto-fit) was built, approved, with every recommendation, and committed 2026-11-09: columns are as wide as their held cells, as Excel's AutoFit makes them, and no typed cell shows `########` in Excel. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10: filters with their hidden names, tables whose header Excel's own rule names, and merged cells open in Excel and LibreOffice, and `NewSheet` repeats the filter and the table. Step 5 (links) was built, approved, with every recommendation, and committed that day: `Uri` fields are links in the `Hyperlink` style, as the policy says, within Excel's limits. The corpus and its oracles are step 6.
+Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show. Step 3 (auto-fit) was built, approved, with every recommendation, and committed 2026-11-09: columns are as wide as their held cells, as Excel's AutoFit makes them, and no typed cell shows `########` in Excel. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10: filters with their hidden names, tables whose header Excel's own rule names, and merged cells open in Excel and LibreOffice, and `NewSheet` repeats the filter and the table. Step 5 (links) was built, approved, with every recommendation, and committed that day: `Uri` fields are links in the `Hyperlink` style, as the policy says, within Excel's limits. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11: ten presentation workbooks in the `written` set, with Excel's answers about their look and its own AutoFit, ClosedXML and LibreOffice compared beside them, and a writer fix found by LibreOffice (a header cell in General says so); see its "As built".
 
 Scope, as planned:
 
@@ -5477,7 +5477,7 @@ None. A `Uri` field already reaches the sink typed (Phase 0), the sink writes th
 4. **Filters, merges and tables (M):** `autoFilter` and its name, `MergeCells`, `TableWriter` and `TableNames`, and `NewSheet`'s repeats.
 5. **Links (S):** `SheetLinks`, the relationships, the `Hyperlink` style, the policy and the cap.
 6. **Corpus and oracles (M):** the presentation workbooks in `written`, Excel's answers, LibreOffice and ClosedXML.
-7. **Security, fuzzing and AOT (S).**
+7. **Security, fuzzing and AOT (S).** (Added at step 6's review: durations of Excel's last serial or more are written as text, as `OutOfRangeDates` says; see step 6's "Left open".)
 8. **Benchmarks (S).**
 9. **"As built" (S).**
 
@@ -5805,6 +5805,108 @@ Filled in step by step; the code is the reference.
   - `StyleRegistryTests.PutsALinksCellFormatsInTheHyperlinkCellStyle`; `TableWriterTests`' relationship; `TypedCellsTests`' kind of `Uri`.
   - Every CsvHelper.Excel suite passes, with 0 warnings: 3,319 tests on .NET 10 and on .NET 8, and 3,271 on .NET Framework, each with the 4 GiB Zip64 test skipped as opt-in. The corpus's pinned hashes still match.
 - **The per-cell cost** (a `Uri` field's text parsed as a URI, and its link) is measured at step 8.
+
+**Step 6, corpus and oracles** (built, approved, with every recommendation, and committed 2026-11-11):
+
+- **New files:**
+  - `tests/CsvHelper.Excel.Tests/Files/excel-written/`: Excel's answers about ten presentation workbooks (below).
+  - `tests/CsvHelper.Excel.Tests/Corpus/ClosedXmlLook.cs`: a workbook's look as ClosedXML reads it, its links through the Open XML SDK, in the terms of Excel's answers.
+- **Changed:**
+  - The content set (`tools/CsvHelper.Excel.Corpus/Written.cs`):
+    - `WrittenLook`: a sheet's options, the ranges merged on its writer (before a row, or after the rows), the text Excel shows of each value in a column's Excel format, and the names Excel gives its tables and their columns.
+    - `WrittenSheet` takes a look, and keeps its record type's `[ExcelSheet]`. A sheet of records with merged ranges is written by `AddSheet<T>` and `WriteRecords`. `WrittenColumn` keeps its member's `[ExcelColumn]`.
+    - Ten workbooks, and their record types (`WrittenLookOrder` to `WrittenReportLine`).
+  - The `written` command (`ExcelWritten.cs`) also answers about every workbook:
+    - its defined names;
+    - each sheet's used range and look: frozen panes, filter, tables, merged ranges, links, hidden columns, the rows Excel sized otherwise than standard, and each cell's look from row 1 to the row below the used range;
+    - last, each column's width at Excel's own AutoFit.
+
+    `ExcelOracle`'s `WriteMerged`, `WriteNames` and `ColumnName` are internal, for it.
+  - The corpus tool's privacy check (`Privacy.cs`) passes email addresses at the domains reserved for examples (RFC 2606), which the `mailto:` links use.
+  - The tests (`Corpus/`):
+    - `WrittenAnswers.cs` loads the names, the used range, the look (`SheetLook`, `SheetTable`, `SheetLink`, `WrittenName`) and Excel's AutoFit.
+    - `WrittenOracle.cs`:
+      - each cell under a title, a table's header as its look names the columns, and a value in a column's Excel format (`InFormat`);
+      - each sheet's look (`Looks`) and the filters' names (`FilterNames`), by the plan's "What a sheet gets";
+      - the parts' hidden and auto-fitted columns (`WrittenParts`).
+    - `WrittenAnswersTests.cs`: four new tests (below), and the cell comparison's new kinds.
+    - `LibreOffice.cs` converts every written workbook to `.xlsx` too, for what LibreOffice keeps of the look.
+  - The writer (`SheetSink`): a header cell in General, in a sheet whose columns have options, says `s="0"` (below).
+  - `Files/README.md`.
+- **The set,** ten more workbooks, written with Phase 5's defaults but where named. The first ten keep Phase 4's look, and their parts.
+  - `look.xlsx`: the default options; a title over a frozen column; a title over one column; columns frozen without the header.
+  - `columns.xlsx`:
+    - columns' Excel formats: `#,##0.00`, `0.0%`, `0.00E+00`, a currency in red, `# ?/?`, `000000`, a date's `dd/mm/yyyy hh:mm`, a boolean's text section, `@`;
+    - widths, wrap and hidden columns, from `[ExcelColumn]` and from `Columns`, which replaces it whole;
+    - a column of a number, text, a boolean, a date and a decimal in one format.
+  - `autofit.xlsx`: later values wider than the first, General numbers, text past the cap and with a line break, two records measured of four, a bold header wider than its cells, formulas, and dates at midnight.
+  - `filters.xlsx`: filters over the rows; under a title in `Bob's orders`; over a header alone with an empty field at its end; beside a frozen column in `a_x0041_b`.
+  - `tables.xlsx`:
+    - tables named after their sheets (`Orders`, `Q1_Orders`, `_2024`), in a style, in one given in lower case, or in none;
+    - without stripes or buttons;
+    - header cells renamed (`Name|Name3|Name2|Column4|2024|True|Two\nLines| Name|NAME5`);
+    - over a header alone, under a title, with `AutoFilter`, and from `[ExcelSheet]`.
+  - `merges.xlsx`: ranges merged down a column before the header and while the rows are written, down and across after them, past the rows, under a title, and beside a table.
+  - `links.xlsx` (`Web`) and `links-all.xlsx` (`All`):
+    - `https` with a fragment (twice, one relationship), `mailto` with an escape, `HTTP://Example.COM`, an escaped letter past ASCII;
+    - `file:`, relative and `urn:` URIs as text under `Web`;
+    - a share, a Windows path, an escaped relative path, a jump to `#Other!B2` and `ftp` under `All`;
+    - in a table, in a column's format and wrap, and a header's URI as text.
+  - `newsheet-look.xlsx`: `RowLimit = NewSheet` at four rows a sheet, with a title and a table, and with a title, a filter and a frozen column.
+  - `presentation.xlsx`: every setting together.
+- **Decisions made while building:**
+  - **The answers cover every workbook,** Phase 4's too: their look is empty, and their cells' answers are unchanged.
+  - **The oracle's rules for links are the test's own:** a jump has no address; a relative URI's address is its text and a file's its local path; another's is its absolute form, with its fragment as the sub-address; escaped letters past ASCII show as the letters.
+  - **A value in a column's Excel format shows the text the set gives,** as formulas' expected text is given: the test doesn't format numbers. Its type may be `number`, `date` or `currency` (which Excel's `Value` gives a currency format).
+  - **Excel's `NumberFormat` spells `"$"` as `$`,** which the comparison allows (`ExcelCode`).
+  - **Excel's AutoFit is the widths' oracle:** each auto-fitted column is as wide as Excel's AutoFit makes it, and at most a tenth and half a character wider. And most columns of a workbook must be wider than Excel's AutoFit, so that answers that copied the widths written can't pass.
+  - **ClosedXML and LibreOffice are compared with Excel's answers,** not the oracle's, in the same terms. What LibreOffice does its own way is left out of both sides, by rules the test states; its other differences are listed.
+  - **The window is sized before the panes are read** (found while building). An invisible Excel lays out a workbook opened after the first in a window with no room (`UsableHeight` 0), and then reports a frozen split clipped to it: `SplitRow` 1, or 0, for two rows frozen, and another answer from run to run. A window of 800 by 500 points gives the split as written, the same in two runs (`panes.ps1`). The command fails if a window has no room.
+  - **Email addresses at reserved domains pass the privacy check:** no one has one.
+- **A writer bug, found and fixed:** LibreOffice gives a written cell without a style its column's style, where Excel gives it General (the design's check, at step 2).
+  - So the header's cells, which take neither their column's format nor its wrap, took both in LibreOffice when the header isn't bold: a styled table's header (`presentation.xlsx`'s `Notes` wrapped), or one with `BoldHeader` off. A column format with a text section would have shown `Paid: Paid`.
+  - Now a header cell in General, in a sheet whose columns have options (`SheetSettings.HasColumns`), says `s="0"`, which LibreOffice takes as General (checked: `header-style`). The check is in the styling branch, which other cells don't take, and other sheets' parts are unchanged: only `tables.xlsx`'s and `presentation.xlsx`'s hashes moved.
+  - `SheetLookTests.SaysAHeaderCellIsInGeneralWhenItsColumnsMayHaveStyles` pins it. Without the fix, it fails, and so do the two hashes and `LibreOfficeKeepsTheLook` of `presentation.xlsx`.
+- **What Excel showed** (Excel 365, 16.0 build 20527, at 144 DPI, through COM, on 2026-11-11; the probes and scripts are in `Csv\_bench\results\phase5\step6`):
+  - It opened all twenty workbooks as they are, and every sheet's look is as its settings say. No look difference is listed:
+    - panes, filters and their hidden names, tables (names, ranges, styles, stripes, buttons, renamed columns), merged ranges, links (addresses and sub-addresses), hidden columns;
+    - the title's row (18.5 points) and wrapped rows sized taller;
+    - the bold header, the title in bold 14, links in the `Hyperlink` style, columns' wrap in their cells, and their format and wrap in the cells not written (the title's row, an empty cell, the row below).
+  - Every cell reads as the oracle says, the text of each value in a column's format among them (`" 1/4"` for 0.25 in `# ?/?`, `Paid: TRUE`, `45,306` for a date in `#,##0`), but in three cells:
+    - **`TimeSpan.MaxValue`** (`autofit.xlsx`, and `types.xlsx` in Phase 4's look) shows `###################` at auto-fit's width. A probe (`durations.ps1`, `durations.txt`) found that Excel shows no serial of 2,958,466 or more in a date or time format, `[h]:mm:ss` too, at any width: that is the instant after 9999-12-31 23:59:59.999. A value that rounds up to it in its format (2,958,465.9999999884 in `[h]:mm:ss`) shows `###` too. Phase 4 took `types.xlsx`'s case for a width (decision 14); it isn't one. See "Left open".
+    - **`newsheet-look.xlsx`'s** `'Orders (2)'!C3` and `'Orders (3)'!A3`: the first sheet fills after two records, before auto-fit's 100 held rows end, and every sheet takes its widths (step 3). Only a row limit far below Excel's, or `AutoFit` near its limit, can do that.
+  - Auto-fit's widths are as wide as Excel's AutoFit, or a little wider (about 5%, as at step 3), but where auto-fit counts otherwise by design: the text cap (`Text!B`, `Capped!A`, `columns.xlsx`'s `Options!K`), two held rows, a formula's default width, dates at midnight, a title over one column (which Excel's AutoFit counts), `NewSheet`'s widths, and `TimeSpan.MaxValue`, which Excel's AutoFit fits in 6.27.
+- **ClosedXML** reads the same look but a table column's name with `_x000A_`, which it doesn't decode.
+- **LibreOffice 26.8.2.2** opens all twenty, and keeps the look but:
+  - its own ways, which the comparison leaves out: it gives each cell of a merged range its first cell's look, names a font of its own for East Asian text (`Microsoft YaHei`), wraps text with a line break, and spells codes its own way (`\$#,##0.00;[RED]"-$"#,##0.00`, `yyyy\-mm\-dd`);
+  - it writes a file's and a relative path's target against the folder it saves in, and the jump to `#Other!B2` as a link to its own file at the cell, as found at step 5.
+
+  It shows Excel's text but a boolean in a column's number format, which it shows as 1 or 0, and the differences listed before.
+- **Tests:**
+  - `WrittenAnswersTests`, for each workbook:
+    - `ExcelShowsTheLook`: each sheet's look against the oracle's, entry by entry, and the filters' hidden names.
+    - `AutoFitsAsWideAsExcel`: each auto-fitted column against Excel's AutoFit.
+    - `ClosedXmlReadsTheLook` and `LibreOfficeKeepsTheLook`: ClosedXML's reading of the workbook, and of LibreOffice's `.xlsx`, against Excel's answers.
+    - `ExcelReadsWhatWasWritten` also checks the text of values in a column's format, and that no typed cell shows `########` but those listed; `ExcelShowsTheWrittenWidths`, a hidden column's 0.
+  - `SheetLookTests.SaysAHeaderCellIsInGeneralWhenItsColumnsMayHaveStyles` (the writer fix).
+  - `WrittenAnswersTests` has 164 tests on .NET 10 and on .NET 8 (44 before), and 148 on .NET Framework, which lacks the two .NET-only workbooks. The LibreOffice tests, whose converted workbooks CI makes, take about 10 seconds more.
+  - Every CsvHelper.Excel suite passes, with 0 warnings: 3,441 tests on .NET 10 and on .NET 8, and 3,385 on .NET Framework, each with the 4 GiB Zip64 test skipped as opt-in. The first ten workbooks' pinned hashes still match, on every target.
+- **Mutation check** on net10.0, each bug planted alone and its file restored, checked by SHA-256. The drivers, `mutate.py` and `mutate_tool.py`, and their results, `mutations.jsonl` and `mutations-tool.jsonl`, are in `Csv\_bench\results\phase5\step6`. Each bug ran `WrittenAnswersTests`, about 15 seconds.
+  - **The oracle, the loader, the readers and the content set** (46 bugs): 40 caught.
+    - Every wrong rule is caught. That covers the title's merge, merges by hand, frozen rows and columns, the filter beside a table and its range, a header-only table, a style's case, the link policy, a fragment, escapes past ASCII, a file's address, hidden columns, tall rows, a styled table's bold, the `Hyperlink` style, columns' format and wrap in cells not written, codes' spelling, the names' visibility, `[ExcelSheet]`, `Columns` against the attribute, a new sheet's rows, a table's header, a date in a format, and a URI's text.
+    - The loader's and ClosedXML's readings are caught too: panes swapped, wrap not read, a link's location, frozen columns.
+    - So is the content: a fraction's text, a table's name, a renamed header's order, ranges not merged, and a text's shown text.
+    - The six that live remove a check rather than change a rule, so the right answers pass them by construction. For four, a bug the check alone sees is caught: a fraction's text, Excel's wrap not read, the names' visibility, and a text's shown text (planted for it). The other two are equivalent for the set's content:
+      - a formatted number's type, behind its value and the pinned parts;
+      - LibreOffice's merged ranges left out whole, whose first cells LibreOffice keeps.
+  - **The `written` command** (4 bugs, each run through Excel over the repository's answers, which were restored and checked file by file): all 4 caught.
+    - the window not sized: `ExcelShowsTheLook` of `links.xlsx` and `links-all.xlsx` fails, and which workbooks clip varies from run to run;
+    - no row's height: 7 tests;
+    - Excel's AutoFit not run: 10, by the check that most columns are wider than Excel's;
+    - no look of the row below the used range: 12.
+- **Left open:**
+  - **Durations of Excel's last serial or more** (above): the review approved writing them as text, as `OutOfRangeDates` says, as negative durations are. Step 7 does it.
+  - Step 5's held targets: step 7.
 
 ### Phase 6: conversion (S)
 

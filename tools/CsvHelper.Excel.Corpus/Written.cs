@@ -20,7 +20,9 @@ namespace CsvHelper.Excel.Corpus;
 /// <para>
 /// The workbooks hold every type of Phase 4's "What a field becomes" and its edge values, formatted members in the invariant
 /// culture and in others, formulas, escaped and long text, shared strings, <see cref="ExcelRowLimit.NewSheet"/>, and sheet
-/// names Excel accepts. Nothing in them depends on the machine: no time zone, no current culture, no clock.
+/// names Excel accepts, in Phase 4's look; and Phase 5's presentation: the default look, titles, frozen panes, columns'
+/// formats, widths, wrap and hidden columns, auto-fit, filters, tables, merged cells and links, each sheet's look given by
+/// <see cref="WrittenLook"/>. Nothing in them depends on the machine: no time zone, no current culture, no clock.
 /// </para>
 /// <para>
 /// A workbook's bytes depend on the target only through deflate, which differs between runtimes, so a workbook is pinned by
@@ -66,6 +68,16 @@ internal static class Written
 #if NET
 		Cultures(),
 #endif
+		Look(),
+		ColumnsLook(),
+		AutoFit(),
+		Filters(),
+		Tables(),
+		Merges(),
+		Links(),
+		AllLinks(),
+		NewSheetsLook(),
+		Presentation(),
 	];
 
 	/// <summary>Writes a workbook synchronously, into memory.</summary>
@@ -533,6 +545,379 @@ internal static class Written
 			]);
 	}
 #endif
+
+	/// <summary>Orders of every kind of cell the default look shows: text, numbers, dates, booleans, durations and links.</summary>
+	/// <returns>Five orders, the first the narrowest in most columns.</returns>
+	private static WrittenLookOrder[] Orders() =>
+	[
+		new() { Id = 1, Customer = "Ada", Placed = new(2024, 1, 15), Total = 12.5m, Paid = true, Took = TimeSpan.FromHours(1), Site = new Uri("https://example.com/orders/1"), Note = "first" },
+		new() { Id = 22, Customer = "Grace Hopper", Placed = new(2024, 1, 16, 10, 30, 5), Total = 1234567.891m, Paid = false, Took = new(1, 2, 3, 4, 500), Site = new Uri("https://example.com/orders/22") },
+		new() { Id = 333, Customer = "Ken", Placed = new(2024, 2, 29, 23, 59, 59, 999), Total = -0.5m, Paid = true, Took = TimeSpan.FromDays(400), Site = new Uri("mailto:ken@example.com"), Note = "a note longer than the others" },
+		new() { Id = 4444, Customer = "名前", Placed = new(2024, 12, 31, 12, 0, 0), Total = 0m, Took = TimeSpan.Zero, Note = "" },
+		new() { Id = 55555, Customer = "Zoë", Placed = new(1900, 3, 1), Total = 99999999.99m, Paid = true, Took = TimeSpan.FromMinutes(90), Site = new Uri("https://example.com/orders/55555?x=1#top"), Note = "last" },
+	];
+
+	/// <summary>"look.xlsx": the default look: a bold, frozen header and auto-fit over 100 rows, with titles and frozen columns.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Look()
+	{
+		var orders = Orders();
+
+		return new WrittenWorkbook(
+			"look.xlsx",
+			"the default options: a bold, frozen header, auto-fit over 100 rows and links for http, https and mailto; with a title over a frozen column, a title over one column, and columns frozen without the header",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records("Orders", orders),
+				WrittenSheet.Records("Titled", orders.Take(3).ToArray(), look: new() { Options = new() { Title = "Orders for January 2024", FreezeColumns = 1 } }),
+				WrittenSheet.Fields("One column", [["Name"], ["a"], ["b"]], look: new() { Options = new() { Title = "A title over one column, which isn't merged" } }),
+				WrittenSheet.Fields("Columns", [["A", "B", "C"], [1, 2, 3]], look: new() { Options = new() { BoldHeader = false, FreezeHeader = false, FreezeColumns = 2 } }),
+			]);
+	}
+
+	/// <summary>"columns.xlsx": columns' formats, widths, wrap and hidden, from <see cref="ExcelColumnAttribute"/> and <see cref="ExcelSheetOptions.Columns"/>.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook ColumnsLook()
+	{
+		WrittenColumns[] rows =
+		[
+			new()
+			{
+				Case = "first", Amount = 1234.5m, Rate = 0.125, Big = 1.5E+20, Price = 1234.5m, Part = 1.5, Code = 123, When = new(2024, 1, 15, 10, 30, 5, 123), Paid = true, Zip = "00123",
+				Notes = "short", Secret = "hidden", Wide = "wide",
+			},
+			new()
+			{
+				Case = "second", Amount = 0m, Rate = 1, Big = 12345, Price = -42m, Part = 0.25, Code = 0, When = new(1900, 1, 1), Paid = false, Zip = "007",
+				Notes = "a line\nand another line", Secret = "s", Wide = "",
+			},
+			new()
+			{
+				Case = "third", Amount = -0.125m, Rate = -0.0123, Big = -0.001, Price = 0m, Part = 2.75, Code = 1234567, When = new(2024, 12, 31, 23, 59, 59), Paid = true, Zip = "",
+				Notes = "This note is long enough to wrap across several lines in a column twenty characters wide.", Secret = "x", Wide = "text",
+			},
+		];
+		var shows = new Dictionary<string, IReadOnlyList<string>>
+		{
+			["Amount"] = ["1,234.50", "0.00", "-0.13"],
+			["Rate"] = ["12.5%", "100.0%", "-1.2%"],
+			["Big"] = ["1.50E+20", "1.23E+04", "-1.00E-03"],
+			["Price"] = ["$1,234.50", "-$42.00", "$0.00"],
+			["Part"] = ["1 1/2", " 1/4", "2 3/4"],
+			["Code"] = ["000123", "000000", "1234567"],
+			["When"] = ["15/01/2024 10:30", "01/01/1900 00:00", "31/12/2024 23:59"],
+			["Paid"] = ["Paid: TRUE", "Paid: FALSE", "Paid: TRUE"],
+		};
+		var columns = new Dictionary<string, ExcelColumnOptions>
+		{
+			["Case"] = new() { Hidden = true },
+			["Amount"] = new() { Format = "0.00" },
+			["Notes"] = new(),
+			["Secret"] = new() { Width = 8 },
+		};
+		object?[][] mixed =
+		[
+			["Case", "Value"],
+			["number", 1234567],
+			["text", "n/a"],
+			["boolean", true],
+			["date", new DateTime(2024, 1, 15)],
+			["decimal", 2.5m],
+		];
+
+		return new WrittenWorkbook(
+			"columns.xlsx",
+			"columns' formats (numbers, percents, exponents, currency, fractions, leading zeros, a date's, a boolean's text section, text), widths, wrap and hidden columns, from [ExcelColumn] and from ExcelSheetOptions.Columns, which replaces it whole",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records("Attributes", rows, look: new() { Shows = shows }),
+				WrittenSheet.Records("Options", rows, look: new() { Options = new() { Columns = columns }, Shows = new Dictionary<string, IReadOnlyList<string>>(shows) { ["Amount"] = ["1234.50", "0.00", "-0.13"] } }),
+				WrittenSheet.Fields(
+					"Mixed",
+					mixed,
+					look: new() { Options = new() { Columns = new Dictionary<string, ExcelColumnOptions> { ["Value"] = new() { Format = "#,##0" } } }, Shows = new Dictionary<string, IReadOnlyList<string>> { ["Value"] = ["1,234,567", "n/a", "TRUE", "45,306", "3"] } }),
+			]);
+	}
+
+	/// <summary>"autofit.xlsx": auto-fit's widths of every kind of cell.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook AutoFit()
+	{
+		WrittenWidths[] widths =
+		[
+			new() { Case = "narrow first", When = new(2024, 1, 15), Took = TimeSpan.FromHours(1) },
+			new() { Case = "wider after", When = new(2024, 1, 15, 10, 30, 0, 123), Took = TimeSpan.MaxValue },
+		];
+		WrittenGeneral[] general =
+		[
+			new() { Case = "small", Value = 0.000123456789 },
+			new() { Case = "pi", Value = 3.14159265358979 },
+			new() { Case = "negative", Value = -1234567.891 },
+			new() { Case = "decimals", Value = 123456.123456 },
+			new() { Case = "large", Value = 1.5E+20 },
+			new() { Case = "tiny", Value = 1E-05 },
+			new() { Case = "11 digits", Value = 12345678901 },
+			new() { Case = "12 digits", Value = 123456789012 },
+			new() { Case = "a half", Value = -0.5 },
+			new() { Case = "17 digits", Value = 0.30000000000000004 },
+		];
+		object?[][] text =
+		[
+			["Short", "Long", "Lines", "Wide"],
+			["a", "This text is a hundred characters long, which is more than the sixty that auto-fit takes at most.", "first line\nsecond, longer line", "日本語のテキスト" + Chars(0x1F600)],
+			["b", "short", "one line", "ascii"],
+		];
+		object?[][] capped =
+		[
+			["Name", "Value"],
+			["short", 1.5],
+			["a name of thirty characters ok", 123456.5],
+			["past the held rows, a much longer name", 2.5],
+		];
+		object?[][] header =
+		[
+			["A header much wider than its cells", "B"],
+			[1, 2],
+			[3, 4],
+		];
+		object?[][] formulas =
+		[
+			["A", "B", "Sum", "Shows"],
+			[1, 2, new ExcelFormula("A2+B2"), "3"],
+			[10, 20, new ExcelFormula("A3*B3"), "200"],
+		];
+
+		return new WrittenWorkbook(
+			"autofit.xlsx",
+			"auto-fit's widths: later values wider than the first, General numbers, text capped at 60 characters and on one line, a capped sheet that measures two records, a bold header wider than its cells, formulas, and dates at midnight",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records("Widths", widths),
+				WrittenSheet.Records("General", general),
+				WrittenSheet.Fields("Text", text),
+				WrittenSheet.Fields("Capped", capped, look: new() { Options = new() { AutoFit = 2, MaxAutoFitWidth = 20 } }),
+				WrittenSheet.Fields("Header", header),
+				WrittenSheet.Fields("Formulas", formulas),
+				WrittenSheet.Records("Midnight", new WrittenMidnight[] { new() { Day = new(2024, 1, 15) }, new() { Day = new(2024, 1, 16) } }),
+			]);
+	}
+
+	/// <summary>"filters.xlsx": autofilters and their hidden names.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Filters()
+	{
+		var orders = Orders();
+		var filter = new ExcelSheetOptions { AutoFilter = true };
+
+		return new WrittenWorkbook(
+			"filters.xlsx",
+			"autofilters, with their hidden _FilterDatabase names: over the rows, under a title in a sheet whose name needs quotes, over a header alone with an empty field at its end, and with a frozen column in a sheet whose name reads as an escape",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records("Orders", orders, look: new() { Options = filter }),
+				WrittenSheet.Records("Bob's orders", orders.Take(3).ToArray(), look: new() { Options = filter with { Title = "Bob's orders" } }),
+				WrittenSheet.Fields("Header", [["Name", "Value", ""]], look: new() { Options = filter }),
+				WrittenSheet.Fields("a_x0041_b", [["A", "B"], [1, 2]], look: new() { Options = filter with { FreezeColumns = 1 } }),
+			]);
+	}
+
+	/// <summary>"tables.xlsx": tables.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Tables()
+	{
+		var orders = Orders();
+		var table = new ExcelSheetOptions { Table = new() };
+		object?[][] renamed =
+		[
+			["Name", "Name", "Name2", "", 2024, true, "Two\nLines", " Name", "NAME"],
+			["a", "b", "c", "d", "e", "f", "g", "h", "i"],
+		];
+
+		return new WrittenWorkbook(
+			"tables.xlsx",
+			"tables: named after their sheets or given, in a style, in one given in lower case or in none, without stripes or buttons, header cells renamed as Excel names them, over a header alone, under a title, with AutoFilter, and from [ExcelSheet]",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records("Orders", orders.Take(3).ToArray(), look: new() { Options = table, Tables = ["Orders"] }),
+				WrittenSheet.Records("Q1 Orders", orders.Take(2).ToArray(), look: new() { Options = new() { Table = new() { Style = "tablestylelight9", BandedRows = false, FilterButtons = false } }, Tables = ["Q1_Orders"] }),
+				WrittenSheet.Fields("2024", [["Year", "Total"], [2024, 1.5]], look: new() { Options = new() { Table = new() { Style = null } }, Tables = ["_2024"] }),
+				WrittenSheet.Fields("Renamed", renamed, look: new() { Options = table, Tables = ["Renamed"], TableColumns = ["Name", "Name3", "Name2", "Column4", "2024", "True", "Two\nLines", " Name", "NAME5"] }),
+				WrittenSheet.Fields("Header", [["A", "B", "C"]], look: new() { Options = table, Tables = ["Header"] }),
+				WrittenSheet.Records("Titled", orders.Take(2).ToArray(), look: new() { Options = table with { Title = "A titled table" }, Tables = ["Titled"] }),
+				WrittenSheet.Fields("Filtered", [["Name", "Value"], ["a", 1], ["b", 2]], look: new() { Options = table with { AutoFilter = true }, Tables = ["Filtered"] }),
+				WrittenSheet.Records("Sales", new WrittenSale[] { new() { Region = "North", Amount = 1234.5m }, new() { Region = "South", Amount = 99.99m } }, look: new() { Tables = ["Sales"], Shows = new Dictionary<string, IReadOnlyList<string>> { ["Amount"] = ["1,234.50", "99.99"] } }),
+			]);
+	}
+
+	/// <summary>"merges.xlsx": merged cells.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Merges()
+	{
+		object?[][] report =
+		[
+			["Region", "Q1", "Q2", "Q3", "Notes"],
+			["North", 10, 20, 30, "steady"],
+			[null, 11, 21, 31, null],
+			["South", 5, 6, 7, "growing"],
+			[null, 8, 9, 10, null],
+			["Total", 34, 56, 78, null],
+		];
+		object?[][] beside =
+		[
+			["Name", "Value", "Code"],
+			["a", 1, "x"],
+			["b", 2, "y"],
+			["c", 3, "z"],
+		];
+
+		return new WrittenWorkbook(
+			"merges.xlsx",
+			"merged cells: down a column before the header and while the rows are written, down and across columns after them, past the rows, under a title, and beside a table",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Fields("Report", report, look: new() { Options = new() { Title = "Quarterly report" }, Merges = [(0, "A3:A4"), (3, "A5:A6"), (6, "E3:E6"), (6, "B9:D10")] }),
+				WrittenSheet.Fields("Beside", beside, look: new() { Options = new() { Table = new() }, Tables = ["Beside"], Merges = [(4, "E2:F3"), (4, "D6:D7")] }),
+			]);
+	}
+
+	/// <summary>Sites of the URIs a policy takes or leaves as text.</summary>
+	/// <param name="uris">The URIs.</param>
+	/// <returns>A site for each.</returns>
+	private static WrittenLink[] Sites(params (string Name, Uri? Link)[] uris) => [.. uris.Select(u => new WrittenLink { Name = u.Name, Link = u.Link })];
+
+	/// <summary>"links.xlsx": links by the default policy, <see cref="ExcelLinks.Web"/>.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Links()
+	{
+		var sites = Sites(
+			("https", new Uri("https://example.com/a?b=1&c=2#frag")),
+			("mailto", new Uri("mailto:someone@example.com?subject=Hi%20there")),
+			("upper case", new Uri("HTTP://Example.COM")),
+			("again", new Uri("https://example.com/a?b=1&c=2#frag")),
+			("past ASCII", new Uri("https://example.com/caf%C3%A9")),
+			("file", new Uri("file:///C:/Temp/report.txt")),
+			("relative", new Uri("docs/report.txt", UriKind.Relative)),
+			("urn", new Uri("urn:isbn:0451450523")),
+			("none", null));
+		object?[][] header =
+		[
+			[new Uri("https://example.com/header"), "Name"],
+			[new Uri("https://example.com/row"), "a"],
+		];
+
+		return new WrittenWorkbook(
+			"links.xlsx",
+			"links by the default policy, Web: http, https and mailto URIs are links in the Hyperlink style, one shared by two cells, and file, relative and urn URIs text; in a table, in a column's format and wrap, and a header's URI as text",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records("Sites", sites),
+				WrittenSheet.Records("Table", sites, look: new() { Options = new() { Table = new() }, Tables = ["Table"] }),
+				WrittenSheet.Records("Styled", sites, look: new() { Options = new() { Columns = new Dictionary<string, ExcelColumnOptions> { ["Link"] = new() { Format = "@", Wrap = true } } } }),
+				WrittenSheet.Fields("Header", header),
+			]);
+	}
+
+	/// <summary>"links-all.xlsx": links by <see cref="ExcelLinks.All"/>.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook AllLinks()
+	{
+		var sites = Sites(
+			("share", new Uri(@"\\server\share\a b.txt")),
+			("path", new Uri(@"C:\Temp\réport.txt")),
+			("relative", new Uri("docs/r%C3%A9sum%C3%A9.txt", UriKind.Relative)),
+			("jump", new Uri("#Other!B2", UriKind.Relative)),
+			("ftp", new Uri("ftp://example.com/file.txt")),
+			("https", new Uri("https://example.com/")));
+
+		return new WrittenWorkbook(
+			"links-all.xlsx",
+			"links by ExcelLinks.All: a share, a Windows path, a relative path with escaped letters, a jump to a cell of the workbook, and ftp and https",
+			new ExcelWriterOptions { Links = ExcelLinks.All },
+			[WrittenSheet.Records("Sites", sites), WrittenSheet.Fields("Other", [["Name", "Value"], ["target", 1]])]);
+	}
+
+	/// <summary>"newsheet-look.xlsx": <see cref="ExcelRowLimit.NewSheet"/> with a look, each new sheet repeating it.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook NewSheetsLook()
+	{
+		object?[][] filtered =
+		[
+			["Name", "Value"],
+			["a", 1],
+			["b", 22],
+			["c", 333],
+			["d", 4444],
+			["e", 55555],
+		];
+
+		return new WrittenWorkbook(
+			"newsheet-look.xlsx",
+			"RowLimit = NewSheet, a sheet's rows limited to 4 (a title, the header and two records): each new sheet repeats the title and its merge, the bold, frozen header, the table or the filter, and the widths",
+			new ExcelWriterOptions { RowLimit = ExcelRowLimit.NewSheet },
+			[
+				WrittenSheet.Records("Orders", Orders(), ["Orders", "Orders (2)", "Orders (3)"], new() { Options = new() { Title = "Orders", Table = new() }, Tables = ["Orders", "Orders2", "Orders3"] }),
+				WrittenSheet.Fields("Filtered", filtered, ["Filtered", "Filtered (2)", "Filtered (3)"], new() { Options = new() { Title = "Filtered", AutoFilter = true, FreezeColumns = 1 } }),
+			],
+			maxRows: 4);
+	}
+
+	/// <summary>"presentation.xlsx": every setting together.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Presentation()
+	{
+		WrittenReportLine[] lines =
+		[
+			new() { Region = "North", Product = "Widgets", Units = 12345, Revenue = 98765.4m, Share = 0.4567, Updated = new(2024, 1, 15), Link = new Uri("https://example.com/north"), Notes = "steady", Internal = "a" },
+			new() { Region = "South", Product = "Gadgets and gizmos", Units = 7, Revenue = 12.5m, Share = 0.0012, Updated = new(2024, 2, 29), Link = new Uri("mailto:south@example.com"), Notes = "growing\nfast", Internal = "b" },
+			new() { Region = "East", Product = "Widgets", Units = 0, Revenue = -150m, Share = 1, Updated = new(2024, 12, 31), Notes = "A note long enough to wrap in a column twenty-four characters wide.", Internal = "c" },
+		];
+		object?[][] summary =
+		[
+			["Region", "Total", "Site"],
+			["North", 98765.4, new Uri("https://example.com/north")],
+			[null, 1.5, new Uri("https://example.com/north/2")],
+			["South", 12.5, null],
+		];
+		var report = new ExcelSheetOptions
+		{
+			Title = "Sales report",
+			FreezeColumns = 1,
+			Table = new() { Name = "Report" },
+			Columns = new Dictionary<string, ExcelColumnOptions>
+			{
+				["Units"] = new() { Format = "#,##0" },
+				["Revenue"] = new() { Format = "\"$\"#,##0.00;[Red]-\"$\"#,##0.00" },
+				["Share"] = new() { Format = "0.00%" },
+				["Updated"] = new() { Format = "yyyy-mm-dd" },
+				["Notes"] = new() { Wrap = true, Width = 24 },
+				["Internal"] = new() { Hidden = true },
+			},
+		};
+
+		return new WrittenWorkbook(
+			"presentation.xlsx",
+			"every setting together: a title, a bold header frozen with a column, a table, columns' formats, wrap, widths and hidden, links, cells merged beside the table, and auto-fit; and a filtered sheet with a title, links and a range merged down a column",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Records(
+					"Report",
+					lines,
+					look: new()
+					{
+						Options = report,
+						Merges = [(4, "K3:L4"), (4, "K6:K7")],
+						Tables = ["Report"],
+						Shows = new Dictionary<string, IReadOnlyList<string>>
+						{
+							["Units"] = ["12,345", "7", "0"],
+							["Revenue"] = ["$98,765.40", "$12.50", "-$150.00"],
+							["Share"] = ["45.67%", "0.12%", "100.00%"],
+							["Updated"] = ["2024-01-15", "2024-02-29", "2024-12-31"],
+						},
+					}),
+				WrittenSheet.Fields("Summary", summary, look: new() { Options = new() { Title = "Summary", AutoFilter = true, FreezeColumns = 1 }, Merges = [(1, "A3:A4")] }),
+			]);
+	}
 }
 
 /// <summary>A workbook of the written set.</summary>
@@ -587,16 +972,20 @@ internal sealed class WrittenSheet
 	/// <param name="names">The sheets it becomes, in tab order: itself, and those <see cref="ExcelRowLimit.NewSheet"/> adds.</param>
 	/// <param name="columns">Its columns, in order.</param>
 	/// <param name="rows">Its rows of values, the header first.</param>
+	/// <param name="look">Its look: the options it is added with, its merged ranges, and what Excel should show.</param>
+	/// <param name="attribute">Its record type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/>.</param>
 	/// <param name="write">Writes it.</param>
 	/// <param name="writeAsync">Writes it asynchronously.</param>
 	private WrittenSheet(
-		string name, IReadOnlyList<string>? names, IReadOnlyList<WrittenColumn> columns, IReadOnlyList<IReadOnlyList<object?>> rows,
-		Action<ExcelWorkbookWriter> write, Func<ExcelWorkbookWriter, Task> writeAsync)
+		string name, IReadOnlyList<string>? names, IReadOnlyList<WrittenColumn> columns, IReadOnlyList<IReadOnlyList<object?>> rows, WrittenLook look,
+		ExcelSheetAttribute? attribute, Action<ExcelWorkbookWriter> write, Func<ExcelWorkbookWriter, Task> writeAsync)
 	{
 		Name = name;
 		Names = names ?? [name];
 		Columns = columns;
 		Rows = rows;
+		Look = look;
+		Attribute = attribute;
 		Write = write;
 		WriteAsync = writeAsync;
 	}
@@ -613,6 +1002,12 @@ internal sealed class WrittenSheet
 	/// <summary>Its rows of values, the header first: records' members, or the fields written by hand.</summary>
 	public IReadOnlyList<IReadOnlyList<object?>> Rows { get; }
 
+	/// <summary>Its look: the options it is added with, its merged ranges, and what Excel should show.</summary>
+	public WrittenLook Look { get; }
+
+	/// <summary>Its record type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/>.</summary>
+	public ExcelSheetAttribute? Attribute { get; }
+
 	/// <summary>Writes it.</summary>
 	public Action<ExcelWorkbookWriter> Write { get; }
 
@@ -621,61 +1016,124 @@ internal sealed class WrittenSheet
 
 	/// <summary>
 	/// A sheet of records, written by <typeparamref name="T"/>'s record writer with its header: a column per public property,
-	/// in declaration order, with its <see cref="CsvFormatAttribute"/> and <see cref="CsvCultureAttribute"/>.
+	/// in declaration order, with its <see cref="CsvFormatAttribute"/>, <see cref="CsvCultureAttribute"/> and
+	/// <see cref="ExcelColumnAttribute"/>. Without merged ranges it is written by <see cref="ExcelWorkbookWriter.WriteSheet"/>;
+	/// with them, by <see cref="ExcelWorkbookWriter.AddSheet{T}"/> and <see cref="CsvWriter.WriteRecords{T}(IEnumerable{T})"/>,
+	/// the ranges merged before the header (0) or after the records.
 	/// </summary>
 	/// <typeparam name="T">The record type, of public properties.</typeparam>
 	/// <param name="name">The sheet's name.</param>
 	/// <param name="records">The records.</param>
 	/// <param name="names">The sheets it becomes, or <see langword="null"/> for itself alone.</param>
+	/// <param name="look">Its look, or <see langword="null"/> for none: the workbook's <see cref="ExcelWriterOptions.Sheets"/>, or <typeparamref name="T"/>'s attribute.</param>
 	/// <returns>The sheet.</returns>
-	public static WrittenSheet Records<T>(string name, IReadOnlyList<T> records, IReadOnlyList<string>? names = null)
+	public static WrittenSheet Records<T>(string name, IReadOnlyList<T> records, IReadOnlyList<string>? names = null, WrittenLook? look = null)
 	{
+		var given = look ?? WrittenLook.None;
 		var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 		var columns = properties
-			.Select(p => new WrittenColumn(p.Name, p.GetCustomAttribute<CsvFormatAttribute>()?.Format, p.GetCustomAttribute<CsvCultureAttribute>()?.Name))
+			.Select(p => new WrittenColumn(p.Name, p.GetCustomAttribute<CsvFormatAttribute>()?.Format, p.GetCustomAttribute<CsvCultureAttribute>()?.Name, p.GetCustomAttribute<ExcelColumnAttribute>()))
 			.ToList();
 		var rows = new List<IReadOnlyList<object?>> { properties.Select(p => (object?)p.Name).ToList() };
 		rows.AddRange(records.Select(r => properties.Select(p => p.GetValue(r)).ToList()));
-
-		return new WrittenSheet(name, names, columns, rows, w => w.WriteSheet(name, records), w => w.WriteSheetAsync(name, records).AsTask());
-	}
-
-	/// <summary>
-	/// A sheet written field by field: <see cref="CsvWriter.WriteField(object)"/> for each value, and
-	/// <see cref="CsvWriter.WriteField(ReadOnlySpan{byte})"/> for a byte array, UTF-8 that need not be valid.
-	/// </summary>
-	/// <param name="name">The sheet's name.</param>
-	/// <param name="rows">Its rows of values, the header first.</param>
-	/// <param name="names">The sheets it becomes, or <see langword="null"/> for itself alone.</param>
-	/// <returns>The sheet.</returns>
-	public static WrittenSheet Fields(string name, IReadOnlyList<IReadOnlyList<object?>> rows, IReadOnlyList<string>? names = null)
-	{
-		var columns = Enumerable.Range(0, rows.Max(r => r.Count)).Select(i => new WrittenColumn(rows[0].ElementAtOrDefault(i) as string ?? "", null, null)).ToList();
+		if (given.Merges.Any(m => m.Before != 0 && m.Before != rows.Count))
+		{
+			throw new InvalidOperationException($"{name}: a sheet of records merges ranges before its header or after its records.");
+		}
 
 		void Write(ExcelWorkbookWriter workbook)
 		{
-			using var writer = workbook.AddSheet(name);
-			foreach (var row in rows)
+			if (given.Merges.Count == 0)
 			{
-				WriteRow(writer, row);
-				writer.EndRecord();
+				workbook.WriteSheet(name, records, given.Options);
+
+				return;
 			}
+
+			using var writer = workbook.AddSheet<T>(name, given.Options);
+			Merge(writer, given, 0);
+			writer.WriteRecords(records);
+			Merge(writer, given, rows.Count);
 		}
 
 		async Task WriteAsync(ExcelWorkbookWriter workbook)
 		{
-			var writer = workbook.AddSheet(name);
+			if (given.Merges.Count == 0)
+			{
+				await workbook.WriteSheetAsync(name, records, given.Options);
+
+				return;
+			}
+
+			var writer = workbook.AddSheet<T>(name, given.Options);
 			await using (writer)
 			{
-				foreach (var row in rows)
-				{
-					WriteRow(writer, row);
-					await writer.EndRecordAsync();
-				}
+				Merge(writer, given, 0);
+				await writer.WriteRecordsAsync(records);
+				Merge(writer, given, rows.Count);
 			}
 		}
 
-		return new WrittenSheet(name, names, columns, rows, Write, WriteAsync);
+		return new WrittenSheet(name, names, columns, rows, given, typeof(T).GetCustomAttribute<ExcelSheetAttribute>(), Write, WriteAsync);
+	}
+
+	/// <summary>
+	/// A sheet written field by field: <see cref="CsvWriter.WriteField(object)"/> for each value, and
+	/// <see cref="CsvWriter.WriteField(ReadOnlySpan{byte})"/> for a byte array, UTF-8 that need not be valid; each of its
+	/// look's ranges merged before the row it names.
+	/// </summary>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="rows">Its rows of values, the header first.</param>
+	/// <param name="names">The sheets it becomes, or <see langword="null"/> for itself alone.</param>
+	/// <param name="look">Its look, or <see langword="null"/> for none: the workbook's <see cref="ExcelWriterOptions.Sheets"/>.</param>
+	/// <returns>The sheet.</returns>
+	public static WrittenSheet Fields(string name, IReadOnlyList<IReadOnlyList<object?>> rows, IReadOnlyList<string>? names = null, WrittenLook? look = null)
+	{
+		var given = look ?? WrittenLook.None;
+		var columns = Enumerable.Range(0, rows.Max(r => r.Count)).Select(i => new WrittenColumn(rows[0].ElementAtOrDefault(i) as string ?? "", null, null)).ToList();
+
+		void Write(ExcelWorkbookWriter workbook)
+		{
+			using var writer = workbook.AddSheet(name, given.Options);
+			for (var i = 0; i < rows.Count; i++)
+			{
+				Merge(writer, given, i);
+				WriteRow(writer, rows[i]);
+				writer.EndRecord();
+			}
+
+			Merge(writer, given, rows.Count);
+		}
+
+		async Task WriteAsync(ExcelWorkbookWriter workbook)
+		{
+			var writer = workbook.AddSheet(name, given.Options);
+			await using (writer)
+			{
+				for (var i = 0; i < rows.Count; i++)
+				{
+					Merge(writer, given, i);
+					WriteRow(writer, rows[i]);
+					await writer.EndRecordAsync();
+				}
+
+				Merge(writer, given, rows.Count);
+			}
+		}
+
+		return new WrittenSheet(name, names, columns, rows, given, null, Write, WriteAsync);
+	}
+
+	/// <summary>Merges a look's ranges that come before a row.</summary>
+	/// <param name="writer">The sheet's writer.</param>
+	/// <param name="look">The look.</param>
+	/// <param name="before">The row's index among the sheet's rows, the header's 0; their count for the ranges after them.</param>
+	private static void Merge(CsvWriter writer, WrittenLook look, int before)
+	{
+		foreach (var (_, range) in look.Merges.Where(m => m.Before == before))
+		{
+			writer.MergeCells(range);
+		}
 	}
 
 	/// <summary>Writes a row's values as fields.</summary>
@@ -704,7 +1162,8 @@ internal sealed class WrittenSheet
 /// <param name="name">Its header's name.</param>
 /// <param name="format">Its member's format, or <see langword="null"/>.</param>
 /// <param name="culture">Its member's culture's name (empty for the invariant culture), or <see langword="null"/> for the writer's.</param>
-internal sealed class WrittenColumn(string name, string? format, string? culture)
+/// <param name="excel">Its member's <see cref="ExcelColumnAttribute"/>, or <see langword="null"/>.</param>
+internal sealed class WrittenColumn(string name, string? format, string? culture, ExcelColumnAttribute? excel = null)
 {
 	/// <summary>Its header's name.</summary>
 	public string Name => name;
@@ -714,6 +1173,44 @@ internal sealed class WrittenColumn(string name, string? format, string? culture
 
 	/// <summary>Its member's culture's name (empty for the invariant culture), or <see langword="null"/> for the writer's.</summary>
 	public string? Culture => culture;
+
+	/// <summary>Its member's <see cref="ExcelColumnAttribute"/>, or <see langword="null"/>.</summary>
+	public ExcelColumnAttribute? Excel => excel;
+}
+
+/// <summary>
+/// A written sheet's look: the options it is added with, the ranges merged on its writer, and what Excel should show that
+/// the values written don't say: the text of values in a column's Excel format, and the names Excel gives its tables and
+/// their columns.
+/// </summary>
+internal sealed class WrittenLook
+{
+	/// <summary>No look: the sheet is added without options, and merges nothing.</summary>
+	public static WrittenLook None { get; } = new();
+
+	/// <summary>The options the sheet is added with, or <see langword="null"/> for its record type's attribute, else the workbook's.</summary>
+	public ExcelSheetOptions? Options { get; init; }
+
+	/// <summary>
+	/// The ranges merged on the sheet's writer, each before the row of an index among the sheet's rows (the header's 0), or
+	/// after them (their count).
+	/// </summary>
+	public IReadOnlyList<(int Before, string Range)> Merges { get; init; } = [];
+
+	/// <summary>
+	/// The text Excel shows of each data row's value in a column whose Excel format is a code (<see cref="ExcelColumnOptions.Format"/>),
+	/// by the column's header name, in the order of the rows across the sheets it becomes.
+	/// </summary>
+	public IReadOnlyDictionary<string, IReadOnlyList<string>> Shows { get; init; } = new Dictionary<string, IReadOnlyList<string>>();
+
+	/// <summary>The names of its tables, one for each sheet it becomes, or <see langword="null"/> without a table.</summary>
+	public IReadOnlyList<string>? Tables { get; init; }
+
+	/// <summary>
+	/// The names Excel gives its table's columns, which the header's cells hold, or <see langword="null"/> when they are the
+	/// header's fields.
+	/// </summary>
+	public IReadOnlyList<string>? TableColumns { get; init; }
 }
 
 /// <summary>Numbers of each common type: a row per edge case.</summary>
@@ -1600,3 +2097,163 @@ public sealed partial class WrittenCultureNumbers
 	public long? GermanLong { get; set; }
 }
 #endif
+
+/// <summary>An order of the default look: text, numbers, a date and time, a boolean, a duration and a link.</summary>
+[CsvRecord]
+public sealed partial class WrittenLookOrder
+{
+	/// <summary>Its number.</summary>
+	public int Id { get; set; }
+
+	/// <summary>Who placed it.</summary>
+	public string Customer { get; set; } = "";
+
+	/// <summary>When it was placed.</summary>
+	public DateTime Placed { get; set; }
+
+	/// <summary>Its total.</summary>
+	public decimal Total { get; set; }
+
+	/// <summary>Whether it is paid.</summary>
+	public bool Paid { get; set; }
+
+	/// <summary>How long it took.</summary>
+	public TimeSpan Took { get; set; }
+
+	/// <summary>Its page, a link by the default policy, or none.</summary>
+	public Uri? Site { get; set; }
+
+	/// <summary>A note, or none.</summary>
+	public string? Note { get; set; }
+}
+
+/// <summary>Columns of every kind of Excel format, width, wrap and hidden, by <see cref="ExcelColumnAttribute"/>.</summary>
+[CsvRecord]
+public sealed partial class WrittenColumns
+{
+	/// <summary>What the row holds.</summary>
+	public string Case { get; set; } = "";
+
+	/// <summary>A decimal with thousands and two decimals.</summary>
+	[ExcelColumn(Format = "#,##0.00")]
+	public decimal Amount { get; set; }
+
+	/// <summary>A percent with a decimal.</summary>
+	[ExcelColumn(Format = "0.0%")]
+	public double Rate { get; set; }
+
+	/// <summary>Scientific notation.</summary>
+	[ExcelColumn(Format = "0.00E+00")]
+	public double Big { get; set; }
+
+	/// <summary>A currency, negative in red.</summary>
+	[ExcelColumn(Format = "\"$\"#,##0.00;[Red]-\"$\"#,##0.00")]
+	public decimal Price { get; set; }
+
+	/// <summary>A fraction.</summary>
+	[ExcelColumn(Format = "# ?/?")]
+	public double Part { get; set; }
+
+	/// <summary>Leading zeros.</summary>
+	[ExcelColumn(Format = "000000")]
+	public int Code { get; set; }
+
+	/// <summary>A date in the column's format, in place of its own.</summary>
+	[ExcelColumn(Format = "dd/mm/yyyy hh:mm")]
+	public DateTime When { get; set; }
+
+	/// <summary>A boolean, in the format's text section.</summary>
+	[ExcelColumn(Format = "0;-0;0;\"Paid: \"@")]
+	public bool Paid { get; set; }
+
+	/// <summary>Text that looks like a number, in the text format.</summary>
+	[ExcelColumn(Format = "@")]
+	public string Zip { get; set; } = "";
+
+	/// <summary>Text that wraps in a column of 20 characters.</summary>
+	[ExcelColumn(Width = 20, Wrap = true)]
+	public string Notes { get; set; } = "";
+
+	/// <summary>A hidden column.</summary>
+	[ExcelColumn(Hidden = true)]
+	public string Secret { get; set; } = "";
+
+	/// <summary>A column of 30 characters.</summary>
+	[ExcelColumn(Width = 30)]
+	public string Wide { get; set; } = "";
+}
+
+/// <summary>Numbers in General, which auto-fit measures as Excel shows them.</summary>
+[CsvRecord]
+public sealed partial class WrittenGeneral
+{
+	/// <summary>What the row holds.</summary>
+	public string Case { get; set; } = "";
+
+	/// <summary>The number.</summary>
+	public double Value { get; set; }
+}
+
+/// <summary>Dates at midnight, whose column keeps the width of a date and time.</summary>
+[CsvRecord]
+public sealed partial class WrittenMidnight
+{
+	/// <summary>The date.</summary>
+	public DateTime Day { get; set; }
+}
+
+/// <summary>Sales, in a table that <see cref="ExcelSheetAttribute"/> asks for.</summary>
+[CsvRecord]
+[ExcelSheet(Table = true, TableName = "Sales", TableStyle = "TableStyleDark1", FreezeColumns = 1)]
+public sealed partial class WrittenSale
+{
+	/// <summary>The region.</summary>
+	public string Region { get; set; } = "";
+
+	/// <summary>The amount, with thousands and two decimals.</summary>
+	[ExcelColumn(Format = "#,##0.00")]
+	public decimal Amount { get; set; }
+}
+
+/// <summary>A named URI, which the policy makes a link or leaves as text.</summary>
+[CsvRecord]
+public sealed partial class WrittenLink
+{
+	/// <summary>What the URI is.</summary>
+	public string Name { get; set; } = "";
+
+	/// <summary>The URI, or none.</summary>
+	public Uri? Link { get; set; }
+}
+
+/// <summary>A line of a report with every setting: formats by <see cref="ExcelSheetOptions.Columns"/>, a link, wrap and a hidden column.</summary>
+[CsvRecord]
+public sealed partial class WrittenReportLine
+{
+	/// <summary>The region.</summary>
+	public string Region { get; set; } = "";
+
+	/// <summary>The product.</summary>
+	public string Product { get; set; } = "";
+
+	/// <summary>Units sold.</summary>
+	public int Units { get; set; }
+
+	/// <summary>Revenue.</summary>
+	public decimal Revenue { get; set; }
+
+	/// <summary>The share of the total.</summary>
+	public double Share { get; set; }
+
+	/// <summary>When it was updated.</summary>
+	public DateTime Updated { get; set; }
+
+	/// <summary>The region's page, or none.</summary>
+	public Uri? Link { get; set; }
+
+	/// <summary>Notes, which wrap.</summary>
+	public string Notes { get; set; } = "";
+
+	/// <summary>A hidden column.</summary>
+	public string Internal { get; set; } = "";
+}

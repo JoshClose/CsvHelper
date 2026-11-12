@@ -15,15 +15,36 @@ namespace CsvHelper.Excel.Corpus;
 /// automatic, since the writer's formulas have no cached values, and with macros disabled. For each worksheet the answers
 /// hold its name, the width of each column of its used range, and each cell with a value or a formula as the oracle's
 /// answers have it (<c>ExcelOracle.WriteCell</c>); the columns keep their widths, so that a number that doesn't fit
-/// shows as <c>########</c>. With them go the workbook's <see cref="Written.PartsHash"/>, the fingerprint of the culture
-/// data it read (<see cref="Written.CultureData"/>), the screen's DPI, which Excel's widths depend on, and the operating
-/// system, whose culture data .NET reads on Windows (its ICU).
+/// shows as <c>########</c>. They hold its look too: the frozen panes, the filter, the tables, the merged ranges, the
+/// links, the hidden columns, the rows Excel sized otherwise than its standard height, each cell's font, cell style, wrap
+/// and (for a cell without a value) number format where they aren't Normal's, from row 1 to the row below the used range;
+/// and last, each column's width at Excel's own AutoFit. With them go the workbook's defined names, its
+/// <see cref="Written.PartsHash"/>, the fingerprint of the culture data it read (<see cref="Written.CultureData"/>), the
+/// screen's DPI, which Excel's widths depend on, and the operating system, whose culture data .NET reads on Windows (its ICU).
 /// </summary>
 [SupportedOSPlatform("windows")]
 internal static class ExcelWritten
 {
 	/// <summary><c>xlCalculationAutomatic</c>.</summary>
 	private const int CalculationAutomatic = -4105;
+
+	/// <summary><c>xlUnderlineStyleNone</c>, Normal's underline.</summary>
+	private const int NoUnderline = -4142;
+
+	/// <summary>Normal's font.</summary>
+	private const string NormalFont = "Calibri";
+
+	/// <summary>Normal's font size.</summary>
+	private const double NormalSize = 11;
+
+	/// <summary><c>xlNormal</c>, a window neither minimized nor maximized, which takes a size.</summary>
+	private const int WindowNormal = -4143;
+
+	/// <summary>The width a workbook's window is given, in points: room for its frozen columns.</summary>
+	private const double WindowWidth = 800;
+
+	/// <summary>The height a workbook's window is given, in points: room for its frozen rows.</summary>
+	private const double WindowHeight = 500;
 
 	/// <summary><c>xlRepairFile</c>, for a workbook Excel opens only by repairing it.</summary>
 	private const int RepairFile = 1;
@@ -151,10 +172,11 @@ internal static class ExcelWritten
 					json.WriteEndArray();
 				}
 
+				ExcelOracle.WriteNames(json, opened);
 				json.WriteStartArray("sheets");
 				foreach (var sheet in opened.Worksheets)
 				{
-					WriteSheet(json, sheet);
+					WriteSheet(json, opened, sheet);
 				}
 
 				json.WriteEndArray();
@@ -171,12 +193,14 @@ internal static class ExcelWritten
 	}
 
 	/// <summary>
-	/// Writes a worksheet's answers: its name, each column's <c>ColumnWidth</c> from A to the used range's last, and each
-	/// cell of the used range with a value or a formula, at the widths written.
+	/// Writes a worksheet's answers: its name, each column's <c>ColumnWidth</c> from A to the used range's last, each cell
+	/// of the used range with a value or a formula, at the widths written, its look (<see cref="WriteLook"/>), and last each
+	/// column's width at Excel's own AutoFit.
 	/// </summary>
 	/// <param name="json">The JSON.</param>
+	/// <param name="workbook">The worksheet's workbook, whose window shows its panes.</param>
 	/// <param name="sheet">The worksheet.</param>
-	private static void WriteSheet(Utf8JsonWriter json, dynamic sheet)
+	private static void WriteSheet(Utf8JsonWriter json, dynamic workbook, dynamic sheet)
 	{
 		json.WriteStartObject();
 		json.WriteString("name", (string)sheet.Name);
@@ -185,6 +209,7 @@ internal static class ExcelWritten
 		int left = used.Column;
 		int rows = used.Rows.Count;
 		int columns = used.Columns.Count;
+		json.WriteString("used", (string)Address(used));
 		json.WriteStartArray("widths");
 		for (var column = 1; column < left + columns; column++)
 		{
@@ -208,8 +233,236 @@ internal static class ExcelWritten
 		}
 
 		json.WriteEndArray();
+		WriteLook(json, workbook, sheet, used, top + rows - 1, left + columns - 1);
+
+		// Excel's own AutoFit of each column, last, since it changes the widths; a hidden column's AutoFit would show it.
+		json.WriteStartArray("autoFit");
+		for (var column = 1; column < left + columns; column++)
+		{
+			var each = sheet.Columns[column];
+			if ((bool)each.Hidden)
+			{
+				json.WriteNullValue();
+			}
+			else
+			{
+				each.AutoFit();
+				json.WriteNumberValue((double)each.ColumnWidth);
+			}
+		}
+
+		json.WriteEndArray();
 		json.WriteEndObject();
 	}
+
+	/// <summary>
+	/// Writes a worksheet's look: its frozen panes (<c>freeze</c>, the rows and columns frozen, or null), its filter's range
+	/// (<c>filter</c>, or null), its tables, its merged ranges, its links (each one's cell, <c>Address</c> and
+	/// <c>SubAddress</c>), its hidden columns, the rows whose height isn't the sheet's standard height (<c>heights</c>, with
+	/// <c>standardHeight</c>), and the cells whose look isn't Normal's (<c>looks</c>): bold, a size or a font other than
+	/// Calibri 11, an underline, a colour, a cell style other than Normal, wrapped, and for a cell without a value a number
+	/// format other than General, from row 1 to the row below the used range, from column A to the used range's last.
+	/// </summary>
+	/// <param name="json">The JSON.</param>
+	/// <param name="workbook">The worksheet's workbook.</param>
+	/// <param name="sheet">The worksheet.</param>
+	/// <param name="used">Its used range.</param>
+	/// <param name="lastRow">The used range's last row.</param>
+	/// <param name="lastColumn">The used range's last column.</param>
+	private static void WriteLook(Utf8JsonWriter json, dynamic workbook, dynamic sheet, dynamic used, int lastRow, int lastColumn)
+	{
+		// The window shows the active sheet's panes. An invisible Excel lays out a workbook opened after the first in a
+		// window with no room, and then reports a split clipped to it (SplitRow 1 for 2 rows frozen, or 0), so the window is
+		// given a size first, and must then have room.
+		sheet.Activate();
+		var window = workbook.Windows[1];
+		window.WindowState = WindowNormal;
+		window.Width = WindowWidth;
+		window.Height = WindowHeight;
+		if ((double)window.UsableHeight <= 0 || (double)window.UsableWidth <= 0)
+		{
+			throw new InvalidOperationException($"Excel's window of {sheet.Name} has no room ({window.UsableWidth} by {window.UsableHeight}), so its split can't be read.");
+		}
+
+		if ((bool)window.FreezePanes)
+		{
+			json.WriteStartObject("freeze");
+			json.WriteNumber("rows", (int)window.SplitRow);
+			json.WriteNumber("columns", (int)window.SplitColumn);
+			json.WriteEndObject();
+		}
+		else
+		{
+			json.WriteNull("freeze");
+		}
+
+		if ((bool)sheet.AutoFilterMode)
+		{
+			json.WriteString("filter", (string)Address(sheet.AutoFilter.Range));
+		}
+		else
+		{
+			json.WriteNull("filter");
+		}
+
+		json.WriteStartArray("tables");
+		foreach (var list in sheet.ListObjects)
+		{
+			json.WriteStartObject();
+			json.WriteString("name", (string)list.Name);
+			json.WriteString("range", (string)Address(list.Range));
+			json.WriteString("style", (string?)TableStyle(list));
+			json.WriteBoolean("stripes", (bool)list.ShowTableStyleRowStripes);
+			json.WriteBoolean("buttons", (bool)list.ShowAutoFilter);
+			json.WriteStartArray("columns");
+			foreach (var column in list.ListColumns)
+			{
+				json.WriteStringValue((string)column.Name);
+			}
+
+			json.WriteEndArray();
+			json.WriteEndObject();
+		}
+
+		json.WriteEndArray();
+		ExcelOracle.WriteMerged(json, used);
+		json.WriteStartArray("links");
+		foreach (var link in sheet.Hyperlinks)
+		{
+			json.WriteStartObject();
+			json.WriteString("cell", (string)Address(link.Range));
+			json.WriteString("address", (string?)NullIfEmpty((object?)link.Address));
+			json.WriteString("subAddress", (string?)NullIfEmpty((object?)link.SubAddress));
+			json.WriteEndObject();
+		}
+
+		json.WriteEndArray();
+		json.WriteStartArray("hiddenColumns");
+		for (var column = 1; column <= lastColumn; column++)
+		{
+			if ((bool)sheet.Columns[column].Hidden)
+			{
+				json.WriteStringValue(ExcelOracle.ColumnName(column));
+			}
+		}
+
+		json.WriteEndArray();
+		double standard = sheet.StandardHeight;
+		json.WriteNumber("standardHeight", standard);
+		json.WriteStartArray("heights");
+		for (var row = 1; row <= lastRow + 1; row++)
+		{
+			double height = sheet.Rows[row].RowHeight;
+			if (height != standard)
+			{
+				json.WriteStartObject();
+				json.WriteNumber("row", row);
+				json.WriteNumber("height", height);
+				json.WriteEndObject();
+			}
+		}
+
+		json.WriteEndArray();
+		json.WriteStartArray("looks");
+		for (var row = 1; row <= lastRow + 1; row++)
+		{
+			for (var column = 1; column <= lastColumn; column++)
+			{
+				WriteCellLook(json, sheet.Cells[row, column]);
+			}
+		}
+
+		json.WriteEndArray();
+	}
+
+	/// <summary>Writes a cell's look when it isn't Normal's: its font, cell style and wrap, and its number format when it has no value.</summary>
+	/// <param name="json">The JSON.</param>
+	/// <param name="cell">The cell.</param>
+	private static void WriteCellLook(Utf8JsonWriter json, dynamic cell)
+	{
+		var font = cell.Font;
+		bool bold = font.Bold;
+		double size = font.Size;
+		string name = font.Name;
+		int underline = font.Underline;
+		double color = font.Color;
+		string style = cell.Style.Name;
+		bool wrap = cell.WrapText;
+		string? format = cell.Value2 is null && (string)cell.NumberFormat is var code && code != "General" ? code : null;
+		if (!bold && size == NormalSize && name == NormalFont && underline == NoUnderline && color == 0 && style == "Normal" && !wrap && format is null)
+		{
+			return;
+		}
+
+		json.WriteStartObject();
+		json.WriteString("cell", (string)Address(cell));
+		if (bold)
+		{
+			json.WriteBoolean("bold", true);
+		}
+
+		if (size != NormalSize)
+		{
+			json.WriteNumber("size", size);
+		}
+
+		if (name != NormalFont)
+		{
+			json.WriteString("font", name);
+		}
+
+		if (underline != NoUnderline)
+		{
+			json.WriteNumber("underline", underline);
+		}
+
+		if (color != 0)
+		{
+			json.WriteNumber("color", color);
+		}
+
+		if (style != "Normal")
+		{
+			json.WriteString("style", style);
+		}
+
+		if (wrap)
+		{
+			json.WriteBoolean("wrap", true);
+		}
+
+		if (format is not null)
+		{
+			json.WriteString("numberFormat", format);
+		}
+
+		json.WriteEndObject();
+	}
+
+	/// <summary>A table's style's name, or <see langword="null"/> for none, which COM gives as a text of a NUL.</summary>
+	/// <param name="list">The table.</param>
+	/// <returns>The name.</returns>
+	private static string? TableStyle(dynamic list)
+	{
+		object? style = list.TableStyle;
+
+		return style switch
+		{
+			null => null,
+			string text => NullIfEmpty(text.TrimEnd('\0')),
+			_ => (string)((dynamic)style).Name,
+		};
+	}
+
+	/// <summary>A range's address without <c>$</c> signs.</summary>
+	/// <param name="range">The range.</param>
+	/// <returns>The address, such as <c>A1:C3</c>.</returns>
+	private static string Address(dynamic range) => ((string)range.Address).Replace("$", "", StringComparison.Ordinal);
+
+	/// <summary>A COM text, <see langword="null"/> when it is missing or empty.</summary>
+	/// <param name="text">The text.</param>
+	/// <returns>The text, or <see langword="null"/>.</returns>
+	private static string? NullIfEmpty(object? text) => text is string value && value.Length > 0 ? value : null;
 
 	/// <summary>The system's DPI, as a system-aware thread sees it.</summary>
 	/// <returns>The DPI: 96 at 100%, 144 at 150%.</returns>

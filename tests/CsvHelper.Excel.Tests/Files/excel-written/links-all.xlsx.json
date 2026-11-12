@@ -1,0 +1,258 @@
+{
+  "file": "links-all.xlsx",
+  "description": "links by ExcelLinks.All: a share, a Windows path, a relative path with escaped letters, a jump to a cell of the workbook, and ftp and https",
+  "sha256": "28288024d914fd0665ff885483da81c3bea66fafa1864af1e275a7ebec6ffe82",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Sites",
+      "used": "A1:B7",
+      "widths": [
+        6.82,
+        27.91
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Link",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "share",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "\\\\server\\share\\a b.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "path",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "C:\\Temp\\réport.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "relative",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "docs/r%C3%A9sum%C3%A9.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": "jump",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "#Other!B2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A6",
+          "value2": "ftp",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B6",
+          "value2": "ftp://example.com/file.txt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A7",
+          "value2": "https",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B7",
+          "value2": "https://example.com/",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [
+        {
+          "cell": "B2",
+          "address": "\\\\server\\share\\a b.txt",
+          "subAddress": null
+        },
+        {
+          "cell": "B3",
+          "address": "C:\\Temp\\réport.txt",
+          "subAddress": null
+        },
+        {
+          "cell": "B4",
+          "address": "docs/résumé.txt",
+          "subAddress": null
+        },
+        {
+          "cell": "B5",
+          "address": null,
+          "subAddress": "Other!B2"
+        },
+        {
+          "cell": "B6",
+          "address": "ftp://example.com/file.txt",
+          "subAddress": null
+        },
+        {
+          "cell": "B7",
+          "address": "https://example.com/",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B5",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B6",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "B7",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        6.36,
+        26.55
+      ]
+    },
+    {
+      "name": "Other",
+      "used": "A1:B2",
+      "widths": [
+        5.36,
+        5.18
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Value",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "target",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": 1,
+          "type": "number",
+          "text": "1",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        5.09,
+        4.91
+      ]
+    }
+  ]
+}

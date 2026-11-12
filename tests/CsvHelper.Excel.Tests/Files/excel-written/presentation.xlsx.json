@@ -1,0 +1,627 @@
+{
+  "file": "presentation.xlsx",
+  "description": "every setting together: a title, a bold header frozen with a column, a table, columns' formats, wrap, widths and hidden, links, cells merged beside the table, and auto-fit; and a filtered sheet with a title, links and a range merged down a column",
+  "sha256": "b7753bb3b17e6d69c55465e88a25bf272591feea8952c999051869541635b6c9",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [
+    {
+      "name": "Summary!_FilterDatabase",
+      "refersTo": "=Summary!$A$2:$C$5",
+      "sheet": "Summary",
+      "range": "A2:C5",
+      "visible": false
+    }
+  ],
+  "sheets": [
+    {
+      "name": "Report",
+      "used": "A1:L7",
+      "widths": [
+        8.64,
+        17.82,
+        7.18,
+        10.18,
+        7.64,
+        10.36,
+        25.36,
+        24.09,
+        0,
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Sales report",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "Region",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "Product",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "Units",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D2",
+          "value2": "Revenue",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E2",
+          "value2": "Share",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F2",
+          "value2": "Updated",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G2",
+          "value2": "Link",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H2",
+          "value2": "Notes",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I2",
+          "value2": "Internal",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "North",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": "Widgets",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C3",
+          "value2": 12345,
+          "type": "number",
+          "text": "12,345",
+          "numberFormat": "#,##0",
+          "category": ",0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "D3",
+          "value2": 98765.4,
+          "type": "currency",
+          "text": "$98,765.40",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "E3",
+          "value2": 0.4567,
+          "type": "number",
+          "text": "45.67%",
+          "numberFormat": "0.00%",
+          "category": "P2",
+          "elapsed": "150.00%"
+        },
+        {
+          "cell": "F3",
+          "value2": 45306,
+          "type": "date",
+          "text": "2024-01-15",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "G3",
+          "value2": "https://example.com/north",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H3",
+          "value2": "steady",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I3",
+          "value2": "a",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A4",
+          "value2": "South",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": "Gadgets and gizmos",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C4",
+          "value2": 7,
+          "type": "number",
+          "text": "7",
+          "numberFormat": "#,##0",
+          "category": ",0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "D4",
+          "value2": 12.5,
+          "type": "currency",
+          "text": "$12.50",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "E4",
+          "value2": 0.0012,
+          "type": "number",
+          "text": "0.12%",
+          "numberFormat": "0.00%",
+          "category": "P2",
+          "elapsed": "150.00%"
+        },
+        {
+          "cell": "F4",
+          "value2": 45351,
+          "type": "date",
+          "text": "2024-02-29",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "G4",
+          "value2": "mailto:south@example.com",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H4",
+          "value2": "growing\nfast",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I4",
+          "value2": "b",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": "East",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": "Widgets",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C5",
+          "value2": 0,
+          "type": "number",
+          "text": "0",
+          "numberFormat": "#,##0",
+          "category": ",0",
+          "elapsed": "2"
+        },
+        {
+          "cell": "D5",
+          "value2": -150,
+          "type": "currency",
+          "text": "-$150.00",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00",
+          "category": "C2-",
+          "elapsed": "$1.50"
+        },
+        {
+          "cell": "E5",
+          "value2": 1,
+          "type": "number",
+          "text": "100.00%",
+          "numberFormat": "0.00%",
+          "category": "P2",
+          "elapsed": "150.00%"
+        },
+        {
+          "cell": "F5",
+          "value2": 45657,
+          "type": "date",
+          "text": "2024-12-31",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        },
+        {
+          "cell": "H5",
+          "value2": "A note long enough to wrap in a column twenty-four characters wide.",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I5",
+          "value2": "c",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 2,
+        "columns": 1
+      },
+      "filter": null,
+      "tables": [
+        {
+          "name": "Report",
+          "range": "A2:I5",
+          "style": "TableStyleMedium2",
+          "stripes": true,
+          "buttons": true,
+          "columns": [
+            "Region",
+            "Product",
+            "Units",
+            "Revenue",
+            "Share",
+            "Updated",
+            "Link",
+            "Notes",
+            "Internal"
+          ]
+        }
+      ],
+      "merged": [
+        "A1:I1",
+        "K3:L4",
+        "K6:K7"
+      ],
+      "links": [
+        {
+          "cell": "G3",
+          "address": "https://example.com/north",
+          "subAddress": null
+        },
+        {
+          "cell": "G4",
+          "address": "mailto:south@example.com",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [
+        "I"
+      ],
+      "standardHeight": 14.5,
+      "heights": [
+        {
+          "row": 1,
+          "height": 18.5
+        },
+        {
+          "row": 4,
+          "height": 29
+        },
+        {
+          "row": 5,
+          "height": 43.5
+        }
+      ],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "C1",
+          "numberFormat": "#,##0"
+        },
+        {
+          "cell": "D1",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00"
+        },
+        {
+          "cell": "E1",
+          "numberFormat": "0.00%"
+        },
+        {
+          "cell": "F1",
+          "numberFormat": "yyyy-mm-dd"
+        },
+        {
+          "cell": "H1",
+          "wrap": true
+        },
+        {
+          "cell": "G3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "H3",
+          "wrap": true
+        },
+        {
+          "cell": "G4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "H4",
+          "wrap": true
+        },
+        {
+          "cell": "H5",
+          "wrap": true
+        },
+        {
+          "cell": "C6",
+          "numberFormat": "#,##0"
+        },
+        {
+          "cell": "D6",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00"
+        },
+        {
+          "cell": "E6",
+          "numberFormat": "0.00%"
+        },
+        {
+          "cell": "F6",
+          "numberFormat": "yyyy-mm-dd"
+        },
+        {
+          "cell": "H6",
+          "wrap": true
+        },
+        {
+          "cell": "C7",
+          "numberFormat": "#,##0"
+        },
+        {
+          "cell": "D7",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00"
+        },
+        {
+          "cell": "E7",
+          "numberFormat": "0.00%"
+        },
+        {
+          "cell": "F7",
+          "numberFormat": "yyyy-mm-dd"
+        },
+        {
+          "cell": "H7",
+          "wrap": true
+        },
+        {
+          "cell": "C8",
+          "numberFormat": "#,##0"
+        },
+        {
+          "cell": "D8",
+          "numberFormat": "$#,##0.00;[Red]-$#,##0.00"
+        },
+        {
+          "cell": "E8",
+          "numberFormat": "0.00%"
+        },
+        {
+          "cell": "F8",
+          "numberFormat": "yyyy-mm-dd"
+        },
+        {
+          "cell": "H8",
+          "wrap": true
+        }
+      ],
+      "autoFit": [
+        8.09,
+        16.91,
+        6.82,
+        9.64,
+        7.18,
+        9.73,
+        24,
+        23.55,
+        null,
+        8.09,
+        8.09,
+        8.09
+      ]
+    },
+    {
+      "name": "Summary",
+      "used": "A1:C5",
+      "widths": [
+        8.64,
+        7.64,
+        26.82
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Summary",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "Region",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "Total",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "Site",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": "North",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B3",
+          "value2": 98765.4,
+          "type": "number",
+          "text": "98765.4",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C3",
+          "value2": "https://example.com/north",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B4",
+          "value2": 1.5,
+          "type": "number",
+          "text": "1.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "C4",
+          "value2": "https://example.com/north/2",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A5",
+          "value2": "South",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B5",
+          "value2": 12.5,
+          "type": "number",
+          "text": "12.5",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        }
+      ],
+      "freeze": {
+        "rows": 2,
+        "columns": 1
+      },
+      "filter": "A2:C5",
+      "tables": [],
+      "merged": [
+        "A1:C1",
+        "A3:A4"
+      ],
+      "links": [
+        {
+          "cell": "C3",
+          "address": "https://example.com/north",
+          "subAddress": null
+        },
+        {
+          "cell": "C4",
+          "address": "https://example.com/north/2",
+          "subAddress": null
+        }
+      ],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [
+        {
+          "row": 1,
+          "height": 18.5
+        }
+      ],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "A2",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "bold": true
+        },
+        {
+          "cell": "C2",
+          "bold": true
+        },
+        {
+          "cell": "C3",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        },
+        {
+          "cell": "C4",
+          "underline": 2,
+          "color": 12673797,
+          "style": "Hyperlink"
+        }
+      ],
+      "autoFit": [
+        8.09,
+        7.18,
+        25.45
+      ]
+    }
+  ]
+}

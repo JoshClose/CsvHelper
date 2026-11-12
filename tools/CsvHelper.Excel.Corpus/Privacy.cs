@@ -34,9 +34,9 @@ internal static partial class Privacy
 			{
 				foreach (var text in Decodings(bytes))
 				{
-					var found = needles.FirstOrDefault(n => text.Contains(n, StringComparison.OrdinalIgnoreCase)) ?? Email().Match(text) switch
+					var found = needles.FirstOrDefault(n => text.Contains(n, StringComparison.OrdinalIgnoreCase)) ?? Email().Matches(text).FirstOrDefault(m => !IsReserved(m.Value)) switch
 					{
-						{ Success: true } match => "an email address (" + match.Value.Length + " characters)",
+						{ } match => "an email address (" + match.Value.Length + " characters)",
 						_ => null,
 					};
 					if (found is not null)
@@ -92,6 +92,23 @@ internal static partial class Privacy
 		{
 			yield return Encoding.Unicode.GetString(bytes, 1, bytes.Length - 1);
 		}
+	}
+
+	/// <summary>
+	/// Whether an email address is at a domain reserved for examples (RFC 2606): <c>example.com</c>, <c>example.net</c>,
+	/// <c>example.org</c>, or one under <c>.example</c>, <c>.test</c> or <c>.invalid</c>. No one has such an address, so
+	/// the written set's <c>mailto:</c> links may use them.
+	/// </summary>
+	/// <param name="address">The address.</param>
+	/// <returns>Whether its domain is reserved.</returns>
+	private static bool IsReserved(string address)
+	{
+		var domain = address.Substring(address.IndexOf('@') + 1).ToLowerInvariant();
+
+		return domain is "example.com" or "example.net" or "example.org"
+			|| domain.EndsWith(".example", StringComparison.OrdinalIgnoreCase)
+			|| domain.EndsWith(".test", StringComparison.OrdinalIgnoreCase)
+			|| domain.EndsWith(".invalid", StringComparison.OrdinalIgnoreCase);
 	}
 
 	/// <summary>An email address.</summary>
