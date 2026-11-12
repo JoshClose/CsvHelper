@@ -23,6 +23,7 @@ foreach (var item in items)
     writer.WriteField(item.Timestamp);                    // DateTime/DateTimeOffset: ISO 8601 ("O") by default
     writer.EndRecord();                                   // or await writer.EndRecordAsync()
 }
+// out.csv is complete when the writer is disposed at the end of the scope, which writes what is still buffered.
 ```
 
 ## Creating a writer
