@@ -97,18 +97,18 @@ if ($Remaining) {
 	throw "Unknown argument: $($Remaining -join ' '). docs/build.ps1 -h lists the options."
 }
 
+function Invoke-Step([string] $name, [scriptblock] $command) {
+	Write-Host "==> $name" -ForegroundColor Green
+	& $command
+	if ($LASTEXITCODE -ne 0) { throw "$name failed (exit code $LASTEXITCODE)." }
+}
+
 if ($CheckSnippets) {
 	$arguments = @('run', '--project', (Join-Path $repo 'tools/CsvHelper.Docs'), '-c', 'Release', '--', '--repo', $repo, '--check-snippets')
 	foreach ($guide in $Only) { $arguments += @('--only', $guide) }
 	Invoke-Step 'Compiling the code of the migration guides' { dotnet @arguments }
 
 	return
-}
-
-function Invoke-Step([string] $name, [scriptblock] $command) {
-	Write-Host "==> $name" -ForegroundColor Green
-	& $command
-	if ($LASTEXITCODE -ne 0) { throw "$name failed (exit code $LASTEXITCODE)." }
 }
 
 # npm ci only when the lockfile changed since the last install.
