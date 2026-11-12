@@ -726,7 +726,12 @@ These compile once the code is ported, but behave differently:
 | Dates and times when writing | The culture's default format (`"G"` for `DateTime`) | ISO 8601 (`"O"`) unless you give a format |
 | Columns of `WriteRecords` | Every public property with a getter | The columns that are read: no computed properties |
 | Field counts when writing | Not checked | A record with another field count than the first throws (`ValidateFieldCount = false` allows it) |
+| When written records reach the destination | At each `NextRecord()` | When the buffer is mostly full, on `Flush` and on `Dispose` |
 | Dynamic records | `IDictionary<string, object>`, can be changed | `CsvDynamicRecord`, read-only |
+
+A `StringWriter` that you read before disposing the writer or calling `Flush` is now empty, where in version 33 it had
+every record up to the last `NextRecord()`. Files and streams written through a `StreamWriter` were already incomplete
+until then, because the `StreamWriter` has a buffer of its own.
 
 ## Removed with no replacement
 
