@@ -142,6 +142,7 @@ generator decides, and attributes such as `[CsvColumn]`, `[CsvIgnore]` and `[Csv
 | `InjectionCharacters`, `InjectionEscapeCharacter` | `InjectionCharacters`, `InjectionEscape` | |
 | `Comment` | `CommentPrefix` | `null` by default: `WriteComment` throws until it is set. |
 | `Quote` | none | The writer always quotes with `"`. |
+| `Encoding` | none | Write to a `StreamWriter` with the encoding; see [Encodings](#encodings). |
 
 New writer options: `NullValue`, `TrueValue` and `FalseValue` for how those are written, `ValidateFieldCount` (on by
 default) and `WriteByteOrderMark`.
@@ -495,8 +496,24 @@ csv.WriteField("Widget");
 csv.EndRecord();
 ```
 
-Files and streams are written as UTF-8 (`WriteByteOrderMark` adds a byte order mark); `CsvWriter.Create(textWriter)`
-writes to a `TextWriter`, which encodes the text itself.
+### Encodings
+
+There is no `Encoding` writer option. Files and streams are written as UTF-8 (`WriteByteOrderMark` adds a byte order
+mark). For another encoding, such as Windows-1252, give `CsvWriter.Create` a `StreamWriter` that uses it, as before:
+
+```csharp before
+using var streamWriter = new StreamWriter("orders.csv", false, Encoding.GetEncoding(1252));
+using var csv = new CsvWriter(streamWriter, CultureInfo.InvariantCulture);
+```
+
+```csharp after
+using var streamWriter = new StreamWriter("orders.csv", false, Encoding.GetEncoding(1252));
+using var csv = CsvWriter.Create(streamWriter);
+```
+
+Any `TextWriter` works the same way: the writer gives it text, and it encodes the text itself. See
+[Encoding and byte order mark](../../pages/writing.md#encoding-and-byte-order-mark) for Windows-1252 on .NET (Core),
+characters that the encoding can't hold, and byte order marks.
 
 ### Writing records
 

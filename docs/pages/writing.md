@@ -31,7 +31,7 @@ foreach (var item in items)
 |---|---|---|
 | A file | `CsvWriter.ToFile(path)` | Created or overwritten; other processes can read it while it is written. Closed when the writer is disposed. |
 | A `Stream` | `CsvWriter.Create(stream)` | Written from its current position. Disposed with the writer unless `leaveOpen: true`. |
-| A `TextWriter` | `CsvWriter.Create(textWriter)` | Gets UTF-16 text, which it encodes itself. Disposed with the writer unless `leaveOpen: true`. |
+| A `TextWriter` | `CsvWriter.Create(textWriter)` | Gets UTF-16 text, which it encodes itself: a `StreamWriter` writes a file in [another encoding](#encoding-and-byte-order-mark). Disposed with the writer unless `leaveOpen: true`. |
 
 ```csharp
 // A file.
@@ -539,7 +539,22 @@ var excel = new CsvWriterOptions { WriteByteOrderMark = true };
 using var writer = CsvWriter.ToFile("for-excel.csv", excel);
 ```
 
-A `TextWriter` gets UTF-16 text and encodes it as it was configured to; `WriteByteOrderMark` does not apply to it.
+There is no `Encoding` option for writing, as there is for [reading](reading.html#encodings). For another encoding,
+write to a `StreamWriter` that uses it: the writer gives it UTF-16 text, and it encodes the text itself.
+
+```csharp
+Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);    // once, at startup; .NET Framework doesn't need it
+using var legacy = CsvWriter.Create(new StreamWriter("legacy.csv", false, Encoding.GetEncoding(1252)));
+```
+
+- **Characters the encoding can't hold** are replaced without an error: Windows-1252 writes `ā` as `a` and `✓` as
+  `?`. To throw an `EncoderFallbackException` instead, get the encoding with
+  `Encoding.GetEncoding(1252, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback)`.
+- **Byte order mark:** `WriteByteOrderMark` does not apply to a `TextWriter`. A `StreamWriter` writes the byte order
+  mark of its encoding, if it has one: `new StreamWriter(path)` writes none, but `Encoding.UTF8` and `Encoding.Unicode`
+  have one.
+- **UTF-8:** write to the file or stream itself. Through a `TextWriter`, the UTF-8 that the writer formats is turned
+  into UTF-16 and back.
 
 ## Flushing and async writing
 

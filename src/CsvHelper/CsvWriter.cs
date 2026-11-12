@@ -173,7 +173,10 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		return writer;
 	}
 
-	/// <summary>Creates a writer that writes to a <see cref="TextWriter"/>.</summary>
+	/// <summary>
+	/// Creates a writer that writes to a <see cref="TextWriter"/>, such as a <see cref="StreamWriter"/> that writes a file
+	/// in an encoding other than UTF-8.
+	/// </summary>
 	/// <param name="textWriter">
 	/// The destination. It gets UTF-16 text, which it encodes itself; <see cref="CsvWriterOptions.WriteByteOrderMark"/>
 	/// does not apply to it.

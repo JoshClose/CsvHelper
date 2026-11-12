@@ -184,7 +184,8 @@ using var import = CsvReader.Create(bytes);
 
 Files hold bytes, and a .NET `string` holds UTF-16 characters. An encoding says how characters are stored as bytes, and
 reading a file with the wrong one garbles every character outside ASCII. CsvHelper reads UTF-8 unless a byte order mark
-says otherwise, and writes UTF-8.
+says otherwise, and writes UTF-8, or another encoding
+[through a `StreamWriter`](writing.html#encoding-and-byte-order-mark).
 
 | You see | What happened |
 |---|---|
