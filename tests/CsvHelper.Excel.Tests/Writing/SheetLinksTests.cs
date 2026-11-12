@@ -118,7 +118,11 @@ public class SheetLinksTests
 		links.EndRecord();
 		links.Add(2, 0, "https://dropped.example/");
 		links.Add(2, 1, "https://kept.example/");
+		Assert.Equal(2, links.Targets);
 		links.DiscardRecord();
+
+		// The record's new target went with it; the one an earlier record uses stays.
+		Assert.Equal(1, links.Targets);
 		links.Add(2, 0, "https://later.example/");
 		links.EndRecord();
 		using var xml = new XmlOutput(256);

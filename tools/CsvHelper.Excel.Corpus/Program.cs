@@ -17,6 +17,7 @@ internal static class Program
 	private const string Usage =
 		"""
 		Usage: CsvHelper.Excel.Corpus <command> [--files <folder>] [--csv <PackageAssets.csv>] [--java <java.exe or JDK>]
+		       CsvHelper.Excel.Corpus fuzzed <folder>
 
 		Commands:
 		  excel          Excel through COM: excel/ (the basic workbook in each format, and .xlsb, encrypted and .xls; the
@@ -34,6 +35,9 @@ internal static class Program
 		  oracle         Excel through COM: excel-oracle/, what every corpus workbook's cells hold as Excel reads them
 		  written        Excel through COM: excel-written/, what Excel reads in each workbook CsvHelper.Excel writes
 		                 (Written.cs), with each workbook's SHA-256
+		  fuzzed         Excel through COM: opens each workbook the writer's fuzzers saved in a folder (their
+		                 CSVHELPER_EXCEL_FUZZ_SAVE), and reports which Excel repairs or refuses, and the numbers it shows
+		                 as ########, to standard output and the folder's fuzzed.txt; nothing is committed
 		  spec           The basic workbook's content as JSON, to standard output (the typed and messy workbooks' go to
 		                 the Python and Java producers through temporary files)
 		  check          Only the check, which every command ends with, that no file holds personal information
@@ -58,6 +62,19 @@ internal static class Program
 		}
 
 		var command = args.FirstOrDefault() ?? "";
+		if (command == "fuzzed")
+		{
+			// Not the corpus: the fuzzers' workbooks, in a folder of their own, which the privacy check isn't for.
+			if (args.Length != 2 || !Directory.Exists(args[1]))
+			{
+				Console.Error.WriteLine(Usage);
+
+				return 1;
+			}
+
+			return ExcelFuzzed.Open(args[1]);
+		}
+
 		var root = FindRepository();
 		var files = Option(args, "--files") ?? Path.Combine(root, "tests", "CsvHelper.Excel.Tests", "Files");
 		var csv = Option(args, "--csv") ?? Path.Combine(root, "bench", "CsvHelper.Benchmarks", "Data", "PackageAssets.csv");

@@ -256,7 +256,8 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// with it; other text, such as a format's (<c>1,234.50</c>, <c>0042</c>), is a text cell, as are <c>NaN</c> and the
 	/// infinities, and every other type. (<see cref="AddSheet{T}(string, ExcelSheetOptions)"/> reads the dates and numbers of its members'
 	/// formats and cultures back.) Integers and decimals of more than 15 significant digits,
-	/// <see cref="DateTimeOffset"/>, and dates before 1900 and negative durations follow <see cref="Options"/>' choices.
+	/// <see cref="DateTimeOffset"/>, and dates before 1900 and durations negative or of 2,958,466 days or more follow
+	/// <see cref="Options"/>' choices.
 	/// The first data record's dates and times widen their columns, so that Excel shows them.
 	/// </para>
 	/// <para>

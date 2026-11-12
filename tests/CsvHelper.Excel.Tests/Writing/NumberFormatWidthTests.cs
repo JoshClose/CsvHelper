@@ -471,10 +471,79 @@ public class NumberFormatWidthTests
 	}
 
 	[Fact]
+	public void RoundsDatesToTheSecondWithoutFractionsOfASecond()
+	{
+		// 2024-01-15 23:59:59.6 is the next day without fractions of a second, as Excel showed it (step 7's probe), and
+		// 23:59:59.4 isn't.
+		var late = 45306.999995370;
+		var earlier = 45306.999993055;
+		Assert.Equal("2024-01-16", new NumberFormatWidth("yyyy-mm-dd").Number(late, widest: false));
+		Assert.Equal("00:00", new NumberFormatWidth("hh:mm").Number(late, widest: false));
+		Assert.Equal("Jan 16", new NumberFormatWidth("mmm d").Number(late, widest: false));
+		Assert.Equal("2024-01-15 23:59:59.6", new NumberFormatWidth("yyyy-mm-dd hh:mm:ss.0").Number(late, widest: false));
+		Assert.Equal("2024-01-15", new NumberFormatWidth("yyyy-mm-dd").Number(earlier, widest: false));
+		Assert.Equal("23:59", new NumberFormatWidth("hh:mm").Number(earlier, widest: false));
+	}
+
+	[Fact]
+	public void ShowsSectionsOfBracketsAloneInGeneral()
+	{
+		// A color, DBNum or a condition alone is General, without a minus sign in a negative section; a locale alone shows
+		// nothing (step 7's probe).
+		Assert.Equal("1234.5", new NumberFormatWidth("[Red]").Number(1234.5, widest: false));
+		Assert.Equal("-1", new NumberFormatWidth("[Red]").Number(-1, widest: false));
+		Assert.Equal("1234.5", new NumberFormatWidth("[Color10]").Number(1234.5, widest: false));
+		Assert.Equal("1234.5", new NumberFormatWidth("[DBNum1]").Number(1234.5, widest: false));
+		Assert.Equal("1", new NumberFormatWidth("0;[Red]").Number(-1, widest: false));
+		Assert.Equal("1234.5", new NumberFormatWidth("[Red];0").Number(1234.5, widest: false));
+		Assert.Equal("", new NumberFormatWidth("[$-409]").Number(1234.5, widest: false));
+		Assert.Equal("", new NumberFormatWidth("0;;0").Number(-1, widest: false));
+	}
+
+	[Fact]
+	public void ShowsElapsedTimeAfterADateAsTheTimeOfDay()
+	{
+		// After a date part, elapsed time is the time of day in its unit; before one, the whole time (step 7's probes:
+		// Excel showed d[ss] of 1234.5 as 1843200, mmmm[mm] as May720, and [ss]d of 328 as 2833920023).
+		Assert.Equal("1843200", new NumberFormatWidth("d[ss]").Number(1234.5, widest: false));
+		Assert.Equal("May720", new NumberFormatWidth("mmmm[mm]").Number(1234.5, widest: false));
+		Assert.Equal("1903-05-18 12:00", new NumberFormatWidth("yyyy-mm-dd [h]:mm").Number(1234.5, widest: false));
+		Assert.Equal("2833920023", new NumberFormatWidth("[ss]d").Number(328, widest: false));
+		Assert.Equal("1777680May", new NumberFormatWidth("[mm]mmmm").Number(1234.5, widest: false));
+	}
+
+	[Fact]
+	public void CountsElapsedTimeAlonePastTheLastDate()
+	{
+		// Elapsed time with literals alone shows any serial, and any other date or time token stops at the last date (step
+		// 7's probe): [h] shows 2,958,466 days as 71003184, and [h]:mm as ########.
+		Assert.Equal("71003184", new NumberFormatWidth("[h]").Number(2958466, widest: false));
+		Assert.Equal("72000000x", new NumberFormatWidth("[h]\"x\"").Number(3000000, widest: false));
+		Assert.Equal("4260191040", new NumberFormatWidth("[mm]").Number(2958466, widest: false));
+		Assert.Equal("255611462400", new NumberFormatWidth("[ss]").Number(2958466, widest: false));
+		Assert.Equal("24000000000000000", new NumberFormatWidth("[h]").Number(1e15, widest: false));
+		Assert.Equal("", new NumberFormatWidth("[h]:mm").Number(2958466, widest: false));
+		Assert.Equal("", new NumberFormatWidth("[ss].0").Number(2958466, widest: false));
+		Assert.Equal("", new NumberFormatWidth("[h] d").Number(2958466, widest: false));
+	}
+
+	[Fact]
 	public void ShowsNothingForValuesExcelCant()
 	{
 		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd").Number(-1, widest: false));
 		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd").Number(2958466, widest: false));
+
+		// 9999-12-31's last millisecond rounds up to 10000-01-01 in a format without fractions of a second, which Excel
+		// shows as ######## too, even in yyyy or d (step 7's probe); with the milliseconds it shows, and elapsed time alone
+		// counts on.
+		var lastMillisecond = 2958465 + (86_399_999 / 86_400_000.0);
+		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd hh:mm:ss").Number(lastMillisecond, widest: false));
+		Assert.Equal("", new NumberFormatWidth("[h]:mm:ss").Number(lastMillisecond, widest: true));
+		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd").Number(lastMillisecond, widest: false));
+		Assert.Equal("", new NumberFormatWidth("d").Number(lastMillisecond, widest: false));
+		Assert.Equal("23:59:59.999", new NumberFormatWidth("hh:mm:ss.000").Number(lastMillisecond, widest: false));
+		Assert.Equal("9999-12-31 23:59:59.999", new NumberFormatWidth("yyyy-mm-dd hh:mm:ss.000").Number(lastMillisecond, widest: false));
+		Assert.Equal("71003184", new NumberFormatWidth("[h]").Number(lastMillisecond, widest: false));
 		Assert.Equal("", new NumberFormatWidth("0.00").Number(double.NaN, widest: false));
 		Assert.Equal("0", NumberFormatWidth.General(double.PositiveInfinity));
 	}

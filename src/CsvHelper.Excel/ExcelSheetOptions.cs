@@ -95,8 +95,8 @@ public sealed record ExcelSheetOptions
 
 	/// <summary>
 	/// The widest auto-fit makes a column for its text, in characters: 1 to 255; 60 by default. Longer text is cut at the
-	/// column's edge, or spills into the next cell. Numbers, booleans, dates and times get the width they need, up to 255,
-	/// since Excel shows one too narrow as <c>########</c>.
+	/// column's edge, or spills into the next cell. Numbers, booleans, dates and times get the width they need, up to the
+	/// widest the file format takes (about 254.29), since Excel shows one too narrow as <c>########</c>.
 	/// </summary>
 	public double MaxAutoFitWidth { get; init; } = 60;
 

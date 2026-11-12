@@ -1,7 +1,7 @@
 {
   "file": "autofit.xlsx",
   "description": "auto-fit's widths: later values wider than the first, General numbers, text capped at 60 characters and on one line, a capped sheet that measures two records, a bold header wider than its cells, formulas, and dates at midnight",
-  "sha256": "d3b78be5ccb4f0420472ef83d5ba84dc72e3e04daa8bf4fd3d6510d9a34ef7d5",
+  "sha256": "201a3ae0e8ce440c103da7d803f5e4be6b60534f6d856346282fe80246c82a52",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],
@@ -12,7 +12,7 @@
       "widths": [
         10.64,
         21.91,
-        19.09
+        24.91
       ],
       "cells": [
         {
@@ -74,12 +74,9 @@
         },
         {
           "cell": "C3",
-          "value2": 10675199.11673007,
-          "type": "number",
-          "text": "###################",
-          "numberFormat": "[h]:mm:ss.000",
-          "category": "G",
-          "elapsed": "36:00:00.000"
+          "value2": "10675199.02:48:05.4775807",
+          "type": "text",
+          "numberFormat": "General"
         }
       ],
       "freeze": {
@@ -110,7 +107,7 @@
       "autoFit": [
         10,
         20.82,
-        6.27
+        23.64
       ]
     },
     {

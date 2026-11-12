@@ -742,7 +742,8 @@ internal static class WrittenOracle
 
 	/// <summary>
 	/// A duration: days, to the millisecond, shown in hours as <c>[h]:mm:ss</c>; a negative one of half a millisecond or more,
-	/// as <see cref="ExcelWriterOptions.OutOfRangeDates"/> says, text of the field as written.
+	/// and one of 2,958,466 days or more, which Excel shows as <c>########</c> (step 6's probe), as
+	/// <see cref="ExcelWriterOptions.OutOfRangeDates"/> says, text of the field as written.
 	/// </summary>
 	/// <param name="duration">The duration.</param>
 	/// <param name="options">The options.</param>
@@ -755,7 +756,13 @@ internal static class WrittenOracle
 			return Text(duration.ToString("c", CultureInfo.InvariantCulture), source);
 		}
 
-		var milliseconds = duration.Ticks < 0 ? 0 : (duration.Ticks + 5_000) / 10_000;
+		// Rounded half up, without adding to the ticks, which TimeSpan.MaxValue's would overflow.
+		var milliseconds = duration.Ticks < 0 ? 0 : (duration.Ticks / 10_000) + (duration.Ticks % 10_000 >= 5_000 ? 1 : 0);
+		if (milliseconds >= 2_958_466L * MillisecondsPerDay)
+		{
+			return Text(duration.ToString("c", CultureInfo.InvariantCulture), source);
+		}
+
 		var shows = $"{milliseconds / 3_600_000}:{milliseconds / 60_000 % 60:00}:{milliseconds / 1000 % 60:00}" + (milliseconds % 1000 == 0 ? "" : $".{milliseconds % 1000:000}");
 
 		return new ExpectedCell { Kind = ExpectedKind.Number, Number = milliseconds / MillisecondsPerDay, Shows = shows, Source = source };

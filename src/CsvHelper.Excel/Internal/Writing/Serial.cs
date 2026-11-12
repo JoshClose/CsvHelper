@@ -13,6 +13,16 @@ internal static class Serial
 	/// <summary>The milliseconds of a day.</summary>
 	public const long MillisecondsPerDay = 86_400_000;
 
+	/// <summary>
+	/// The first serial Excel can't show, in milliseconds: 2,958,466 days, 10000-01-01, the instant after 9999-12-31's
+	/// last millisecond. Excel shows no serial from it on in a date or time format, <c>[h]:mm:ss</c> too, at any width, nor
+	/// one that rounds up to it in its format (checked through COM on 2026-11-11;
+	/// <c>Csv\_bench\results\phase5\step6\durations.txt</c>). So it is also the shortest duration Excel can't show. The
+	/// writer's own formats show every serial below it: a duration in whole seconds is in <c>[h]:mm:ss</c>, and its last
+	/// millisecond in <c>[h]:mm:ss.000</c>.
+	/// </summary>
+	public const long PastLast = 2_958_466 * MillisecondsPerDay;
+
 	private const long TicksPerMillisecond = 10_000;
 
 	// Milliseconds from 0001-01-01: Excel's first date, serial 1; the first day after its 1900-02-29, which never existed;
@@ -51,7 +61,10 @@ internal static class Serial
 
 	/// <summary>A duration's serial (days), in milliseconds.</summary>
 	/// <param name="ticks">The duration's ticks.</param>
-	/// <returns>The milliseconds, negative for a negative duration of half a millisecond or more.</returns>
+	/// <returns>
+	/// The milliseconds, negative for a negative duration of half a millisecond or more; <see cref="PastLast"/> or more
+	/// for one Excel can't show.
+	/// </returns>
 	public static long DurationMilliseconds(long ticks) => ticks >= 0 ? Round(ticks) : ticks <= -5000 ? -1 : 0;
 
 	/// <summary>A serial in days, from its milliseconds.</summary>

@@ -73,6 +73,17 @@ public class TableWriterTests
 	}
 
 	[Fact]
+	public void TakesNamesAlikeButForCharactersExcelIgnoresAsRepeats()
+	{
+		// Excel repaired a table of a header with a byte order mark first, or U+FFFD (a lone surrogate written), beside the
+		// same name without it (step 7's presentation fuzzer, checked through COM on 2026-11-11). A name of such characters
+		// alone is empty to the comparison.
+		var names = TableWriter.ColumnNames([(char)0xFEFF + "Name", "Name", (char)0xFFFD + "x", "X", "" + (char)0xFFFD, "" + (char)0x00AD, "a" + (char)0x200B]);
+
+		Assert.Equal([(char)0xFEFF + "Name", "Name2", (char)0xFFFD + "x", "X3", "" + (char)0xFFFD, (char)0x00AD + "4", "a" + (char)0x200B], names);
+	}
+
+	[Fact]
 	public void DoesntCutASurrogatePair()
 	{
 		// The cut at 252 characters, before the number, falls between the emoji's halves, so the emoji goes.

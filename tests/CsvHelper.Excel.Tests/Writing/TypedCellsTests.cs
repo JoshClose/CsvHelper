@@ -332,6 +332,13 @@ public class TypedCellsTests
 			// Half a millisecond before 1900 rounds to it, and a negative tick to no time.
 			writer.WriteField(new DateTime(1900, 1, 1).AddTicks(-5000));
 			writer.WriteField(TimeSpan.FromTicks(-1));
+			// Excel shows no duration of 2,958,466 days or more, the serial of 10000-01-01; its last millisecond before it
+			// shows in [h]:mm:ss.000, and half a millisecond before it rounds to it.
+			writer.WriteField(TimeSpan.MaxValue);
+			writer.WriteField(TimeSpan.FromDays(2_958_466));
+			writer.WriteField(TimeSpan.FromDays(2_958_466) - TimeSpan.FromMilliseconds(1));
+			writer.WriteField(TimeSpan.FromDays(2_958_466) - TimeSpan.FromTicks(5000));
+			writer.WriteField(TimeSpan.FromDays(2_958_465) + new TimeSpan(23, 59, 59));
 			await Written.EndRecordAsync(writer, a);
 			await Written.DisposeAsync(writer, a);
 		}, async, options);
@@ -340,19 +347,25 @@ public class TypedCellsTests
 		Assert.Contains(
 			"<c r=\"A1\" t=\"inlineStr\"><is><t>1899-12-31T23:59:59.0000000</t></is></c><c r=\"B1\" t=\"inlineStr\"><is><t>-01:00:00</t></is></c>" +
 			"<c r=\"C1\" t=\"inlineStr\"><is><t>1900-01-01T00:30:00.0000000+01:00</t></is></c><c r=\"D1\" t=\"inlineStr\"><is><t>0001-01-01T00:00:00.0000000</t></is></c>" +
-			"<c r=\"E1\" s=\"1\"><v>1</v></c><c r=\"F1\" s=\"2\"><v>0</v></c>",
+			"<c r=\"E1\" s=\"1\"><v>1</v></c><c r=\"F1\" s=\"2\"><v>0</v></c>" +
+			"<c r=\"G1\" t=\"inlineStr\"><is><t>10675199.02:48:05.4775807</t></is></c><c r=\"H1\" t=\"inlineStr\"><is><t>2958466.00:00:00</t></is></c>",
 			sheet);
+		Assert.Contains("<c r=\"J1\" t=\"inlineStr\"><is><t>2958465.23:59:59.9995000</t></is></c><c r=\"K1\" s=\"2\"><v>2958465.999988426</v></c>", sheet);
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader(new ExcelReaderOptions { Csv = new CsvReaderOptions { HasHeader = false } });
 		Assert.True(reader.Read());
 		Assert.Equal(new DateTime(1899, 12, 31, 23, 59, 59), reader.Parse<DateTime>(0));
 		Assert.Equal(TimeSpan.FromHours(-1), reader.Parse<TimeSpan>(1));
 		Assert.Equal(new DateTime(1900, 1, 1), reader.Parse<DateTime>(4));
+		Assert.Equal(TimeSpan.MaxValue, reader.Parse<TimeSpan>(6));
+		Assert.Equal(TimeSpan.FromDays(2_958_466) - TimeSpan.FromMilliseconds(1), reader.Parse<TimeSpan>(8));
+		Assert.Equal(TimeSpan.FromDays(2_958_465) + new TimeSpan(23, 59, 59), reader.Parse<TimeSpan>(10));
 	}
 
 	[Theory]
 	[InlineData(0, "Cell Old!A2 holds 1899-12-31T00:00:00.0000000, before 1900-01-01, Excel's first date (ExcelWriterOptions.OutOfRangeDates is Throw).")]
 	[InlineData(1, "Cell Old!B2 holds -00:00:00.0005000, a negative duration, which Excel shows as ######## (ExcelWriterOptions.OutOfRangeDates is Throw).")]
+	[InlineData(2, "Cell Old!B2 holds 2958465.23:59:59.9995000, a duration of 2,958,466 days or more, which Excel shows as ######## (ExcelWriterOptions.OutOfRangeDates is Throw).")]
 	public void ThrowsForDatesExcelCantShowWhenTheOptionsSay(int field, string message)
 	{
 		var options = new ExcelWriterOptions { OutOfRangeDates = ExcelOutOfRangeDates.Throw, Csv = new CsvWriterOptions { HasHeader = false, ValidateFieldCount = false } };
@@ -362,7 +375,7 @@ public class TypedCellsTests
 			using var writer = workbook.AddSheet("Old");
 			writer.WriteField(new DateTime(1900, 1, 1));
 			writer.EndRecord();
-			if (field == 1)
+			if (field > 0)
 			{
 				writer.WriteField(new DateTime(1900, 1, 1));
 			}
@@ -373,9 +386,13 @@ public class TypedCellsTests
 				{
 					writer.WriteField(new DateTime(1899, 12, 31));
 				}
-				else
+				else if (field == 1)
 				{
 					writer.WriteField(TimeSpan.FromTicks(-5000));
+				}
+				else
+				{
+					writer.WriteField(TimeSpan.FromDays(2_958_466) - TimeSpan.FromTicks(5000));
 				}
 			});
 

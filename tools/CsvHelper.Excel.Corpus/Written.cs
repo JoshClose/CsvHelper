@@ -1318,7 +1318,7 @@ public sealed partial class WrittenWidths
 	/// <summary>A date at midnight, then one with milliseconds.</summary>
 	public DateTime? When { get; set; }
 
-	/// <summary>A short duration, then <see cref="TimeSpan.MaxValue"/>.</summary>
+	/// <summary>A short duration, then <see cref="TimeSpan.MaxValue"/>, which Excel can't show as a duration, so it is text.</summary>
 	public TimeSpan? Took { get; set; }
 }
 

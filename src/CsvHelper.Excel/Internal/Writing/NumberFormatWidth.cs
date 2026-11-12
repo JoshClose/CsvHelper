@@ -43,8 +43,9 @@ namespace CsvHelper.Excel;
 /// <item><description>
 /// Dates show month and day names (<c>aaa</c> and <c>aaaa</c> too), in English or in the language of a locale
 /// (<c>[$-407]</c>), and the days before 1900-03-01 a day of the week earlier, as Excel counts them. Elapsed time
-/// (<c>[h]</c>) shows the whole hours, minutes or seconds, but beside a date, where it is the time of day. A time is taken
-/// to the millisecond; whole seconds round, fractions of a second and minutes are cut.
+/// (<c>[h]</c>) shows the whole hours, minutes or seconds, but after a date part, where it is the time of day in its unit;
+/// alone, it shows any serial, where any other token stops at 9999-12-31. A time is taken to the millisecond, and rounds
+/// to the second unless the section shows fractions of one; fractions of a second and minutes are cut.
 /// </description></item>
 /// </list>
 /// <para>
@@ -292,7 +293,10 @@ internal sealed class NumberFormatWidth
 	/// <returns>The text.</returns>
 	private static string Render(Section section, double value, double abs, bool minus, bool widest)
 	{
-		if (section.Tokens.Count == 0)
+		// A section of a color, DBNum or a condition alone shows the number in General ([Red] is [Red]General); one of a
+		// locale alone, or of nothing, shows nothing (checked through COM on 2026-11-11, after step 7's format fuzzer).
+		var bracketsAlone = section.Tokens.Count == 0;
+		if (bracketsAlone && !(section.Color || section.DBNum || section.Condition))
 		{
 			return "";
 		}
@@ -302,7 +306,7 @@ internal sealed class NumberFormatWidth
 			return RenderDate(section, value, widest);
 		}
 
-		var shown = section.HasGeneral || section.Placeholders == 0 ? RenderGeneral(section, abs, minus, widest) :
+		var shown = bracketsAlone || section.HasGeneral || section.Placeholders == 0 ? RenderGeneral(section, abs, minus, widest) :
 			section.IsFraction ? RenderFraction(section, abs, minus, widest) : RenderNumber(section, abs, minus, widest);
 		if (section.DBNum && widest)
 		{
@@ -322,7 +326,7 @@ internal sealed class NumberFormatWidth
 
 	/// <summary>
 	/// A section's text for a number in General, with its literals: a section with <c>General</c>, one of literals alone
-	/// (<c>"zero"</c>), and, in its widest form, one with <c>[DBNum]</c>.
+	/// (<c>"zero"</c>), one of brackets alone (<c>[Red]</c>), and, in its widest form, one with <c>[DBNum]</c>.
 	/// </summary>
 	/// <param name="section">The section.</param>
 	/// <param name="abs">The number's absolute value.</param>
@@ -332,10 +336,15 @@ internal sealed class NumberFormatWidth
 	private static string RenderGeneral(Section section, double abs, bool minus, bool widest)
 	{
 		var builder = new StringBuilder();
-		var general = section.HasGeneral || section.Placeholders > 0 ? General(abs) : "";
+		var general = section.HasGeneral || section.Placeholders > 0 || section.Tokens.Count == 0 ? General(abs) : "";
 		if (widest)
 		{
 			general = AsDigits(general);
+		}
+
+		if (section.Tokens.Count == 0)
+		{
+			return (minus && abs != 0 ? "-" : "") + general;
 		}
 
 		foreach (var token in section.Tokens)
@@ -573,22 +582,38 @@ internal sealed class NumberFormatWidth
 	/// <returns>The text, or nothing for a serial Excel shows as <c>########</c>.</returns>
 	private static string RenderDate(Section section, double value, bool widest)
 	{
-		if (value < 0 || value >= PastLastDate)
+		// Elapsed time with nothing else of a date or time but literals counts past Excel's last date ([h] shows 2,958,466
+		// days as 71003184), and any other token stops there ([h]:mm shows ########): checked through COM on 2026-11-11.
+		var elapsedAlone = IsElapsedAlone(section);
+		if (value < 0 || (value >= PastLastDate && !elapsedAlone))
 		{
 			return "";
 		}
 
-		// To the millisecond; then whole seconds round when the section shows them, and fractions of a second and minutes are
-		// cut (09:05:07.250 shows 07.2 in ss.0, and 23:59:59 shows 23:59 in hh:mm).
+		if (elapsedAlone && value >= PastLastDate)
+		{
+			return RenderElapsed(section, value);
+		}
+
+		// To the millisecond; then whole seconds round unless the section shows fractions of a second, and fractions of a
+		// second and minutes are cut (09:05:07.250 shows 07.2 in ss.0, 23:59:59 shows 23:59 in hh:mm, and 23:59:59.6 shows
+		// the next day in yyyy-mm-dd and 00:00 in hh:mm: step 7's probe).
 		var milliseconds = (long)Math.Round(value * Serial.MillisecondsPerDay, MidpointRounding.AwayFromZero);
-		if (section.ShowsSeconds && section.SubSecondDigits == 0)
+		if (section.SubSecondDigits == 0)
 		{
 			milliseconds = (milliseconds + 500) / 1000 * 1000;
 		}
 
+		// A serial that rounds up to the last one shows as ######## too: 9999-12-31 23:59:59.999 in any format without
+		// fractions of a second (step 6's durations.txt, 2,958,465.9999999884 in [h]:mm:ss; step 7's, in yyyy and d).
+		if (milliseconds >= Serial.PastLast && !elapsedAlone)
+		{
+			return "";
+		}
+
 		var days = milliseconds / Serial.MillisecondsPerDay;
 		var ofDay = milliseconds % Serial.MillisecondsPerDay;
-		var (year, month, day, weekday) = DateOf((int)days);
+		var (year, month, day, weekday) = elapsedAlone ? (0, 0, 0, 0) : DateOf((int)days);
 		var hour = (int)(ofDay / 3_600_000);
 		var minute = (int)(ofDay / 60_000 % 60);
 		var second = (int)(ofDay / 1000 % 60);
@@ -652,15 +677,15 @@ internal sealed class NumberFormatWidth
 
 					break;
 				case TokenKind.ElapsedHour:
-					builder.Append((milliseconds / 3_600_000).ToString(CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
+					builder.Append(((token.OfDay ? ofDay : milliseconds) / 3_600_000).ToString(CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
 
 					break;
 				case TokenKind.ElapsedMinute:
-					builder.Append((milliseconds / 60_000).ToString(CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
+					builder.Append(((token.OfDay ? ofDay : milliseconds) / 60_000).ToString(CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
 
 					break;
 				case TokenKind.ElapsedSecond:
-					builder.Append((milliseconds / 1000).ToString(CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
+					builder.Append(((token.OfDay ? ofDay : milliseconds) / 1000).ToString(CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
 
 					break;
 				case TokenKind.AmPm:
@@ -686,6 +711,62 @@ internal sealed class NumberFormatWidth
 
 					break;
 			}
+		}
+
+		return builder.ToString();
+	}
+
+	/// <summary>Whether a section's only date or time token is one elapsed time, beside literals.</summary>
+	/// <param name="section">The section, which has a date or time.</param>
+	/// <returns>Whether it is.</returns>
+	private static bool IsElapsedAlone(Section section)
+	{
+		var elapsed = 0;
+		foreach (var token in section.Tokens)
+		{
+			switch (token.Kind)
+			{
+				case TokenKind.ElapsedHour or TokenKind.ElapsedMinute or TokenKind.ElapsedSecond:
+					elapsed++;
+
+					break;
+				case TokenKind.Year or TokenKind.EraYear or TokenKind.BuddhistYear or TokenKind.Month or TokenKind.Day or TokenKind.JapaneseDay or
+					TokenKind.Hour or TokenKind.Minute or TokenKind.Second or TokenKind.SubSecond or TokenKind.AmPm or TokenKind.Era:
+					return false;
+			}
+		}
+
+		return elapsed == 1;
+	}
+
+	/// <summary>
+	/// The text of a section of elapsed time alone for a serial past Excel's last date: its hours, minutes or seconds in
+	/// whole numbers, rounded to the second, with its literals; in the double's digits, past a long's milliseconds.
+	/// </summary>
+	/// <param name="section">The section, whose only date or time token is one elapsed time.</param>
+	/// <param name="value">The serial, 2,958,466 days or more.</param>
+	/// <returns>The text.</returns>
+	private static string RenderElapsed(Section section, double value)
+	{
+		var seconds = Math.Round(value * 86_400, MidpointRounding.AwayFromZero);
+		var builder = new StringBuilder();
+		foreach (var token in section.Tokens)
+		{
+			var units = token.Kind switch
+			{
+				TokenKind.ElapsedHour => Math.Floor(seconds / 3600),
+				TokenKind.ElapsedMinute => Math.Floor(seconds / 60),
+				TokenKind.ElapsedSecond => seconds,
+				_ => -1,
+			};
+			if (units < 0)
+			{
+				AppendLiteral(builder, token, widest: false);
+
+				continue;
+			}
+
+			builder.Append(units.ToString("0", CultureInfo.InvariantCulture).PadLeft(token.Count, '0'));
 		}
 
 		return builder.ToString();
@@ -1045,7 +1126,8 @@ internal sealed class NumberFormatWidth
 	/// <param name="Char">A placeholder's character, an exponent's sign, a space's or fill's character, or <c>A</c>'s case of <c>AM/PM</c>.</param>
 	/// <param name="Count">A date token's letters.</param>
 	/// <param name="Role">What a placeholder or a comma does.</param>
-	private readonly record struct Token(TokenKind Kind, string Text = "", char Char = '\0', int Count = 0, DigitRole Role = DigitRole.None);
+	/// <param name="OfDay">Whether an elapsed time comes after a date part, where it is the time of day in its unit.</param>
+	private readonly record struct Token(TokenKind Kind, string Text = "", char Char = '\0', int Count = 0, DigitRole Role = DigitRole.None, bool OfDay = false);
 
 	/// <summary>A section of a code: its tokens, and what they make of it.</summary>
 	private sealed class Section
@@ -1073,6 +1155,9 @@ internal sealed class NumberFormatWidth
 
 		/// <summary>Whether it has a condition.</summary>
 		public bool Condition { get; private set; }
+
+		/// <summary>Whether the section has a color.</summary>
+		public bool Color { get; private set; }
 
 		/// <summary>The names of its months and days: English, or a locale's (<c>[$-407]</c>).</summary>
 		public DateTimeFormatInfo Names { get; private set; } = CultureInfo.InvariantCulture.DateTimeFormat;
@@ -1177,6 +1262,10 @@ internal sealed class NumberFormatWidth
 			else if (content.Length > 0 && content[0] is '<' or '>' or '=')
 			{
 				Condition = true;
+			}
+			else
+			{
+				Color = true;
 			}
 		}
 
@@ -1311,19 +1400,17 @@ internal sealed class NumberFormatWidth
 				ShowsSeconds |= token.Kind is TokenKind.Second or TokenKind.ElapsedSecond;
 			}
 
-			// A date part wins over elapsed time: yyyy-mm-dd [h]:mm shows the hour of the day (Phase 4's answers).
-			if (Tokens.Exists(t => t.Kind is TokenKind.Year or TokenKind.Month or TokenKind.Day or TokenKind.EraYear or TokenKind.BuddhistYear or TokenKind.JapaneseDay))
+			// Elapsed time after a date part is the time of day in its unit: yyyy-mm-dd [h]:mm shows the hour of the day (Phase
+			// 4's answers), d[ss] the seconds since midnight, and mmmm[mm] the minutes; before one, it is the whole time ([ss]d
+			// shows every second, then the day): checked through COM on 2026-11-11, after step 7's fuzzers.
+			var afterDate = false;
+			for (var i = 0; i < Tokens.Count; i++)
 			{
-				for (var i = 0; i < Tokens.Count; i++)
+				var kind = Tokens[i].Kind;
+				afterDate |= kind is TokenKind.Year or TokenKind.Month or TokenKind.Day or TokenKind.EraYear or TokenKind.BuddhistYear or TokenKind.JapaneseDay;
+				if (afterDate && kind is TokenKind.ElapsedHour or TokenKind.ElapsedMinute or TokenKind.ElapsedSecond)
 				{
-					var kind = Tokens[i].Kind switch
-					{
-						TokenKind.ElapsedHour => TokenKind.Hour,
-						TokenKind.ElapsedMinute => TokenKind.Minute,
-						TokenKind.ElapsedSecond => TokenKind.Second,
-						_ => Tokens[i].Kind,
-					};
-					Tokens[i] = Tokens[i] with { Kind = kind };
+					Tokens[i] = Tokens[i] with { OfDay = true };
 				}
 			}
 		}

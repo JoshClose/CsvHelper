@@ -15,7 +15,8 @@ public sealed record ExcelColumnOptions
 
 	/// <summary>
 	/// The column's width, as Excel's <c>ColumnWidth</c> counts it: the number of the default font's digits it shows, 0 to
-	/// 255. It beats auto-fit's width and the width of a date's format. <see langword="null"/>, the default, for none.
+	/// 255. It beats auto-fit's width and the width of a date's format. <see langword="null"/>, the default, for none. A
+	/// width past about 254.29 is written as the widest the file format takes, which Excel shows as about 254.29.
 	/// </summary>
 	public double? Width { get; init; }
 

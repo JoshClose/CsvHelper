@@ -94,6 +94,15 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>The most significant digits Excel keeps of a number.</summary>
 	private const int MaxSignificantDigits = 15;
 
+	/// <summary>Why Excel can't show a date before 1900-01-01, for <see cref="WriteOutOfRange"/>'s message.</summary>
+	private const string BeforeFirstDate = "before 1900-01-01, Excel's first date";
+
+	/// <summary>Why Excel can't show a negative duration, for <see cref="WriteOutOfRange"/>'s message.</summary>
+	private const string NegativeDuration = "a negative duration, which Excel shows as ########";
+
+	/// <summary>Why Excel can't show a duration of <see cref="Serial.PastLast"/> or more, for <see cref="WriteOutOfRange"/>'s message.</summary>
+	private const string LongDuration = "a duration of 2,958,466 days or more, which Excel shows as ########";
+
 	/// <summary>The XML before the columns and the rows.</summary>
 	private static readonly byte[] Start = Concat(
 		PackageParts.Declaration,
@@ -283,6 +292,9 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>How the sheet looks: its options, resolved and checked when it was added.</summary>
 	public SheetSettings Settings { get; }
+
+	/// <summary>The number of distinct link targets the sheet holds until it ends, the current record's included.</summary>
+	public int LinkTargets => links?.Targets ?? 0;
 
 	/// <summary>Whether the cell being measured is the header's, in bold.</summary>
 	private bool MeasuresBold => boldHeaderWidths && row == headerRowNumber;
@@ -821,7 +833,7 @@ internal sealed class SheetSink : CsvCellSink
 		var milliseconds = Serial.DateMilliseconds(ticks);
 		if (milliseconds < 0)
 		{
-			WriteOutOfRange(text, at, duration: false);
+			WriteOutOfRange(text, at, BeforeFirstDate);
 
 			return;
 		}
@@ -852,7 +864,7 @@ internal sealed class SheetSink : CsvCellSink
 		var milliseconds = Serial.DateMilliseconds(ticks);
 		if (milliseconds < 0)
 		{
-			WriteOutOfRange(text, at, duration: false);
+			WriteOutOfRange(text, at, BeforeFirstDate);
 
 			return;
 		}
@@ -890,10 +902,12 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>
 	/// Writes a duration cell from a <see cref="TimeSpan"/>'s <c>"c"</c> text: its days, in <c>[h]:mm:ss</c>, with
 	/// <c>.000</c> when it has milliseconds. Its column's width is its own text's. A duration in its member's format, other
-	/// than <c>c</c>, is a text cell, even when its text looks like <c>c</c>'s (<c>hh\:mm\:ss</c> drops the days).
+	/// than <c>c</c>, is a text cell, even when its text looks like <c>c</c>'s (<c>hh\:mm\:ss</c> drops the days). A negative
+	/// duration, and one of <see cref="Serial.PastLast"/> or more, follow <see cref="ExcelWriterOptions.OutOfRangeDates"/>.
 	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
+	/// <exception cref="InvalidOperationException">Excel can't show the duration, and the options say to throw.</exception>
 	private void WriteDuration(ReadOnlySpan<byte> text, int at)
 	{
 		if (FormatOf(at) is { HasDurationFormat: true } || !DotNetText.TryDuration(text, out var ticks))
@@ -904,9 +918,9 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		var milliseconds = Serial.DurationMilliseconds(ticks);
-		if (milliseconds < 0)
+		if (milliseconds < 0 || milliseconds >= Serial.PastLast)
 		{
-			WriteOutOfRange(text, at, duration: true);
+			WriteOutOfRange(text, at, milliseconds < 0 ? NegativeDuration : LongDuration);
 
 			return;
 		}
@@ -921,17 +935,15 @@ internal sealed class SheetSink : CsvCellSink
 	/// </summary>
 	/// <param name="text">The field's text.</param>
 	/// <param name="at">The cell's column.</param>
-	/// <param name="duration">Whether it is a negative duration, rather than a date before 1900-01-01.</param>
+	/// <param name="why">Why Excel can't show it, for the exception's message: <see cref="BeforeFirstDate"/>, <see cref="NegativeDuration"/> or <see cref="LongDuration"/>.</param>
 	/// <exception cref="InvalidOperationException">The options say to throw.</exception>
-	private void WriteOutOfRange(ReadOnlySpan<byte> text, int at, bool duration)
+	private void WriteOutOfRange(ReadOnlySpan<byte> text, int at, string why)
 	{
 		if (options.OutOfRangeDates == ExcelOutOfRangeDates.Throw)
 		{
 			var value = Encoding.UTF8.GetString(text.ToArray());
 
-			throw new InvalidOperationException(duration
-				? $"Cell {Location.Cell(at, row)} holds {value}, a negative duration, which Excel shows as ######## (ExcelWriterOptions.OutOfRangeDates is Throw)."
-				: $"Cell {Location.Cell(at, row)} holds {value}, before 1900-01-01, Excel's first date (ExcelWriterOptions.OutOfRangeDates is Throw).");
+			throw new InvalidOperationException($"Cell {Location.Cell(at, row)} holds {value}, {why} (ExcelWriterOptions.OutOfRangeDates is Throw).");
 		}
 
 		WriteText(text, at);
@@ -958,7 +970,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		if (milliseconds < 0)
 		{
-			WriteOutOfRange(text, at, duration: false);
+			WriteOutOfRange(text, at, BeforeFirstDate);
 
 			return;
 		}
@@ -1543,7 +1555,8 @@ internal sealed class SheetSink : CsvCellSink
 			xml.Append("\" max=\""u8);
 			xml.AppendNumber(at + 1);
 			xml.Append("\" width=\""u8);
-			xml.AppendDouble(custom ? width : ColumnWidths.Default);
+			// A column's own width of 255 characters, or a formatted number's without auto-fit, is wider than the schema takes.
+			xml.AppendDouble(custom ? Math.Min(width, ColumnWidths.Widest) : ColumnWidths.Default);
 			xml.Append((byte)'"');
 			if (style != 0)
 			{

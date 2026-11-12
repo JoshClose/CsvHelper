@@ -68,8 +68,13 @@ internal static class ColumnWidths
 	/// </summary>
 	public const double Default = 9.140625;
 
-	/// <summary>The width of the widest column, 255 characters, the most Excel's <c>ColumnWidth</c> takes.</summary>
-	public static readonly double Widest = FromCharacters(ExcelColumnOptions.MaxWidth);
+	/// <summary>
+	/// The widest column written: 255, the most the Open XML schema's <c>width</c> takes, about 254.29 characters. Excel's
+	/// own widest, 255 characters (<see cref="ExcelColumnOptions.MaxWidth"/>), is wider as stored: Excel wrote 255.6328125
+	/// for it at 144 DPI, and <see cref="FromCharacters"/> gives 255.7109375 at 96, which the schema refuses (step 7's
+	/// fuzzer, through the validator; <c>Csv\_bench\results\phase5\step7\widths.txt</c>).
+	/// </summary>
+	public const double Widest = 255;
 
 	/// <summary>The pixels of a date, <c>yyyy-mm-dd</c>.</summary>
 	public static readonly double DatePixels = TextPixels("2024-12-31".AsSpan());

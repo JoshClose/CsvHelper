@@ -27,6 +27,14 @@ namespace CsvHelper.Excel;
 /// dots (<c>I</c>, <c>ı</c>, <c>i</c>, <c>İ</c>), or by a zero-width space. <see cref="Key"/> agrees with every pair
 /// checked but the compatibility forms, which it takes to be the same name, so it is stricter there.
 /// </para>
+/// <para>
+/// Excel ignores some characters when it compares names, a sheet's or a table's column's (checked through COM on
+/// 2026-11-11, after Phase 5's presentation fuzzer): <c>\uFEFFa</c>, <c>\u00ADa</c> and <c>\uFFFDa</c> are <c>a</c>, and
+/// <c>a\u00ADb</c> is <c>ab</c>. They are the soft hyphen, the combining grapheme joiner, the format characters (the joiners,
+/// the directions' marks, the word joiner, the byte order mark), the variation selectors, U+FFFC, U+FFFD and the
+/// non-characters; not U+200B, U+180E or the language tags. <see cref="Key"/> drops them wherever they are, where Excel
+/// kept one at a name's end, so it is stricter there.
+/// </para>
 /// </remarks>
 internal static class SheetNames
 {
@@ -86,8 +94,8 @@ internal static class SheetNames
 	}
 
 	/// <summary>
-	/// The key of a name, which names Excel takes to be the same share: its NFKC form (Unicode's compatibility
-	/// composition; around the non-characters the normalization refuses), with <c>ß</c> and <c>ẞ</c> as <c>ss</c>,
+	/// The key of a name, which names Excel takes to be the same share: without the characters Excel ignores
+	/// (<see cref="IsIgnored"/>), its NFKC form (Unicode's compatibility composition), with <c>ß</c> and <c>ẞ</c> as <c>ss</c>,
 	/// upper-cased in the invariant culture as .NET does it (on .NET Framework, with the mappings it lacks:
 	/// <c>InvariantUpper</c>); and that again, as Unicode's caseless match does, since each step can undo the other's:
 	/// <c>I</c> and U+0307 compose to <c>İ</c>, while <c>i</c> and U+0307, which Excel takes to be the same name (checked on
@@ -95,7 +103,49 @@ internal static class SheetNames
 	/// </summary>
 	/// <param name="name">The name, which <see cref="Check"/> accepted.</param>
 	/// <returns>The key, compared ordinally.</returns>
-	public static string Key(string name) => Upper(Normalized(Upper(Normalized(name))));
+	public static string Key(string name) => Upper(Normalized(Upper(Normalized(WithoutIgnored(name)))));
+
+	/// <summary>A name without the characters Excel ignores when it compares names (<see cref="IsIgnored"/>).</summary>
+	/// <param name="name">The name, without lone surrogates.</param>
+	/// <returns>The name, or the same string when it has none of them.</returns>
+	private static string WithoutIgnored(string name)
+	{
+		StringBuilder? kept = null;
+		for (var i = 0; i < name.Length; i++)
+		{
+			var pair = char.IsHighSurrogate(name[i]) && i + 1 < name.Length && char.IsLowSurrogate(name[i + 1]);
+			var code = pair ? char.ConvertToUtf32(name[i], name[i + 1]) : name[i];
+			if (IsIgnored(code))
+			{
+				kept ??= new StringBuilder(name, 0, i, name.Length);
+			}
+			else
+			{
+				kept?.Append(name, i, pair ? 2 : 1);
+			}
+
+			if (pair)
+			{
+				i++;
+			}
+		}
+
+		return kept?.ToString() ?? name;
+	}
+
+	/// <summary>
+	/// Whether Excel ignores a character when it compares names: the soft hyphen, the combining grapheme joiner, Unicode's
+	/// format characters but U+200B, U+180E and the language tags (which Excel compares), the variation selectors of the
+	/// Basic Multilingual Plane, U+FFFC, U+FFFD and the non-characters. A fixed list, so that every target agrees.
+	/// </summary>
+	/// <param name="code">The character's code point.</param>
+	/// <returns>Whether it is ignored.</returns>
+	private static bool IsIgnored(int code) =>
+		code is 0x00AD or 0x034F or 0x061C or 0x06DD or 0x070F or 0x08E2 or 0x110BD or 0x110CD or 0xFEFF ||
+		code is (>= 0x0600 and <= 0x0605) or (>= 0x0890 and <= 0x0891) or (>= 0x200C and <= 0x200F) or (>= 0x202A and <= 0x202E) ||
+		code is (>= 0x2060 and <= 0x2064) or (>= 0x2066 and <= 0x206F) or (>= 0xFE00 and <= 0xFE0F) or (>= 0xFFF9 and <= 0xFFFD) ||
+		code is (>= 0x13430 and <= 0x1343F) or (>= 0x1BCA0 and <= 0x1BCA3) or (>= 0x1D173 and <= 0x1D17A) ||
+		code is (>= 0xFDD0 and <= 0xFDEF) || (code & 0xFFFE) == 0xFFFE;
 
 	/// <summary>A name's NFKC form, with <c>ß</c> and <c>ẞ</c> as <c>ss</c>.</summary>
 	/// <param name="name">The name, which has no lone surrogates.</param>
@@ -114,8 +164,8 @@ internal static class SheetNames
 		}
 		catch (ArgumentException)
 		{
-			// The normalization refuses non-characters: U+FFFE on .NET, and every one on .NET Framework (U+FFFF, U+FDD0).
-			normal = NormalizeAround(name);
+			// The normalization refuses non-characters (U+FFFE on .NET, every one on .NET Framework), which the key drops first.
+			normal = name;
 		}
 
 		normal = normal.Replace("\u00DF", "ss").Replace("\u1E9E", "ss");
@@ -194,40 +244,6 @@ internal static class SheetNames
 		}
 
 		return stem + suffix;
-	}
-
-	/// <summary>
-	/// A name's NFKC form around its non-characters (U+FDD0 to U+FDEF, and the last two code points of each plane), which
-	/// the normalization refuses (U+FFFE on .NET, every one on .NET Framework; checked on 2026-11-07): they compose with
-	/// nothing and nothing reorders across them, so each run between them is normalized alone, and they are kept as they
-	/// are, as .NET's normalization keeps those it takes.
-	/// </summary>
-	/// <param name="name">The name, which has no lone surrogates.</param>
-	/// <returns>The NFKC form.</returns>
-	private static string NormalizeAround(string name)
-	{
-		var normal = new StringBuilder(name.Length);
-		var start = 0;
-		for (var i = 0; i < name.Length; i++)
-		{
-			var pair = char.IsHighSurrogate(name[i]) && i + 1 < name.Length;
-			var code = pair ? char.ConvertToUtf32(name[i], name[i + 1]) : name[i];
-			if (code is >= 0xFDD0 and <= 0xFDEF || (code & 0xFFFE) == 0xFFFE)
-			{
-				normal.Append(name.Substring(start, i - start).Normalize(NormalizationForm.FormKC));
-				normal.Append(name, i, pair ? 2 : 1);
-				start = i + (pair ? 2 : 1);
-			}
-
-			if (pair)
-			{
-				i++;
-			}
-		}
-
-		normal.Append(name.Substring(start).Normalize(NormalizationForm.FormKC));
-
-		return normal.ToString();
 	}
 
 	/// <summary>The code units a name takes as the workbook part writes it (<see cref="XmlOutput.WrittenLength"/>).</summary>

@@ -226,6 +226,37 @@ public class SheetLookTests
 	}
 
 	[Theory]
+	[InlineData(false, 0)]
+	[InlineData(true, 0)]
+	[InlineData(false, 100)]
+	[InlineData(true, 100)]
+	public async Task WritesNoColumnWiderThanTheSchemaTakes(bool async, int autoFit)
+	{
+		// Excel's widest column, 255 characters, is 255.71 as stored at 96 DPI (Excel itself wrote 255.63 at 144), past the
+		// schema's 255, which the validator refuses (step 7's fuzzer): the writer writes 255. So it does a formatted
+		// number's width, which 240 digits grouped in thousands make wider still, with or without auto-fit. 254 characters
+		// are as they are.
+		var options = new ExcelSheetOptions
+		{
+			AutoFit = autoFit,
+			Columns = new Dictionary<string, ExcelColumnOptions>
+			{
+				["Name"] = new() { Width = 255 },
+				["Amount"] = new() { Format = "#,##" + new string('0', 240) },
+				["Note"] = new() { Width = 254 },
+			},
+		};
+
+		var workbook = await Write(Orders, async, options);
+
+		var cols = Regex.Match(Written.Entry(workbook, "xl/worksheets/sheet1.xml"), "<cols>.*</cols>").Value;
+		Assert.Contains("<col min=\"1\" max=\"1\" width=\"255\" customWidth=\"1\"/>", cols);
+		Assert.Contains("<col min=\"2\" max=\"2\" width=\"255\" style=\"", cols);
+		Assert.Contains($"<col min=\"4\" max=\"4\" width=\"{W(ColumnWidths.FromCharacters(254))}\" customWidth=\"1\"/>", cols);
+		Assert.Empty(Written.ValidationErrors(workbook));
+	}
+
+	[Theory]
 	[MemberData(nameof(Modes))]
 	public async Task StylesColumnsByTheirOptions(bool async)
 	{

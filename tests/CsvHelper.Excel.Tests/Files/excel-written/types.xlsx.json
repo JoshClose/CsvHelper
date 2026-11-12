@@ -1,7 +1,7 @@
 {
   "file": "types.xlsx",
   "description": "every type that .NET Framework has, at its edges, with the default options",
-  "sha256": "0ac207a5124066f3f42c4c484bb65800e4613a5c8f9c8e9ca6fd1e7540e67e14",
+  "sha256": "f4834039dfbab46c125743b98968f25a82521b8ea1191d3c2b993254460bfedc",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],
@@ -1331,12 +1331,9 @@
         },
         {
           "cell": "C3",
-          "value2": 10675199.11673007,
-          "type": "number",
-          "text": "########",
-          "numberFormat": "[h]:mm:ss.000",
-          "category": "G",
-          "elapsed": "36:00:00.000"
+          "value2": "10675199.02:48:05.4775807",
+          "type": "text",
+          "numberFormat": "General"
         }
       ],
       "freeze": null,
@@ -1351,7 +1348,7 @@
       "autoFit": [
         10,
         20.82,
-        6.27
+        23.64
       ]
     }
   ]

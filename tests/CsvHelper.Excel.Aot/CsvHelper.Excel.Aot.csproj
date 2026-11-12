@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Phase 5's NativeAOT check (decision 14): an app that writes a sheet of a type with [ExcelSheet] and [ExcelColumn],
+	     whose attributes CsvHelper.Excel reads through reflection over the members T's annotation keeps, and reads it
+	     back. CI publishes it with NativeAOT, where a trim or AOT warning is an error, and runs it. It builds as a plain app
+	     with the solution. -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<IsPackable>false</IsPackable>
+		<PublishAot>true</PublishAot>
+		<InvariantGlobalization>true</InvariantGlobalization>
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+		<!-- NuGet's audit of known vulnerabilities stays a warning: the only package it can name is the SDK's own ILCompiler,
+		     which an SDK not yet patched has (SDK 10.0.402's 10.0.13 had an advisory on 2026-11-11); the app references none. -->
+		<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
+		<IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
+		<ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
+		<!-- Each trim or AOT warning on its own, rather than one for each assembly that has any. -->
+		<TrimmerSingleWarn>false</TrimmerSingleWarn>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\CsvHelper.Excel\CsvHelper.Excel.csproj" />
+		<!-- The [CsvRecord] generator, for the order's generated record writer and reader. -->
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+</Project>

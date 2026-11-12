@@ -2,7 +2,8 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// What a written workbook does with a date before 1900-01-01, the first date of Excel's 1900 date system, and with a
-/// negative <see cref="System.TimeSpan"/>, which Excel shows as <c>########</c> (<see cref="ExcelWriterOptions.OutOfRangeDates"/>).
+/// <see cref="System.TimeSpan"/> that is negative or of 2,958,466 days or more (past 9999-12-31 as a serial), which Excel
+/// shows as <c>########</c> (<see cref="ExcelWriterOptions.OutOfRangeDates"/>).
 /// </summary>
 public enum ExcelOutOfRangeDates
 {

@@ -364,6 +364,35 @@ public class SheetAutoFitTests
 		ReadsBackAsWritten(workbook, orders);
 	}
 
+	[Theory]
+	[InlineData(false, 100)]
+	[InlineData(true, 100)]
+	[InlineData(false, 0)]
+	[InlineData(true, 0)]
+	public async Task MeasuresNothingOfADateItsFormatRoundsPastTheLast(bool async, int autoFit)
+	{
+		// DateTime's last tick is 9999-12-31's last millisecond, which rounds up to 10000-01-01 in whole seconds, as Excel
+		// shows as ######## (step 7's fuzzer: measuring it threw). It counts nothing toward the column's width, with or
+		// without auto-fit, and reads back as that millisecond.
+		var options = new ExcelSheetOptions
+		{
+			AutoFit = autoFit,
+			Columns = new Dictionary<string, ExcelColumnOptions>
+			{
+				["When"] = new() { Format = "yyyy-mm-dd hh:mm:ss" },
+			},
+		};
+		FitOrder[] orders = [With(Orders[0], o => o.When = DateTime.MaxValue), Orders[1]];
+
+		var workbook = await Write(orders, async, options);
+
+		Assert.Equal(autoFit > 0 ? Fit(Text("When", bold: true), Text("2024-01-16 00:00:00")) : ColumnWidths.Default, Width(workbook, 3));
+		Assert.Empty(Written.ValidationErrors(workbook));
+		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
+		using var reader = book.OpenReader();
+		Assert.Equal([new DateTime(9999, 12, 31, 23, 59, 59, 999), Orders[1].When], reader.GetRecords<FitOrder>().Select(o => o.When));
+	}
+
 	/// <summary>A copy of an order, changed.</summary>
 	/// <param name="order">The order.</param>
 	/// <param name="change">Changes the copy.</param>

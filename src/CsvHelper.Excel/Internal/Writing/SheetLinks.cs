@@ -34,6 +34,12 @@ namespace CsvHelper.Excel;
 /// <para>
 /// A text that isn't a link's target, or comes past the sheet's 65,530 links, is a text cell without a link.
 /// </para>
+/// <para>
+/// The distinct targets are held until the sheet ends, since its relationships part comes after it: each once, about
+/// 16,450 bytes for one of 8,192 code units, so 1.0 GiB for Excel's worst case, 65,530 of them (measured at Phase 5's
+/// step 7: <c>LinkMemoryTests</c>). A record discarded takes the targets it added with it, so that records that fail,
+/// whose links the cap doesn't count, can't hold more.
+/// </para>
 /// </remarks>
 internal sealed class SheetLinks
 {
@@ -48,14 +54,18 @@ internal sealed class SheetLinks
 	private readonly Dictionary<string, int> indexes = new(StringComparer.Ordinal);
 	// The links, in the order of their cells.
 	private readonly List<Link> links = [];
-	// The links of the records ended: those after them are the current record's.
+	// The links and the targets of the records ended: those after them are the current record's.
 	private int kept;
+	private int keptTargets;
 	// The targets that the links use, in the order of their relationships' ids, from the first id; once the links are written.
 	private List<int>? numbered;
 	private int firstId;
 
 	/// <summary>The number of links, the current record's included.</summary>
 	public int Count => links.Count;
+
+	/// <summary>The number of distinct targets held, the current record's included.</summary>
+	public int Targets => targets.Count;
 
 	/// <summary>Whether the sheet has as many links as Excel opens: a later URI is text without one.</summary>
 	public bool IsFull => links.Count >= MaxLinks;
@@ -125,11 +135,27 @@ internal sealed class SheetLinks
 		links.Add(new Link((int)row, column, index));
 	}
 
-	/// <summary>Keeps the current record's links: the record has ended.</summary>
-	public void EndRecord() => kept = links.Count;
+	/// <summary>Keeps the current record's links and targets: the record has ended.</summary>
+	public void EndRecord()
+	{
+		kept = links.Count;
+		keptTargets = targets.Count;
+	}
 
-	/// <summary>Drops the current record's links: the record was discarded. Their targets stay, unused, and get no relationship.</summary>
-	public void DiscardRecord() => links.RemoveRange(kept, links.Count - kept);
+	/// <summary>
+	/// Drops the current record's links, and the targets it added: the record was discarded. The records before it use
+	/// none of those targets, which came after theirs.
+	/// </summary>
+	public void DiscardRecord()
+	{
+		links.RemoveRange(kept, links.Count - kept);
+		for (var i = keptTargets; i < targets.Count; i++)
+		{
+			indexes.Remove(targets[i]);
+		}
+
+		targets.RemoveRange(keptTargets, targets.Count - keptTargets);
+	}
 
 	/// <summary>
 	/// Writes the links' <c>hyperlinks</c>, each cell's with the id of its target's relationship. The targets the links

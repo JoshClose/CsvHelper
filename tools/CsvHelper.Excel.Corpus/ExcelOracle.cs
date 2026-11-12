@@ -323,7 +323,7 @@ internal static class ExcelOracle
 	/// </summary>
 	/// <param name="call">The call.</param>
 	/// <returns>Its result.</returns>
-	private static dynamic WhenReady(Func<object> call)
+	internal static dynamic WhenReady(Func<object> call)
 	{
 		for (var attempt = 1; ; attempt++)
 		{

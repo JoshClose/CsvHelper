@@ -26,8 +26,6 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 
 	private const string FirstRecordWidths = "in Phase 4's look, without auto-fit, a column's width comes from its first data record (decision 14), and a later value that needs more shows ########";
 
-	private const string LastSerial = "Excel shows no date or duration of its last serial, 2,958,466 (10000-01-01), or more, even at 255 characters: TimeSpan.MaxValue is ######## at any width (step 6's probe)";
-
 	private const string NewSheetWidths = "with NewSheet at four rows, the first sheet fills after two records, before auto-fit's 100 held rows end, and every sheet takes its widths (step 3): a later record that needs more shows ########";
 
 	private const string TitleCounts = "Excel's AutoFit counts a title over one column, which isn't merged; auto-fit counts no title";
@@ -50,8 +48,6 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 
 	private const string LibreOfficeHashes = "LibreOffice's CSV export shows a value its column is too narrow for, which Excel fills with #";
 
-	private const string LibreOfficeFmt = "LibreOffice shows #FMT for TimeSpan.MaxValue in [h]:mm:ss.000";
-
 	private const string LibreOfficeLines = "LibreOffice reads a CR in text that has an LF as a line break, LF (CR LF as one LF)";
 
 	private const string LibreOfficeFormulaEscapes = "LibreOffice doesn't decode _xHHHH_ in formulas, as Excel does (and as it does in text)";
@@ -73,11 +69,9 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 	[
 		("types.xlsx", "Numbers!F15", Subnormal),
 		("types.xlsx", "Widths!B3", FirstRecordWidths),
-		("types.xlsx", "Widths!C3", LastSerial),
 		("formats.xlsx", "Early!A3", FirstRecordWidths + ": the first is text, before 1900, so the column gets no width"),
 		.. new[] { "Custom!I2", "Custom!I3", "Custom!I4" }.Select(c => ("cultures.xlsx", c, JapaneseMonths)),
 		("cultures.xlsx", "Custom!A3", GermanMarch),
-		("autofit.xlsx", "Widths!C3", LastSerial),
 		("newsheet-look.xlsx", "'Orders (2)'!C3", NewSheetWidths),
 		("newsheet-look.xlsx", "'Orders (3)'!A3", NewSheetWidths),
 	];
@@ -86,7 +80,6 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 	private static readonly (string File, string Cell, string Reason)[] AutoFitDifferences =
 	[
 		("look.xlsx", "'One column'!A", TitleCounts),
-		("autofit.xlsx", "Widths!C", LastSerial + ", and its AutoFit gives the column 6.27"),
 		("autofit.xlsx", "Text!B", TextCap),
 		("autofit.xlsx", "Capped!A", TextCap + "; " + HeldRows),
 		("autofit.xlsx", "Formulas!C", FormulaWidth),
@@ -119,7 +112,6 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		("types.xlsx", "Dates!B5", LibreOffice1900),
 		("types.xlsx", "Dates!B6", LibreOffice1900),
 		("types.xlsx", "Widths!B3", LibreOfficeHashes),
-		("types.xlsx", "Widths!C3", LibreOfficeFmt),
 		("formats.xlsx", "Early!A3", LibreOfficeHashes),
 		("types-net.xlsx", "Newer!B3", LibreOffice1900),
 		("types-net.xlsx", "Newer!B5", LibreOffice1900),
@@ -134,7 +126,6 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		.. new[] { "Custom!D2", "Custom!D3", "Custom!D4" }.Select(c => ("cultures.xlsx", c, LibreOfficeGermanAmPm)),
 		.. new[] { "Custom!I2", "Custom!I3", "Custom!I4" }.Select(c => ("cultures.xlsx", c, JapaneseMonths + "; LibreOffice shows .NET's")),
 		("cultures.xlsx", "Custom!A3", GermanMarch + "; LibreOffice shows ICU's"),
-		("autofit.xlsx", "Widths!C3", LibreOfficeFmt),
 		("newsheet-look.xlsx", "'Orders (2)'!C3", LibreOfficeHashes),
 		.. new[] { "Attributes", "Options" }.SelectMany(s => new[] { (s + "!I2", LibreOfficeBooleans), (s + "!I3", LibreOfficeBooleans), (s + "!I4", LibreOfficeBooleans), (s + "!H3", LibreOffice1900) })
 			.Select(d => ("columns.xlsx", d.Item1, d.Item2)),

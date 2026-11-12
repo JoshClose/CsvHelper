@@ -25,7 +25,8 @@ public sealed class ExcelColumnAttribute : Attribute
 {
 	/// <summary>
 	/// The column's width, as Excel's <c>ColumnWidth</c> counts it: the number of the default font's digits it shows, up to
-	/// 255. 0, the default, for none: auto-fit or a date's format sets it.
+	/// 255. 0, the default, for none: auto-fit or a date's format sets it. A width past about 254.29 is written as the widest
+	/// the file format takes, which Excel shows as about 254.29.
 	/// </summary>
 	public double Width { get; set; }
 

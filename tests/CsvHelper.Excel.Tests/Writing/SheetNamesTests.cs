@@ -52,6 +52,20 @@ public class SheetNamesTests
 		yield return [((char)0x130).ToString(), "i" + (char)0x307];
 		yield return [((char)0x130).ToString(), "I" + (char)0x307];
 		yield return ["aI" + (char)0x307 + "b", "Ai" + (char)0x307 + "B"];
+
+		// Checked through COM on 2026-11-11, after Phase 5's presentation fuzzer: Excel ignores some characters when it
+		// compares names, at a name's start or inside it (the soft hyphen, format characters, U+FFFD, non-characters).
+		yield return ["a", (char)0xFEFF + "a"];
+		yield return ["a", (char)0x00AD + "a"];
+		yield return ["a", (char)0xFFFD + "a"];
+		yield return ["A", (char)0xFFFD + "a"];
+		yield return ["ab", "a" + (char)0x00AD + "b"];
+		yield return ["ab", "a" + (char)0xFEFF + "b"];
+		yield return ["ab", "a" + (char)0x200E + (char)0x2060 + "b"];
+		yield return [(char)0xFFFD + "a", (char)0x00AD + "a"];
+		yield return [(char)0xFFFD + " a", " a"];
+		yield return ["a", (char)0xFE0F + "a"];
+		yield return ["a", (char)0xFFFE + "a"];
 	}
 
 	/// <summary>Pairs of names Excel opens together, which the writer takes to be different.</summary>
@@ -160,7 +174,7 @@ public class SheetNamesTests
 	public void ComparesNamesWithNonCharacters()
 	{
 		// The normalization refuses them (U+FFFE on .NET, every one on .NET Framework), and Excel opens them (checked on
-		// 2026-11-07): the runs between them are normalized, and they are kept as they are.
+		// 2026-11-07); and Excel ignores them when it compares names (checked on 2026-11-11), so the key drops them.
 		var fffe = ((char)0xFFFE).ToString();
 		var fdd0 = ((char)0xFDD0).ToString();
 		var plane = new string(new[] { (char)0xD83F, (char)0xDFFF });
@@ -169,11 +183,11 @@ public class SheetNamesTests
 			SheetNames.Check(name, "name");
 		}
 
-		Assert.Equal("A" + fffe + "B", SheetNames.Key("a" + fffe + "b"));
+		Assert.Equal("AB", SheetNames.Key("a" + fffe + "b"));
 		Assert.Equal(SheetNames.Key((char)0xFB01 + fffe + (char)0xE9), SheetNames.Key("FI" + fffe + "e" + (char)0x301));
 		Assert.Equal(SheetNames.Key("i" + fdd0 + "I" + (char)0x307), SheetNames.Key("I" + fdd0 + (char)0x130));
 		Assert.Equal(SheetNames.Key((char)0xFB01 + plane), SheetNames.Key("fi" + plane));
-		Assert.NotEqual(SheetNames.Key("a" + fffe), SheetNames.Key("a" + (char)0xFFFF));
+		Assert.Equal(SheetNames.Key("a" + fffe), SheetNames.Key("a" + (char)0xFFFF));
 	}
 
 	[Fact]

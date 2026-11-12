@@ -64,7 +64,8 @@ public sealed record ExcelWriterOptions
 	public ExcelDateTimeOffsets DateTimeOffsets { get; init; } = ExcelDateTimeOffsets.Text;
 
 	/// <summary>
-	/// What a date before 1900-01-01, Excel's first, and a negative <see cref="TimeSpan"/> become: a text cell
+	/// What a date before 1900-01-01, Excel's first, and a <see cref="TimeSpan"/> that is negative or of 2,958,466 days or
+	/// more (which Excel shows as <c>########</c>) become: a text cell
 	/// (<see cref="ExcelOutOfRangeDates.Text"/>, the default) or an exception.
 	/// </summary>
 	public ExcelOutOfRangeDates OutOfRangeDates { get; init; } = ExcelOutOfRangeDates.Text;
@@ -85,7 +86,9 @@ public sealed record ExcelWriterOptions
 	/// A link's cell is in Excel's <c>Hyperlink</c> cell style (underlined, blue), and opens an absolute URI's
 	/// <see cref="Uri.AbsoluteUri"/>, with the letters past ASCII as themselves, or a relative URI's text. These are text
 	/// without a link: the header's cells, which name its columns; a URI whose link Excel wouldn't open, longer than 8,192
-	/// characters; and a URI past a sheet's 65,530 links, which is as many as Excel opens.
+	/// characters; and a URI past a sheet's 65,530 links, which is as many as Excel opens. A sheet holds each distinct
+	/// link's target until it ends, since the targets are written after it: about two bytes a character, so at most about
+	/// 1 GiB, for 65,530 targets of 8,192 characters. <see cref="ExcelLinks.None"/> holds none.
 	/// </remarks>
 	public ExcelLinks Links { get; init; } = ExcelLinks.Web;
 

@@ -45,6 +45,15 @@ jobs:
         with:
           name: test-results
           path: TestResults
+      - name: Check CsvHelper.Excel with NativeAOT
+        # CsvHelper.Excel reads [ExcelSheet] and [ExcelColumn] through reflection over the members a record type's
+        # annotation keeps. The app (tests/CsvHelper.Excel.Aot) is published with NativeAOT, where its project makes a trim
+        # or AOT warning an error, and its native build writes a sheet of such a type, checks its look, and reads it back.
+        run: |
+          dotnet publish tests/CsvHelper.Excel.Aot --configuration Release --runtime win-x64 -o aot-check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          ./aot-check/CsvHelper.Excel.Aot.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Check CsvHelper.Excel Package
         # CsvHelper.Excel uses CsvHelper's internals, so its package must depend on its exact CsvHelper version. The
         # PinCsvHelperVersion target of its project does that through NuGet's internal pack targets; this fails if they
