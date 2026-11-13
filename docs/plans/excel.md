@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11. Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11, and step 8 (benchmarks) 2026-11-12. Step 9 ("As built") was written, approved and committed 2026-11-12, with the gate re-checked. Phase 5 is complete, its gate met; see "As built" under Phase 5, which opens with a summary.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11. Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11, and step 8 (benchmarks) 2026-11-12. Step 9 ("As built") was written, approved and committed 2026-11-12, with the gate re-checked. Phase 5 is complete, its gate met; see "As built" under Phase 5, which opens with a summary. The branch was pushed that day, and CI's run 43342222558 passed every step (Phase 5's "Left open"). Phase 6's detailed design was written 2026-11-12, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -81,6 +81,7 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { AutoFilter = t
 - **`ExcelFormula`**: a formula, written as a formula cell without a cached value (Excel and LibreOffice compute it on open), through a member of that type or `WriteFormula`.
 - **`ExcelSheetOptions`** (Phase 5): `Title` (a row above the header, merged across it), `BoldHeader` and `FreezeHeader` (both on), `FreezeColumns`, `AutoFilter`, `Table` (an `ExcelTableOptions`: name, style, banded rows, filter buttons), `AutoFit` (rows to measure, 100; 0 for none) and `MaxAutoFitWidth` (60 characters), and `Columns` (per header name, an `ExcelColumnOptions`: `Width`, `Format`, `Wrap`, `Hidden`). A sheet's are the argument, else `T`'s `[ExcelSheet]`, else `ExcelWriterOptions.Sheets`, each taken whole.
 - **Attributes** (Phase 5): `[ExcelColumn(Width, Format, Wrap, Hidden)]` on members, and `[ExcelSheet]` on the class, with `ExcelSheetOptions`' settings but `Columns` (the table's as `Table`, `TableName` and `TableStyle`) and no `Name`, since a sheet's name is always given.
+- **`ExcelConvert`** (Phase 6): `ToCsv` (one sheet, from paths, streams, or a sheet's reader into a CSV writer), `ToCsvFiles` (every worksheet, a file each in a folder), `ToExcel` (one sheet, its columns' types inferred) and `ToExcel<T>` (typed through `T`), each sync and async, with `ExcelToCsvOptions` (`Excel`, `Csv`) and `CsvToExcelOptions` (`Csv`, `Excel`, `SheetName`, `Sheet`, `InferTypes`: records that decide the types, 1,000; 0 for text). `ExcelWorkbookWriter.WriteSheet(name, CsvReader)` writes a CSV reader's records into a sheet, for several CSV files in one workbook.
 
 ## Phases
 
@@ -2147,7 +2148,7 @@ Applied at approval on 2026-11-03:
   - Phase 1's benchmark: the scanner's Phase 2 work costs nothing measurable (every method within 1%).
   - Core: `FormattedDatesRead`'s Records about 2% slower with 65% less allocation; the other reads, the writes and NCsvPerf within noise.
 - **Left for later:**
-  - **Phase 6:** `CsvWriter` writes a dynamic record's stored form, so a sheet's dates copied to CSV come out as serials (step 1, the user's choice).
+  - **Phase 6:** `CsvWriter` writes a dynamic record's stored form, so a sheet's dates copied to CSV come out as serials (step 1, the user's choice). Phase 6's decision 18 leaves it so, and points to `ExcelConvert.ToCsv`, the copy that writes text.
   - **Phase 8:** the displayed text, which date cells' ISO 8601 text doesn't follow.
   - **Phase 9:**
     - why typed sheets read close to Sylvan's time while text sheets don't (step 9 gives a guess);
@@ -2197,7 +2198,7 @@ Applied at approval on 2026-11-03:
   - **`DateTime.FromOADate` is a millisecond off for some doubles.** It adds its epoch to the milliseconds before truncating them. The tests compare it exactly on serials of whole milliseconds and within a millisecond on arbitrary doubles, and check the millisecond rounding exactly.
 - **Left for later (the user's choice, 2026-11-03):**
   - `CsvWriter` writes a `CsvDynamicRecord`'s stored form (`TryGetSpan`). So `WriteRecords(sheet.GetRecords<dynamic>())` writes a sheet's dates as serials and its booleans as 1 or 0.
-  - The design doesn't cover it, and the writer is JIT-sensitive. Phase 6's conversion is the natural place.
+  - The design doesn't cover it, and the writer is JIT-sensitive. Phase 6's conversion is the natural place. (Phase 6's decision 18, approved 2026-11-12: it stays, and `ExcelConvert.ToCsv` is the copy that writes text.)
 - **Tests:**
   - **`CellConversionTests`** (18 tests):
     - every kind for every target, through every accessor, generated mappers (sync, async, `ParallelEnumerate`) and `OnRecordError`;
@@ -5663,7 +5664,7 @@ Filled in step by step; the code is the reference.
   - **Not traced:** why Phase 4's look is 2.4% faster for the package assets than at Phase 4.
   - **The `fuzzed` command** leaves Excel processes behind in long runs (step 7).
   - **ILCompiler's audit warning:** it stays until this machine's SDK is updated. CI installs the newest.
-  - **CI on steps 6 to 9:** it runs when they are pushed, the ten presentation workbooks' LibreOffice comparisons among them on CI's machine.
+  - **CI on steps 6 to 9:** settled 2026-11-12. The branch was pushed with step 9's commit (`10ba94cf`), and CI's run 43342222558 passed every step: the build; every test, with CsvHelper.Excel.Tests 3,707 on net10.0 and net8.0 and 3,651 on net48 (the Zip64 theory skipped as opt-in), core 1,311, 1,306 and 846, and CsvHelper.Linq 112, 110 and 101; the twenty `written` workbooks' LibreOffice comparisons among them (`LibreOfficeShowsWhatExcelShows` and `LibreOfficeKeepsTheLook`), the ten presentation workbooks' included, on CI's machine; the NativeAOT check; and the pack check.
 
 **Step 1, settings** (built 2026-11-08, approved, with every recommendation, and committed 2026-11-09):
 
@@ -6329,6 +6330,10 @@ Filled in step by step; the code is the reference.
 
 ### Phase 6: conversion (S)
 
+Status: the detailed design below was written on 2026-11-12, after the Excel and LibreOffice checks under "Checked on 2026-11-12", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied.
+
+Scope, as planned:
+
 - **`.xlsx` → CSV:**
   - Source field bytes go straight into `WriteField(ReadOnlySpan<byte>)` with no strings created.
   - Dates come out as ISO 8601.
@@ -6337,6 +6342,304 @@ Filled in step by step; the code is the reference.
   - All text.
   - Per-column type inference from a sample of rows: numbers without leading zeros, ISO dates, `TRUE`/`FALSE`.
   - Typed through `T`.
+- **From earlier phases:**
+  - The guide, `docs/pages/excel.md`, which waited for the API to settle (Phase 1's decision 18).
+  - `publish.yaml`'s pack and push of CsvHelper.Excel, which v1.0 needs (Phase 1's "Project setup").
+  - A sheet's dynamic records written to CSV: `WriteRecords(sheet.GetRecords<dynamic>())` writes dates as serials and booleans as `1` and `0`, and Phase 2 named this phase the place for it (its "Left for later").
+
+#### Public API
+
+Phase 6 adds `ExcelConvert`, a static class of conversions; an options record for each direction; and a `WriteSheet` that takes a CSV reader.
+
+```csharp
+public static class ExcelConvert
+{
+	// .xlsx → CSV: one sheet, which options.Excel picks as ExcelReader does.
+	public static void ToCsv(string excelPath, string csvPath, ExcelToCsvOptions? options = null);
+	public static void ToCsv(Stream excel, Stream csv, ExcelToCsvOptions? options = null);
+	public static ValueTask ToCsvAsync(string excelPath, string csvPath, ExcelToCsvOptions? options = null, CancellationToken cancellationToken = default);
+	public static ValueTask ToCsvAsync(Stream excel, Stream csv, ExcelToCsvOptions? options = null, CancellationToken cancellationToken = default);
+
+	// .xlsx → CSV: a reader's records into a writer, for other sources and destinations.
+	public static void ToCsv(CsvReader sheet, CsvWriter csv);
+	public static ValueTask ToCsvAsync(CsvReader sheet, CsvWriter csv, CancellationToken cancellationToken = default);
+
+	// .xlsx → CSV: every worksheet, a file each in a folder; the files' paths, in tab order.
+	public static IReadOnlyList<string> ToCsvFiles(string excelPath, string folder, ExcelToCsvOptions? options = null);
+	public static ValueTask<IReadOnlyList<string>> ToCsvFilesAsync(string excelPath, string folder, ExcelToCsvOptions? options = null, CancellationToken cancellationToken = default);
+
+	// CSV → .xlsx: one sheet, its columns' types inferred, or text with InferTypes = 0.
+	public static void ToExcel(string csvPath, string excelPath, CsvToExcelOptions? options = null);
+	public static void ToExcel(Stream csv, Stream excel, CsvToExcelOptions? options = null);
+	public static ValueTask ToExcelAsync(string csvPath, string excelPath, CsvToExcelOptions? options = null, CancellationToken cancellationToken = default);
+	public static ValueTask ToExcelAsync(Stream csv, Stream excel, CsvToExcelOptions? options = null, CancellationToken cancellationToken = default);
+
+	// CSV → .xlsx: typed through T, read with T's mapper and written as WriteSheet<T> writes it.
+	public static void ToExcel<[DynamicallyAccessedMembers(Members)] T>(string csvPath, string excelPath, CsvToExcelOptions? options = null);
+	public static void ToExcel<[DynamicallyAccessedMembers(Members)] T>(Stream csv, Stream excel, CsvToExcelOptions? options = null);
+	public static ValueTask ToExcelAsync<[DynamicallyAccessedMembers(Members)] T>(string csvPath, string excelPath, CsvToExcelOptions? options = null, CancellationToken cancellationToken = default);
+	public static ValueTask ToExcelAsync<[DynamicallyAccessedMembers(Members)] T>(Stream csv, Stream excel, CsvToExcelOptions? options = null, CancellationToken cancellationToken = default);
+}
+
+public sealed class ExcelWorkbookWriter
+{
+	// Phase 4's and 5's, and: a sheet of a CSV reader's records, such as one of several CSV files in a workbook.
+	public void WriteSheet(string name, CsvReader csv, ExcelSheetOptions? options = null, int inferTypes = 1000);
+	public ValueTask WriteSheetAsync(string name, CsvReader csv, ExcelSheetOptions? options = null, int inferTypes = 1000, CancellationToken cancellationToken = default);
+}
+
+public sealed record ExcelToCsvOptions
+{
+	public static ExcelToCsvOptions Default { get; } = new();
+	public ExcelReaderOptions Excel { get; init; } = ExcelReaderOptions.Default;	// the sheet or area, header, hidden rows, merges, errors, formulas, SignificantDigits
+	public CsvWriterOptions Csv { get; init; } = CsvWriterOptions.Default;		// separator, quoting, new line, byte-order mark, injection
+}
+
+public sealed record CsvToExcelOptions
+{
+	public static CsvToExcelOptions Default { get; } = new();
+	public CsvReaderOptions Csv { get; init; } = CsvReaderOptions.Default;		// separator, header, encoding, culture, null values, trimming
+	public ExcelWriterOptions Excel { get; init; } = ExcelWriterOptions.Default;	// strings, compression, row limit, long numbers, dates, links, Sheets
+	public string? SheetName { get; init; }						// null: after the CSV file, or Sheet1
+	public ExcelSheetOptions? Sheet { get; init; }					// null: Excel.Sheets
+	public int InferTypes { get; init; } = 1000;					// the records that decide each column's type; 0 for text cells
+}
+```
+
+`Members` is Phase 4's: what reading `T`'s formats and Excel attributes needs. A `CsvReader` isn't an `IEnumerable<T>`, so `WriteSheet(name, csvReader)` can't bind to `WriteSheet<T>`.
+
+**Reading and writing** (decisions 1 and 16):
+
+- The path overloads open the workbook with `ExcelWorkbook.Open` and the CSV with `CsvReader.FromFile`, and write with `CsvWriter.ToFile` or `ExcelWorkbookWriter.ToFile`, which create or overwrite the file.
+- The stream overloads read a workbook as `ExcelWorkbook.Open` reads a stream (from its start when it can seek, else through a temporary copy), read a CSV and write either from the stream's position, and leave both streams open.
+- `ToCsv(CsvReader, CsvWriter)` writes the reader's header, when its options have `HasHeader`, then its records from where it stands, and disposes neither. `WriteSheet(name, CsvReader, …)` does the same into a new sheet.
+- A failure propagates: the reader's and the writer's exceptions, and a sheet's limits (a field past 32,767 characters, a column past XFD, `LongNumbers = Throw`, `ErrorCells = Error`, each naming the cell). A path overload then deletes the file it was writing, so none is left half written.
+- Async: every read and write is asynchronous, through the readers' and writers' own async methods, with Phase 4's caveat before .NET 10 (closing a zip entry writes synchronously).
+- The options are checked as `ExcelReader`'s and `ExcelWorkbookWriter`'s are, and `InferTypes` below 0 throws `ArgumentOutOfRangeException`.
+
+**What `.xlsx` → CSV writes:**
+
+- **The records** are the sheet's as `OpenReader` reads them with `options.Excel`, so all of Phases 1 to 3 applies: the sheet or area, `HeaderRow`'s search and its columns, `SkipHiddenRows`, `SkipHiddenColumns`, `FillMergedCells`, `ErrorCells`, `Formulas`, and `Csv`'s `SkipEmptyLines`, `TrimWhitespace` and `ShouldSkipRecord`.
+- **The header,** with `HasHeader` (the default), is the reader's `Headers`: the names it gives the columns, a date header cell's being its ISO 8601 text.
+- **Each field** is the reader's text of the cell, the text `GetString` gets, as UTF-8 and without a string (decision 3):
+  - text as stored, decoded (shared strings, rich text, `_xHHHH_`);
+  - **numbers** to `ExcelReaderOptions.SignificantDigits`, 15 by default, as `decimal` targets read them (decision 4): a number of 15 significant digits or fewer is its stored text, and a longer one is rounded half away from zero, in the stored text's notation, without zeros at the end of a fraction. So `0.30000000000000004` is `0.3`, `1234567.8910000001` is `1234567.891`, `1.0000000000000001E-5` is `1E-5`, and `1.2345678901234568E+17` is `1.23456789012346E+17`. With `SignificantDigits = null`, the stored text;
+  - dates and times in ISO 8601 by what each holds: `2024-01-15`, `2024-01-15T10:30:00`, `2024-01-15T10:30:45.325`, and `10:30:00` for a time alone; serial 60 is `1900-02-29`, as Excel shows it;
+  - durations as `[h]:mm:ss`, such as `36:00:00`;
+  - booleans as `TRUE` and `FALSE`;
+  - errors as `ErrorCells` says: their text (`#N/A`), an empty field, or a failure naming the cell;
+  - formulas as their cached values, or `=` and the formula with `Formulas = FormulaText`.
+- **Rows** (decision 6): each record as wide as the reader gives it. Field `i` is column `i` from the sheet's or area's first column, rows with a value are padded to the first record's width, and a longer row stays longer, so the CSV writer's field-count check is off. With `SkipEmptyLines` off, an empty row is a record of empty fields as wide as the first record (`,,,`), where the reader gives one empty field, which a CSV writer writes as `""`.
+- **The CSV** is written as `options.Csv` says: by default commas, quotes where a field needs them, CR LF and no byte-order mark (decision 7). Text that Excel computes when it opens a CSV (`=1+1`, `+1+1` and `@SUM(1)`, checked) is written as it is, as Excel's own export writes it, and `Csv.Injection` protects it.
+- **No strings per field:** text and number cells go from the reader's buffer into `WriteField(ReadOnlySpan<byte>)`, and a typed cell's text or a rounded number is formatted into a stack buffer first. The header's names are the reader's strings.
+
+**`ToCsvFiles`** (decision 8):
+
+- Every worksheet, in tab order, hidden ones included. Chart, dialog and macro sheets have no cells and are skipped.
+- Each goes to `<folder>/<name>.csv`; the folder is created if it is missing, and a file of the same name is overwritten.
+- The name is the sheet's, made a file name on every system: `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*` and control characters as `_`; dots and spaces at the end dropped; Windows' device names (`CON`, `PRN`, `AUX`, `NUL`, `COM1` to `COM9`, `LPT1` to `LPT9`) with `_` before them; an empty name as `Sheet` and the sheet's number; and names then equal ignoring case numbered (`Data (2)`).
+- The reader doesn't hold a crafted workbook's sheet names to Excel's rules, so a sheet named `../x` becomes `.._x.csv`, and every path is checked to be in the folder.
+- `options.Excel` applies to every sheet, so options that pick a sheet or an area (`Sheet`, `SheetIndex`, `Range`, `Table`, `DefinedName`) throw `ArgumentException`.
+
+**What CSV → `.xlsx` writes:**
+
+- **One sheet,** named `SheetName`, else after the CSV file as Excel names it when it opens one (checked): the file's name without its extension, cut to 31 characters, `[` and `]` as `(` and `)`, other characters a sheet name can't have as `_`, apostrophes at either end dropped, and `Sheet1` when nothing is left. From a stream, `Sheet1` (decision 15).
+- **Its look** is `Sheet`, else `Excel.Sheets`: by default Phase 5's bold, frozen header and auto-fitted columns.
+- **The header** is the CSV's, by the CSV reader's `HasHeader`, whatever `Excel.Csv.HasHeader` says (decision 17): its names, bold, frozen, and a table's when `Sheet` asks for one.
+- **Null fields,** empty or one of the CSV reader's `NullValues`, are empty cells (decision 14).
+- **Inference** (`InferTypes`, 1,000 records; decisions 9 to 13):
+  - The records after the header, up to `InferTypes` of them, are held, and each column's type is the narrowest that every non-null field of it among them matches:
+    - **Number:** the text Phase 4's sink reads as a number (its decision 8), `-?(0|[1-9][0-9]*)(\.[0-9]+)?([Ee][+-]?[0-9]+)?`, in the CSV reader's culture (its `FormatProvider`, invariant by default; de-DE's `1,5`), with at most 15 significant digits unless `LongNumbers` is `Number`. So not `00123`, `007`, `+5`, `.5`, `5.`, spaces, grouping (`1,234`), currency, percent, `NaN` or hex.
+    - **Date:** `yyyy-MM-dd`, of a day that exists.
+    - **Date and time:** a date, `T` or a space, `HH:mm`, then `:ss` and a fraction of 1 to 7 digits if any. A column of dates and of dates and times is one of dates and times.
+    - **Date and time with an offset:** the same, then `Z` or `±HH:mm`. It follows `DateTimeOffsets`, so it is text by default.
+    - **Boolean:** `true` or `false`, in any case.
+    - **Text:** anything else, a mix of the types above, or a column of null fields only.
+  - Then each field is written by its column's type. One that matches is that type's cell, as Phase 4 writes the type, with `LongNumbers`, `OutOfRangeDates` and `DateTimeOffsets` as for any sheet: a number's invariant text; a date in `yyyy-mm-dd`, and a date and time in `yyyy-mm-dd hh:mm:ss`, with `.000` for milliseconds. One that doesn't match, which can only come after the held records (`N/A` in a column of numbers), is a text cell (decision 10).
+  - Times alone and durations stay text (decision 13).
+  - With `InferTypes = 0`, every field is a text cell.
+- **Text cells** are Phase 4's: escaped as Excel writes text, with `ignoredErrors` when one looks like a number (`00123`).
+- **Rows:** each record's fields as the CSV has them, without a field-count check. A sheet's limits apply: past row 1,048,576, `RowLimit` throws or goes on in a new sheet with the header repeated.
+- **`ToExcel<T>`** reads `GetRecords<T>()` with `options.Csv` and writes `WriteSheet<T>(name, records, options.Sheet)`, so `T`'s mapping, `[CsvFormat]`, `[ExcelSheet]` and `[ExcelColumn]` apply, and `InferTypes` doesn't.
+
+**Messages** (`ArgumentException`, and `ArgumentOutOfRangeException` for `InferTypes`):
+
+- "ToCsvFiles writes every worksheet, so ExcelReaderOptions.Sheet can't be set. Use ToCsv for one sheet."
+- "InferTypes is how many records decide the columns' types, or 0 for text cells, and it can't be -1."
+
+#### Checked on 2026-11-12
+
+Excel 365 (16.0 build 20527) through COM and LibreOffice 26.8, on this machine's en-US settings. The probes, their scripts and the answers are in `Csv\_bench\results\phase6\design`: `make_source.ps1` builds `source.xlsx` through COM and saves Excel's CSVs (`excel-csv.txt`); LibreOffice's exports are in `lo-csv.txt`; `readback` is what CsvHelper.Excel's reader gives (`reader.txt`); `open_report.ps1` reports what Excel holds after opening `infer.csv` (`excel-infer.txt`) or LibreOffice's imports of it (`lo-import-plain.txt`, `lo-import-special.txt`); and `sheet_names.ps1` the sheet names Excel gives CSV files (`excel-sheet-names.txt`).
+
+- **Excel's "Save As" CSV:**
+  - "CSV UTF-8" writes a byte-order mark, CR LF, and quotes around a field with a comma, a quote, a line break or a tab. "CSV" writes the system's code page, with `?` for what it lacks (an emoji, `年`).
+  - Each cell as Excel shows it: General in 11 characters (`1.23457E+17`, `3.141592654`, `123456789.1`), formats applied (`$1,234.50`, `25%`, `2.500`, `1/15/2024`, `10:30`), errors as their text, formulas' values, and `TRUE`.
+  - Text as it is: `=1+1`, `00123`, spaces at either end without quotes, and CR LF.
+  - Only the used range: data from C3 starts the file at C3, every row is padded to the range's width (`h1,h2,h3,,`), and an empty row inside it is `,,,,`. Hidden rows are written, and a merged range's value once, in its first cell.
+  - One sheet per save, the active one.
+- **LibreOffice's CSV export:**
+  - No byte-order mark, CR LF, a tab without quotes, and a cell's CR LF as LF.
+  - From A1, not from the used range: two empty rows and two empty fields before C3's data.
+  - Raw (`--convert-to csv`'s default, "as shown" off): numbers in 15 significant digits (`0.3`, `3.14159265358979`, `123456789.123456`, `1.23456789012346E+017`, `1.5E+020`), and the values of currency and fixed formats (`1234.5`, `2.5`). Dates and times are still formatted (`01/15/2024`, `10:30:00 AM`), and serial 60 is `1900-02-28`.
+  - As shown: Excel's text, but General in 15 digits.
+  - Every sheet (`-1`) writes `source-Data.csv` and so on, and stops at a sheet named `Sales <2024>`, which Windows can't take as a file name, writing no later sheet.
+- **CsvHelper.Excel's reader** on the same workbook: Excel stored 17 significant digits, so `=0.1+0.2` reads `0.30000000000000004`, `1234567.891` reads `1234567.8910000001`, `0.00001` reads `1.0000000000000001E-5`, and `=PI()` reads `3.1415926535897931`. Dates read `2024-01-15`, `2024-01-15T10:30:45.325` and `10:30:00`; the duration `36:00:00`; serial 60 `1900-02-29`; the boolean `TRUE`; errors their text. The sheet with data from C3 reads `,,h1,h2,h3`, and its row of seven values `,,5,6,7,8,9`.
+- **Excel opening a CSV** (`infer.csv`, 63 forms):
+  - Numbers: `00123` and `007` lose their zeros; `+45`, `.5`, `5.`, ` 5`, `5 `, `-0`, `1e5` and `1E5` are numbers; 16 and 19 digits keep 15 (`1.23456789012345E+18`); `1,234` is 1234 in `#,##0`, `$5` a currency and `50%` 0.5; `1,5`, `0x10`, `NaN` and `Infinity` are text.
+  - Dates: `2024-01-15`, `2024/01/15`, `1/15/2024`, `15-Jan-2024`, `2024-01-15 10:30:00` and `2024-01-15 10:30` are dates. `2024-01-15T10:30:00`, with or without a fraction, `Z` or an offset, is text, and so are `15/01/2024` and `Jan 15 2024`. `1900-02-29` is serial 60; `1899-12-31`, `0001-01-01` and `2024-02-30` are text; `9999-12-31` is a date. Every date shows `########` at the default width.
+  - `10:30`, `10:30:45` and `10:30:45.123` are times, and `36:00:00` a duration.
+  - `TRUE`, `true`, `True` and `FALSE` are booleans; `yes` text; `1` a number.
+  - `#N/A` and `#DIV/0!` are error cells; `=1+1`, `+1+1` and `@SUM(1)` are formulas, computed.
+  - It names the sheet after the file, cut to 31 characters, with `[` and `]` as `(` and `)`; an apostrophe inside stays.
+- **LibreOffice importing a CSV** (en-US, "detect special numbers" off, then on):
+  - Off: `00123` is 123 too, and `+45`, `.5`, `5.`, `1e5` and `1,234` are numbers; 16 digits are a double; `$5`, `50%`, times, durations, booleans and `2024-01-15 10:30:00` are text; `2024-01-15` and the `T` forms, fractions included, are dates; `1899-12-31` is serial 1, and `0001-01-01` a negative serial, which Excel can't show.
+  - On: `$5`, `50%`, `1/15/2024`, `15-Jan-2024`, `Jan 15 2024`, times, durations, booleans and the space form are typed too.
+  - Both: `=1+1` is a formula; `+1+1`, `@SUM(1)` and `#N/A` are text, and so are `Z` and offsets.
+
+#### Internal design
+
+**New files:**
+
+- Public: `ExcelConvert.cs`, `ExcelToCsvOptions.cs` and `CsvToExcelOptions.cs`.
+- `Internal/Conversion/`:
+  - `SheetToCsv.cs`: the copy into a CSV writer, sync and async: the header, each field's text through core's accessor, and empty rows padded.
+  - `CsvToSheet.cs`: the copy into a sheet, sync and async: the header, the held records, the columns' types, and each field by its column's type.
+  - `ColumnTypes.cs`: a field's type, in one pass over its bytes; a column's type from its fields'; and a matching field's text in the form the sink reads (a number's invariant text, a date and time's `"O"` text, `True` or `False`), with the type the sink takes it as.
+  - `HeldRecords.cs`: the held records' fields, in an arena with their ends, and each record's field count.
+  - `ConversionNames.cs`: sheet names to file names, and file names to sheet names.
+- **Changed:**
+  - `ExcelWorkbookWriter`: `WriteSheet(name, CsvReader, …)` and its async form, through an internal way to add a sheet whose writer takes `HasHeader` from the CSV reader, writes invariant text (the converter hands it no other), and doesn't check field counts.
+  - `CellKinds`: an internal type for a date alone, since the netstandard and .NET Framework builds have no `DateOnly` to hand the sink.
+
+**The paths:**
+
+- `.xlsx` → CSV, for each field: core's `GetTextUtf8(i, buffer, roundNumbers: true)` gives the reader's bytes for text, a number of 15 digits or fewer and an error cell's text, and otherwise formats the text into a 64-byte stack buffer. Then `csv.WriteField(text)`.
+- CSV → `.xlsx`, for each field: `GetSpan(i)`, then by its column's type. Text goes through `WriteField(ReadOnlySpan<byte>)`. A field of a typed column is checked, and when it matches it is put in the sink's form in a stack buffer and handed over with its type through core's `WriteField(ReadOnlySpan<byte>, Type)`; otherwise it is text. The sink writes the cell as it writes that type from any record writer, so every rule of Phases 4 and 5 applies unchanged.
+- **Holding:** the held records' bytes and ends grow in pooled arrays, returned once they are written. Phase 5's auto-fit holds its own 100 records in the sink besides.
+
+#### Testing
+
+- **Unit:**
+  - `ColumnTypesTests`: every form of `infer.csv`, as the design reads it, beside Excel's and LibreOffice's answers; de-DE and fr-FR numbers; 15 and 16 digits, and `LongNumbers = Number`; days that don't exist (`2023-02-29`, `1900-02-29`, `2024-02-30`); fractions of 1 to 7 digits, and 8; offsets; `true` in each case; and each mix of types.
+  - `ConversionNamesTests`: each character a file name can't have, device names with and without an extension, dots and spaces at the end, collisions, `..`, `../x` and `C:x`; and sheet names from files, as Excel named them (31 characters, brackets).
+  - Core: `TryText` against `Text` for every typed kind, over random serials in both date systems (serial 60, fractions, the limits); `TryRound` for 15 digits and fewer, `0.30000000000000004`, carries (`9.9999999999999999`, `999999999999999999`), exponents of both signs, negatives, and more than 40 digits; `GetTextUtf8` for CSV and each kind; and `WriteField(ReadOnlySpan<byte>, Type)` against `WriteField(ReadOnlySpan<byte>)` for CSV, with `Injection` by type.
+- **Through the public API,** sync and async, on net10.0, net8.0 and net48: every overload, from paths, streams and readers; `WriteSheet(name, CsvReader)` beside other sheets; each option of both records; `HasHeader` both ways; `SkipEmptyLines` off; ragged rows; error cells under each `ErrorCells`; `FormulaText`; areas and `HeaderRow`; `ToCsvFiles` with every kind of sheet and odd names; and failures, with the file deleted and the stream left open.
+- **`.xlsx` → CSV over the corpus:** for every workbook of every set and producer, each sheet's CSV, read back by `CsvReader`, has the sheet reader's records: each field `GetString`'s text, but numbers, which equal the reader's `decimal` reads. An allocation test: converting 1,000 or 100,000 rows of the orders allocates the same.
+- **CSV → `.xlsx`:**
+  - Round trips: a CSV converted and converted back gives each field's text, but a typed cell's, which comes back as the reader's text of the same value (`1.50` as `1.5`, `true` as `TRUE`, `2024-01-15 10:30` as `2024-01-15T10:30:00`). A seeded property test does it for random columns of each type, with near misses.
+  - Each converted workbook passes `OpenXmlValidator`, and ClosedXML and ExcelDataReader read the same values.
+- **Excel's answers:** the `written` set gains converted workbooks (`infer.csv` inferred, the same as text, and a de-DE CSV), with Excel's answers committed as before: each cell's type, value and `Text`, none `########`. LibreOffice converts them in CI.
+- **Security and fuzzing:**
+  - Workbooks with crafted sheet names (separators, `..`, device names, control characters, long names) never write outside the folder.
+  - An inference fuzzer: random fields near each form (signs, separators, digit counts, days that don't exist, offsets, cases). Every workbook passes the validator, and a cell is typed only when its text matches its column's type, and reads back to the same value.
+  - `ToCsv` over the reader fuzzers' malformed workbooks fails only with the reader's exceptions, and leaves no file.
+- **AOT:** the NativeAOT app also converts a CSV to a sheet (inferred, and through `T`) and back.
+
+#### Benchmark
+
+- A class for each direction, over the benchmarks' existing data, writing to a stream that counts and drops its bytes:
+  - **`ExcelToCsv`:** the package assets workbook (a million rows of text, with inline and with shared strings) and the orders workbook (dates, numbers, booleans):
+    - `ExcelConvert.ToCsv`;
+    - the string path it avoids: `GetString` into `WriteField(string)`;
+    - Sylvan.Data.Excel 0.5.8's reader into Sylvan.Data.Csv 1.4.4's `CsvDataWriter`, and MiniExcel 1.46.0's `ConvertXlsxToCsv`.
+  - **`CsvToExcel`:** the package assets and the orders as CSV:
+    - `ExcelConvert.ToExcel` inferred and as text, and `ToExcel<OrderRecord>`;
+    - Sylvan's `CsvDataReader` into its `ExcelDataWriter`, and MiniExcel's `ConvertCsvToXlsx`.
+- Allocation is measured (`ToCsv`'s shouldn't grow with rows), and the files' sizes recorded.
+- One BenchmarkDotNet run, recorded in "As built". There is no speed target against the others; Phase 9 tunes. The core hooks have their own gate (below).
+
+#### Core changes
+
+Three internal additions, for CsvHelper.Excel. Nothing that reading or writing CSV runs changes.
+
+1. **`CsvReader.GetTextUtf8(int index, Span<byte> buffer, bool roundNumbers)`,** in `CsvReader.Cells.cs`: a field's text as UTF-8, the text `GetString` gets, without a string. For CSV, and for a record source's text, empty and error cells, it is `GetSpan`. A date, duration or boolean cell's text is formatted into `buffer`, and with `roundNumbers` a number cell is rounded to the source's `SignificantDigits`. An error cell whose source fails every read throws as `GetString` does.
+2. **`CsvWriter.WriteField(ReadOnlySpan<byte> utf8, Type type)`:** `WriteField(ReadOnlySpan<byte>)` with the type the field is formatted from, which a cell sink gets (and which `Injection` and `ShouldQuote` get for CSV). It is a new method beside the public one, which is unchanged.
+3. **`CsvCells`:** a typed cell's text as UTF-8 (`TryText`), which `Text` now makes its string from, so that `GetString` and the conversion share one implementation; and a number's text rounded to significant digits (`TryRound`), through the `Number` that `decimal` targets already round with.
+
+**The gate:** Phase 0's, for what the change can reach:
+
+- core's suites pass on every target;
+- `git diff` over `src/CsvHelper` shows the two new methods and `CsvCells` alone;
+- BenchmarkDotNet, base and new interleaved, as Phase 5's UTF-8 dates were measured: `PackageAssetsWrite`, `FloatsWrite`, `PackageAssetsRead` and NCsvPerf within 1%, with QuickRunner's fresh processes deciding where BenchmarkDotNet's runs disagree;
+- every field of the orders sheet read as a string (dynamic records), whose dates now format through `TryText`, within 1%.
+
+**Considered and avoided:**
+
+- A public UTF-8 text accessor: architecture decision 3 keeps the hooks internal.
+- `GetChars`, which is public: its text is UTF-16, transcoded back for the writer, and a typed cell's makes a string.
+- Seeding the sink's kinds per column, without a core change: a field that doesn't match its column's type would then be read by the sink's rules for that type, in the sheet's culture, rather than kept as text, so that de-DE's `1.5` would be the number 1.5.
+- Writing a sheet's dynamic records' text: decision 18.
+
+#### Decisions
+
+1. **The entry points.** Recommended: a static `ExcelConvert` with `ToCsv`, `ToCsvFiles`, `ToExcel` and `ToExcel<T>`, each from paths and streams, sync and async; and `ToCsv(CsvReader, CsvWriter)` and `WriteSheet(name, CsvReader)` as the parts, for other sources and destinations, such as several CSV files in one workbook. Alternative: the parts alone, with the reader and writer opened by the caller.
+2. **The options.** Recommended: a record for each direction, holding each side's existing options (`ExcelReaderOptions` and `CsvWriterOptions`; `CsvReaderOptions` and `ExcelWriterOptions`) and the conversion's own. Alternative: two options parameters on each method.
+3. **Typed cells' text in the CSV.** Recommended: the reader's text, `GetString`'s: ISO 8601 dates, `[h]:mm:ss` durations, `TRUE` and `FALSE`, and errors as `ErrorCells` says. It is the same text whatever the cell's format, and reads back into `DateTime`, `TimeSpan` and `bool` in any culture. Alternative: what Excel shows, as its export and LibreOffice's "as shown" write, which is Phase 8's `Text = Formatted`.
+4. **Numbers' digits.** Recommended: rounded to `SignificantDigits`, 15 by default, as Excel shows them and LibreOffice's raw export writes them, so that the CSV holds `0.3` and `1234567.891` rather than Excel's stored 17 digits; `null` writes the stored text, the cell's exact double. Alternative: the stored text always, as `GetString` gives it.
+5. **The core hooks.** Recommended: the three internal additions under "Core changes", behind Phase 0's gate, so that no field makes a string and every inferred cell is the sink's own. Alternative: no core change: `GetChars`, and a string per typed cell, for `.xlsx` → CSV, and the sink's kinds seeded per column for CSV → `.xlsx`.
+6. **The CSV's rows.** Recommended: the reader's records (field `i` is column `i`, so data from C3 starts with two empty fields; short rows padded, long rows long), the CSV writer's field-count check off, and kept empty rows padded. `Range` or `HeaderRow` clip a sheet. Alternative: Excel's used range, from the sheet's `dimension`, every row padded to its width; our writer and some other producers write no `dimension`, so the output would differ by producer.
+7. **The byte-order mark.** Recommended: CsvHelper's defaults, without one, as every CSV CsvHelper writes; Excel reads a CSV without one in the system's code page, which `Csv.WriteByteOrderMark` fixes, and the guide says so. Alternative: a byte-order mark by default, as Excel's "CSV UTF-8" writes.
+8. **Every sheet.** Recommended: every worksheet, hidden ones included (as reading includes them), a file each named after its sheet, made a file name on every system, numbered on a collision, and kept in the folder. Alternatives: visible sheets only; LibreOffice's `<workbook>-<sheet>.csv`.
+9. **What inference reads.** Recommended: Phase 4's number text in the CSV's culture (no leading zeros, grouping, currency or percent, and at most 15 digits), ISO dates and dates and times (with `T` or a space), and `true` and `false` in any case. Excel and LibreOffice both drop `00123`'s zeros, and Excel keeps 15 of 19 digits (checked); this keeps both as text. Alternative: Excel's wider reading (grouping, currency, percent, `+5`, `.5`, dates in the culture's order), which loses what those forms show.
+10. **Inference by column, from held records.** Recommended: a column's type from its first `InferTypes` records, every non-null field matching, so that a column of IDs with one `00123` is text throughout; a later field that doesn't match is a text cell. Alternative: each cell by its own text, as Excel and LibreOffice open a CSV, which mixes numbers and text in a column.
+11. **How many records.** Recommended: 1,000, held in memory, and 0 for text cells, as `AutoFit = 0` is no auto-fit. Alternatives: 200, as Power Query reads; every record, reading a file twice.
+12. **The default.** Recommended: inference, since a sheet of text can't sum or sort its numbers and dates. Alternative: text cells, which never change how a value looks.
+13. **Times and durations.** Recommended: text, as the plan's scope has it: `10:30` is as often a label as a time. Alternative: `HH:mm[:ss[.fff]]` as times and `[h]:mm:ss` as durations, as Excel reads them.
+14. **Null fields.** Recommended: empty cells, by the CSV reader's `NullValues` (only empty fields by default). Alternative: their text.
+15. **The sheet's name.** Recommended: `SheetName`, else the file's name as Excel names a CSV's sheet, else `Sheet1`. Alternative: `Sheet1` always.
+16. **Files and streams.** Recommended: a path overload that fails deletes its file, and streams are left open, as `Stream.CopyTo` leaves them, so there is no `leaveOpen`. Alternatives: a failed file left as written; `leaveOpen` parameters, as `ExcelReader.Create` has.
+17. **A converted sheet's header and culture.** Recommended: they follow the CSV reader (`HasHeader`, and invariant text from its culture), whatever `ExcelWriterOptions.Csv` says, since a workbook writer's CSV options are for record writers. Alternative: the workbook's options apply, and must match the CSV's.
+18. **A sheet's dynamic records written to CSV** (Phase 2's "Left for later"). Recommended: leave `WriteRecords(sheet.GetRecords<dynamic>())` as it is, writing dates as serials, and point to `ExcelConvert.ToCsv` in the guide and in `CsvDynamicRecord`'s docs, since that is the copy that writes text. Alternative: dynamic records carry their cells' kinds and the writer writes a typed cell's text, a core change to the writer's dynamic path behind Phase 0's gate.
+19. **The guide and publishing.** Recommended: `docs/pages/excel.md` (Phase 1's decision 18) and `publish.yaml`'s pack and push of CsvHelper.Excel after CsvHelper (Phase 1's "Project setup") are this phase's last steps, since v1.0 is phases 0 to 6. Alternative: a release step of their own after Phase 6.
+
+#### Risks
+
+- **Inference sees the first 1,000 records:** a column whose later values differ mixes typed and text cells. `InferTypes` can read more, and `ToExcel<T>` types exactly.
+- **Rounding changes the stored text:** the CSV holds what Excel shows, not the double's 17 digits. `SignificantDigits = null` keeps them.
+- **Users expect Excel's export:** shown text, the used range and a byte-order mark. The guide lists the differences, and Phase 8's `Text = Formatted` gives shown text.
+- **Held records** cost memory for wide rows, beside auto-fit's 100, and delay the sheet's first write.
+- **Dates in other forms** (`1/15/2024`, `15-Jan-2024`) stay text, since their order depends on a culture. `ToExcel<T>` with `[CsvFormat]` reads them.
+- **The hooks** tie CsvHelper.Excel to more of core's internals, which the exact version pin covers.
+- **Publishing:** nuget.org's trusted publishing policy must cover CsvHelper.Excel before its first push, a setting outside the repository.
+
+#### Order of work
+
+1. **Core hooks (S):** the three additions, their tests and their gate.
+2. **`.xlsx` → CSV (S):** `ExcelToCsvOptions`, `ToCsv` from paths, streams and readers, `ToCsvFiles`, `SheetToCsv`, and `ConversionNames`' file names.
+3. **CSV → `.xlsx` (M):** `CsvToExcelOptions`, `ColumnTypes`, `HeldRecords`, `CsvToSheet`, `WriteSheet(name, CsvReader)`, `ToExcel` and `ToExcel<T>`, and sheet names from files.
+4. **Corpus and oracles (S):** the converted workbooks in `written`, Excel's answers, LibreOffice, and the round trips.
+5. **Security, fuzzing and AOT (S).**
+6. **Benchmarks (S).**
+7. **The guide and publishing (M):** `docs/pages/excel.md`, `site.json` (the guide, and CsvHelper.Excel among its projects), and `publish.yaml`.
+8. **"As built" (S).**
+
+The conversions are S, as planned; the guide makes the phase M.
+
+#### Gate
+
+- Every conversion works on net10.0, net8.0 and net48, sync and async, from paths, streams and readers, with errors naming the cell.
+- `.xlsx` → CSV: every corpus workbook's CSV reads back as the sheet reader reads it, numbers equal as `decimal`s, and no field makes a string (allocation doesn't grow with rows).
+- CSV → `.xlsx`: every workbook the tests write passes `OpenXmlValidator`; the `written` set's converted workbooks open in Excel and LibreOffice without a repair prompt, with Excel's answers matching the inference and no typed cell `########`; and round trips give each field back.
+- `ToCsvFiles` writes nothing outside its folder, and the security and fuzz tests pass.
+- The core hooks pass their gate.
+- The benchmark's numbers are recorded.
+- The NativeAOT publish has no warnings.
+- The site builds with the guide and CsvHelper.Excel's API pages (`docs/build.ps1`), and `publish.yaml`'s pack of CsvHelper.Excel works (as CI's pack check, with nothing pushed).
+- CI passes.
+
+#### Changes elsewhere
+
+Applied at approval, 2026-11-12:
+
+- **Status** (top of the plan): Phase 6's design approved.
+- **API sketch:** `ExcelConvert` (`ToCsv`, `ToCsvFiles`, `ToExcel`, `ToExcel<T>`), `ExcelToCsvOptions`, `CsvToExcelOptions`, and `WriteSheet(name, CsvReader)`.
+- **Defaults:** conversions write numbers in 15 significant digits, dates in ISO 8601, and CsvHelper's CSV defaults (no byte-order mark); a CSV's columns' types are inferred from 1,000 records.
+- **Phase 8:** "Formatted output in `.xlsx` → CSV conversion" comes through `GetTextUtf8`, which follows `Text = Formatted`.
+- **Phase 2's "Left for later":** the dynamic records' note points to decision 18.
+
+#### As built
+
+Filled in step by step; the code is the reference.
 
 **v1.0 release: phases 0–6.**
 
@@ -6361,7 +6664,7 @@ Filled in step by step; the code is the reference.
   - Built-in formats whose output depends on the locale, rendered with the reader's `FormatProvider`.
 - **Options it enables:**
   - `Text = Formatted` reading.
-  - Formatted output in `.xlsx` → CSV conversion.
+  - Formatted output in `.xlsx` → CSV conversion, which comes through core's `GetTextUtf8` (Phase 6) once it follows `Text = Formatted`.
 - **Test oracle:** where Excel is installed, COM automation exports `Range.Text` for a corpus of values and formats. This feature is where scope creeps most, and real Excel output keeps it honest.
 - **From Phase 5:** auto-fit's `NumberFormatWidth` estimates a formatted number's width, erring wide, from the digits, grouping, decimals, percent, exponent and literals of the section for its sign. That is part of what the renderer does exactly, and the renderer replaces it.
 
@@ -6512,6 +6815,8 @@ Chosen during planning, and still open to change:
 - Dates are written in ISO-like formats by what each value holds: a date, seconds or milliseconds (Phase 4).
 - A sheet's header is bold and frozen, and its columns are auto-fitted over the header and first 100 records, at most 60 characters wide (Phase 5).
 - `Uri` fields with http, https or mailto are links; others are text (Phase 5).
+- Conversion to CSV writes numbers in 15 significant digits, dates in ISO 8601, and CsvHelper's CSV defaults, without a byte-order mark (Phase 6).
+- Conversion from CSV infers each column's type from its first 1,000 records: numbers without leading zeros and of at most 15 digits, ISO dates, and `true` and `false` (Phase 6).
 - Formulas are written without cached values (Phase 4).
 - Long numbers, dates before 1900 and negative durations are written as text (Phase 4).
 - `History` is allowed as a sheet name (Phase 4).
