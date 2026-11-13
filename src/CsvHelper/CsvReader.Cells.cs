@@ -274,6 +274,15 @@ public sealed partial class CsvReader
 		return CellText(utf8, index, buffer, roundNumbers);
 	}
 
+	/// <summary>
+	/// The kind of field <paramref name="index"/> of the current record, for CsvHelper.Excel's conversion of a sheet to CSV,
+	/// which writes each field with the type its kind is formatted from, so that injection protection passes over a
+	/// number cell's minus sign as it does a number's.
+	/// </summary>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <returns>The kind of the field: <see cref="CsvCellKind.Text"/> for CSV, and for a field past the record's end.</returns>
+	internal CsvCellKind GetCellKind(int index) => typedCells ? CellKind(index) : CsvCellKind.Text;
+
 	/// <summary>The text of a field of a record source as UTF-8, for <see cref="GetTextUtf8(int, Span{byte}, bool)"/>.</summary>
 	/// <param name="utf8">The field's stored text.</param>
 	/// <param name="column">The index of the field in the current record, for its kind (<see cref="CellKind(int)"/>).</param>

@@ -128,6 +128,27 @@ public class ConversionHookTests
 	}
 
 	[Fact]
+	public void CellKindsAreTheSourcesAndCsvsAreText()
+	{
+		var cells = new[] { Text("a"), Number("-5"), Date("45306"), Duration("1.5"), Bool("1"), Error("#N/A"), Empty() };
+		using (var reader = Cells(null, cells))
+		{
+			foreach (var (_, kind) in cells)
+			{
+				Assert.True(reader.Read());
+				Assert.Equal(kind, reader.GetCellKind(0));
+
+				// Past the record's end, a field is text, as GetString reads it.
+				Assert.Equal(CsvCellKind.Text, reader.GetCellKind(1));
+			}
+		}
+
+		using var csv = CsvReader.FromText("a,-5,45306\r\n", new CsvReaderOptions { HasHeader = false });
+		Assert.True(csv.Read());
+		Assert.All(Enumerable.Range(0, 4), i => Assert.Equal(CsvCellKind.Text, csv.GetCellKind(i)));
+	}
+
+	[Fact]
 	public void NumbersRoundToTheSourcesSignificantDigits()
 	{
 		(string, CsvCellKind)[] cells = [Number("0.30000000000000004"), Number("1234567.8910000001"), Number("1.5"), Number("123456789012345")];
