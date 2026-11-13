@@ -103,6 +103,15 @@ public sealed class CountingStream(bool keep) : Stream
 /// </summary>
 public abstract class ExcelWriteBenchmarkBase
 {
+	/// <summary>
+	/// A sheet as Phase 4 wrote it: the settings Phase 5 turned on by default (a bold header, a frozen header and auto-fit)
+	/// turned off.
+	/// </summary>
+	protected static readonly ExcelSheetOptions Plain = new() { BoldHeader = false, FreezeHeader = false, AutoFit = 0 };
+
+	/// <summary>A sheet at the defaults, with the header and the rows in a table, in the table's default style.</summary>
+	protected static readonly ExcelSheetOptions InTable = new() { Table = new ExcelTableOptions() };
+
 	/// <summary>The stream the last benchmark wrote to.</summary>
 	private CountingStream? last;
 
@@ -160,6 +169,12 @@ public abstract class ExcelWriteBenchmarkBase
 /// synchronously until its buffer is full.
 /// </para>
 /// <para>
+/// CsvHelper.Excel's sheet settings: its defaults (a bold, frozen header and auto-fit over 100 rows) in the methods above;
+/// Phase 4's look, without them (<see cref="CsvHelper_WritePlain"/>); a presentation (a title, a filter and auto-fit over
+/// 1,000 rows besides); and a table. And its links: each row with a 26th column, the package's NuGet page as a
+/// <see cref="Uri"/>, written as links (the first 65,530, as a sheet holds no more) and, for what they cost, as text.
+/// </para>
+/// <para>
 /// The MB/s column is of the same data as CSV, and <see cref="Csv_Write"/> writes that CSV with CsvHelper, as a
 /// reference. The Written column is the size of what each writes.
 /// </para>
@@ -170,19 +185,46 @@ public abstract class ExcelWriteBenchmarkBase
 [Config(typeof(WrittenSizeConfig))]
 public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 {
+	/// <summary>The presentation: a title, a bold, frozen header, a filter, and auto-fit over 1,000 rows.</summary>
+	private static readonly ExcelSheetOptions Presentation = new() { Title = "Package assets", AutoFilter = true, AutoFit = 1000 };
+
 	/// <summary>The header.</summary>
 	private string[] header = [];
+
+	/// <summary>The header with the links' column after it.</summary>
+	private string[] linkedHeader = [];
 
 	/// <summary>The data rows, which share the arrays of each copy of NCsvPerf's lines.</summary>
 	private string[][] rows = [];
 
-	/// <summary>Builds the rows, and writes them as CSV once for <see cref="ExcelWriteBenchmarkBase.DataBytes"/>.</summary>
+	/// <summary>Each row's link: its package's page on NuGet, one <see cref="Uri"/> for each package and version.</summary>
+	private Uri[] links = [];
+
+	/// <summary>
+	/// Builds the rows and their links, and writes the rows as CSV once for <see cref="ExcelWriteBenchmarkBase.DataBytes"/>.
+	/// </summary>
 	[GlobalSetup]
 	public void Setup()
 	{
 		var records = ExcelDataGenerator.PackageAssetRecords(ExcelDataGenerator.PackageAssetRows);
 		header = records[0];
+		linkedHeader = [.. header, "Link"];
 		rows = records.Skip(1).ToArray();
+
+		var pages = new Dictionary<(string Id, string Version), Uri>();
+		links = new Uri[rows.Length];
+		for (var i = 0; i < rows.Length; i++)
+		{
+			var package = (rows[i][2], rows[i][3]);
+			if (!pages.TryGetValue(package, out var page))
+			{
+				page = new Uri($"https://www.nuget.org/packages/{package.Item1}/{package.Item2}");
+				pages.Add(package, page);
+			}
+
+			links[i] = page;
+		}
+
 		DataBytes = Csv_Write();
 	}
 
@@ -210,23 +252,59 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 		return stream.Count;
 	}
 
-	/// <summary>CsvHelper.Excel: each field through the sheet's <see cref="CsvWriter"/>, with inline strings at <see cref="CompressionLevel.Fastest"/>.</summary>
+	/// <summary>
+	/// CsvHelper.Excel: each field through the sheet's <see cref="CsvWriter"/>, at its defaults: inline strings at
+	/// <see cref="CompressionLevel.Fastest"/>, and a bold, frozen header with auto-fit over 100 rows.
+	/// </summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Write")]
-	public long CsvHelper_Write() => WriteWorkbook(ExcelStrings.Inline, CompressionLevel.Fastest);
+	public long CsvHelper_Write() => WriteWorkbook(new ExcelWriterOptions());
 
 	/// <summary>CsvHelper.Excel with shared strings.</summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Write")]
-	public long CsvHelper_WriteShared() => WriteWorkbook(ExcelStrings.Shared, CompressionLevel.Fastest);
+	public long CsvHelper_WriteShared() => WriteWorkbook(new ExcelWriterOptions { Strings = ExcelStrings.Shared });
 
 	/// <summary>CsvHelper.Excel at <see cref="CompressionLevel.Optimal"/>.</summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Write")]
-	public long CsvHelper_WriteOptimal() => WriteWorkbook(ExcelStrings.Inline, CompressionLevel.Optimal);
+	public long CsvHelper_WriteOptimal() => WriteWorkbook(new ExcelWriterOptions { CompressionLevel = CompressionLevel.Optimal });
+
+	/// <summary>CsvHelper.Excel with Phase 4's look: no bold header, no frozen header and no auto-fit.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WritePlain() => WriteWorkbook(new ExcelWriterOptions { Sheets = Plain });
+
+	/// <summary>CsvHelper.Excel with a title, a bold, frozen header, a filter, and auto-fit over 1,000 rows.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WritePresentation() => WriteWorkbook(new ExcelWriterOptions { Sheets = Presentation });
+
+	/// <summary>CsvHelper.Excel with the header and the rows in a table.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteTable() => WriteWorkbook(new ExcelWriterOptions { Sheets = InTable });
+
+	/// <summary>
+	/// CsvHelper.Excel with a column of links after the rows' fields, each the package's NuGet page: the first 65,530 are
+	/// links, and the rest text, as a sheet holds no more links.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteLinks() => WriteLinkedWorkbook(new ExcelWriterOptions());
+
+	/// <summary>CsvHelper.Excel with the same column of URIs as text (<see cref="ExcelLinks.None"/>), for what links cost.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteLinksAsText() => WriteLinkedWorkbook(new ExcelWriterOptions { Links = ExcelLinks.None });
 
 	/// <summary>LargeXlsx: a row per record, a string cell per field.</summary>
 	/// <returns>The bytes written.</returns>
@@ -288,7 +366,8 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 				return csv.GetRecords<PackageAsset>().ToList();
 			}
 
-			using var reader = ExcelReader.Create(stream);
+			// The header is found, below a title when there is one; a column of links after it is read as no member.
+			using var reader = ExcelReader.Create(stream, new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.Find<PackageAsset>() });
 
 			return reader.GetRecords<PackageAsset>().ToList();
 		}
@@ -321,13 +400,11 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 	}
 
 	/// <summary>Writes the header and the rows with CsvHelper.Excel.</summary>
-	/// <param name="strings">Where the strings go.</param>
-	/// <param name="level">The compression level.</param>
+	/// <param name="options">The workbook's options, the sheet's among them.</param>
 	/// <returns>The bytes written.</returns>
-	private long WriteWorkbook(ExcelStrings strings, CompressionLevel level)
+	private long WriteWorkbook(ExcelWriterOptions options)
 	{
 		var stream = NewOutput();
-		var options = new ExcelWriterOptions { Strings = strings, CompressionLevel = level };
 		using (var workbook = ExcelWorkbookWriter.Create(stream, options, leaveOpen: true))
 		using (var writer = workbook.AddSheet(ExcelDataGenerator.SheetName))
 		{
@@ -337,8 +414,35 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 		return stream.Count;
 	}
 
+	/// <summary>Writes the header and the rows, each with its link after its fields, with CsvHelper.Excel.</summary>
+	/// <param name="options">The workbook's options, the links' policy among them.</param>
+	/// <returns>The bytes written.</returns>
+	private long WriteLinkedWorkbook(ExcelWriterOptions options)
+	{
+		var stream = NewOutput();
+		using (var workbook = ExcelWorkbookWriter.Create(stream, options, leaveOpen: true))
+		using (var writer = workbook.AddSheet(ExcelDataGenerator.SheetName))
+		{
+			writer.WriteHeader(linkedHeader);
+			for (var r = 0; r < rows.Length; r++)
+			{
+				var row = rows[r];
+				for (var i = 0; i < row.Length; i++)
+				{
+					writer.WriteField(row[i]);
+				}
+
+				writer.WriteField(links[r]);
+				writer.EndRecord();
+			}
+		}
+
+		return stream.Count;
+	}
+
 	/// <summary>Writes the header and the rows, field by field, to CsvHelper's writer or a sheet's.</summary>
 	/// <param name="writer">The writer.</param>
+	/// <remarks>The loop is Phase 4's, so that the gate against Phase 4's numbers times the same code around the writer.</remarks>
 	private void WriteRows(CsvWriter writer)
 	{
 		writer.WriteHeader(header);
@@ -364,7 +468,10 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 /// CsvHelper.Excel writes them with <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/>, through the
 /// record writer generated for <see cref="OrderRecord"/>, with <see cref="ExcelDateTimeOffsets.Utc"/> so that
 /// <c>ShippedAt</c> is a date, as the others write it: with inline strings at <see cref="CompressionLevel.Fastest"/>, with
-/// shared strings, and with inline strings at <see cref="CompressionLevel.Optimal"/>.
+/// shared strings, and with inline strings at <see cref="CompressionLevel.Optimal"/>. Its sheet settings: its defaults (a
+/// bold, frozen header and auto-fit over 100 rows) in those; Phase 4's look, without them
+/// (<see cref="CsvHelper_WritePlain"/>); a presentation (a title, a filter, auto-fit over 1,000 rows, and the numbers in
+/// formats besides); and a table.
 /// </para>
 /// <para>
 /// SpreadCheetah 1.28.0 (the baseline), LargeXlsx 2.0.2 and MiniExcel 1.46.0 write each member as the cell of its type,
@@ -383,6 +490,28 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 [Config(typeof(WrittenSizeConfig))]
 public class ExcelOrdersWrite : ExcelWriteBenchmarkBase
 {
+	/// <summary>The options of every workbook CsvHelper.Excel writes: <c>ShippedAt</c> as its UTC date.</summary>
+	private static readonly ExcelWriterOptions Utc = new() { DateTimeOffsets = ExcelDateTimeOffsets.Utc };
+
+	/// <summary>
+	/// The presentation: a title, a bold, frozen header, a filter, auto-fit over 1,000 rows, and the numbers in formats
+	/// (the dates are in theirs already).
+	/// </summary>
+	private static readonly ExcelSheetOptions Presentation = new()
+	{
+		Title = "Orders",
+		AutoFilter = true,
+		AutoFit = 1000,
+		Columns = new Dictionary<string, ExcelColumnOptions>
+		{
+			["Id"] = new() { Format = "0" },
+			["Total"] = new() { Format = "#,##0.00" },
+			["Weight"] = new() { Format = "0.00" },
+			["Quantity"] = new() { Format = "#,##0" },
+			["Sku"] = new() { Format = "0" },
+		},
+	};
+
 	/// <summary>The orders.</summary>
 	private OrderRecord[] orders = [];
 
@@ -437,25 +566,46 @@ public class ExcelOrdersWrite : ExcelWriteBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: the orders through <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/>, with
-	/// inline strings at <see cref="CompressionLevel.Fastest"/>.
+	/// CsvHelper.Excel: the orders through <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/>, at
+	/// its defaults: inline strings at <see cref="CompressionLevel.Fastest"/>, and a bold, frozen header with auto-fit over
+	/// 100 rows.
 	/// </summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Write")]
-	public long CsvHelper_Write() => WriteWorkbook(ExcelStrings.Inline, CompressionLevel.Fastest);
+	public long CsvHelper_Write() => WriteWorkbook(Utc);
 
 	/// <summary>CsvHelper.Excel with shared strings: every <c>CustomerId</c> is one of its own.</summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Write")]
-	public long CsvHelper_WriteShared() => WriteWorkbook(ExcelStrings.Shared, CompressionLevel.Fastest);
+	public long CsvHelper_WriteShared() => WriteWorkbook(Utc with { Strings = ExcelStrings.Shared });
 
 	/// <summary>CsvHelper.Excel at <see cref="CompressionLevel.Optimal"/>.</summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Write")]
-	public long CsvHelper_WriteOptimal() => WriteWorkbook(ExcelStrings.Inline, CompressionLevel.Optimal);
+	public long CsvHelper_WriteOptimal() => WriteWorkbook(Utc with { CompressionLevel = CompressionLevel.Optimal });
+
+	/// <summary>CsvHelper.Excel with Phase 4's look: no bold header, no frozen header and no auto-fit.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WritePlain() => WriteWorkbook(Utc with { Sheets = Plain });
+
+	/// <summary>
+	/// CsvHelper.Excel with a title, a bold, frozen header, a filter, auto-fit over 1,000 rows, and the numbers in formats.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WritePresentation() => WriteWorkbook(Utc with { Sheets = Presentation });
+
+	/// <summary>CsvHelper.Excel with the header and the orders in a table.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteTable() => WriteWorkbook(Utc with { Sheets = InTable });
 
 	/// <summary>LargeXlsx: a row of typed cells per order, <c>Sku</c> as a double, as it has no <see cref="long"/> cell.</summary>
 	/// <returns>The bytes written.</returns>
@@ -534,20 +684,19 @@ public class ExcelOrdersWrite : ExcelWriteBenchmarkBase
 				return csv.GetRecords<OrderRecord>().ToList();
 			}
 
-			using var reader = ExcelReader.Create(stream);
+			// The header is found, below a title when there is one.
+			using var reader = ExcelReader.Create(stream, new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.Find<OrderRecord>() });
 
 			return reader.GetRecords<OrderRecord>().ToList();
 		}
 	}
 
 	/// <summary>Writes the orders with CsvHelper.Excel.</summary>
-	/// <param name="strings">Where the strings go.</param>
-	/// <param name="level">The compression level.</param>
+	/// <param name="options">The workbook's options, the sheet's among them.</param>
 	/// <returns>The bytes written.</returns>
-	private long WriteWorkbook(ExcelStrings strings, CompressionLevel level)
+	private long WriteWorkbook(ExcelWriterOptions options)
 	{
 		var stream = NewOutput();
-		var options = new ExcelWriterOptions { Strings = strings, CompressionLevel = level, DateTimeOffsets = ExcelDateTimeOffsets.Utc };
 		using (var workbook = ExcelWorkbookWriter.Create(stream, options, leaveOpen: true))
 		{
 			workbook.WriteSheet(ExcelOrders.SheetName, orders);

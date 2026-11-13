@@ -5221,7 +5221,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 5: presentation (M)
 
-Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show. Step 3 (auto-fit) was built, approved, with every recommendation, and committed 2026-11-09: columns are as wide as their held cells, as Excel's AutoFit makes them, and no typed cell shows `########` in Excel. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10: filters with their hidden names, tables whose header Excel's own rule names, and merged cells open in Excel and LibreOffice, and `NewSheet` repeats the filter and the table. Step 5 (links) was built, approved, with every recommendation, and committed that day: `Uri` fields are links in the `Hyperlink` style, as the policy says, within Excel's limits. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11: ten presentation workbooks in the `written` set, with Excel's answers about their look and its own AutoFit, ClosedXML and LibreOffice compared beside them, and a writer fix found by LibreOffice (a header cell in General says so); see its "As built". Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11: fuzzers of presentations and of Excel's format codes, opened in Excel on demand, which found six writer bugs (fixed) and gave `FormatCheck` Excel's rules; durations past Excel's last serial as text; the links' memory measured; and the NativeAOT check in CI; see its "As built".
+Status: the detailed design below was written on 2026-11-08, after the Excel and LibreOffice checks under "Checked on 2026-11-08", and approved that day, with every recommendation accepted. Its first item, core's UTF-8 date literals, was built, approved and committed that day (`146257b1`); see its "As built". Step 1 (settings) was built that day, and approved, with every recommendation, and committed 2026-11-09; see "As built" at the end of this phase. Step 2 (styles and the header) was built, approved, with every recommendation, and committed 2026-11-09: the bold header, the frozen pane, the title and the columns' options show. Step 3 (auto-fit) was built, approved, with every recommendation, and committed 2026-11-09: columns are as wide as their held cells, as Excel's AutoFit makes them, and no typed cell shows `########` in Excel. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10: filters with their hidden names, tables whose header Excel's own rule names, and merged cells open in Excel and LibreOffice, and `NewSheet` repeats the filter and the table. Step 5 (links) was built, approved, with every recommendation, and committed that day: `Uri` fields are links in the `Hyperlink` style, as the policy says, within Excel's limits. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11: ten presentation workbooks in the `written` set, with Excel's answers about their look and its own AutoFit, ClosedXML and LibreOffice compared beside them, and a writer fix found by LibreOffice (a header cell in General says so); see its "As built". Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11: fuzzers of presentations and of Excel's format codes, opened in Excel on demand, which found six writer bugs (fixed) and gave `FormatCheck` Excel's rules; durations past Excel's last serial as text; the links' memory measured; and the NativeAOT check in CI; see its "As built". Step 8 (benchmarks) was built, approved, with every recommendation, and committed 2026-11-12. With Phase 4's look the writer writes Phase 4's bytes: as fast for the orders, and 2.4% faster for the package assets. The defaults and every setting a sheet writes once cost under 1%. A column's format or wrap costs 2–6%, and a sheet's 65,530 links 2.1%. See its "As built".
 
 Scope, as planned:
 
@@ -6042,6 +6042,129 @@ Filled in step by step; the code is the reference.
   - **`NumberFormatWidth` and codes it doesn't model** (Phase 8's exact rendering): in the last codes round, about 1,040 numbers showed `########` where the estimate gave a width. The forms are conditions, elapsed time with sub-second digits past the last date, the system's formats (`[$-F800]`, `[$-F400]`), East Asian names, and an emoji's width. Random codes go far past what columns are given in practice, and the written set's columns still show every typed cell.
   - The `fuzzed` command left Excel processes behind in long runs, three this session. Their workbooks were closed and the answers are whole, but the processes stayed, hidden, until closed by hand.
 
+**Step 8, benchmarks** (built, approved, with every recommendation, and committed 2026-11-12):
+
+- **Changed:**
+  - `bench/CsvHelper.Benchmarks/ExcelWriteBenchmarks.cs`:
+    - `CsvHelper_Write`, `CsvHelper_WriteShared` and `CsvHelper_WriteOptimal` in both classes are at the new defaults: a bold, frozen header and auto-fit over 100 rows. From now on `CsvHelper_Write` isn't Phase 4's look; `CsvHelper_WritePlain` is.
+    - New in both classes:
+      - `CsvHelper_WritePlain`: Phase 4's look (`BoldHeader`, `FreezeHeader` and `AutoFit` off).
+      - `CsvHelper_WritePresentation`: a title, the bold, frozen header, a filter and auto-fit over 1,000 rows. The orders' adds formats for its five number columns: `Id` and `Sku` `0`, `Total` `#,##0.00`, `Weight` `0.00`, `Quantity` `#,##0` (decision 2).
+      - `CsvHelper_WriteTable`: the defaults, with the header and rows in a table in its default style.
+    - New in the package assets: `CsvHelper_WriteLinks` and `CsvHelper_WriteLinksAsText` (decision 1).
+    - `verify` reads each workbook back by finding its header (`ExcelHeaderRow.Find<T>()`), below a title when there is one.
+    - The loops around the writer are Phase 4's, so that the gate times the same code around it.
+  - `bench/CsvHelper.Benchmarks/QuickRunner.cs`: a filter that starts with `~` is a regular expression over `Class.Method`, so that a run names methods exactly (for the gate's pairs, below).
+  - CsvHelper.Excel and core: no change.
+- **Checked:**
+  - `verify` read every new method's workbook back as the others: 1,000,000 orders of hash `199B37C22F244824`, and 1,000,000 package assets of hash `A46BD7E4C52574F1`.
+  - With Phase 4's look the writer writes Phase 4's bytes exactly: 176,118,335 for the orders and 139,191,310 for the package assets, the same as `69907e65` (Phase 4's last commit) writes.
+- **The runs:**
+  - BenchmarkDotNet 0.15.8 and .NET 10.0.13, on core 4 of the Ryzen 9 9950X3D, with 4 warm-ups and 12 iterations.
+  - The paged pool stayed at 4.40–4.42 GB throughout (it was 2.5 GB at Phase 4's step 7), with 36–38 GB free. During the full run, total CPU had a median of 4.2%, and 2 of 206 samples were above 10%.
+  - The scripts, logs, reports and probes are in `Csv\_bench\results\phase5\step8`. Allocated counts 1 KB as 1,024 B, as BenchmarkDotNet does; Written counts 1 MB as 10⁶ B.
+- **The gate** (Phase 4's look within 1% of Phase 4's):
+  - The first try was BenchmarkDotNet, interleaved base/new/new/base:
+    - base was `69907e65`'s `CsvHelper_Write` (Phase 4's look), and new was `CsvHelper_WritePlain`;
+    - base was a scratch copy outside the repo.
+    - It was inconclusive: the two base processes of the orders disagreed by 6% (1,577.2 and 1,484.9 ms) on the same code.
+  - So, as for the UTF-8 dates' gate, the gate used 24 fresh QuickRunner processes, base/new/new/base six times (`quick-pairs.ps1`). Each process timed SpreadCheetah (the control) and CsvHelper.Excel in both classes. Below is the median of each side's 12 process medians, with the range of those medians:
+
+    | Class | Phase 4 (base) | Phase 4's look (new) | Change | SpreadCheetah, base and new |
+    |---|---:|---:|---:|---:|
+    | Orders | 1,495.3 ms (1,474.3–1,519.7) | 1,487.2 ms (1,476.0–1,520.3) | −0.5% | 955.6 and 955.9 ms |
+    | Package assets | 1,278.3 ms (1,265.8–1,353.8) | 1,248.1 ms (1,237.5–1,256.6) | −2.4% | 670.6 and 668.9 ms |
+
+  - **Met:**
+    - Phase 4's look is as fast for the orders, and 2.4% faster for the package assets, where every new process was faster than every base one.
+    - The control moved 0.0% and −0.3%.
+    - What made the package assets faster wasn't traced. Phase 5 rebuilt the sink's cell path around styles (`StartCell`, `StyleOf`).
+- **Each setting's cost:**
+  - **How it was measured:** BenchmarkDotNet's process per method can't resolve half a percent, so a probe (`probes\settings`) timed them:
+    - one process pinned to core 4, at high priority;
+    - the benchmarks' data and loops, each setting alone on Phase 4's look;
+    - two warm-ups, then 11 rounds in a shuffled order, with a collection before each write;
+    - the median of each setting, against Phase 4's look in the same process.
+  - **Results:**
+
+    | Setting | Orders | Package assets |
+    |---|---:|---:|
+    | Phase 4's look | 1,483.3 ms | 1,261.6 ms |
+    | Bold header | −0.1% | −0.6% |
+    | Frozen header | −0.4% | +0.0% |
+    | Auto-fit over 100 rows | −0.3% | −0.2% |
+    | Auto-fit over 1,000 rows | +0.2% | +0.6% |
+    | Title | −0.1% | −0.5% |
+    | Filter | −0.1% | −0.2% |
+    | Table | +0.2% | −0.0% |
+    | **The defaults** | **−0.4%** | **−0.1%** |
+    | Formats of the 5 number columns (of 12) | +6.1% (+90.3 ms) | |
+    | Wrap (`Path`) | | +2.0% (+25.6 ms) |
+    | Width (`Path`, 40) | | −0.5% |
+    | Hidden (`ScanId`) | | +0.5% |
+    | 65,530 links, against the same column as text | | +2.1% (+29.2 ms) |
+
+  - **What a sheet writes once costs nothing measurable:** the defaults, and each setting written once per sheet (the header's font, the panes, auto-fit's widths, the title, the filter, the table). Each is within the probe's noise, under 1%.
+  - **Per-cell settings cost:**
+    - **A column's format** writes `s` on each of its cells. The orders' five formats add 12.9 MB to the file (189.0 MB against 176.1 MB) and 6.1% to the time.
+    - **Wrap** writes `s` on its column's cells too: 5,986,060 more bytes of XML. Deflate at `Fastest` happens to compress the sheet 4.6 MB smaller (134,558,450 bytes against 139,189,106), and the time grows 2.0%.
+    - **Links:** each of a sheet's first 65,530 URIs is parsed again for its target, and held.
+      - In a run of the probe with a link column (`links.txt`), the links cost 29.2 ms (+2.1%) over the same column as text: about 450 ns each. BenchmarkDotNet has +32.0 ms.
+      - They allocate 34,560,000 bytes against the text's 138,248, about 525 bytes per link. The field's bytes are copied, decoded, and parsed as a `Uri` for its `AbsoluteUri`.
+      - Past the cap, a URI is text and costs what text costs: the link column itself, as text, is +6.7%.
+  - **Memory** (BenchmarkDotNet's Allocated):
+    - **Phase 4's look:** 10.4 KB per workbook for the orders and 10.1 KB for the package assets, against Phase 4's 7.3 KB. That is about 3 KB for Phase 5's settings and styles, whatever the rows.
+    - **The defaults:** about 423 KB for the orders (447 KB in one run of the first try) and 135 KB for the package assets. This is auto-fit's 101 held records:
+      - Package assets: 1.0–1.2 KB per held record, about its XML (1,090 bytes a row).
+      - Orders: 4.1–4.6 KB per held record, seven to eight times its XML (570 bytes a row). Why wasn't traced.
+- **The full run** (BenchmarkDotNet, every method of both classes; `run.ps1`, `bdn`), against Phase 4's step 7:
+  - **Caveat:** each method runs in its own process, and CsvHelper.Excel's land 2–4% apart between processes. In the package assets, Phase 4's look took 1,342.4 ms against 1,321.1 for the defaults and 1,287.3 for the table, which the probe puts within 0.6% of each other. The tables are the run's record; the gate and the settings' costs come from the pairs and the probe.
+  - `ExcelPackageAssetsWrite`:
+
+    | Writer | Phase 4 | Mean | Ratio | Written | Allocated |
+    |---|---:|---:|---:|---:|---:|
+    | SpreadCheetah | 624.0 ms | 630.6 ms | baseline | 58.6 MB | 11.2 KB |
+    | CsvHelper.Excel (the defaults) | 1,276.5 ms | 1,321.1 ms | 2.10x slower | 139.2 MB | 135.0 KB |
+    | CsvHelper.Excel, shared | 1,376.7 ms | 1,315.2 ms | 2.09x slower | 100.6 MB | 515.4 KB |
+    | CsvHelper.Excel, `Optimal` | 4,392.2 ms | 4,402.3 ms | 6.98x slower | 79.0 MB | 135.0 KB |
+    | CsvHelper.Excel, Phase 4's look | | 1,342.4 ms | 2.13x slower | 139.2 MB | 10.1 KB |
+    | CsvHelper.Excel, presentation | | 1,301.7 ms | 2.06x slower | 139.2 MB | 1.01 MB |
+    | CsvHelper.Excel, table | | 1,287.3 ms | 2.04x slower | 139.2 MB | 151.8 KB |
+    | CsvHelper.Excel, links | | 1,398.2 ms | 2.22x slower | 147.7 MB | 33.0 MB |
+    | CsvHelper.Excel, the links as text | | 1,366.2 ms | 2.17x slower | 147.3 MB | 135.0 KB |
+    | LargeXlsx | 1,438.8 ms | 1,439.5 ms | 2.28x slower | 195.4 MB | 103.3 KB |
+    | MiniExcel | 3,957.8 ms | 3,950.8 ms | 6.27x slower | 195.2 MB | 9.29 GB |
+    | CsvHelper, CSV | 136.3 ms | 135.1 ms | 4.67x faster | 306.0 MB | 440 B |
+
+  - `ExcelOrdersWrite`:
+
+    | Writer | Phase 4 | Mean | Ratio | Written | Allocated |
+    |---|---:|---:|---:|---:|---:|
+    | SpreadCheetah | 960.5 ms | 957.3 ms | baseline | 132.1 MB | 91.6 MB |
+    | CsvHelper.Excel (the defaults) | 1,497.4 ms | 1,502.4 ms | 1.57x slower | 176.1 MB | 423.3 KB |
+    | CsvHelper.Excel, shared | 1,662.3 ms | 1,660.8 ms | 1.73x slower | 175.3 MB | 160.4 MB |
+    | CsvHelper.Excel, `Optimal` | 4,754.9 ms | 4,767.4 ms | 4.98x slower | 115.1 MB | 423.4 KB |
+    | CsvHelper.Excel, Phase 4's look | | 1,527.8 ms | 1.60x slower | 176.1 MB | 10.4 KB |
+    | CsvHelper.Excel, presentation | | 1,556.5 ms | 1.63x slower | 189.1 MB | 4.55 MB |
+    | CsvHelper.Excel, table | | 1,504.9 ms | 1.57x slower | 176.1 MB | 431.9 KB |
+    | LargeXlsx | 1,424.7 ms | 1,429.4 ms | 1.49x slower | 176.1 MB | 91.7 MB |
+    | MiniExcel | 2,461.2 ms | 2,341.4 ms | 2.45x slower | 189.2 MB | 4.08 GB |
+    | CsvHelper, CSV | 123.7 ms | 125.7 ms | 7.62x faster | 191.0 MB | 464 B |
+
+  - Phase 4's "CsvHelper.Excel" rows were in Phase 4's look; this run's are at the new defaults.
+  - Shared strings in the package assets allocate 127.7 KB more than at Phase 4: auto-fit's held records.
+- **Decisions made while building** (each recommended, and approved as built):
+  1. **Links in the package assets, as a 26th column:** each package's NuGet page (`https://www.nuget.org/packages/{Id}/{Version}`), one `Uri` per package and version, built in setup. `LinksAsText` (`ExcelLinks.None`) writes the same column, for what links cost. The orders have no `Uri` member, and adding one would change `OrderRecord`, which the read benchmarks share.
+     - Alternative: a record type of its own, with a `Uri`, for the orders.
+  2. **The package assets' presentation has no formats,** since every field is text. The orders' has its five number columns'.
+     - Alternative: a text format (`@`) on the package assets' columns, which would cost as a format does.
+  3. **The gate from fresh-process pairs,** as for the UTF-8 dates, since BenchmarkDotNet's processes disagreed by 6% on the same code. The base's copy got the `~` filter too, outside the repo.
+  4. **The settings' probe stays outside the repo,** as earlier probes have.
+     - Alternative: a benchmark class with a method per setting, whose BenchmarkDotNet numbers would need the same pairs to read.
+- **Left open:**
+  - Why Phase 4's look is 2.4% faster for the package assets than at Phase 4 (above). The gate asks for no more than that it isn't slower.
+  - The orders' held records allocate seven to eight times their XML: Phase 9's "Auto-fit's held rows".
+
 ### Phase 6: conversion (S)
 
 - **`.xlsx` → CSV:**
@@ -6096,6 +6219,7 @@ Filled in step by step; the code is the reference.
   - Keep each piece only if it wins on the benchmark machine. The compress flattener showed that a faster stage doesn't always move the end-to-end numbers.
 - **Memory:** profile workbooks with huge shared-string tables.
 - **Auto-fit's held rows** (Phase 5): a sheet holds its header and first 100 records until their widths are measured, since `<cols>` comes before the rows. Measure what measuring costs, and what holding costs in memory and in time to the first write for wide sheets, and whether a smaller sample fits as well.
+  - **Phase 5's step 8:** holding and measuring 100 or 1,000 records cost no time it could measure, under 1%. Each held record allocated about its XML in the package assets (1.0–1.2 KB), and seven to eight times its XML in the orders (4.1–4.6 KB, against 570 bytes). The orders' allocation is the place to start.
 - **Finding merged ranges** (Phase 3): a cheaper skip over `sheetData` for the read that finds `<mergeCells>`, such as a raw search for its end tag. Phase 3's step 8 measured that read at a third of a plain sheet's time: 1.18 s for 714 MB of sheet XML through the XML scanner's skip, at about 600 MB/s, where inflating alone runs at 5.3–5.6 GB/s.
 - **Measuring Phase 3's default path again** (Phase 3's "Left open", added 2026-11-06):
   - Phase 3's gate wanted every A/B method of the default path within 1%. Shared Rows had one clean pair, at +1.2%, inline Rows none, and five of the eight methods weren't measured after step 8's `FlushGaps` split. Phase 3 was called complete with that item as it stood.

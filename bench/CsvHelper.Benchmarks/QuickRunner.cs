@@ -1,13 +1,15 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using BenchmarkDotNet.Attributes;
 
 namespace CsvHelper.Benchmarks;
 
 /// <summary>
 /// A fast Stopwatch based runner for the BenchmarkDotNet classes, for quick iteration while tuning.
-/// Usage: dotnet run -c Release -- quick [filter ...]  (filters match class, category or method names)
+/// Usage: dotnet run -c Release -- quick [filter ...]  (filters match class, category or method names; one that starts
+/// with ~ is a regular expression over Class.Method)
 /// </summary>
 public static class QuickRunner
 {
@@ -30,10 +32,7 @@ public static class QuickRunner
 			var methods = type.GetMethods()
 				.Where(m => m.GetCustomAttribute<BenchmarkAttribute>() is not null)
 				.Select(m => (Method: m, Category: m.GetCustomAttribute<BenchmarkCategoryAttribute>()?.Categories.FirstOrDefault() ?? ""))
-				.Where(x => filters.Length == 0 || filters.All(f =>
-					type.Name.Contains(f, StringComparison.OrdinalIgnoreCase) ||
-					x.Category.Equals(f, StringComparison.OrdinalIgnoreCase) ||
-					x.Method.Name.Contains(f, StringComparison.OrdinalIgnoreCase)))
+				.Where(x => filters.Length == 0 || filters.All(f => Matches(f, type, x.Category, x.Method)))
 				.ToList();
 			if (methods.Count == 0) continue;
 
@@ -63,6 +62,28 @@ public static class QuickRunner
 				}
 			}
 		}
+	}
+
+	/// <summary>
+	/// Whether a benchmark matches a filter: its class's or its method's name contains the filter, or its category is the
+	/// filter, ignoring case; or, for a filter that starts with <c>~</c>, the rest of it, a regular expression, matches its
+	/// <c>Class.Method</c>, so that a run can name methods exactly.
+	/// </summary>
+	/// <param name="filter">The filter.</param>
+	/// <param name="type">The benchmark's class.</param>
+	/// <param name="category">The benchmark's category.</param>
+	/// <param name="method">The benchmark's method.</param>
+	/// <returns>Whether it matches.</returns>
+	private static bool Matches(string filter, Type type, string category, MethodInfo method)
+	{
+		if (filter.StartsWith('~'))
+		{
+			return Regex.IsMatch($"{type.Name}.{method.Name}", filter[1..]);
+		}
+
+		return type.Name.Contains(filter, StringComparison.OrdinalIgnoreCase) ||
+			category.Equals(filter, StringComparison.OrdinalIgnoreCase) ||
+			method.Name.Contains(filter, StringComparison.OrdinalIgnoreCase);
 	}
 
 	/// <summary>
