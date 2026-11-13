@@ -245,6 +245,63 @@ public sealed partial class CsvReader
 		return CsvCells.Text(utf8, CellKind(column), recordSource!.CellOptions) ?? MakeString(utf8, -1);
 	}
 
+	/// <summary>
+	/// Gets the text of field <paramref name="index"/> as UTF-8: the text <see cref="GetString(int)"/> gets, without making
+	/// a string, for CsvHelper.Excel's conversion of a sheet to CSV. For CSV it is the field's value
+	/// (<see cref="GetSpan(int)"/>), and so is a record source's text, number, error and empty cells'. A date, duration or
+	/// boolean cell's text (<see cref="CsvCells.TryText"/>) is written into <paramref name="buffer"/>, and so is a number
+	/// cell's rounded to the source's <see cref="CsvCellOptions.SignificantDigits"/> when <paramref name="roundNumbers"/> is
+	/// set and it has more (<see cref="CsvCells.TryRound"/>).
+	/// </summary>
+	/// <param name="index">The 0-based index of the field.</param>
+	/// <param name="buffer">Room for a typed cell's text, of at least <see cref="CsvCells.MaxTextLength"/> bytes.</param>
+	/// <param name="roundNumbers">Whether a number cell is rounded to the source's significant digits.</param>
+	/// <returns>The text of the field; empty for an empty field. Valid until the next read, or until <paramref name="buffer"/> changes.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is negative.</exception>
+	/// <exception cref="IndexOutOfRangeException">
+	/// <paramref name="index"/> is not less than <see cref="FieldCount"/> and <see cref="CsvReaderOptions.MissingField"/>
+	/// is <see cref="CsvMissingFieldHandling.Throw"/>.
+	/// </exception>
+	/// <exception cref="FormatException">The field is an error cell, and the source's error cells fail every read.</exception>
+	internal ReadOnlySpan<byte> GetTextUtf8(int index, Span<byte> buffer, bool roundNumbers)
+	{
+		var utf8 = GetSpan(index);
+		if (!typedCells)
+		{
+			return utf8;
+		}
+
+		return CellText(utf8, index, buffer, roundNumbers);
+	}
+
+	/// <summary>The text of a field of a record source as UTF-8, for <see cref="GetTextUtf8(int, Span{byte}, bool)"/>.</summary>
+	/// <param name="utf8">The field's stored text.</param>
+	/// <param name="column">The index of the field in the current record, for its kind (<see cref="CellKind(int)"/>).</param>
+	/// <param name="buffer">Room for a typed cell's text.</param>
+	/// <param name="roundNumbers">Whether a number cell is rounded to the source's significant digits.</param>
+	/// <returns>The text of the field.</returns>
+	/// <exception cref="FormatException">The field is an error cell, and the source's error cells fail every read.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private ReadOnlySpan<byte> CellText(ReadOnlySpan<byte> utf8, int column, Span<byte> buffer, bool roundNumbers)
+	{
+		var kind = CellKind(column);
+		var options = recordSource!.CellOptions;
+		switch (kind)
+		{
+			case CsvCellKind.Number:
+				if (roundNumbers && options.SignificantDigits is { } digits && CsvCells.TryRound(utf8, digits, buffer, out var rounded))
+				{
+					return buffer.Slice(0, rounded);
+				}
+
+				return utf8;
+			case CsvCellKind.Error when options.ThrowOnErrorCells:
+				throw CsvCells.ErrorRead(utf8, hideValues, Locate(column));
+			default:
+				return CsvCells.TryText(utf8, kind, options, buffer, out var length) ? buffer.Slice(0, length) : utf8;
+		}
+	}
+
 	/// <summary>Copies the text of field <paramref name="index"/> of a record source into <paramref name="destination"/>, for <see cref="GetChars(int, Span{char})"/>.</summary>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="destination">Receives the text of the field.</param>

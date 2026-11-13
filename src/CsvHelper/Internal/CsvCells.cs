@@ -8,7 +8,8 @@ namespace CsvHelper;
 /// The conversions of typed cells, the fields of a <see cref="CsvRecordSource"/> whose <see cref="CsvCellKind"/> is not
 /// text: numbers for <see cref="decimal"/> and integer targets, rounded to significant digits; serial dates and durations
 /// for date and time targets, in either of Excel's date systems; booleans; error cells; and the text of dates,
-/// durations and booleans. The reader and dynamic records call it for typed cells only, so CSV never runs it.
+/// durations and booleans, and of numbers rounded to significant digits. The reader and dynamic records call it for typed
+/// cells only, so CSV never runs it.
 /// </summary>
 /// <remarks>
 /// The rules are those of "What a cell reads as" in Phase 2 of docs/plans/excel.md. A conversion either gives the value,
@@ -18,6 +19,12 @@ namespace CsvHelper;
 /// </remarks>
 internal static class CsvCells
 {
+	/// <summary>
+	/// The room <see cref="TryText"/> needs: the longest text of a typed cell is a date's, of 23 bytes
+	/// (<c>9999-12-31T23:59:59.999</c>), and a duration's has at most 20 (<c>-256204775:59:59.999</c>).
+	/// </summary>
+	public const int MaxTextLength = 32;
+
 	private const long MillisecondsPerDay = 86_400_000;
 	private const long MillisecondsPerHour = 3_600_000;
 	private const long TicksPerMillisecond = 10_000;
@@ -142,13 +149,82 @@ internal static class CsvCells
 	/// <param name="kind">The kind of the cell.</param>
 	/// <param name="options">The source's options.</param>
 	/// <returns>The text, or <see langword="null"/> when the text is the stored text.</returns>
-	public static string? Text(ReadOnlySpan<byte> s, CsvCellKind kind, CsvCellOptions options) => kind switch
+	public static string? Text(ReadOnlySpan<byte> s, CsvCellKind kind, CsvCellOptions options)
 	{
-		CsvCellKind.DateNumber => DateText(s, options.Date1904),
-		CsvCellKind.Duration => DurationText(s),
-		CsvCellKind.Bool => BooleanText(s),
-		_ => null,
-	};
+		// A boolean's text is one of two strings, which needn't be made again.
+		if (kind == CsvCellKind.Bool)
+		{
+			return BooleanValue(s) is { } value ? (value ? "TRUE" : "FALSE") : null;
+		}
+
+		Span<byte> text = stackalloc byte[MaxTextLength];
+
+		return TryText(s, kind, options, text, out var length) ? Utf8String.Create(text.Slice(0, length)) : null;
+	}
+
+	/// <summary>
+	/// Writes the text of a date, duration or boolean cell as UTF-8, when it is not the cell's stored text: the text that
+	/// <see cref="Text"/> gives, without a string.
+	/// </summary>
+	/// <param name="s">The stored text of the cell (UTF-8).</param>
+	/// <param name="kind">The kind of the cell.</param>
+	/// <param name="options">The source's options.</param>
+	/// <param name="destination">Receives the text (ASCII), of at least <see cref="MaxTextLength"/> bytes.</param>
+	/// <param name="length">The length of the text.</param>
+	/// <returns>Whether the cell has text of its own; <see langword="false"/> when its text is its stored text.</returns>
+	public static bool TryText(ReadOnlySpan<byte> s, CsvCellKind kind, CsvCellOptions options, Span<byte> destination, out int length)
+	{
+		length = kind switch
+		{
+			CsvCellKind.DateNumber => DateText(s, options.Date1904, destination),
+			CsvCellKind.Duration => DurationText(s, destination),
+			CsvCellKind.Bool => BooleanText(s, destination),
+			_ => -1,
+		};
+
+		return length >= 0;
+	}
+
+	/// <summary>
+	/// Writes a number cell's text rounded to <paramref name="keep"/> significant digits, half away from zero, as UTF-8:
+	/// in the stored text's notation (with an exponent when it has one, its letter, an explicit <c>+</c> and its number of
+	/// digits kept), and without zeros at the end of a fraction. So to 15 digits <c>0.30000000000000004</c> is <c>0.3</c>,
+	/// <c>1234567.8910000001</c> is <c>1234567.891</c> and <c>1.2345678901234568E+17</c> is <c>1.23456789012346E+17</c>.
+	/// </summary>
+	/// <param name="s">The stored text of the cell (UTF-8).</param>
+	/// <param name="keep">The significant digits to keep, at least 1.</param>
+	/// <param name="destination">Receives the text (ASCII).</param>
+	/// <param name="length">The length of the text.</param>
+	/// <returns>
+	/// Whether the number was rounded; <see langword="false"/>, and the stored text stands, for a number of
+	/// <paramref name="keep"/> significant digits or fewer, for text that is not a number, and for rounded text longer
+	/// than <paramref name="destination"/> (which can be one byte longer than the stored text, for a carry).
+	/// </returns>
+	public static bool TryRound(ReadOnlySpan<byte> s, int keep, Span<byte> destination, out int length)
+	{
+		length = 0;
+
+		// Fewer bytes than the digits to keep can't hold more digits.
+		if (s.Length <= keep)
+		{
+			return false;
+		}
+
+		Span<byte> digits = stackalloc byte[MaxDigits];
+		var number = new Number(digits);
+		if (!number.Read(s) || number.Count <= keep)
+		{
+			return false;
+		}
+
+		number.Round(keep);
+		number.TrimZeros();
+		var e = s.IndexOfAny((byte)'e', (byte)'E');
+
+		return e < 0
+			? TryWritePlain(ref number, destination, out length)
+			: TryWriteExponent(ref number, s[e], s.Slice(e + 1), destination, out length);
+	}
 
 	/// <summary>
 	/// The exception for reading an error cell as text with <see cref="CsvCellOptions.ThrowOnErrorCells"/>, such as
@@ -699,24 +775,24 @@ internal static class CsvCells
 	}
 
 	/// <summary>
-	/// The text of a date cell, from its value: <c>yyyy-MM-dd</c> for a whole day, <c>HH:mm:ss</c> for a serial below 1
-	/// (a time alone), else <c>yyyy-MM-ddTHH:mm:ss</c>, each with <c>.fff</c> when there are milliseconds, without
+	/// Writes the text of a date cell, from its value: <c>yyyy-MM-dd</c> for a whole day, <c>HH:mm:ss</c> for a serial
+	/// below 1 (a time alone), else <c>yyyy-MM-ddTHH:mm:ss</c>, each with <c>.fff</c> when there are milliseconds, without
 	/// trailing zeros.
 	/// </summary>
 	/// <param name="s">The stored text of the cell.</param>
 	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
-	/// <returns>The text, or <see langword="null"/> for a cell that is not a valid date: its text is the stored text.</returns>
-	private static string? DateText(ReadOnlySpan<byte> s, bool date1904)
+	/// <param name="text">Receives the text, of at least <see cref="MaxTextLength"/> bytes.</param>
+	/// <returns>The length of the text, or -1 for a cell that is not a valid date: its text is the stored text.</returns>
+	private static int DateText(ReadOnlySpan<byte> s, bool date1904, Span<byte> text)
 	{
 		if (!CsvParse.TryDouble(s, CultureInfo.InvariantCulture, out var serial) || !(serial >= 0 && serial < MaxSerial))
 		{
-			return null;
+			return -1;
 		}
 
 		var milliseconds = Milliseconds(serial);
 		var day = milliseconds / MillisecondsPerDay;
 		var time = milliseconds - (day * MillisecondsPerDay);
-		Span<char> text = stackalloc char[32];
 		var length = 0;
 		if (day > 0)
 		{
@@ -724,7 +800,7 @@ internal static class CsvCells
 			{
 				// Excel's 1900-02-29, which a date target can't hold.
 				Append(text, ref length, 1900, 4);
-				"-02-29".AsSpan().CopyTo(text.Slice(length));
+				"-02-29"u8.CopyTo(text.Slice(length));
 				length += 6;
 			}
 			else
@@ -732,54 +808,54 @@ internal static class CsvCells
 				var epoch = date1904 ? Days1904Jan1 : day < 60 ? Days1899Dec31 : Days1899Dec30;
 				if (epoch + day > MaxDays)
 				{
-					return null;
+					return -1;
 				}
 
 				var date = new DateTime((epoch + day) * TicksPerDay);
 				Append(text, ref length, date.Year, 4);
-				text[length++] = '-';
+				text[length++] = (byte)'-';
 				Append(text, ref length, date.Month, 2);
-				text[length++] = '-';
+				text[length++] = (byte)'-';
 				Append(text, ref length, date.Day, 2);
 			}
 
 			if (time == 0)
 			{
-				return text.Slice(0, length).ToString();
+				return length;
 			}
 
-			text[length++] = 'T';
+			text[length++] = (byte)'T';
 		}
 
 		AppendTime(text, ref length, time / MillisecondsPerHour, time % MillisecondsPerHour);
 
-		return text.Slice(0, length).ToString();
+		return length;
 	}
 
 	/// <summary>
-	/// The text of a duration cell, as Excel's <c>[h]:mm:ss</c> shows it: hours of at least two digits, with no day part
-	/// (<c>36:00:00</c>, <c>-01:30:00</c>), and <c>.fff</c> when there are milliseconds, without trailing zeros.
+	/// Writes the text of a duration cell, as Excel's <c>[h]:mm:ss</c> shows it: hours of at least two digits, with no day
+	/// part (<c>36:00:00</c>, <c>-01:30:00</c>), and <c>.fff</c> when there are milliseconds, without trailing zeros.
 	/// </summary>
 	/// <param name="s">The stored text of the cell.</param>
-	/// <returns>The text, or <see langword="null"/> for a cell beyond <see cref="TimeSpan"/>'s range: its text is the stored text.</returns>
-	private static string? DurationText(ReadOnlySpan<byte> s)
+	/// <param name="text">Receives the text, of at least <see cref="MaxTextLength"/> bytes.</param>
+	/// <returns>The length of the text, or -1 for a cell beyond <see cref="TimeSpan"/>'s range: its text is the stored text.</returns>
+	private static int DurationText(ReadOnlySpan<byte> s, Span<byte> text)
 	{
 		if (!CsvParse.TryDouble(s, CultureInfo.InvariantCulture, out var serial) || !TryMilliseconds(serial, out var milliseconds))
 		{
-			return null;
+			return -1;
 		}
 
-		Span<char> text = stackalloc char[32];
 		var length = 0;
 		if (milliseconds < 0)
 		{
-			text[length++] = '-';
+			text[length++] = (byte)'-';
 			milliseconds = -milliseconds;
 		}
 
 		AppendTime(text, ref length, milliseconds / MillisecondsPerHour, milliseconds % MillisecondsPerHour);
 
-		return text.Slice(0, length).ToString();
+		return length;
 	}
 
 	/// <summary>Appends <c>HH:mm:ss</c> and the milliseconds, if any, as <c>.fff</c> without trailing zeros.</summary>
@@ -787,12 +863,12 @@ internal static class CsvCells
 	/// <param name="length">The length of the text so far.</param>
 	/// <param name="hours">The hours: at least two digits.</param>
 	/// <param name="rest">The milliseconds within the hour.</param>
-	private static void AppendTime(Span<char> text, ref int length, long hours, long rest)
+	private static void AppendTime(Span<byte> text, ref int length, long hours, long rest)
 	{
 		Append(text, ref length, hours, 2);
-		text[length++] = ':';
+		text[length++] = (byte)':';
 		Append(text, ref length, rest / 60_000, 2);
-		text[length++] = ':';
+		text[length++] = (byte)':';
 		Append(text, ref length, rest / 1000 % 60, 2);
 		var fraction = (int)(rest % 1000);
 		if (fraction == 0)
@@ -800,14 +876,14 @@ internal static class CsvCells
 			return;
 		}
 
-		text[length++] = '.';
-		text[length++] = (char)('0' + (fraction / 100));
+		text[length++] = (byte)'.';
+		text[length++] = (byte)('0' + (fraction / 100));
 		if (fraction % 100 != 0)
 		{
-			text[length++] = (char)('0' + (fraction / 10 % 10));
+			text[length++] = (byte)('0' + (fraction / 10 % 10));
 			if (fraction % 10 != 0)
 			{
-				text[length++] = (char)('0' + (fraction % 10));
+				text[length++] = (byte)('0' + (fraction % 10));
 			}
 		}
 	}
@@ -817,7 +893,22 @@ internal static class CsvCells
 	/// <param name="length">The length of the text so far.</param>
 	/// <param name="number">The number.</param>
 	/// <param name="width">The fewest digits.</param>
-	private static void Append(Span<char> text, ref int length, long number, int width)
+	private static void Append(Span<byte> text, ref int length, long number, int width)
+	{
+		var digits = Math.Max(Digits(number), width);
+		for (var i = length + digits - 1; i >= length; i--)
+		{
+			text[i] = (byte)('0' + (number % 10));
+			number /= 10;
+		}
+
+		length += digits;
+	}
+
+	/// <summary>The number of decimal digits of a non-negative number.</summary>
+	/// <param name="number">The number.</param>
+	/// <returns>The digits it takes, 1 for 0.</returns>
+	private static int Digits(long number)
 	{
 		var digits = 1;
 		for (var rest = number / 10; rest > 0; rest /= 10)
@@ -825,32 +916,149 @@ internal static class CsvCells
 			digits++;
 		}
 
-		digits = Math.Max(digits, width);
-		for (var i = length + digits - 1; i >= length; i--)
-		{
-			text[i] = (char)('0' + (number % 10));
-			number /= 10;
-		}
-
-		length += digits;
+		return digits;
 	}
 
-	/// <summary>The text of a boolean cell: <c>TRUE</c> or <c>FALSE</c>.</summary>
+	/// <summary>Writes the text of a boolean cell: <c>TRUE</c> or <c>FALSE</c>.</summary>
 	/// <param name="s">The stored text of the cell, <c>1</c> or <c>0</c>.</param>
-	/// <returns>The text, or <see langword="null"/> when the stored text is not a boolean: its text is the stored text.</returns>
-	private static string? BooleanText(ReadOnlySpan<byte> s)
+	/// <param name="text">Receives the text, of at least <see cref="MaxTextLength"/> bytes.</param>
+	/// <returns>The length of the text, or -1 when the stored text is not a boolean: its text is the stored text.</returns>
+	private static int BooleanText(ReadOnlySpan<byte> s, Span<byte> text)
+	{
+		if (BooleanValue(s) is not { } value)
+		{
+			return -1;
+		}
+
+		var word = value ? "TRUE"u8 : "FALSE"u8;
+		word.CopyTo(text);
+
+		return word.Length;
+	}
+
+	/// <summary>The value of a boolean cell's stored text.</summary>
+	/// <param name="s">The stored text of the cell, <c>1</c> or <c>0</c>.</param>
+	/// <returns>The value, or <see langword="null"/> when the stored text is not a boolean.</returns>
+	private static bool? BooleanValue(ReadOnlySpan<byte> s)
 	{
 		if (s.Length == 1 && s[0] is (byte)'0' or (byte)'1')
 		{
-			return s[0] == (byte)'1' ? "TRUE" : "FALSE";
+			return s[0] == (byte)'1';
 		}
 
-		if (!CsvParse.TryBoolean(s, out var value))
+		return CsvParse.TryBoolean(s, out var value) ? value : null;
+	}
+
+	/// <summary>
+	/// Writes a rounded number without an exponent: its digits, with the point where its exponent puts it, or zeros after
+	/// them for a whole number.
+	/// </summary>
+	/// <param name="number">The number, rounded, without trailing zeros, and not zero.</param>
+	/// <param name="destination">Receives the text.</param>
+	/// <param name="length">The length of the text.</param>
+	/// <returns>Whether the text fits <paramref name="destination"/>.</returns>
+	private static bool TryWritePlain(ref Number number, Span<byte> destination, out int length)
+	{
+		length = 0;
+		var count = number.Count;
+		var exponent = number.Exponent;
+
+		// The places before the point: all the digits and some zeros, some of the digits, or none (0.000ddd).
+		var point = count + exponent;
+		var needed = (number.Negative ? 1 : 0) + (exponent >= 0 ? point : point > 0 ? count + 1 : 2 - point + count);
+		if (needed > destination.Length)
 		{
-			return null;
+			return false;
 		}
 
-		return value ? "TRUE" : "FALSE";
+		if (number.Negative)
+		{
+			destination[length++] = (byte)'-';
+		}
+
+		if (point <= 0)
+		{
+			destination[length++] = (byte)'0';
+			destination[length++] = (byte)'.';
+			for (var i = point; i < 0; i++)
+			{
+				destination[length++] = (byte)'0';
+			}
+		}
+
+		for (var i = 0; i < count; i++)
+		{
+			if (i == point && point > 0)
+			{
+				destination[length++] = (byte)'.';
+			}
+
+			destination[length++] = (byte)('0' + number.Digits[i]);
+		}
+
+		for (var i = count; i < point; i++)
+		{
+			destination[length++] = (byte)'0';
+		}
+
+		return true;
+	}
+
+	/// <summary>
+	/// Writes a rounded number with an exponent, in the stored text's form: one digit before the point, then the stored
+	/// exponent's letter, a <c>+</c> for an exponent of 0 or more when the stored one had it, and, when the stored one was
+	/// padded with zeros (<c>E-05</c>, <c>E+020</c>), at least as many digits as it.
+	/// </summary>
+	/// <param name="number">The number, rounded, without trailing zeros, and not zero.</param>
+	/// <param name="letter">The stored exponent's letter, <c>E</c> or <c>e</c>.</param>
+	/// <param name="stored">The stored exponent after its letter, such as <c>+17</c> or <c>-05</c>.</param>
+	/// <param name="destination">Receives the text.</param>
+	/// <param name="length">The length of the text.</param>
+	/// <returns>Whether the text fits <paramref name="destination"/>.</returns>
+	private static bool TryWriteExponent(ref Number number, byte letter, ReadOnlySpan<byte> stored, Span<byte> destination, out int length)
+	{
+		length = 0;
+		var count = number.Count;
+		var exponent = number.Exponent + count - 1;
+		var signed = stored.Length > 0 && stored[0] is (byte)'+' or (byte)'-';
+		var plus = signed && stored[0] == (byte)'+';
+		var storedDigits = stored.Slice(signed ? 1 : 0);
+		var padded = storedDigits.Length > 1 && storedDigits[0] == (byte)'0';
+		var width = Math.Max(Digits(Math.Abs((long)exponent)), padded ? storedDigits.Length : 1);
+		var needed = (number.Negative ? 1 : 0) + count + (count > 1 ? 1 : 0) + 1 + (exponent < 0 || plus ? 1 : 0) + width;
+		if (needed > destination.Length)
+		{
+			return false;
+		}
+
+		if (number.Negative)
+		{
+			destination[length++] = (byte)'-';
+		}
+
+		destination[length++] = (byte)('0' + number.Digits[0]);
+		if (count > 1)
+		{
+			destination[length++] = (byte)'.';
+			for (var i = 1; i < count; i++)
+			{
+				destination[length++] = (byte)('0' + number.Digits[i]);
+			}
+		}
+
+		destination[length++] = letter;
+		if (exponent < 0)
+		{
+			destination[length++] = (byte)'-';
+		}
+		else if (plus)
+		{
+			destination[length++] = (byte)'+';
+		}
+
+		Append(destination, ref length, Math.Abs((long)exponent), width);
+
+		return true;
 	}
 
 	/// <summary>The exception for a failed conversion.</summary>

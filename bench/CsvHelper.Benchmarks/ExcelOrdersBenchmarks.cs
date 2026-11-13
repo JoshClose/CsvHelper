@@ -333,6 +333,31 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 		return checksum;
 	}
 
+	// ----- Strings -----
+
+	/// <summary>
+	/// CsvHelper.Excel: every field of every order as text, through <see cref="CsvReader.GetString(int)"/>, whose date and
+	/// boolean cells have text of their own (ISO 8601, <c>TRUE</c> and <c>FALSE</c>). Phase 6's core gate measures it, since
+	/// that text is formatted as UTF-8 from then on.
+	/// </summary>
+	/// <returns>The total length of the texts.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Strings")]
+	public long CsvHelper_Strings()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream());
+		var length = 0L;
+		while (reader.Read())
+		{
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				length += reader.GetString(i).Length;
+			}
+		}
+
+		return length;
+	}
+
 	/// <summary>Builds an order from a row's typed values.</summary>
 	/// <typeparam name="TSource">The reader's source.</typeparam>
 	/// <param name="source">The source, on a row.</param>

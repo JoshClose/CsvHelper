@@ -506,6 +506,40 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		if (encodeAll || utf8.ContainsAny(special)) pos = start + Encode(start, utf8.Length, typeof(string));
 	}
 
+	/// <summary>
+	/// Writes a field from UTF-8 bytes formatted from a value of type <paramref name="type"/>, which a cell sink gets: for
+	/// CsvHelper.Excel's conversion of CSV to a sheet, which hands each field of a column it has typed with that type.
+	/// For CSV it is <see cref="WriteField(ReadOnlySpan{byte})"/>, with <paramref name="type"/> for injection protection
+	/// and <see cref="CsvWriterOptions.ShouldQuote"/>.
+	/// </summary>
+	/// <remarks>
+	/// A method of its own, so that the public one, which CSV record loops inline, is unchanged (see <c>sink</c>).
+	/// </remarks>
+	/// <param name="utf8">The value, copied as is (it is not validated).</param>
+	/// <param name="type">The type the value was formatted from; <see cref="string"/> for text.</param>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	internal void WriteField(ReadOnlySpan<byte> utf8, Type type)
+	{
+		var max = (utf8.Length * 2) + 3;
+		if (buffer.Length - pos < max)
+		{
+			Grow(max);
+		}
+
+		if (fieldCount++ > 0)
+		{
+			buffer[pos++] = sep;
+		}
+
+		var start = pos;
+		utf8.CopyTo(buffer.AsSpan(start));
+		pos = start + utf8.Length;
+		if (encodeAll || utf8.ContainsAny(special))
+		{
+			pos = start + Encode(start, utf8.Length, type);
+		}
+	}
+
 #if NET
 	/// <summary>
 	/// Writes a value that formats itself as UTF-8 (numbers, <see cref="Guid"/>, ...), with the configured format
