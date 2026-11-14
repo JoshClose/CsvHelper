@@ -4,5 +4,10 @@ another. Now `GetRecords<T>()`, `WriteRecords<T>()`, `CsvReaderOptions.For<T>()`
 map throw an `InvalidOperationException` that names the maps. A type with one map works as before. See
 [Types you cannot change](../../pages/records.md#types-you-cannot-change-csvrecordmap).
 
+The new `SkipLines` reader option skips lines at the start of the input, such as a title or a report date above the
+header. The lines are not parsed, and the separator is detected from the lines after them. In 33, `ShouldSkipRecord`
+could skip such lines; in 34 it gets data records only. See
+[Lines above the header](../../pages/reading.md#lines-above-the-header).
+
 Listing the column names of a `CsvDynamicRecord`, as its dictionary `Keys` or as the member names that a `dynamic`
 binder asks for, no longer reads each value as a string.

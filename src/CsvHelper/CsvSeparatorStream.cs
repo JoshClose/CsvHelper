@@ -14,9 +14,9 @@ namespace CsvHelper;
 /// <para>
 /// Pass it to <see cref="CsvReader.Create(Stream, CsvReaderOptions?, bool)"/>. The reader then splits fields on
 /// <see cref="Replacement"/>, and gives the stream its <see cref="CsvReaderOptions.Mode"/>, quote, escape and comment
-/// characters, so the separators that are text stay as they are: in quoted fields, after an escape character and in
-/// comment lines. Everything else passes through unchanged, so <see cref="CsvReader.RawRecord"/> shows
-/// <see cref="Replacement"/> where the separator was.
+/// characters and <see cref="CsvReaderOptions.SkipLines"/>, so the separators that are text stay as they are: in quoted
+/// fields, after an escape character, in comment lines and in the lines the reader skips. Everything else passes through
+/// unchanged, so <see cref="CsvReader.RawRecord"/> shows <see cref="Replacement"/> where the separator was.
 /// </para>
 /// <para>
 /// The stream works on bytes, in the buffer of the caller, so the reader keeps its UTF-8 fast path. The input is UTF-8,
@@ -54,6 +54,8 @@ public sealed partial class CsvSeparatorStream : Stream
 	private bool trim;
 	private bool[]? blankBytes;         // with trimming, WhitespaceCharacters by byte value when they are not space and tab
 	private bool lineBreaksInQuotes;
+	private int linesToSkip;            // SkipLines: the lines at the start of the input still to pass through unchanged
+	private bool skippedCr;             // the last byte passed through ended a skipped line with a CR, which an LF may follow
 	private bool utf8;
 	private ulong overlaps;             // bit d set when two separators d bytes apart can overlap, as in ||| for ||
 	private ulong dropMultiplier;       // bits 1 to length - 1: a mask of separator starts times this marks their other bytes
@@ -379,6 +381,8 @@ public sealed partial class CsvSeparatorStream : Stream
 		}
 
 		lineBreaksInQuotes = options.AllowLineBreaksInQuotes;
+		linesToSkip = options.SkipLines;
+		skippedCr = false;
 		separator = bytes;
 		dropMultiplier = (1UL << bytes.Length) - 2;
 		overlaps = 0;
@@ -491,8 +495,20 @@ public sealed partial class CsvSeparatorStream : Stream
 	{
 		if (!started) Start(buffer.Slice(0, length));
 		if (length == 0) return 0;
+		var skipped = 0;
+		if (linesToSkip > 0 || skippedCr)
+		{
+			// The lines that the reader skips are passed through unchanged, and the first record starts after them.
+			skipped = PassSkippedLines(buffer.Slice(0, length));
+			fieldStart = rowStart = skipped;
+			Rebase(skipped);
+			buffer = buffer.Slice(skipped);
+			length -= skipped;
+			if (length == 0) return skipped;
+		}
+
 		// Without the rest of the input, the last length - 1 bytes may start a separator.
-		var processEnd = eof ? length : length - (separator.Length - 1);
+		var processEnd = eof ? length : Math.Max(length - (separator.Length - 1), 0);
 		var written = Replace(buffer, length, processEnd);
 		// A separator that starts before processEnd is taken whole.
 		var next = Math.Max(processEnd, skipUntil);
@@ -500,7 +516,37 @@ public sealed partial class CsvSeparatorStream : Stream
 		buffer.Slice(next, pendingCount).CopyTo(pending);
 		Rebase(next);
 
-		return written;
+		return skipped + written;
+	}
+
+	/// <summary>
+	/// Finds the end of the lines at the start of the input that the reader skips (<see cref="CsvReaderOptions.SkipLines"/>).
+	/// They are not CSV: a quote in them must not open a quoted field.
+	/// </summary>
+	/// <param name="data">The data of the read.</param>
+	/// <returns>The number of bytes at the start of <paramref name="data"/> that belong to skipped lines.</returns>
+	private int PassSkippedLines(ReadOnlySpan<byte> data)
+	{
+		var pos = 0;
+		while ((linesToSkip > 0 || skippedCr) && pos < data.Length)
+		{
+			if (skippedCr)
+			{
+				// CR LF is one line break.
+				skippedCr = false;
+				if (data[pos] == (byte)'\n') pos++;
+
+				continue;
+			}
+
+			var k = data.Slice(pos).IndexOfAny((byte)'\r', (byte)'\n');
+			if (k < 0) return data.Length;
+			pos += k + 1;
+			linesToSkip--;
+			skippedCr = data[pos - 1] == (byte)'\r';
+		}
+
+		return pos;
 	}
 
 	/// <summary>Checks the byte order mark at the start of the input.</summary>

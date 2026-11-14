@@ -54,6 +54,7 @@ while (reader.Read()) Console.WriteLine($"[{reader.GetString(0)}] [{reader.GetSt
 | `FieldCountMismatch` | `Allow` (default), `Throw`, `Skip` | Enforce that records have the header's field count. |
 | `MissingField` | `ReturnEmpty` (default), `Throw` | Accessing a field past the end of a short record. |
 | `TrimWhitespace` | `null` (default: trim in `FixedWidth` mode only), `true`, `false` | Trim spaces/tabs around values; `  "quoted"  ` still unquotes, and escaped whitespace is kept. `TrimInsideQuotes` trims inside the quotes too, and `WhitespaceCharacters` says what is trimmed. |
+| `SkipLines` | `0` (default) or a number of lines | Skip a title, a report date or other lines above the header. They are not parsed. |
 | `ShouldSkipRecord` | callback | Skip records such as totals or section titles in the middle of the data. |
 | `OnRecordError` | callback | Skip records of a [record type](records.html#errors) whose fields do not parse or fail their checks, and go on. |
 | `MaxRecordSize` | `null` (default: no limit) | Stop a record that keeps growing, such as one after an unclosed quote, before it fills memory. |
@@ -193,4 +194,6 @@ reader.GetString(2);     // IndexOutOfRangeException: Record 2 has 2 fields; fie
   `WhitespaceCharacters` trims other padding characters. See [Whitespace](reading.html#whitespace).
 - `CommentPrefix = '#'` skips lines that start with `#`, such as notes before the header. See
   [Comments and empty lines](reading.html#comments-and-empty-lines).
+- `SkipLines = 2` skips the first two lines, whatever they contain, such as a title and a date above the header. See
+  [Lines above the header](reading.html#lines-above-the-header).
 - Empty lines are skipped; `SkipEmptyLines = false` returns each as a record with one empty field.

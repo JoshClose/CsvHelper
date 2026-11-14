@@ -21,6 +21,8 @@ internal sealed record ReferenceOptions
 	public bool LineBreaksInQuotes { get; init; } = true;
 	public bool SkipMalformed { get; init; }
 	public bool SkipFieldCountMismatch { get; init; }
+	// The lines at the start of the text that are not parsed.
+	public int SkipLines { get; init; }
 	// Not a reading rule: whether the reader under test pools strings (on, so that tests exercise the pool too).
 	public bool PoolStrings { get; init; } = true;
 
@@ -38,6 +40,7 @@ internal sealed record ReferenceOptions
 		CommentPrefix = Comment,
 		SkipEmptyLines = SkipEmptyLines,
 		AllowLineBreaksInQuotes = LineBreaksInQuotes,
+		SkipLines = SkipLines,
 		HasHeader = hasHeader,
 		BufferSize = bufferSize,
 		PoolStrings = PoolStrings,
@@ -54,6 +57,20 @@ internal static class ReferenceCsv
 
 	public static List<string[]> Parse(string text, ReferenceOptions o) => Parse(text, o, out _, out _);
 
+	/// <summary>The text after its first <paramref name="lines"/> lines, each ended by CR, LF or CR LF (SkipLines).</summary>
+	public static string AfterLines(string text, int lines)
+	{
+		var start = 0;
+		for (var i = 0; i < lines && start < text.Length; i++)
+		{
+			var end = text.IndexOfAny(['\r', '\n'], start);
+			if (end < 0) return "";
+			start = text[end] == '\r' && end + 1 < text.Length && text[end + 1] == '\n' ? end + 2 : end + 1;
+		}
+
+		return text.Substring(start);
+	}
+
 	public static List<string[]> Parse(string text, ReferenceOptions o, out int malformed) => Parse(text, o, out malformed, out _);
 
 	/// <summary>Parses, applying the skip options; <paramref name="malformed"/> counts records with bad quoting.</summary>
@@ -61,6 +78,7 @@ internal static class ReferenceCsv
 	{
 		var bads = new List<string>();
 		badRecords = bads;
+		text = AfterLines(text, o.SkipLines);
 		var sep = o.SeparatorText ?? o.Separator.ToString();
 		bool AtSeparator(int at) => at + sep.Length <= text.Length && string.CompareOrdinal(text, at, sep, 0, sep.Length) == 0;
 		var records = new List<string[]>();

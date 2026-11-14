@@ -102,6 +102,8 @@ skips never reach `Read`, `GetRecords` or `ParallelEnumerate`, and do not use up
 var options = new CsvReaderOptions { ShouldSkipRecord = row => row[0].ToString() is "Subtotal" or "Total" };
 ```
 
+Lines above the header are skipped with [`SkipLines`](#lines-above-the-header).
+
 **Spans and rows are valid until the next read.** `GetSpan`, `GetRawSpan`, `RawRecord`, `CsvRow` and `CsvField`
 point into the reader's buffer, which the next `Read` or `ReadAsync` reuses. Strings and parsed values are yours to
 keep:
@@ -176,6 +178,23 @@ reader.TryGetFieldIndex("Amount", 2, out _);   // false
 
 Exact matches are counted first, while there are enough of them, then the matches that ignore case and whitespace.
 Record types choose a column the same way with [`[CsvColumn("Amount", NameIndex = 1)]`](records.html#by-name).
+
+### Lines above the header
+
+`SkipLines` skips lines at the start of the input, such as a title or a report date above the header. They are not
+parsed, so quotes and separators in them have no effect, and the separator is detected from the lines after them:
+
+```csharp
+// Stock report 2026-11-05
+// Id|Name|Qty
+// 1|Tea|3
+var options = new CsvReaderOptions { SkipLines = 1 };
+using var reader = CsvReader.FromFile("stock.csv", options);   // the header is Id, Name, Qty; the separator is '|'
+```
+
+A line ends at CR, LF or CR LF, and a byte order mark is not a line. Skipped lines count for `LineNumber`, and
+`ByteOffset` counts from the start of the input. When the number of lines above the header varies, read records until
+you reach the header and call `ReadHeader` on it, as in [Several data sets in one file](#several-data-sets-in-one-file).
 
 ### Several data sets in one file
 
@@ -698,8 +717,8 @@ while (reader.Read())
 
 ### What works in every mode
 
-Empty lines, comments (`CommentPrefix`), `TrimWhitespace`, `MissingField`, field count checks, every input source,
-async reading, `ParallelEnumerate` and [records](records.html) work the same way in every mode.
+Empty lines, comments (`CommentPrefix`), `SkipLines`, `TrimWhitespace`, `MissingField`, field count checks, every
+input source, async reading, `ParallelEnumerate` and [records](records.html) work the same way in every mode.
 
 ## Separators and dialects
 
@@ -737,11 +756,11 @@ while (reader.Read())
 }
 ```
 
-The reader gives the stream its `Mode`, `Quote`, `Escape`, `CommentPrefix`, `TrimWhitespace` and
-`AllowLineBreaksInQuotes`, so a separator that is text stays text: in a quoted field, after an escape character (Escape
-mode) and in a comment line. Separators that overlap are taken from the left: `a|||b` is `a` and `|b`, and `a||||b` has
-an empty field in the middle. Leave `Separator` unset, or set it to the stream's `Replacement`. FixedWidth mode has no
-separator to replace.
+The reader gives the stream its `Mode`, `Quote`, `Escape`, `CommentPrefix`, `TrimWhitespace`,
+`AllowLineBreaksInQuotes` and `SkipLines`, so a separator that is text stays text: in a quoted field, after an escape
+character (Escape mode), in a comment line and in a skipped line. Separators that overlap are taken from the left:
+`a|||b` is `a` and `|b`, and `a||||b` has an empty field in the middle. Leave `Separator` unset, or set it to the
+stream's `Replacement`. FixedWidth mode has no separator to replace.
 
 - **The replacement** is U+001F, the ASCII unit separator, unless you choose another:
   `new CsvSeparatorStream(stream, "||", replacement: '\t')`. `RawRecord` and `GetRawSpan` show it where the separator
@@ -938,6 +957,7 @@ Options are checked when a reader is created; invalid ones throw `ArgumentExcept
 | `Separator` | `null`: detected | [Separator detection](#separator-detection), [several characters](#separators-of-several-characters) |
 | `DetectSeparatorHint` | `true` | [Separator detection](#separator-detection) |
 | `HasHeader` | `true` | [Headers](#headers) |
+| `SkipLines` | `0` | [Lines above the header](#lines-above-the-header) |
 | `NormalizeHeaderName` | `null` | [How names are matched](#how-names-are-matched) |
 | `Quote` | `"` | [RFC 4180](#rfc-4180) |
 | `Escape` | `\` | [Escape](#escape) |
