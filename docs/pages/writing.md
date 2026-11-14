@@ -296,6 +296,19 @@ writing slower. Per-field quoting and `ShouldQuote` apply to RFC 4180 mode only.
 A record whose only field is empty is written as `""`, so that a reader does not take it for an empty line. A record
 with no fields at all is an error.
 
+`Quote` changes the quote character, for files that quote with apostrophes. Fields that contain it are quoted, it is
+doubled inside them, and the double quote becomes an ordinary character:
+
+```csharp
+var options = new CsvWriterOptions { Quote = '\'' };
+writer.WriteRecord("Anna", "a, b", "it's", "say \"hi\"");
+
+// Anna,'a, b','it''s',say "hi"
+```
+
+A reader with the same [`Quote`](reading.html#rfc-4180) reads them back. The quote can be any ASCII character except
+CR, LF, the separator and the comment prefix.
+
 ## Separators
 
 `Separator` replaces the comma with another ASCII character. Quoting then follows the same rules for that separator:
@@ -722,6 +735,7 @@ between writers, on any thread.
 | `HasHeader` | `true` | [Writing [CsvRecord] types](#writing-csvrecord-types) |
 | `Quoting` | `WhenNeeded` | [Quoting](#quoting) |
 | `ShouldQuote` | `null` | [Quoting](#quoting) |
+| `Quote` | `"` | [Quoting](#quoting) |
 | `NullValue` | `null` (an empty field) | [Booleans, nulls and other values](#booleans-nulls-and-other-values) |
 | `TrueValue`, `FalseValue` | `"True"`, `"False"` | [Booleans, nulls and other values](#booleans-nulls-and-other-values) |
 | `NewLine` | `"\r\n"` | [Line endings](#line-endings) |

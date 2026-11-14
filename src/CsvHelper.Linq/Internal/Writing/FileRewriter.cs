@@ -233,10 +233,10 @@ internal abstract class FieldPatch : RowChange
 	/// <summary>The options of the writer that encodes the fields.</summary>
 	protected CsvWriterOptions WriterOptions { get; private set; } = CsvWriterOptions.Default;
 
-	/// <summary>Takes the file's separator, mode and escape for the writer.</summary>
+	/// <summary>Takes the file's separator, mode, quote and escape for the writer.</summary>
 	/// <param name="reader">The reader of the file.</param>
 	/// <param name="options">The writer options to start from.</param>
-	/// <exception cref="NotSupportedException">The file is fixed-width, or quotes with another character than <c>"</c>.</exception>
+	/// <exception cref="NotSupportedException">The file is fixed-width.</exception>
 	protected void StartFields(CsvReader reader, CsvWriterOptions options)
 	{
 		var readerOptions = reader.Options;
@@ -245,15 +245,11 @@ internal abstract class FieldPatch : RowChange
 			throw new NotSupportedException("Records of fixed-width files cannot be changed in place.");
 		}
 
-		if (readerOptions.Mode == CsvMode.Rfc4180 && readerOptions.Quote != '"')
-		{
-			throw new NotSupportedException($"Records of files quoted with {readerOptions.Quote} cannot be changed in place: the writer quotes with \".");
-		}
-
 		WriterOptions = options with
 		{
 			Separator = reader.Separator,
 			Mode = readerOptions.Mode,
+			Quote = readerOptions.Quote,
 			Escape = readerOptions.Escape,
 			HasHeader = false,
 			WriteByteOrderMark = false,
@@ -265,6 +261,7 @@ internal abstract class FieldPatch : RowChange
 			HasHeader = false,
 			Separator = reader.Separator,
 			Mode = readerOptions.Mode,
+			Quote = readerOptions.Quote,
 			Escape = readerOptions.Escape,
 			AllowLineBreaksInQuotes = true,
 		};

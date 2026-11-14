@@ -9,5 +9,10 @@ header. The lines are not parsed, and the separator is detected from the lines a
 could skip such lines; in 34 it gets data records only. See
 [Lines above the header](../../pages/reading.md#lines-above-the-header).
 
+The new `Quote` writer option changes the quote character of RFC 4180 mode, as the reader's `Quote` does, so files
+that quote with apostrophes can be written as well as read. 34.0 always quoted with `"`. CsvHelper.Linq's `Update` now
+changes files quoted with another character than `"` instead of throwing `NotSupportedException`. See
+[Quoting](../../pages/writing.md#quoting).
+
 Listing the column names of a `CsvDynamicRecord`, as its dictionary `Keys` or as the member names that a `dynamic`
 binder asks for, no longer reads each value as a string.

@@ -3,7 +3,7 @@ using System.Text;
 
 namespace CsvHelper.Tests;
 
-/// <summary>The writer's line endings, comments, per-field quoting, ShouldQuote callback and injection protection.</summary>
+/// <summary>The writer's line endings, comments, per-field quoting, ShouldQuote callback, quote character and injection protection.</summary>
 public class WriterOptionTests
 {
 	private static string Write(Action<CsvWriter> write, CsvWriterOptions? options = null)
@@ -310,6 +310,103 @@ public class WriterOptionTests
 			w.WriteField(1);
 			w.EndRecord();
 		}, options));
+	}
+
+	[Fact]
+	public void QuoteChangesTheQuoteCharacter()
+	{
+		var options = new CsvWriterOptions { Quote = '\'', ValidateFieldCount = false };
+		// Past the 32 chars of the short-field path.
+		var longValue = new string('x', 40) + "'s, " + new string('y', 40);
+		var csv = Write(w =>
+		{
+			w.WriteRecord("plain", "a,b", "it's", "say \"hi\"", "two\nlines", "");
+			w.WriteRecord("é's", longValue);
+			w.WriteField("'q'"u8);
+			w.WriteField("x", CsvQuoting.Always);
+			w.WriteField(42);
+			w.WriteField(1.5);
+			w.WriteField(true);
+			w.EndRecord();
+			w.WriteField("");
+			w.EndRecord();
+		}, options);
+
+		Assert.Equal(
+			"plain,'a,b','it''s',say \"hi\",'two\nlines',\r\n" +
+			$"'é''s','{longValue.Replace("'", "''")}'\r\n" +
+			"'''q''','x',42,1.5,True\r\n" +
+			"''\r\n",
+			csv);
+		var back = TestUtil.ReadText(csv, new CsvReaderOptions { Quote = '\'', HasHeader = false });
+		Assert.Equal(
+			["plain|a,b|it's|say \"hi\"|two\nlines|", $"é's|{longValue}", "'q'|x|42|1.5|True", ""],
+			back.Select(r => string.Join("|", r)));
+	}
+
+	[Fact]
+	public void QuoteAppliesToCommentsShouldQuoteAndFormulas()
+	{
+		// The injection escape is the quote too: it is doubled like any other quote in the field.
+		var options = new CsvWriterOptions
+		{
+			Quote = '\'',
+			CommentPrefix = '#',
+			Injection = CsvInjection.Escape,
+			Quoting = CsvQuoting.WhenNeededOrWhitespace,
+			ShouldQuote = (field, _, _, _) => field.SequenceEqual("ask".AsSpan()),
+		};
+		var csv = Write(w => w.WriteRecord("#1", "=1+1", " pad", "ask", "it's", "plain"), options);
+
+		Assert.Equal("'#1','''=1+1',' pad','ask','it''s',plain\r\n", csv);
+		var back = TestUtil.ReadText(csv, new CsvReaderOptions { Quote = '\'', CommentPrefix = '#', HasHeader = false });
+		Assert.Equal(["#1|'=1+1| pad|ask|it's|plain"], back.Select(r => string.Join("|", r)));
+	}
+
+	[Fact]
+	public void NumbersThatContainTheQuoteAreQuoted()
+	{
+		// Numbers in the invariant culture skip the check for special characters unless one of them can appear.
+		var csv = Write(w =>
+		{
+			w.WriteField(1.5);
+			w.WriteField(2);
+			w.WriteField(-0.25m);
+			w.WriteField((object)3.5f);
+			w.EndRecord();
+		}, new CsvWriterOptions { Quote = '.' });
+
+		Assert.Equal(".1..5.,2,.-0..25.,.3..5.\r\n", csv);
+		var back = TestUtil.ReadText(csv, new CsvReaderOptions { Quote = '.', HasHeader = false });
+		Assert.Equal(["1.5|2|-0.25|3.5"], back.Select(r => string.Join("|", r)));
+	}
+
+	[Theory]
+	[InlineData(',', null)]
+	[InlineData('\n', null)]
+	[InlineData('\r', null)]
+	[InlineData('\0', null)]
+	[InlineData('é', null)]
+	[InlineData('#', '#')]
+	public void QuoteMustBeUsable(char quote, char? commentPrefix) =>
+		Assert.Throws<ArgumentException>(() =>
+			CsvWriter.Create(new MemoryStream(), new CsvWriterOptions { Quote = quote, CommentPrefix = commentPrefix }));
+
+	[Fact]
+	public void TheSeparatorCanBeADoubleQuoteWithAnotherQuote()
+	{
+		Assert.Throws<ArgumentException>(() => CsvWriter.Create(new MemoryStream(), new CsvWriterOptions { Separator = '"' }));
+		var csv = Write(w => w.WriteRecord("a\"b", "c"), new CsvWriterOptions { Separator = '"', Quote = '\'' });
+
+		Assert.Equal("'a\"b'\"c\r\n", csv);
+	}
+
+	[Fact]
+	public void QuoteIsForRfc4180Only()
+	{
+		// Not used, so not validated, in the other modes.
+		Assert.Equal("a\\,'b\r\n", Write(w => w.WriteRecord("a,'b"), new CsvWriterOptions { Mode = CsvMode.Escape, Quote = 'é' }));
+		Assert.Equal("a,'b\r\n", Write(w => w.WriteRecord("a,'b"), new CsvWriterOptions { Mode = CsvMode.NoEscape, Quote = '\'' }));
 	}
 
 	[Fact]

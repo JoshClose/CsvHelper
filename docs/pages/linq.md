@@ -296,7 +296,8 @@ complete, so a failure, or a canceled token, leaves the file as it was:
   column for throws `InvalidOperationException`.
 
 The condition reads only the members it uses. A record that cannot be read and that `OnRecordError` skips is kept.
-Files must be UTF-8. `Update` needs a file that is not fixed-width and quotes with `"`.
+Files must be UTF-8. `Update` needs a file that is not fixed-width, and writes the changed fields with the separator,
+mode, quote and escape character that the file is read with.
 
 ## Trimming and native AOT
 

@@ -182,7 +182,7 @@ public static class CsvQueryable
 	/// <returns>The number of rows changed.</returns>
 	/// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">The update sets a column that the file does not have.</exception>
-	/// <exception cref="NotSupportedException">The file is not UTF-8, is fixed-width, or quotes with another character than <c>"</c>.</exception>
+	/// <exception cref="NotSupportedException">The file is not UTF-8 or is fixed-width.</exception>
 	public static long Update(this CsvTable<CsvDynamicRecord> table, Expression<Func<CsvDynamicRecord, bool>> predicate, Action<IDictionary<string, string?>> update)
 	{
 		ArgumentNullException.ThrowIfNull(table);
@@ -198,7 +198,7 @@ public static class CsvQueryable
 	/// <returns>The number of rows changed.</returns>
 	/// <exception cref="ArgumentNullException">An argument is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">The update sets a column that the file does not have.</exception>
-	/// <exception cref="NotSupportedException">The file is not UTF-8, is fixed-width, or quotes with another character than <c>"</c>.</exception>
+	/// <exception cref="NotSupportedException">The file is not UTF-8 or is fixed-width.</exception>
 	public static ValueTask<long> UpdateAsync(this CsvTable<CsvDynamicRecord> table, Expression<Func<CsvDynamicRecord, bool>> predicate,
 		Action<IDictionary<string, string?>> update, CancellationToken cancellationToken = default)
 	{
