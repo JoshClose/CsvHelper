@@ -249,7 +249,7 @@ internal static class SheetNames
 	/// <summary>The code units a name takes as the workbook part writes it (<see cref="XmlOutput.WrittenLength"/>).</summary>
 	/// <param name="name">The name, which has no lone surrogates.</param>
 	/// <returns>The code units.</returns>
-	private static int WrittenLength(string name) => name.IndexOf('_') < 0 && name.IndexOf((char)0xFFFE) < 0 && name.IndexOf((char)0xFFFF) < 0
+	public static int WrittenLength(string name) => name.IndexOf('_') < 0 && name.IndexOf((char)0xFFFE) < 0 && name.IndexOf((char)0xFFFF) < 0
 		? name.Length
 		: XmlOutput.WrittenLength(Encoding.UTF8.GetBytes(name), attribute: true);
 

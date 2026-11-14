@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.IO;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -15,7 +16,8 @@ namespace CsvHelper.Excel;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Sheets are written in turn, in tab order: <see cref="WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> writes one whole, and
+/// Sheets are written in turn, in tab order: <see cref="WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> writes one whole,
+/// <see cref="WriteSheet(string, CsvReader, ExcelSheetOptions?, int)"/> writes one of CSV with its columns' types inferred, and
 /// <see cref="AddSheet(string, ExcelSheetOptions)"/> returns a writer for one, which disposing completes. A workbook is written one sheet at a
 /// time, so adding a sheet while another's writer is open throws. Disposing the workbook writer completes an open sheet,
 /// then writes the workbook's other parts and closes the package; a workbook with no sheet gets one empty sheet,
@@ -232,6 +234,120 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Writes a sheet whole from a CSV reader's records, with each column's type inferred from its first records: the
+	/// reader's header, when its options have <see cref="CsvReaderOptions.HasHeader"/>, then the records it reads from where
+	/// it stands, as <see cref="CsvReader.GetRecords{T}"/> reads them (a record it is on has been read); then the sheet is
+	/// complete. The reader isn't disposed. For several CSV files in one workbook, or a CSV that
+	/// <see cref="ExcelConvert.ToExcel(string, string, CsvToExcelOptions?)"/> doesn't open.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// <b>Inference.</b> The records after the header, up to <paramref name="inferTypes"/> of them, are held, and each
+	/// column's type is the narrowest that every non-null field of it among them matches:
+	/// </para>
+	/// <list type="bullet">
+	/// <item><description>
+	/// a number: <c>-?(0|[1-9][0-9]*)(\.[0-9]+)?([Ee][+-]?[0-9]+)?</c>, with the signs and decimal separator of the reader's
+	/// <see cref="CsvReaderOptions.FormatProvider"/> (<c>1,5</c> in <c>de-DE</c>), from 1E-307 to below 1E+308, and of at
+	/// most 15 significant digits when <see cref="ExcelWriterOptions.LongNumbers"/> is <see cref="ExcelLongNumbers.Text"/>;
+	/// so not <c>00123</c>, <c>+5</c>, <c>.5</c>, <c>1,234</c>, <c>$5</c>, <c>50%</c> or <c>NaN</c>;
+	/// </description></item>
+	/// <item><description>a date, <c>yyyy-MM-dd</c>, of a day that exists;</description></item>
+	/// <item><description>
+	/// a date and time: a date, <c>T</c> or a space, <c>HH:mm</c>, then <c>:ss</c> and a fraction of 1 to 7 digits if any. A
+	/// column of dates and of dates and times is one of dates and times;
+	/// </description></item>
+	/// <item><description>
+	/// a date and time with an offset, the same then <c>Z</c> or <c>+HH:mm</c> or <c>-HH:mm</c>, when
+	/// <see cref="ExcelWriterOptions.DateTimeOffsets"/> isn't <see cref="ExcelDateTimeOffsets.Text"/>;
+	/// </description></item>
+	/// <item><description>a boolean: <c>true</c> or <c>false</c>, in any case;</description></item>
+	/// <item><description>text: anything else, a mix of the types above, or a column of null fields only.</description></item>
+	/// </list>
+	/// <para>
+	/// So a column of IDs with one <c>00123</c> is text throughout. Each field is then written by its column's type: one that
+	/// matches it is a cell of that type, and one that doesn't, which can only come after the held records (<c>N/A</c> in a
+	/// column of numbers), is a text cell. Times alone, durations, and dates in other forms stay text. With
+	/// <paramref name="inferTypes"/> 0, every field is a text cell.
+	/// </para>
+	/// <para>
+	/// <b>Cells.</b> A typed field is written as a value of its type is: a number cell of the number, a date cell in
+	/// <c>yyyy-mm-dd</c>, <c>yyyy-mm-dd hh:mm:ss</c> or <c>yyyy-mm-dd hh:mm:ss.000</c> by what it holds (rounded to the
+	/// millisecond), and a boolean cell; with <see cref="ExcelWriterOptions.LongNumbers"/>,
+	/// <see cref="ExcelWriterOptions.OutOfRangeDates"/> and <see cref="ExcelWriterOptions.DateTimeOffsets"/> as for any sheet,
+	/// though a date that is a text cell for them keeps its own text. A null field, empty or one of the reader's
+	/// <see cref="CsvReaderOptions.NullValues"/>, is no cell. Text cells are as
+	/// <see cref="AddSheet(string, ExcelSheetOptions)"/> writes them. Each record's fields are written as the CSV has them,
+	/// whatever their number.
+	/// </para>
+	/// <para>
+	/// <b>The header</b> is the reader's: the sheet's first record is its header when the reader has one, whatever
+	/// <see cref="Options"/>' <see cref="ExcelWriterOptions.Csv"/> says, whose <see cref="CsvWriterOptions.HasHeader"/>,
+	/// <see cref="CsvWriterOptions.FormatProvider"/> and <see cref="CsvWriterOptions.ValidateFieldCount"/> are for record
+	/// writers. How the sheet looks is <paramref name="options"/>', or <see cref="ExcelWriterOptions.Sheets"/>' without them.
+	/// The held records are in memory, a copy of their fields' bytes, until the sheet's first rows are written.
+	/// </para>
+	/// </remarks>
+	/// <param name="name">The sheet's name (see <see cref="AddSheet(string, ExcelSheetOptions)"/>).</param>
+	/// <param name="csv">The reader of the CSV.</param>
+	/// <param name="options">How the sheet looks, or <see langword="null"/> for <see cref="ExcelWriterOptions.Sheets"/>.</param>
+	/// <param name="inferTypes">The records that decide each column's type, 1,000 by default; 0 for text cells.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="csv"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid, name a table the workbook has, or need a header that the reader doesn't have.
+	/// </exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="inferTypes"/> is negative.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// Another sheet's writer is open; <see cref="ExcelWriterOptions.Sheets"/> need a header that the reader doesn't have; or
+	/// a field can't be written (a text of more than 32,767 characters, a field past column <c>XFD</c>, a record past the
+	/// last row with <see cref="ExcelRowLimit.Throw"/>, or a value that the options say to throw for), naming its cell, or
+	/// <see cref="ExcelSheetOptions.Columns"/> names a column the header doesn't have: the record is discarded, and the sheet
+	/// completed with the records before it.
+	/// </exception>
+	/// <exception cref="CsvFormatException">The reader's: a record is malformed and its options say to throw.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook writer or the reader has been disposed.</exception>
+	public void WriteSheet(string name, CsvReader csv, ExcelSheetOptions? options = null, int inferTypes = 1000)
+	{
+		ArgumentNullException.ThrowIfNull(csv);
+		CheckInferTypes(inferTypes, nameof(inferTypes));
+		var writer = AddConvertedSheet(name, options, csv.Options.HasHeader);
+		SyncOrAsync.Wait(WriteConvertedAsync(csv, writer, inferTypes, false, CancellationToken.None));
+	}
+
+	/// <summary>
+	/// Writes a sheet whole from a CSV reader's records, as <see cref="WriteSheet(string, CsvReader, ExcelSheetOptions?, int)"/>
+	/// does, reading the CSV and writing to the stream asynchronously.
+	/// </summary>
+	/// <param name="name">The sheet's name (see <see cref="AddSheet(string, ExcelSheetOptions)"/>).</param>
+	/// <param name="csv">The reader of the CSV.</param>
+	/// <param name="options">How the sheet looks, or <see langword="null"/> for <see cref="ExcelWriterOptions.Sheets"/>.</param>
+	/// <param name="inferTypes">The records that decide each column's type, 1,000 by default; 0 for text cells.</param>
+	/// <param name="cancellationToken">Cancels reading and writing.</param>
+	/// <returns>A task that completes when the sheet is complete.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="name"/> or <paramref name="csv"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid, name a table the workbook has, or need a header that the reader doesn't have.
+	/// </exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="inferTypes"/> is negative.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// Another sheet's writer is open, <see cref="ExcelWriterOptions.Sheets"/> need a header that the reader doesn't have, or
+	/// a field or record can't be written.
+	/// </exception>
+	/// <exception cref="CsvFormatException">The reader's: a record is malformed and its options say to throw.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook writer or the reader has been disposed.</exception>
+	/// <exception cref="OperationCanceledException"><paramref name="cancellationToken"/> was canceled.</exception>
+	public ValueTask WriteSheetAsync(string name, CsvReader csv, ExcelSheetOptions? options = null, int inferTypes = 1000, CancellationToken cancellationToken = default)
+	{
+		ArgumentNullException.ThrowIfNull(csv);
+		CheckInferTypes(inferTypes, nameof(inferTypes));
+		var writer = AddConvertedSheet(name, options, csv.Options.HasHeader);
+
+		return WriteConvertedAsync(csv, writer, inferTypes, true, cancellationToken);
+	}
+
+	/// <summary>
 	/// Adds a sheet, after the sheets added before it, and returns the writer of its cells: records written with
 	/// <see cref="CsvWriter.WriteRecords{T}(IEnumerable{T})"/>, <see cref="CsvWriter.WriteRecord{T}(T)"/> or dynamic
 	/// records, and fields written by hand (<see cref="CsvWriter.WriteField(string?)"/> and the rest, then
@@ -300,7 +416,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(null);
 		var table = TableName(name, settings);
 
-		return Open(NewSheet(name, key, settings, null, null, columns, table));
+		return Open(NewSheet(name, key, settings, null, null, columns, table, Options.Csv), Options.Csv);
 	}
 
 	/// <summary>
@@ -365,7 +481,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(headerNames);
 		var table = TableName(name, settings);
 
-		return Open(NewSheet(name, key, settings, formats, headerNames, columns, table));
+		return Open(NewSheet(name, key, settings, formats, headerNames, columns, table, Options.Csv), Options.Csv);
 	}
 
 	/// <summary>
@@ -382,7 +498,49 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var columns = Options.Csv.HasHeader ? null : settings.ColumnsFor(null);
 		var table = TableName(name, settings);
 
-		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null, columns, table));
+		return Open(NewSheet(name, key, settings, members.HasFormats ? members : null, null, columns, table, Options.Csv), Options.Csv);
+	}
+
+	/// <summary>
+	/// Adds a sheet of CSV converted to cells (<see cref="WriteSheet(string, CsvReader, ExcelSheetOptions?, int)"/>), whose
+	/// writer's header is the CSV's, whatever <see cref="ExcelWriterOptions.Csv"/> says; whose numbers are read as invariant
+	/// text, the only text the conversion hands it; and whose records can have any number of fields.
+	/// </summary>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="options">How the sheet looks, or <see langword="null"/> for <see cref="ExcelWriterOptions.Sheets"/>.</param>
+	/// <param name="hasHeader">Whether the CSV's first record is its header.</param>
+	/// <returns>The sheet's writer.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="name"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">
+	/// The name is not one Excel opens, the workbook has a sheet Excel takes to be the same, or <paramref name="options"/>
+	/// are not valid, name a table the workbook has, or need a header the CSV doesn't have.
+	/// </exception>
+	/// <exception cref="InvalidOperationException">Another sheet's writer is open, or <see cref="ExcelWriterOptions.Sheets"/> need a header the CSV doesn't have.</exception>
+	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
+	internal CsvWriter AddConvertedSheet(string name, ExcelSheetOptions? options, bool hasHeader)
+	{
+		var key = CheckNewSheet(name);
+		var settings = SheetSettings.Resolve(options, null, null, Options, hasHeader, "CsvReaderOptions.HasHeader");
+		var columns = hasHeader ? null : settings.ColumnsFor(null);
+		var table = TableName(name, settings);
+		var csv = Options.Csv with { HasHeader = hasHeader, FormatProvider = CultureInfo.InvariantCulture, ValidateFieldCount = false };
+
+		return Open(NewSheet(name, key, settings, null, null, columns, table, csv), csv);
+	}
+
+	/// <summary>Checks the number of records that decide a converted sheet's columns' types.</summary>
+	/// <param name="inferTypes">The number.</param>
+	/// <param name="paramName">The name of the parameter or option it came from.</param>
+	/// <exception cref="ArgumentOutOfRangeException">The number is negative.</exception>
+	internal static void CheckInferTypes(int inferTypes, string paramName)
+	{
+		if (inferTypes < 0)
+		{
+			throw new ArgumentOutOfRangeException(
+				paramName,
+				inferTypes,
+				$"InferTypes is how many records decide the columns' types, or 0 for text cells, and it can't be {inferTypes.ToString(CultureInfo.InvariantCulture)}.");
+		}
 	}
 
 	/// <summary>
@@ -499,6 +657,43 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		}
 	}
 
+	/// <summary>
+	/// Writes a CSV reader's records into a converted sheet, then completes the sheet, whether or not they were written. A
+	/// record that fails is discarded first, as the record methods discard theirs, so that the sheet keeps the records
+	/// before it.
+	/// </summary>
+	/// <param name="csv">The reader.</param>
+	/// <param name="writer">The sheet's writer (<see cref="AddConvertedSheet"/>).</param>
+	/// <param name="inferTypes">The records that decide each column's type, or 0 for text cells.</param>
+	/// <param name="async">Whether to read and write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read or write.</param>
+	/// <returns>A task that completes when the sheet is complete.</returns>
+	private async ValueTask WriteConvertedAsync(CsvReader csv, CsvWriter writer, int inferTypes, bool async, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await CsvToSheet.CopyAsync(csv, writer, inferTypes, Options, async, cancellationToken).ConfigureAwait(false);
+		}
+		catch
+		{
+			// The sink's record is dropped; the writer ends it as it is disposed, which the sink then ignores.
+			SinkOf(writer)?.DiscardRecord();
+
+			throw;
+		}
+		finally
+		{
+			if (async)
+			{
+				await writer.DisposeAsync().ConfigureAwait(false);
+			}
+			else
+			{
+				writer.Dispose();
+			}
+		}
+	}
+
 	/// <summary>Checks that a sheet can be added: the writer is open, no other sheet is, and the name is one Excel opens and the workbook doesn't have.</summary>
 	/// <param name="name">The sheet's name.</param>
 	/// <returns>The name's key (<see cref="Excel.SheetNames.Key"/>).</returns>
@@ -575,10 +770,11 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <param name="headerNames">Without a header, the names the record writer writes in its header, or <see langword="null"/>.</param>
 	/// <param name="columns">Without a header, each column's options, or <see langword="null"/> for none.</param>
 	/// <param name="table">The name of the sheet's table (<see cref="TableName"/>), which the workbook then has; or <see langword="null"/>.</param>
+	/// <param name="csv">The options of the sheet's writer.</param>
 	/// <returns>The sheet's sink.</returns>
-	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns, string? table)
+	private SheetSink NewSheet(string name, string key, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns, string? table, CsvWriterOptions csv)
 	{
-		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, MaxRows, settings, members, headerNames, columns, table);
+		var sink = new SheetSink(this, package, name, PackageParts.SheetPart(sheetNames.Count + 1), strings, styles, Options, csv, MaxRows, settings, members, headerNames, columns, table);
 		namesByKey.Add(key, name);
 		sheetNames.Add(name);
 		if (table is not null)
@@ -591,10 +787,11 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 	/// <summary>Makes a sheet the open one, with its writer.</summary>
 	/// <param name="sink">The sheet's sink.</param>
+	/// <param name="csv">The writer's options, the sink's.</param>
 	/// <returns>The sheet's writer.</returns>
-	private CsvWriter Open(SheetSink sink)
+	private CsvWriter Open(SheetSink sink, CsvWriterOptions csv)
 	{
-		var writer = new CsvWriter(sink, Options.Csv);
+		var writer = new CsvWriter(sink, csv);
 		Sinks.Add(writer, sink);
 		openSheet = sink;
 		openWriter = writer;
@@ -629,7 +826,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 			if (sheetNames.Count == 0)
 			{
-				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null, null).CompleteAsync(async).ConfigureAwait(false);
+				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null, null, Options.Csv).CompleteAsync(async).ConfigureAwait(false);
 			}
 
 			await PackageParts.WriteAsync(package, sheetNames, strings, styles, filters, tables, async, CancellationToken.None).ConfigureAwait(false);

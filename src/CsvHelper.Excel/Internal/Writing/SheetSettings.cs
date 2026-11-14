@@ -108,9 +108,28 @@ internal sealed class SheetSettings
 	/// The record type's <see cref="ExcelSheetAttribute"/> or <see cref="ExcelColumnAttribute"/>s are not valid, or
 	/// <see cref="ExcelWriterOptions.Sheets"/>' columns were changed, after the writer was created, into ones that are not.
 	/// </exception>
-	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions)
+	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions) =>
+		Resolve(options, recordType, members, writerOptions, writerOptions.Csv.HasHeader, "CsvWriterOptions.HasHeader");
+
+	/// <summary>
+	/// Resolves and checks a sheet's settings when it is added, for a sheet whose header may not be the workbook's: a
+	/// converted sheet's is its CSV's (<see cref="ExcelWorkbookWriter.WriteSheet(string, CsvReader, ExcelSheetOptions?, int)"/>).
+	/// </summary>
+	/// <param name="options">The options given when it was added, or <see langword="null"/>.</param>
+	/// <param name="recordType">The record type of a sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/>, or <see langword="null"/>.</param>
+	/// <param name="members">The record type's members' formats (<see cref="MemberFormats.For(Type)"/>), or <see langword="null"/>.</param>
+	/// <param name="writerOptions">The workbook's options, which are valid.</param>
+	/// <param name="hasHeader">Whether the sheet's first record is its header.</param>
+	/// <param name="headerSetting">The setting that says so, as a message names it: <c>CsvReaderOptions.HasHeader</c> for a converted sheet.</param>
+	/// <returns>The settings.</returns>
+	/// <exception cref="ArgumentException">The options given are not valid, or need a header that the sheet doesn't have.</exception>
+	/// <exception cref="InvalidOperationException">
+	/// The record type's <see cref="ExcelSheetAttribute"/> or <see cref="ExcelColumnAttribute"/>s are not valid,
+	/// <see cref="ExcelWriterOptions.Sheets"/>' columns were changed, after the writer was created, into ones that are not, or
+	/// <see cref="ExcelWriterOptions.Sheets"/> need a header that the sheet doesn't have.
+	/// </exception>
+	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions, bool hasHeader, string headerSetting)
 	{
-		var hasHeader = writerOptions.Csv.HasHeader;
 		if (members?.Problem is { } attributes)
 		{
 			throw new InvalidOperationException(attributes);
@@ -119,7 +138,7 @@ internal sealed class SheetSettings
 		if (options is not null)
 		{
 			var copy = Copy(options.Columns);
-			if ((options.Problem(copy) ?? options.HeaderProblem(hasHeader)) is { } problem)
+			if ((options.Problem(copy) ?? options.HeaderProblem(hasHeader, headerSetting)) is { } problem)
 			{
 				throw new ArgumentException("ExcelSheetOptions: " + problem, nameof(options));
 			}
@@ -130,7 +149,7 @@ internal sealed class SheetSettings
 		if (members?.Sheet is { } sheet)
 		{
 			var origin = $"The [ExcelSheet] of {recordType?.Name}";
-			if (sheet.HeaderProblem(hasHeader) is { } problem)
+			if (sheet.HeaderProblem(hasHeader, headerSetting) is { } problem)
 			{
 				throw new InvalidOperationException($"{origin}: {problem}");
 			}
@@ -143,6 +162,12 @@ internal sealed class SheetSettings
 		if (defaults.Problem(columns) is { } changed)
 		{
 			throw new InvalidOperationException("ExcelWriterOptions.Sheets' columns were changed after the writer was created: " + changed);
+		}
+
+		// The writer's own header was checked when it was created; a converted sheet's can differ.
+		if (defaults.HeaderProblem(hasHeader, headerSetting) is { } header)
+		{
+			throw new InvalidOperationException("ExcelWriterOptions.Sheets: " + header);
 		}
 
 		return new SheetSettings(defaults, columns, members, hasHeader, "ExcelWriterOptions.Sheets", false);

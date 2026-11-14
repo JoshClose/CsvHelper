@@ -165,10 +165,14 @@ public sealed record ExcelSheetOptions
 
 	/// <summary>What is wrong with the options for a sheet with or without a header, if anything.</summary>
 	/// <param name="hasHeader">Whether the sheet's first record is its header (<see cref="CsvWriterOptions.HasHeader"/>).</param>
+	/// <param name="setting">
+	/// The setting that says whether it is, as the message names it: <c>CsvWriterOptions.HasHeader</c>, or
+	/// <c>CsvReaderOptions.HasHeader</c> for a sheet converted from CSV.
+	/// </param>
 	/// <returns>What is wrong, or <see langword="null"/>.</returns>
-	internal string? HeaderProblem(bool hasHeader) =>
+	internal string? HeaderProblem(bool hasHeader, string setting = "CsvWriterOptions.HasHeader") =>
 		hasHeader ? null :
-		AutoFilter ? "AutoFilter needs a header, and CsvWriterOptions.HasHeader is off." :
-		Table is not null ? "A table needs a header, and CsvWriterOptions.HasHeader is off." :
+		AutoFilter ? $"AutoFilter needs a header, and {setting} is off." :
+		Table is not null ? $"A table needs a header, and {setting} is off." :
 		null;
 }

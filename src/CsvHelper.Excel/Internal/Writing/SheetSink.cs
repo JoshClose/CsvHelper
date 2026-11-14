@@ -119,6 +119,9 @@ internal sealed class SheetSink : CsvCellSink
 	private readonly SharedStringTable? strings;
 	private readonly StyleRegistry styles;
 	private readonly ExcelWriterOptions options;
+	// The options of the sheet's writer: the workbook's Csv, or a converted sheet's (ExcelWorkbookWriter.WriteSheet of a
+	// CsvReader), whose header is the CSV's and whose numbers are invariant.
+	private readonly CsvWriterOptions csv;
 	// The writer's culture's signs and separator, or null for the invariant ones.
 	private readonly NumberCulture? culture;
 	// The formats of the record type's members, until the header's names say which columns they are for.
@@ -227,6 +230,10 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="strings">The shared strings, or <see langword="null"/> to write each cell's string in the cell.</param>
 	/// <param name="styles">The workbook's cell formats.</param>
 	/// <param name="options">The workbook's options.</param>
+	/// <param name="csv">
+	/// The options of the sheet's writer: <see cref="ExcelWriterOptions.Csv"/>, or a converted sheet's, whose
+	/// <see cref="CsvWriterOptions.HasHeader"/> and <see cref="CsvWriterOptions.FormatProvider"/> are its CSV's.
+	/// </param>
 	/// <param name="maxRows">The rows a sheet holds before <see cref="ExcelWriterOptions.RowLimit"/> applies: at least 2.</param>
 	/// <param name="settings">How the sheet looks.</param>
 	/// <param name="members">The formats of the record type's members, or <see langword="null"/> for none.</param>
@@ -239,8 +246,8 @@ internal sealed class SheetSink : CsvCellSink
 	/// <see langword="null"/> for none. With a header, they are resolved when the header record ends.
 	/// </param>
 	/// <param name="tableName">The name of the sheet's table, which the workbook doesn't have; <see langword="null"/> without a table.</param>
-	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, int maxRows,
-		SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns, string? tableName)
+	public SheetSink(ExcelWorkbookWriter workbook, PackageWriter package, string name, string partName, SharedStringTable? strings, StyleRegistry styles, ExcelWriterOptions options, CsvWriterOptions csv,
+		int maxRows, SheetSettings settings, MemberFormats? members, IReadOnlyList<string>? headerNames, ExcelColumnOptions?[]? columns, string? tableName)
 	{
 		this.workbook = workbook;
 		this.package = package;
@@ -248,23 +255,24 @@ internal sealed class SheetSink : CsvCellSink
 		this.strings = strings;
 		this.styles = styles;
 		this.options = options;
+		this.csv = csv;
 		this.maxRows = maxRows;
 		Settings = settings;
-		culture = NumberCulture.For(options.Csv.FormatProvider);
+		culture = NumberCulture.For(csv.FormatProvider);
 		title = settings.Title is { } text ? Encoding.UTF8.GetBytes(text) : null;
 		firstRow = title is null ? 1 : 2;
-		headerRowNumber = options.Csv.HasHeader ? firstRow : 0;
-		firstDataRow = options.Csv.HasHeader ? firstRow + 1 : firstRow;
+		headerRowNumber = csv.HasHeader ? firstRow : 0;
+		firstDataRow = csv.HasHeader ? firstRow + 1 : firstRow;
 		fits = settings.AutoFit > 0;
 		lastHeldRow = fits ? firstDataRow + settings.AutoFit - 1 : firstDataRow;
 		boldHeaderWidths = settings.BoldHeader || (settings.HasHeader && settings.Table?.Style is not null);
 		filterButtons = settings.HasHeader && (settings.AutoFilter || settings.Table is { FilterButtons: true });
-		repeatsHeader = options.Csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
-		headerSaysStyle = options.Csv.HasHeader && settings.HasColumns;
+		repeatsHeader = csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
+		headerSaysStyle = csv.HasHeader && settings.HasColumns;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
-		firstTableName = this.tableName = options.Csv.HasHeader ? tableName : null;
-		if (options.Csv.HasHeader)
+		firstTableName = this.tableName = csv.HasHeader ? tableName : null;
+		if (csv.HasHeader)
 		{
 			if (members is not null || settings.HasColumns || this.tableName is not null)
 			{
@@ -276,7 +284,7 @@ internal sealed class SheetSink : CsvCellSink
 		{
 			if (members is not null && headerNames is not null)
 			{
-				columnFormats = members.Columns(headerNames, options.Csv.FormatProvider);
+				columnFormats = members.Columns(headerNames, csv.FormatProvider);
 			}
 
 			SetColumns(columns);
@@ -1345,7 +1353,7 @@ internal sealed class SheetSink : CsvCellSink
 
 		if (members is not null)
 		{
-			columnFormats = members.Columns(names, options.Csv.FormatProvider);
+			columnFormats = members.Columns(names, csv.FormatProvider);
 		}
 
 		SetColumns(columns);

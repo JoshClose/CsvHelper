@@ -1,6 +1,9 @@
 namespace CsvHelper.Excel.Tests.Conversion;
 
-/// <summary><see cref="ConversionNames"/>: sheets' names made file names on every system, and numbered when they're the same.</summary>
+/// <summary>
+/// <see cref="ConversionNames"/>: sheets' names made file names on every system, and numbered when they're the same; and
+/// CSV files' names made sheet names, as Excel makes them.
+/// </summary>
 public class ConversionNamesTests
 {
 	[Theory]
@@ -101,5 +104,48 @@ public class ConversionNamesTests
 		Assert.Equal(["a_b.csv", "a_b (2).csv", "é.csv", "é (2).csv", "Sheet5.csv", "Sheet5 (2).csv", "_CON.csv", "_con (2).csv"], names);
 
 		Assert.Empty(ConversionNames.FileNames([]));
+	}
+
+	[Theory]
+	[InlineData("orders.csv", "orders")]
+	[InlineData("Q1 Orders.csv", "Q1 Orders")]
+	[InlineData("data.backup.csv", "data.backup")]
+	[InlineData("noextension", "noextension")]
+	[InlineData("brackets [x] and #.csv", "brackets (x) and #")]
+	[InlineData("quote's.csv", "quote's")]
+	[InlineData("'quoted'.csv", "quoted")]
+	[InlineData("''.csv", "Sheet1")]
+	[InlineData(".csv", "Sheet1")]
+	[InlineData("a-very-long-file-name-for-the-sheet-name-check-of-excel.csv", "a-very-long-file-name-for-the-s")]
+	[InlineData("pair 😀.csv", "pair 😀")]
+	[InlineData("History.csv", "History")]
+	[InlineData("=sum + 1!.csv", "=sum + 1!")]
+	public void NamesACsvFilesSheetAsExcelDoes(string file, string expected)
+	{
+		// Excel 365 names the sheets of the fifth, sixth and tenth so (Csv\_bench\results\phase6\design\excel-sheet-names.txt).
+		Assert.Equal(expected, ConversionNames.SheetName(Path.Combine(Path.GetTempPath(), file)));
+		SheetNames.Check(expected, "name");
+	}
+
+	[Fact]
+	public void MakesEveryFileNameASheetName()
+	{
+#if NET
+		// Characters a file name can have off Windows, control characters, and a lone surrogate, which no file system gives.
+		// (.NET Framework's paths can't have control characters, and take a colon for a drive's.)
+		Assert.Equal("a_b_c_d_e_f", ConversionNames.SheetName("a?b*c:d\u0001e\uD800f.csv"));
+		Assert.Equal("x_y", ConversionNames.SheetName("x\ty.csv"));
+#endif
+
+		// Cut to 31 without splitting a pair, then without an apostrophe at the end that the cut leaves.
+		Assert.Equal(new string('a', 30), ConversionNames.SheetName(new string('a', 30) + "😀.csv"));
+		Assert.Equal(new string('a', 29) + "😀", ConversionNames.SheetName(new string('a', 29) + "😀b.csv"));
+		Assert.Equal(new string('a', 30), ConversionNames.SheetName(new string('a', 30) + "'b.csv"));
+
+		// Escapes take more as the workbook writes them: _x0041_ is written _x005F_x0041_, so the name is cut to fit.
+		var escapes = ConversionNames.SheetName("_x0041__x0042__x0043__x0044_.csv");
+		Assert.True(SheetNames.WrittenLength(escapes) <= SheetNames.MaxLength);
+		Assert.StartsWith(escapes, "_x0041__x0042__x0043__x0044_", StringComparison.Ordinal);
+		SheetNames.Check(escapes, "name");
 	}
 }

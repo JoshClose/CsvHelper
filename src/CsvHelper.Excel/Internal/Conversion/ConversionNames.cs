@@ -1,13 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// The names of a conversion's files: a CSV file for each worksheet of <see cref="ExcelConvert.ToCsvFiles"/>, named after
-/// its sheet and made a file name on every system.
+/// The names of a conversion's files and sheets: a CSV file for each worksheet of <see cref="ExcelConvert.ToCsvFiles"/>,
+/// named after its sheet and made a file name on every system; and the sheet of a CSV file that
+/// <see cref="ExcelConvert.ToExcel(string, string, CsvToExcelOptions?)"/> converts, named after the file as Excel names it.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -23,6 +25,12 @@ namespace CsvHelper.Excel;
 /// <see cref="SheetNames.Key"/>, which compares them ignoring case and Unicode's forms as file systems that ignore case or
 /// normalize names (Windows', macOS') do, and more. The first in tab order keeps its name, and a number is one no other
 /// sheet's name has.
+/// </para>
+/// <para>
+/// A CSV file's name becomes a sheet's (<see cref="SheetName"/>) as Excel names the sheet of a CSV file it opens (checked
+/// through COM on 2026-11-12): <c>[</c> and <c>]</c> are <c>(</c> and <c>)</c>, and the name is cut to 31 characters. The
+/// other characters a sheet's name can't have, which Windows' file names can't have either but Linux's can, are
+/// <c>_</c>, and apostrophes at either end are dropped, so that every name is one the workbook writer takes.
 /// </para>
 /// </remarks>
 internal static class ConversionNames
@@ -84,6 +92,57 @@ internal static class ConversionNames
 		}
 
 		return names;
+	}
+
+	/// <summary>
+	/// The name of the sheet of a CSV file (see <see cref="ConversionNames"/>): the file's name without its extension, with
+	/// <c>[</c> and <c>]</c> as <c>(</c> and <c>)</c>, <c>\ / ? * :</c>, control characters and lone surrogates as <c>_</c>,
+	/// no apostrophe at either end, and cut to 31 UTF-16 code units as the workbook writes it, without splitting a pair;
+	/// <c>Sheet1</c> when nothing is left.
+	/// </summary>
+	/// <param name="path">The CSV file's path.</param>
+	/// <returns>The sheet's name, which <see cref="SheetNames.Check"/> accepts.</returns>
+	public static string SheetName(string path)
+	{
+		var stem = Path.GetFileNameWithoutExtension(path);
+		var text = new StringBuilder(stem.Length);
+		for (var i = 0; i < stem.Length; i++)
+		{
+			var c = stem[i];
+			if (char.IsHighSurrogate(c) && i + 1 < stem.Length && char.IsLowSurrogate(stem[i + 1]))
+			{
+				text.Append(c).Append(stem[++i]);
+
+				continue;
+			}
+
+			text.Append(c switch
+			{
+				'[' => '(',
+				']' => ')',
+				'\\' or '/' or '?' or '*' or ':' => '_',
+				_ when char.IsControl(c) || char.IsSurrogate(c) => '_',
+				_ => c,
+			});
+		}
+
+		var name = text.ToString().Trim('\'');
+		if (name.Length > SheetNames.MaxLength)
+		{
+			name = name.Substring(0, char.IsHighSurrogate(name[SheetNames.MaxLength - 1]) ? SheetNames.MaxLength - 1 : SheetNames.MaxLength);
+		}
+
+		// Its escapes take more as written (_x005F_ for an _ before x and four hexadecimal digits), so it is cut a character
+		// at a time until it fits.
+		while (SheetNames.WrittenLength(name) > SheetNames.MaxLength)
+		{
+			var cut = name.Length - 1;
+			name = name.Substring(0, cut > 0 && char.IsLowSurrogate(name[cut]) ? cut - 1 : cut);
+		}
+
+		name = name.TrimEnd('\'');
+
+		return name.Length == 0 ? "Sheet1" : name;
 	}
 
 	/// <summary>A sheet's name made a file's name, without its extension or a number (see <see cref="ConversionNames"/>).</summary>
