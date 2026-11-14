@@ -500,4 +500,73 @@ public class ReaderOptionTests
 		}));
 		Assert.Throws<ArgumentOutOfRangeException>(() => CsvReader.FromText("a", new CsvReaderOptions { SkipLines = -1 }));
 	}
+
+	private static char DetectedSeparator(string text, CsvReaderOptions options)
+	{
+		using var reader = CsvReader.FromText(text, options);
+		return reader.Separator;
+	}
+
+	[Fact]
+	public void SeparatorCandidatesWithSpace()
+	{
+		var withSpace = NoHeader with { SeparatorCandidates = ",;\t| " };
+
+		// Space is not a candidate by default.
+		Assert.Equal(["a b c", "1 2 3"], Lines("a b c\n1 2 3\n", NoHeader));
+		Assert.Equal(["a|b|c", "1|2|3"], Lines("a b c\n1 2 3\n", withSpace));
+		Assert.Equal(["a|b", "1|2"], Lines("a,b\n1,2\n", withSpace));
+
+		// Why: each of these lines has two spaces and one comma, so with space a candidate, space wins.
+		var names = "Full Name,Home City\nAnna Smith,New York\nBen Jones,Los Angeles\n";
+		Assert.Equal(',', DetectedSeparator(names, NoHeader));
+		Assert.Equal(' ', DetectedSeparator(names, withSpace));
+	}
+
+	[Fact]
+	public void SeparatorCandidatesInOrder()
+	{
+		// A tie goes to the earlier candidate.
+		Assert.Equal(',', DetectedSeparator("a,b|c\n1,2|3\n", NoHeader));
+		Assert.Equal('|', DetectedSeparator("a,b|c\n1,2|3\n", NoHeader with { SeparatorCandidates = "|," }));
+		// When none appears, the first is used, so a single column keeps its commas.
+		Assert.Equal(["Smith, Ann", "Jones, Ben"], Lines("Smith, Ann\nJones, Ben\n", NoHeader with { SeparatorCandidates = ";" }));
+		// The quote, the escape character and the comment prefix are left out, also when none appears.
+		Assert.Equal(';', DetectedSeparator("one\n", NoHeader with { SeparatorCandidates = "';", Quote = '\'' }));
+		Assert.Equal(';', DetectedSeparator("one\n", NoHeader with { SeparatorCandidates = "^;", Mode = CsvMode.Escape, Escape = '^' }));
+		Assert.Equal(';', DetectedSeparator("one\n", NoHeader with { SeparatorCandidates = "#;", CommentPrefix = '#' }));
+		// Other characters, repeated ones, and more candidates than are counted on the stack.
+		Assert.Equal(["a|b|c", "1|2|3"], Lines("a:b:c\n1:2:3\n", NoHeader with { SeparatorCandidates = ",,;;\t|!$%&*+-/:=?@^~" }));
+		Assert.Equal('~', DetectedSeparator("a~b\n", NoHeader with { SeparatorCandidates = ",;\t|!$%&*+-/:=?@^~~" }));
+	}
+
+	[Fact]
+	public void SeparatorCandidatesOnlyForDetection()
+	{
+		var spaceOnly = NoHeader with { SeparatorCandidates = " " };
+
+		Assert.Equal(["a b|c"], Lines("a b;c\n", spaceOnly with { Separator = ';' }));
+		Assert.Equal(["a b|c"], Lines("sep=|\na b|c\n", spaceOnly));
+		Assert.Equal(["ab|12"], Lines("ab 12\n", spaceOnly with { Mode = CsvMode.FixedWidth, FieldWidths = [3, 2] }));
+	}
+
+	[Theory]
+	[InlineData("")]
+	[InlineData("\n")]
+	[InlineData(",\r")]
+	[InlineData(",é")]
+	public void RejectsInvalidSeparatorCandidates(string candidates) =>
+		Assert.Throws<ArgumentException>(() => CsvReader.Create([], NoHeader with { SeparatorCandidates = candidates }));
+
+	[Fact]
+	public void RejectsSeparatorCandidatesThatAreAllLeftOut()
+	{
+		Assert.Throws<ArgumentNullException>(() => CsvReader.Create([], NoHeader with { SeparatorCandidates = null! }));
+		Assert.Throws<ArgumentException>(() => CsvReader.Create([], NoHeader with { SeparatorCandidates = "\"" }));
+		Assert.Throws<ArgumentException>(() => CsvReader.Create([], NoHeader with { SeparatorCandidates = "#\"#", CommentPrefix = '#' }));
+		Assert.Throws<ArgumentException>(() => CsvReader.Create([], NoHeader with { Mode = CsvMode.Escape, SeparatorCandidates = "\\" }));
+		// The quote is a character like any other outside Rfc4180 mode, and the escape character outside Escape mode.
+		using var noEscape = CsvReader.Create([], NoHeader with { Mode = CsvMode.NoEscape, SeparatorCandidates = "\"" });
+		using var rfc = CsvReader.Create([], NoHeader with { SeparatorCandidates = "\\" });
+	}
 }

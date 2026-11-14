@@ -131,10 +131,20 @@ public sealed record CsvReaderOptions
 
 	/// <summary>
 	/// The field separator. When <see langword="null"/> (the default), the separator is detected from
-	/// the first lines of the input, choosing among <c>,</c> <c>;</c> <c>\t</c> and <c>|</c>.
+	/// the first lines of the input, choosing among the <see cref="SeparatorCandidates"/>.
 	/// Must be an ASCII character. Not used in <see cref="CsvMode.FixedWidth"/> mode.
 	/// </summary>
 	public char? Separator { get; init; }
+
+	/// <summary>
+	/// The characters that separator detection chooses from when <see cref="Separator"/> is not set. Defaults to
+	/// <c>,;\t|</c>. Detection picks the candidate that appears the same number of times on the most lines; a tie goes
+	/// to the one that appears more often per line, and then to the earlier one. When none appears, the first is used.
+	/// Candidates that are the quote, the escape character or the comment prefix are left out. Each must be an ASCII
+	/// character other than CR and LF. A space can be added, though values that contain spaces can then make a file
+	/// separated by commas look separated by spaces.
+	/// </summary>
+	public string SeparatorCandidates { get; init; } = ",;\t|";
 
 	/// <summary>Whether the first record is a header row. Defaults to <see langword="true"/>.</summary>
 	public bool HasHeader { get; init; } = true;
@@ -347,6 +357,7 @@ public sealed record CsvReaderOptions
 		if (SkipLines < 0) throw new ArgumentOutOfRangeException(nameof(SkipLines), SkipLines, "SkipLines cannot be negative.");
 
 		ValidateWhitespace();
+		ValidateSeparatorCandidates();
 		ValidateValues(NullValues, nameof(NullValues));
 		ValidateValues(TrueValues, nameof(TrueValues));
 		ValidateValues(FalseValues, nameof(FalseValues));
@@ -412,6 +423,29 @@ public sealed record CsvReaderOptions
 			{
 				throw new ArgumentException("WhitespaceCharacters cannot contain the quote or the escape character.", nameof(WhitespaceCharacters));
 			}
+		}
+	}
+
+	private void ValidateSeparatorCandidates()
+	{
+		if (SeparatorCandidates is null)
+		{
+			throw new ArgumentNullException(nameof(SeparatorCandidates));
+		}
+
+		// Detection leaves out the quote, the escape character and the comment prefix, so one candidate must be another.
+		var usable = false;
+		foreach (var c in SeparatorCandidates)
+		{
+			ValidateAscii(c, nameof(SeparatorCandidates));
+			usable |= !(Mode == CsvMode.Rfc4180 && c == Quote) && !(Mode == CsvMode.Escape && c == Escape) && c != CommentPrefix;
+		}
+
+		if (!usable)
+		{
+			throw new ArgumentException(
+				"SeparatorCandidates must contain a character other than the quote, the escape character and the comment prefix.",
+				nameof(SeparatorCandidates));
 		}
 	}
 

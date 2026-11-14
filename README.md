@@ -275,7 +275,7 @@ adds the generator itself:
 
 | Situation | Behavior |
 |---|---|
-| Separator | Detected from the first lines (`,` `;` tab `\|`), scored by how consistently each appears per line. Excel's `sep=;` first line is honored and skipped. |
+| Separator | Detected from the first lines (`,` `;` tab `\|`, or the `SeparatorCandidates` you list), scored by how consistently each appears per line. Excel's `sep=;` first line is honored and skipped. |
 | Encoding | UTF-8 (BOM skipped). UTF-16/UTF-32 byte order marks are detected and transcoded. `Encoding` option for other code pages. |
 | Line endings | `\n`, `\r\n` and lone `\r`, mixed freely. |
 | Quotes | RFC 4180: a quote at the start of a field opens a quoted field (separators/line breaks inside are text, `""` is a quote). |
