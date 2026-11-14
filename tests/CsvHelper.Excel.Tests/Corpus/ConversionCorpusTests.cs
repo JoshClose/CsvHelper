@@ -93,9 +93,12 @@ public class ConversionCorpusTests
 			return GC.GetAllocatedBytesForCurrentThread() - before;
 		}
 
+		// Each size is measured twice, and the smaller kept: the runtime allocates once on the thread at a moment the JIT's
+		// tiering sets (OSR with dynamic PGO), which can fall in one pass but not in both, where an allocation per row would
+		// be in both. See ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows.
 		Allocated(1000);
-		var few = Allocated(100);
-		var many = Allocated(1000);
+		var few = Math.Min(Allocated(100), Allocated(100));
+		var many = Math.Min(Allocated(1000), Allocated(1000));
 		Assert.True(many - few < 4096, $"100 orders allocated {few:N0} bytes and 1,000 orders {many:N0}.");
 	}
 #endif

@@ -542,9 +542,12 @@ public class ExcelToCsvTests
 			return GC.GetAllocatedBytesForCurrentThread() - before;
 		});
 
+		// Each size is measured twice, and the smaller kept: the runtime allocates once on the thread at a moment the JIT's
+		// tiering sets (OSR with dynamic PGO; 7,248 bytes in CI's run 43641418718), which can fall in one pass but not in
+		// both, where an allocation per row would be in both.
 		bytes(1_000);
-		var few = bytes(1_000);
-		var many = bytes(100_000);
+		var few = Math.Min(bytes(1_000), bytes(1_000));
+		var many = Math.Min(bytes(100_000), bytes(100_000));
 		Assert.True(many - few < 4096, $"1,000 rows allocated {few:N0} bytes and 100,000 rows {many:N0}.");
 	}
 #endif
