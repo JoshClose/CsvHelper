@@ -429,7 +429,7 @@ public sealed partial class CsvReader
 			ReadOnlySpan<byte> data = buffer.AsSpan(dataStart, dataEnd - dataStart);
 			var bufferFull = dataEnd >= buffer.Length - 1024;
 			if (!eof && !bufferFull && !CsvSeparatorDetector.HasEnoughData(data)) return false;
-			sepByte = CsvSeparatorDetector.Detect(data, quoteInt, commentInt, escapeInt);
+			sepByte = CsvSeparatorDetector.Detect(data, options.SeparatorCandidates, quoteInt, commentInt, escapeInt);
 			separatorKnown = true;
 		}
 

@@ -9,6 +9,11 @@ header. The lines are not parsed, and the separator is detected from the lines a
 could skip such lines; in 34 it gets data records only. See
 [Lines above the header](../../pages/reading.md#lines-above-the-header).
 
+The new `SeparatorCandidates` reader option lists the characters that separator detection chooses from, `,;\t|` by
+default, so files separated by spaces or another character can be detected, as `DetectDelimiterValues` allowed in 33.
+When none of them appears, the first is used, a comma by default as before. See
+[Separator detection](../../pages/reading.md#separator-detection).
+
 The new `Quote` writer option changes the quote character of RFC 4180 mode, as the reader's `Quote` does, so files
 that quote with apostrophes can be written as well as read. 34.0 always quoted with `"`. CsvHelper.Linq's `Update` now
 changes files quoted with another character than `"` instead of throwing `NotSupportedException`. See

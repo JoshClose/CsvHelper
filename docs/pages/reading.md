@@ -741,6 +741,23 @@ var options = new CsvReaderOptions { Separator = ';' };   // any ASCII character
 
 Getting `Separator` before the first `Read` reads the start of the input, synchronously.
 
+`SeparatorCandidates` changes the characters that detection chooses from (`",;\t|"` by default). Detection picks the
+one that appears the same number of times on the most lines; a tie goes to the one that appears more often per line,
+and then to the earlier one. When none appears, the first is used. To detect files separated by spaces too:
+
+```csharp
+var options = new CsvReaderOptions { SeparatorCandidates = ",;\t| " };
+```
+
+Space is not a candidate by default because values that contain spaces can make a file separated by commas look
+separated by spaces. Each line of this file has one comma and two spaces, so with space a candidate, the space wins:
+
+```
+Full Name,Home City
+Anna Smith,New York
+Ben Jones,Los Angeles
+```
+
 ### Separators of several characters
 
 `Separator` is one ASCII character. For a longer separator, such as `||`, or one that is not ASCII, such as `¦`, read
@@ -955,6 +972,7 @@ Options are checked when a reader is created; invalid ones throw `ArgumentExcept
 |---|---|---|
 | `Mode` | `Rfc4180` | [Parsing modes](#parsing-modes) |
 | `Separator` | `null`: detected | [Separator detection](#separator-detection), [several characters](#separators-of-several-characters) |
+| `SeparatorCandidates` | `",;\t\|"` | [Separator detection](#separator-detection) |
 | `DetectSeparatorHint` | `true` | [Separator detection](#separator-detection) |
 | `HasHeader` | `true` | [Headers](#headers) |
 | `SkipLines` | `0` | [Lines above the header](#lines-above-the-header) |
