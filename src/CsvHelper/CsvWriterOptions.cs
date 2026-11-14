@@ -66,8 +66,8 @@ public delegate bool CsvShouldQuote(ReadOnlySpan<char> field, Type fieldType, in
 
 /// <summary>
 /// Options for <see cref="CsvWriter"/>. By default the output follows RFC 4180: records end with CRLF, fields
-/// that need it are enclosed in double quotes, and quotes inside them are doubled. <see cref="Mode"/> selects the
-/// other formats.
+/// that need it are enclosed in double quotes (<see cref="Quote"/>), and quotes inside them are doubled.
+/// <see cref="Mode"/> selects the other formats.
 /// </summary>
 public sealed record CsvWriterOptions
 {
@@ -137,6 +137,14 @@ public sealed record CsvWriterOptions
 	public CsvShouldQuote? ShouldQuote { get; init; }
 
 	/// <summary>
+	/// The quote character of <see cref="CsvMode.Rfc4180"/> mode, such as <c>'</c> for files that quote with apostrophes.
+	/// Defaults to <c>"</c>. Fields that contain it are quoted, and it is doubled inside them; a reader with the same
+	/// <see cref="CsvReaderOptions.Quote"/> reads them back. Must be an ASCII character other than CR, LF, the separator
+	/// and <see cref="CommentPrefix"/>.
+	/// </summary>
+	public char Quote { get; init; } = '"';
+
+	/// <summary>
 	/// The text written for <see langword="null"/>: a <see langword="null"/> string, object or <see cref="Nullable{T}"/>,
 	/// such as <c>NULL</c> or <c>\N</c> for a database import. Defaults to <see langword="null"/>: an empty field. Character
 	/// and UTF-8 spans cannot be <see langword="null"/>, so an empty span is an empty field whatever this is. A reader
@@ -164,7 +172,7 @@ public sealed record CsvWriterOptions
 	/// it has that field quoted (<see cref="CsvMode.Rfc4180"/>) or escaped (<see cref="CsvMode.Escape"/>), so that a
 	/// reader with the same <see cref="CsvReaderOptions.CommentPrefix"/> does not skip the record; such a record
 	/// throws <see cref="InvalidOperationException"/> in <see cref="CsvMode.FixedWidth"/> mode and is written as it is in
-	/// <see cref="CsvMode.NoEscape"/> mode. Must be an ASCII character other than the separator, the quote (in
+	/// <see cref="CsvMode.NoEscape"/> mode. Must be an ASCII character other than the separator, <see cref="Quote"/> (in
 	/// <see cref="CsvMode.Rfc4180"/> mode) and <see cref="Escape"/> (in <see cref="CsvMode.Escape"/> mode).
 	/// </summary>
 	public char? CommentPrefix { get; init; }
@@ -252,8 +260,14 @@ public sealed record CsvWriterOptions
 		}
 
 		var s = Separator;
-		if (s == '\0' || s > 0x7F || s == '\r' || s == '\n' || (s == '"' && Mode == CsvMode.Rfc4180))
-			throw new ArgumentException("Separator must be an ASCII character other than CR, LF and the quote.", nameof(Separator));
+		if (s == '\0' || s > 0x7F || s == '\r' || s == '\n')
+			throw new ArgumentException("Separator must be an ASCII character other than CR and LF.", nameof(Separator));
+		if (Mode == CsvMode.Rfc4180)
+		{
+			CsvReaderOptions.ValidateAscii(Quote, nameof(Quote));
+			if (Quote == s) throw new ArgumentException("Separator and Quote must differ.", nameof(Separator));
+		}
+
 		if (Mode == CsvMode.Escape)
 		{
 			CsvReaderOptions.ValidateAscii(Escape, nameof(Escape));
@@ -269,9 +283,9 @@ public sealed record CsvWriterOptions
 				throw new ArgumentException("Separator and CommentPrefix must differ.", nameof(CommentPrefix));
 			}
 
-			if (Mode == CsvMode.Rfc4180 && c == '"')
+			if (Mode == CsvMode.Rfc4180 && c == Quote)
 			{
-				throw new ArgumentException("CommentPrefix cannot be the quote.", nameof(CommentPrefix));
+				throw new ArgumentException("Quote and CommentPrefix must differ.", nameof(CommentPrefix));
 			}
 
 			if (Mode == CsvMode.Escape && c == Escape)

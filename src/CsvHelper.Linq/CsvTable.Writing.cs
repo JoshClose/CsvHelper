@@ -87,7 +87,7 @@ public sealed partial class CsvTable<T>
 	/// <returns>The number of records changed.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="predicate"/> or <paramref name="update"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">The update changes a member that the file has no column for.</exception>
-	/// <exception cref="NotSupportedException">The file is not UTF-8, is fixed-width, or quotes with another character than <c>"</c>.</exception>
+	/// <exception cref="NotSupportedException">The file is not UTF-8 or is fixed-width.</exception>
 	public long Update(Expression<Func<T, bool>> predicate, Func<T, T> update) => UpdateAsync(predicate, update, false, default).GetAwaiter().GetResult();
 
 	/// <summary>Changes the records that match a condition, asynchronously; see <see cref="Update"/>.</summary>
@@ -97,7 +97,7 @@ public sealed partial class CsvTable<T>
 	/// <returns>The number of records changed.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="predicate"/> or <paramref name="update"/> is <see langword="null"/>.</exception>
 	/// <exception cref="InvalidOperationException">The update changes a member that the file has no column for.</exception>
-	/// <exception cref="NotSupportedException">The file is not UTF-8, is fixed-width, or quotes with another character than <c>"</c>.</exception>
+	/// <exception cref="NotSupportedException">The file is not UTF-8 or is fixed-width.</exception>
 	public ValueTask<long> UpdateAsync(Expression<Func<T, bool>> predicate, Func<T, T> update, CancellationToken cancellationToken = default) =>
 		UpdateAsync(predicate, update, true, cancellationToken);
 

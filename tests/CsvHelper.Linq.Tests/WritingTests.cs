@@ -323,6 +323,17 @@ public sealed class WritingTests : IDisposable
 	}
 
 	[Fact]
+	public void UpdatesFilesQuotedWithAnotherCharacter()
+	{
+		var path = File("apostrophes.csv", "Name,Country,Rank\n'Ada, A',NO,1\nBob,SE,2\n");
+		var options = new CsvQueryOptions { ReaderOptions = new CsvReaderOptions { Quote = '\'' } };
+		var table = CsvQueryable.FromFile<Customer>(path, options);
+		Assert.Equal(1, table.Update(c => c.Rank == 2, c => c with { Name = "Bob's, B" }));
+		Assert.Equal("Name,Country,Rank\n'Ada, A',NO,1\n'Bob''s, B',SE,2\n", Text(path));
+		Assert.Equal("Bob's, B", table.Single(c => c.Rank == 2).Name);
+	}
+
+	[Fact]
 	public async Task DeletesAsynchronouslyAndCanBeCanceled()
 	{
 		var path = File("cancel.csv", Data.CustomersCsv);

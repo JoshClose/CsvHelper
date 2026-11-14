@@ -137,11 +137,11 @@ generator decides, and attributes such as `[CsvColumn]`, `[CsvIgnore]` and `[Csv
 | `Delimiter` | `Separator` | One character, `','` by default (not the culture's list separator). |
 | `HasHeaderRecord` | `HasHeader` | |
 | `NewLine` | `NewLine` | `"\r\n"` (the default), `"\n"` or `"\r"`. |
-| `ShouldQuote` | `Quoting`, `ShouldQuote` | `Quoting = CsvQuoting.Always` quotes every field. |
+| `ShouldQuote` | `Quoting`, `ShouldQuote` | `Quoting = CsvQuoting.Always` quotes every field. A field that needs quotes is quoted whatever `ShouldQuote` returns; `ShouldQuote = _ => false` is `Mode = CsvMode.NoEscape`, which writes every field as it is. |
 | `InjectionOptions` | `Injection` | `CsvInjection.None`, `Escape`, `Strip` or `Throw` (was `Exception`). |
 | `InjectionCharacters`, `InjectionEscapeCharacter` | `InjectionCharacters`, `InjectionEscape` | |
 | `Comment` | `CommentPrefix` | `null` by default: `WriteComment` throws until it is set. |
-| `Quote` | none | The writer always quotes with `"`. |
+| `Quote` | `Quote` | From 34.1; in 34.0 the writer always quotes with `"`. Rfc4180 mode only; quotes inside fields are doubled. |
 | `Encoding` | none | Write to a `StreamWriter` with the encoding; see [Encodings](#encodings). |
 
 New writer options: `NullValue`, `TrueValue` and `FalseValue` for how those are written, `ValidateFieldCount` (on by

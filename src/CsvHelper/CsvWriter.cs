@@ -42,6 +42,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	private readonly CsvWriterOptions options;
 	private readonly IFormatProvider provider;
 	private readonly byte sep;
+	private readonly byte quote;            // Rfc4180: the quote character
 	private readonly bool quoteAll;
 	private readonly bool quoteWhitespace;  // CsvQuoting.WhenNeededOrWhitespace (custom handling)
 	private readonly bool quoting;          // Rfc4180 mode
@@ -95,6 +96,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		this.options = options;
 		provider = options.FormatProvider ?? System.Globalization.CultureInfo.InvariantCulture;
 		sep = (byte)options.Separator;
+		quote = (byte)options.Quote;
 		mode = options.Mode;
 		quoting = mode == CsvMode.Rfc4180;
 		quoteAll = quoting && options.Quoting == CsvQuoting.Always;
@@ -127,7 +129,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		this.leaveOpen = leaveOpen;
 		special = mode switch
 		{
-			CsvMode.Rfc4180 => SearchValues.Create([sep, (byte)'"', (byte)'\r', (byte)'\n']),
+			CsvMode.Rfc4180 => SearchValues.Create([sep, quote, (byte)'\r', (byte)'\n']),
 			CsvMode.Escape => SearchValues.Create([sep, escape, (byte)'\r', (byte)'\n']),
 			_ => SearchValues.Create(ReadOnlySpan<byte>.Empty),
 		};
@@ -140,9 +142,10 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		invariant = ReferenceEquals(provider, System.Globalization.CultureInfo.InvariantCulture) ||
 					 ReferenceEquals(provider, System.Globalization.NumberFormatInfo.InvariantInfo);
 		// Invariant numbers contain only digits, sign, '.', 'E', "NaN" and "Infinity"; check them only if the
-		// separator (or the escape character) could appear in that output.
+		// separator (or the quote or escape character) could appear in that output.
 		const string NumberChars = "0123456789+-.EeNaIfinity";
 		checkNumbers = NumberChars.Contains(options.Separator) || !invariant ||
+					   (quoting && NumberChars.Contains(options.Quote)) ||
 					   (mode == CsvMode.Escape && NumberChars.Contains(options.Escape));
 		buffer = ArrayPool<byte>.Shared.Rent(options.BufferSize);
 		flushThreshold = Math.Max(buffer.Length - 4096, buffer.Length / 2);
@@ -155,9 +158,9 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// <returns>A writer positioned at the start of the first record.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
-	/// <paramref name="options"/> are not valid: a <see cref="CsvWriterOptions.Separator"/> that is not ASCII or is CR, LF
-	/// or (in Rfc4180 mode) the quote, an <see cref="CsvWriterOptions.Escape"/> that cannot be used, or missing or
-	/// non-positive <see cref="CsvWriterOptions.FieldWidths"/> in FixedWidth mode.
+	/// <paramref name="options"/> are not valid: a <see cref="CsvWriterOptions.Separator"/> that is not ASCII or is CR
+	/// or LF, a <see cref="CsvWriterOptions.Quote"/> (in Rfc4180 mode) or <see cref="CsvWriterOptions.Escape"/> that
+	/// cannot be used, or missing or non-positive <see cref="CsvWriterOptions.FieldWidths"/> in FixedWidth mode.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException"><see cref="CsvWriterOptions.BufferSize"/> is less than 256.</exception>
 	public static CsvWriter Create(Stream stream, CsvWriterOptions? options = null, bool leaveOpen = false)
@@ -186,9 +189,9 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// <returns>A writer positioned at the start of the first record.</returns>
 	/// <exception cref="ArgumentNullException"><paramref name="textWriter"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
-	/// <paramref name="options"/> are not valid: a <see cref="CsvWriterOptions.Separator"/> that is not ASCII or is CR, LF
-	/// or (in Rfc4180 mode) the quote, an <see cref="CsvWriterOptions.Escape"/> that cannot be used, or missing or
-	/// non-positive <see cref="CsvWriterOptions.FieldWidths"/> in FixedWidth mode.
+	/// <paramref name="options"/> are not valid: a <see cref="CsvWriterOptions.Separator"/> that is not ASCII or is CR
+	/// or LF, a <see cref="CsvWriterOptions.Quote"/> (in Rfc4180 mode) or <see cref="CsvWriterOptions.Escape"/> that
+	/// cannot be used, or missing or non-positive <see cref="CsvWriterOptions.FieldWidths"/> in FixedWidth mode.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException"><see cref="CsvWriterOptions.BufferSize"/> is less than 256.</exception>
 	public static CsvWriter Create(TextWriter textWriter, CsvWriterOptions? options = null, bool leaveOpen = false)
@@ -270,7 +273,7 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		var start = pos;
 		if (value.Length <= 32 && narrowFast)
 		{
-			var special = AsciiField.TryNarrow(value, ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(buffer), start), sep, (byte)'"');
+			var special = AsciiField.TryNarrow(value, ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(buffer), start), sep, quote);
 			if (special == 0)
 			{
 				pos = start + value.Length;
@@ -913,8 +916,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		{
 			// A lone empty field would look like an empty line; RFC 4180 quoting keeps it a record.
 			if (buffer.Length - pos < 2) Grow(2);
-			buffer[pos++] = (byte)'"';
-			buffer[pos++] = (byte)'"';
+			buffer[pos++] = quote;
+			buffer[pos++] = quote;
 		}
 
 		if (validate)
@@ -990,8 +993,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 
 			buffer.AsSpan(end, pos - end).CopyTo(buffer.AsSpan(end + 2));
 			buffer.AsSpan(start, end - start).CopyTo(buffer.AsSpan(start + 1));
-			buffer[start] = (byte)'"';
-			buffer[end + 1] = (byte)'"';
+			buffer[start] = quote;
+			buffer[end + 1] = quote;
 			pos += 2;
 		}
 		else if (mode == CsvMode.Escape)
@@ -1138,9 +1141,9 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 			case CsvMode.Rfc4180:
 				var whitespace = (quoteWhitespace || quoting == CsvQuoting.WhenNeededOrWhitespace) && length > 0 &&
 								 (IsSpaceOrTab(buffer[start]) || IsSpaceOrTab(buffer[start + length - 1]));
-				var quote = always || whitespace || buffer.AsSpan(start, length).ContainsAny(special) || AskShouldQuote(start, length, type);
+				var quoted = always || whitespace || buffer.AsSpan(start, length).ContainsAny(special) || AskShouldQuote(start, length, type);
 
-				return quote ? Quote(start, length) : length;
+				return quoted ? Quote(start, length) : length;
 			case CsvMode.Escape:
 				return EscapeInPlace(start, length);
 			case CsvMode.FixedWidth:
@@ -1360,27 +1363,28 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	private int Quote(int start, int length)
 	{
 		Span<byte> b = buffer;
-		var quotes = b.Slice(start, length).Count((byte)'"');
+		var q = quote;
+		var quotes = b.Slice(start, length).Count(q);
 		var total = length + quotes + 2;
 		var dst = start + total - 1;
-		b[dst] = (byte)'"';
+		b[dst] = q;
 		var srcEnd = start + length;
 		while (quotes > 0)
 		{
-			var q = start + b.Slice(start, srcEnd - start).LastIndexOf((byte)'"');
-			var segment = srcEnd - (q + 1);
+			var at = start + b.Slice(start, srcEnd - start).LastIndexOf(q);
+			var segment = srcEnd - (at + 1);
 			dst -= segment;
-			b.Slice(q + 1, segment).CopyTo(b.Slice(dst));
-			b[--dst] = (byte)'"';
-			b[--dst] = (byte)'"';
-			srcEnd = q;
+			b.Slice(at + 1, segment).CopyTo(b.Slice(dst));
+			b[--dst] = q;
+			b[--dst] = q;
+			srcEnd = at;
 			quotes--;
 		}
 
 		var rest = srcEnd - start;
 		dst -= rest;
 		b.Slice(start, rest).CopyTo(b.Slice(dst));
-		b[start] = (byte)'"';
+		b[start] = q;
 
 		return total;
 	}
@@ -1632,8 +1636,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 		if (fieldCount == 1 && pos == recordStart && quoting)
 		{
 			if (buffer.Length - pos < 2) Grow(2);
-			buffer[pos++] = (byte)'"';
-			buffer[pos++] = (byte)'"';
+			buffer[pos++] = quote;
+			buffer[pos++] = quote;
 		}
 
 		if (protectComments)
