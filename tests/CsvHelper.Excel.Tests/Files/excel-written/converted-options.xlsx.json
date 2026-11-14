@@ -1,0 +1,120 @@
+{
+  "file": "converted-options.xlsx",
+  "description": "CSV converted with LongNumbers = Number and DateTimeOffsets = Utc, and a date before 1900 in a column of dates",
+  "sha256": "87d974203a7d4c899bffef00a067f213185ae193c68c9e9770f18b266fdcafa3",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Options",
+      "used": "A1:C3",
+      "widths": [
+        11.91,
+        18.09,
+        10.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Id",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "At",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Day",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": 1234567890123456,
+          "type": "number",
+          "text": "1.23457E+15",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B2",
+          "value2": 45306.395833333336,
+          "type": "date",
+          "text": "2024-01-15 09:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "C2",
+          "value2": "1899-12-31",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A3",
+          "value2": 1.2345678901234567E+19,
+          "type": "number",
+          "text": "1.23457E+19",
+          "numberFormat": "General",
+          "category": "G",
+          "elapsed": "1.5"
+        },
+        {
+          "cell": "B3",
+          "value2": 45306.4375,
+          "type": "date",
+          "text": "2024-01-15 10:30:00",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss",
+          "category": "G",
+          "elapsed": "1900-01-01 12:00:00"
+        },
+        {
+          "cell": "C3",
+          "value2": 1,
+          "type": "date",
+          "text": "1900-01-01",
+          "numberFormat": "yyyy-mm-dd",
+          "category": "G",
+          "elapsed": "1900-01-01"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        }
+      ],
+      "autoFit": [
+        11.18,
+        17.18,
+        9.45
+      ]
+    }
+  ]
+}

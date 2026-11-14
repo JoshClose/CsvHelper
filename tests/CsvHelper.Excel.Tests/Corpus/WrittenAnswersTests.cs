@@ -130,6 +130,8 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		.. new[] { "Attributes", "Options" }.SelectMany(s => new[] { (s + "!I2", LibreOfficeBooleans), (s + "!I3", LibreOfficeBooleans), (s + "!I4", LibreOfficeBooleans), (s + "!H3", LibreOffice1900) })
 			.Select(d => ("columns.xlsx", d.Item1, d.Item2)),
 		("columns.xlsx", "Mixed!B4", LibreOfficeBooleans),
+		("converted.xlsx", "Columns!C4", LibreOffice1900),
+		("converted-options.xlsx", "Options!C3", LibreOffice1900),
 	];
 
 	/// <summary>The workbooks of the set on this target.</summary>
@@ -185,6 +187,16 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 			$"{name} isn't the workbook Excel answered about: the writer or the content set changed. Run the corpus tool's written command "
 			+ "(dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- written) and review what changed in Files/excel-written.");
 		Assert.Equal(answers.Sha256, Written.PartsHash(await Written.WriteAsync(workbook)));
+	}
+
+	[Theory]
+	[MemberData(nameof(Workbooks))]
+	public void PassesTheOpenXmlValidator(string name)
+	{
+		// Every workbook of the set, its look's and the converted ones too (Phase 6's gate), not only the writing tests' own.
+		var workbook = Written.Workbooks.Single(w => w.Name == name);
+
+		Assert.Empty(Writing.Written.ValidationErrors(Written.Write(workbook)));
 	}
 
 	[Theory]

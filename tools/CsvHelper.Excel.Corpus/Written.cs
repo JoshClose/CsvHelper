@@ -47,6 +47,79 @@ internal static class Written
 	/// <summary>The default options with Phase 4's look, and no links.</summary>
 	private static readonly ExcelWriterOptions Phase4Options = new() { Sheets = Phase4Look, Links = ExcelLinks.None };
 
+	/// <summary>
+	/// The forms of the design's <c>infer.csv</c> (<c>Csv\_bench\results\phase6\design</c>), which Excel and LibreOffice were
+	/// asked to open, each with its label and the cell that inference makes of it alone in its column, by the plan's
+	/// "What CSV → .xlsx writes": a number (as a decimal), a date or a date and time (as a <see cref="DateTime"/>), a
+	/// boolean, a text cell of the field (which a date before 1900 is too), or no cell.
+	/// </summary>
+	private static readonly (string Label, string Field, object? Cell)[] InferForms =
+	[
+		("int", "123", 123m),
+		("zeros", "00123", "00123"),
+		("zero-7", "007", "007"),
+		("negative", "-45", -45m),
+		("plus", "+45", "+45"),
+		("decimal", "1.5", 1.5m),
+		("dot-first", ".5", ".5"),
+		("dot-last", "5.", "5."),
+		("exp-lower", "1e5", 100000m),
+		("exp-upper", "1E5", 100000m),
+		("exp-big", "1.5E+20", 150000000000000000000m),
+		("digits-15", "123456789012345", 123456789012345m),
+		("digits-16", "1234567890123456", "1234567890123456"),
+		("digits-19", "1234567890123456789", "1234567890123456789"),
+		("decimal-21", "3.14159265358979323846", "3.14159265358979323846"),
+		("trailing-zero", "1.50", 1.50m),
+		("one-point-zero", "1.0", 1.0m),
+		("grouped", "1,234", "1,234"),
+		("grouped-dec", "1,234.5", "1,234.5"),
+		("de-decimal", "1,5", "1,5"),
+		("dollar", "$5", "$5"),
+		("percent", "50%", "50%"),
+		("lead-space", " 5", " 5"),
+		("trail-space", "5 ", "5 "),
+		("neg-zero", "-0", 0m),
+		("hex", "0x10", "0x10"),
+		("nan", "NaN", "NaN"),
+		("infinity", "Infinity", "Infinity"),
+		("quoted-num", "123", 123m),
+		("date", "2024-01-15", new DateTime(2024, 1, 15)),
+		("date-T-time", "2024-01-15T10:30:00", new DateTime(2024, 1, 15, 10, 30, 0)),
+		("date-space-time", "2024-01-15 10:30:00", new DateTime(2024, 1, 15, 10, 30, 0)),
+		("date-space-hm", "2024-01-15 10:30", new DateTime(2024, 1, 15, 10, 30, 0)),
+		("date-T-ms", "2024-01-15T10:30:00.123", new DateTime(2024, 1, 15, 10, 30, 0, 123)),
+		("date-T-7", "2024-01-15T10:30:00.1234567", new DateTime(2024, 1, 15, 10, 30, 0).AddTicks(1234567)),
+		("date-Z", "2024-01-15T10:30:00Z", "2024-01-15T10:30:00Z"),
+		("date-offset", "2024-01-15T10:30:00+01:00", "2024-01-15T10:30:00+01:00"),
+		("date-mdy", "1/15/2024", "1/15/2024"),
+		("date-dmy", "15/01/2024", "15/01/2024"),
+		("date-slash-iso", "2024/01/15", "2024/01/15"),
+		("date-text", "15-Jan-2024", "15-Jan-2024"),
+		("date-words", "Jan 15 2024", "Jan 15 2024"),
+		("date-1900-02-29", "1900-02-29", "1900-02-29"),
+		("date-1899", "1899-12-31", "1899-12-31"),
+		("date-0001", "0001-01-01", "0001-01-01"),
+		("date-9999", "9999-12-31", new DateTime(9999, 12, 31)),
+		("date-bad", "2024-02-30", "2024-02-30"),
+		("time-hm", "10:30", "10:30"),
+		("time-hms", "10:30:45", "10:30:45"),
+		("time-ms", "10:30:45.123", "10:30:45.123"),
+		("duration", "36:00:00", "36:00:00"),
+		("TRUE", "TRUE", true),
+		("true", "true", true),
+		("True", "True", true),
+		("FALSE", "FALSE", false),
+		("yes", "yes", "yes"),
+		("one", "1", 1m),
+		("error", "#N/A", "#N/A"),
+		("error-div", "#DIV/0!", "#DIV/0!"),
+		("formula", "=1+1", "=1+1"),
+		("formula-plus", "+1+1", "+1+1"),
+		("at", "@SUM(1)", "@SUM(1)"),
+		("empty", "", null),
+	];
+
 	/// <summary><see cref="ExcelWorkbookWriter"/>'s internal row limit, which a test sets to start new sheets after a few rows.</summary>
 	private static readonly PropertyInfo MaxRows = typeof(ExcelWorkbookWriter).GetProperty("MaxRows", BindingFlags.Instance | BindingFlags.NonPublic)
 		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal MaxRows.");
@@ -78,6 +151,10 @@ internal static class Written
 		AllLinks(),
 		NewSheetsLook(),
 		Presentation(),
+		Converted(),
+		ConvertedText(),
+		ConvertedGerman(),
+		ConvertedOptions(),
 	];
 
 	/// <summary>Writes a workbook synchronously, into memory.</summary>
@@ -918,6 +995,120 @@ internal static class Written
 				WrittenSheet.Fields("Summary", summary, look: new() { Options = new() { Title = "Summary", AutoFilter = true, FreezeColumns = 1 }, Merges = [(1, "A3:A4")] }),
 			]);
 	}
+
+	/// <summary>
+	/// "converted.xlsx": CSV converted to sheets, each column's type inferred (Phase 6): the forms of the design's
+	/// <c>infer.csv</c>, a column each, so that each form alone decides its column; <c>infer.csv</c> as it is, whose values
+	/// share a column, which is text; columns of several records; and columns that two records decide, with later fields
+	/// that don't match.
+	/// </summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook Converted()
+	{
+		object?[][] columns =
+		[
+			["Count", "Price", "Day", "At", "Paid", "Code", "Note", "Mixed"],
+			[3m, 1.5m, new DateTime(2024, 1, 15), new DateTime(2024, 1, 15, 10, 30, 0), true, "00123", null, "1"],
+			[-4m, 2.25m, new DateTime(2024, 1, 16), new DateTime(2024, 1, 16), false, "123", "x", "2024-01-15"],
+			[0m, 0.00001m, new DateTime(1900, 1, 1), new DateTime(2024, 1, 15, 23, 59, 59, 999), true, "7", "y", "true"],
+		];
+		const string ColumnsCsv =
+			"Count,Price,Day,At,Paid,Code,Note,Mixed\r\n" +
+			"3,1.5,2024-01-15,2024-01-15 10:30,true,00123,,1\r\n" +
+			"-4,2.25,2024-01-16,2024-01-16,FALSE,123,x,2024-01-15\r\n" +
+			"0,1E-5,1900-01-01,2024-01-15T23:59:59.999,True,7,y,true\r\n";
+		object?[][] later =
+		[
+			["Id", "Amount"],
+			[1m, 10m],
+			[2m, 20m],
+			["00123", "N/A"],
+			[4m, 40m],
+		];
+
+		return new WrittenWorkbook(
+			"converted.xlsx",
+			"CSV converted with each column's type inferred: infer.csv's forms a column each, infer.csv as it is, columns of several records, and columns two records decide",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Csv("Forms", Csv([[.. InferForms.Select(f => f.Label)], [.. InferForms.Select(f => f.Field)]]), [[.. InferForms.Select(f => (object?)f.Label)], [.. InferForms.Select(f => f.Cell)]]),
+				WrittenSheet.Csv("As is", Csv([["label", "value"], .. InferForms.Select(f => new[] { f.Label, f.Field })]), [["label", "value"], .. InferForms.Select(f => new object?[] { f.Label, AsText(f.Field) })]),
+				WrittenSheet.Csv("Columns", ColumnsCsv, columns),
+				WrittenSheet.Csv("Later", "Id,Amount\r\n1,10\r\n2,20\r\n00123,N/A\r\n4,40\r\n", later, inferTypes: 2),
+			]);
+	}
+
+	/// <summary>"converted-text.xlsx": <c>infer.csv</c>'s forms converted with <see cref="CsvToExcelOptions.InferTypes"/> 0, every field a text cell.</summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook ConvertedText() =>
+		new(
+			"converted-text.xlsx",
+			"infer.csv's forms converted as text (InferTypes 0): every field a text cell of its text",
+			new ExcelWriterOptions(),
+			[
+				WrittenSheet.Csv("Forms", Csv([[.. InferForms.Select(f => f.Label)], [.. InferForms.Select(f => f.Field)]]), [[.. InferForms.Select(f => (object?)f.Label)], [.. InferForms.Select(f => AsText(f.Field))]], inferTypes: 0),
+			]);
+
+	/// <summary>
+	/// "converted-de.xlsx": a de-DE CSV, separated by <c>;</c>, read with the de-DE culture: its numbers' decimal comma, and
+	/// a column of numbers in the invariant culture's form and with grouping, which is text.
+	/// </summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook ConvertedGerman()
+	{
+		object?[][] rows =
+		[
+			["Name", "Menge", "Preis", "Datum", "Zeit", "Bezahlt", "Code"],
+			["Äpfel", 3m, 1.5m, new DateTime(2024, 1, 15), new DateTime(2024, 1, 15, 10, 30, 0), true, "1.5"],
+			["Birnen", -4m, -2.25m, new DateTime(2024, 1, 16), new DateTime(2024, 1, 16, 23, 59, 59, 500), false, "1.234,5"],
+			["Kirschen", 1000m, 1500m, new DateTime(2024, 2, 29), new DateTime(2024, 2, 29), true, "0,5"],
+		];
+		const string Csv =
+			"Name;Menge;Preis;Datum;Zeit;Bezahlt;Code\r\n" +
+			"Äpfel;3;1,5;2024-01-15;2024-01-15 10:30;true;1.5\r\n" +
+			"Birnen;-4;-2,25;2024-01-16;2024-01-16 23:59:59.5;FALSE;1.234,5\r\n" +
+			"Kirschen;1000;1,5E3;2024-02-29;2024-02-29T00:00;True;0,5\r\n";
+
+		return new WrittenWorkbook(
+			"converted-de.xlsx",
+			"a de-DE CSV converted with each column's type inferred: decimal commas, and numbers in other forms as text",
+			new ExcelWriterOptions(),
+			[WrittenSheet.Csv("Preise", Csv, rows, new CsvReaderOptions { Separator = ';', FormatProvider = CultureInfo.GetCultureInfo("de-DE") })]);
+	}
+
+	/// <summary>
+	/// "converted-options.xlsx": CSV converted with <see cref="ExcelLongNumbers.Number"/> and
+	/// <see cref="ExcelDateTimeOffsets.Utc"/>: long numbers and dates and times with offsets typed, and a date before 1900
+	/// a text cell of its own text in a column of dates.
+	/// </summary>
+	/// <returns>The workbook.</returns>
+	private static WrittenWorkbook ConvertedOptions()
+	{
+		object?[][] rows =
+		[
+			["Id", "At", "Day"],
+			[1234567890123456m, new DateTime(2024, 1, 15, 9, 30, 0), "1899-12-31"],
+			[12345678901234567890m, new DateTime(2024, 1, 15, 10, 30, 0), new DateTime(1900, 1, 1)],
+		];
+		const string Csv = "Id,At,Day\r\n1234567890123456,2024-01-15T10:30:00+01:00,1899-12-31\r\n12345678901234567890,2024-01-15 10:30Z,1900-01-01\r\n";
+
+		return new WrittenWorkbook(
+			"converted-options.xlsx",
+			"CSV converted with LongNumbers = Number and DateTimeOffsets = Utc, and a date before 1900 in a column of dates",
+			new ExcelWriterOptions { LongNumbers = ExcelLongNumbers.Number, DateTimeOffsets = ExcelDateTimeOffsets.Utc },
+			[WrittenSheet.Csv("Options", Csv, rows)]);
+	}
+
+	/// <summary>A field's text cell: the field, or no cell for an empty one.</summary>
+	/// <param name="field">The field.</param>
+	/// <returns>The cell's value.</returns>
+	private static object? AsText(string field) => field.Length == 0 ? null : field;
+
+	/// <summary>CSV of records of fields, each quoted when it has a comma, a quote or a line break, with CR LF after each.</summary>
+	/// <param name="records">The records.</param>
+	/// <returns>The CSV.</returns>
+	private static string Csv(IEnumerable<IEnumerable<string>> records) =>
+		string.Concat(records.Select(r => string.Join(",", r.Select(f => f.IndexOfAny([',', '"', '\r', '\n']) >= 0 ? "\"" + f.Replace("\"", "\"\"") + "\"" : f)) + "\r\n"));
 }
 
 /// <summary>A workbook of the written set.</summary>
@@ -1013,6 +1204,12 @@ internal sealed class WrittenSheet
 
 	/// <summary>Writes it asynchronously.</summary>
 	public Func<ExcelWorkbookWriter, Task> WriteAsync { get; }
+
+	/// <summary>The CSV a converted sheet is written from (<see cref="Csv(string, string, IReadOnlyList{IReadOnlyList{object}}, CsvReaderOptions, int, WrittenLook)"/>), or <see langword="null"/> for a sheet of values.</summary>
+	public string? CsvText { get; private init; }
+
+	/// <summary>The options a converted sheet's CSV is read with, or <see langword="null"/> for the default ones.</summary>
+	public CsvReaderOptions? CsvOptions { get; private init; }
 
 	/// <summary>
 	/// A sheet of records, written by <typeparamref name="T"/>'s record writer with its header: a column per public property,
@@ -1122,6 +1319,40 @@ internal sealed class WrittenSheet
 		}
 
 		return new WrittenSheet(name, names, columns, rows, given, null, Write, WriteAsync);
+	}
+
+	/// <summary>
+	/// A sheet of CSV converted to cells, each column's type inferred (Phase 6): written by
+	/// <see cref="ExcelWorkbookWriter.WriteSheet(string, CsvReader, ExcelSheetOptions?, int)"/> from a reader of the CSV, its
+	/// rows the cells inference should make, the header first: a decimal for a number, a <see cref="DateTime"/> for a date,
+	/// a boolean, a string for a text cell, and <see langword="null"/> for no cell. The CSV has a header, as the workbook's
+	/// <see cref="CsvWriterOptions.HasHeader"/> says the oracle's sheets do.
+	/// </summary>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="csv">The CSV.</param>
+	/// <param name="rows">The cells inference should make, the header first.</param>
+	/// <param name="reader">The CSV reader's options, or <see langword="null"/> for the default ones.</param>
+	/// <param name="inferTypes">The records that decide each column's type.</param>
+	/// <param name="look">Its look, or <see langword="null"/> for none: the workbook's <see cref="ExcelWriterOptions.Sheets"/>.</param>
+	/// <returns>The sheet.</returns>
+	public static WrittenSheet Csv(string name, string csv, IReadOnlyList<IReadOnlyList<object?>> rows, CsvReaderOptions? reader = null, int inferTypes = 1000, WrittenLook? look = null)
+	{
+		var given = look ?? WrittenLook.None;
+		var columns = Enumerable.Range(0, rows.Max(r => r.Count)).Select(i => new WrittenColumn(rows[0].ElementAtOrDefault(i) as string ?? "", null, null)).ToList();
+
+		void Write(ExcelWorkbookWriter workbook)
+		{
+			using var records = CsvReader.Create(Encoding.UTF8.GetBytes(csv), reader);
+			workbook.WriteSheet(name, records, given.Options, inferTypes);
+		}
+
+		async Task WriteAsync(ExcelWorkbookWriter workbook)
+		{
+			using var records = CsvReader.Create(Encoding.UTF8.GetBytes(csv), reader);
+			await workbook.WriteSheetAsync(name, records, given.Options, inferTypes);
+		}
+
+		return new WrittenSheet(name, null, columns, rows, given, null, Write, WriteAsync) { CsvText = csv, CsvOptions = reader };
 	}
 
 	/// <summary>Merges a look's ranges that come before a row.</summary>

@@ -1,6 +1,6 @@
 # CsvHelper.Excel's test corpus
 
-Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, the orders on 2026-11-04, and the messy workbooks, with Excel's answers about every workbook's tables, names, hidden rows and columns and merged ranges, on 2026-11-05; the four from Apache POI's test data are under "Downloads". Excel's answers about the workbooks CsvHelper.Excel writes, which aren't kept here, were written on 2026-11-07, and again with their looks on 2026-11-11.
+Workbooks written by real producers, for the corpus and oracle tests in `tests/CsvHelper.Excel.Tests/Corpus`. The tests only read these files. `tools/CsvHelper.Excel.Corpus` writes them again on demand, on Windows; it never runs in CI. The basic workbooks were written on 2026-11-02, the typed workbooks and Excel's answers on 2026-11-03, the orders on 2026-11-04, and the messy workbooks, with Excel's answers about every workbook's tables, names, hidden rows and columns and merged ranges, on 2026-11-05; the four from Apache POI's test data are under "Downloads". Excel's answers about the workbooks CsvHelper.Excel writes, which aren't kept here, were written on 2026-11-07, again with their looks on 2026-11-11, and again with workbooks converted from CSV on 2026-11-14.
 
 ```
 dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
@@ -50,7 +50,7 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 
 ## Excel's reading of written workbooks
 
-`excel-written/<name>.json` (written 2026-11-07 by `written`, Excel 365 16.0 build 20527 at 144 DPI, and again on 2026-11-11 with the presentation workbooks and every sheet's look, every Phase 4 cell's answer unchanged) records what Excel reads in each workbook of the `written` content set: workbooks CsvHelper.Excel writes. `Corpus/WrittenAnswersTests.cs` writes each again and compares.
+`excel-written/<name>.json` (written 2026-11-07 by `written`, Excel 365 16.0 build 20527 at 144 DPI, again on 2026-11-11 with the presentation workbooks and every sheet's look, every Phase 4 cell's answer unchanged, and again on 2026-11-14 with the converted workbooks, every other answer byte for byte as it was) records what Excel reads in each workbook of the `written` content set: workbooks CsvHelper.Excel writes. `Corpus/WrittenAnswersTests.cs` writes each again and compares.
 
 - **The set:** defined once in `tools/CsvHelper.Excel.Corpus/Written.cs`, which the tests link. Nothing in it depends on the machine: no time zone, no current culture, no clock.
   - `types.xlsx`: every type of Phase 4's "What a field becomes" that .NET Framework has, at its edges (integers to their limits, 15 and 16 significant digits, 17-digit doubles, subnormals, `NaN` and the infinities; dates around 1900-02-29, Excel's last millisecond, before 1900, each `Kind`, half a millisecond; durations, negative ones, offsets as text; booleans, characters, Guids, enums, URIs), and a column whose first value is narrower than a later one.
@@ -72,6 +72,11 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
     - `links.xlsx` (`Web`) and `links-all.xlsx` (`All`): links in the `Hyperlink` style and URIs left as text; a shared target, an escaped letter past ASCII, a share, a Windows path, a relative path, a jump within the workbook; in a table and in a column's format and wrap; a header's URI as text.
     - `newsheet-look.xlsx`: `RowLimit = NewSheet` at four rows a sheet, each sheet repeating its title, table or filter, frozen panes and widths.
     - `presentation.xlsx`: every setting together.
+  - And four of CSV converted to sheets (Phase 6), with the default look, each sheet written by `ExcelWorkbookWriter.WriteSheet` from a reader of its CSV, and its rows the cells inference should make (a decimal for a number, a date, a boolean, text):
+    - `converted.xlsx`: the forms of the design's `infer.csv` (`Csv\_bench\results\phase6\design`), a column each, so that each form alone decides its column's type; `infer.csv` as it is, whose values share a column, which is text; columns of several records (dates alone among dates and times); and columns two records decide, with later fields that don't match.
+    - `converted-text.xlsx`: the same forms with `InferTypes = 0`, every field a text cell.
+    - `converted-de.xlsx`: a de-DE CSV separated by `;`: decimal commas, an exponent, and numbers in the invariant form and with grouping, which are text.
+    - `converted-options.xlsx`: `LongNumbers = Number` and `DateTimeOffsets = Utc`, and a date before 1900, a text cell of its own text, in a column of dates.
 - **How:** the command writes each workbook into a temporary folder and Excel opens it read-only, with calculation automatic, since the writer's formulas have no cached values, and with macros disabled. The columns keep the widths written, so that a value its column is too narrow for shows as `########`. Each workbook's window is given a size before its panes are read, since an invisible Excel lays out a workbook opened after the first in a window with no room, and then reports a frozen split clipped to it. Excel's own AutoFit runs last, on each column. No workbook is kept: the tests write them again.
 - **What:** for each workbook:
   - `sha256`: the SHA-256 of its parts, each entry's name and inflated bytes with their lengths, in the package's order. The file's own bytes differ between runtimes, since deflate does (zlib-ng on .NET 9 and later, zlib on .NET 8, .NET Framework's own).
