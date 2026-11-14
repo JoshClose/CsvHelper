@@ -107,6 +107,29 @@ dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- all
 - **What Excel showed of the look:** every presentation workbook opened as it is, and every sheet looks as its settings say: no difference is listed. Auto-fit's widths are as wide as Excel's AutoFit or a little wider, but where auto-fit counts otherwise by design (the text cap, held rows, formulas, dates at midnight, a title over one column, `NewSheet`'s widths).
 - **LibreOffice 26.8.2.2** shows Excel's text but: serials before 61 a day earlier (its 1900 system has no 1900-02-29); a CR in text with an LF as LF; `_xHHHH_` in formulas undecoded; a missing sheet as `#NAME?`; a percent's result as `2.00%`; `A/P` in lower case; `AM/PM` under `[$-407]` as `vorm.` and `nachm.`; a value its column is too narrow for; ja-JP's and de-DE's months as .NET writes them; and a boolean in a number format as 1 or 0. It keeps the look but for its own ways above, and writes a file's or a relative target against the folder it saves in, and a jump within the workbook as a link to its own file.
 
+## GridCraft's reading
+
+ArtCraft's GridCraft, a spreadsheet application that reads workbooks as Excel does, is another product the tests compare with Excel's answers, as LibreOffice is (added 2026-11-14, with GridCraft 0.18.0). Nothing of it is kept here: `Corpus/GridCraftTests.cs` asks it during the run, where it's installed (`CSVHELPER_GRIDCRAFT`, else `C:\Program Files\GridCraft\gridcraft-cli.exe`), and is skipped elsewhere; CI doesn't install it.
+
+- **How:** `gridcraft-cli run --in <file> --script <file>` opens a workbook headless and runs its MCP's commands, a line of JSON out for each: `sheet.read` for each worksheet's cells with a value, then `cell.get` for each of them and each cell Excel answered about (type, value, text as shown, formula, number format, link). `info --json` gives each worksheet's panes, filter, tables and merged ranges, and the names, and `convert` to JSON the hidden rows and columns. A run of every test takes about 8 seconds.
+- **What:**
+  - every corpus workbook with Excel's answers: each cell, against `excel-oracle`, and the merged ranges, hidden rows and columns, tables and names;
+  - every workbook of the written set as the run writes it, the converted ones among them: each cell, against `excel-written`, and its panes, filter, tables, merged ranges, hidden columns, links and names;
+  - `Conversion/RoundTripTests.cs`' workbooks converted from CSV: each cell's value and type by the test's own rules, beside ClosedXML's and ExcelDataReader's.
+- **The comparison** allows for how each reports a cell: a type by its family (Excel's `date` and `currency` are numbers); a format's code without `\`, quotes and case, which Excel's `NumberFormat` drops or changes, and an xf without a code as General; `#` signs of any length; Excel's `Text`, which stops at 8,221 characters; a table without a style; and a link's address and fragment as one target. GridCraft recalculates every formula when it opens a workbook and can't show a cached value, which Excel's answers about the corpus are, so a corpus formula's value isn't compared.
+- **What GridCraft 0.18.0 showed:** it reads every cell as Excel does but where the tests list, each with its reason:
+  - General's `0.00001` and `0.0000001` as `1E-05` and `1E-07`, and a minus sign counted in its 11 characters;
+  - General for the built-in format ids Excel maps by its locale (27–36, 50–58 and 59–81), and the specification's codes for 37 and 47 (`mmss.0`);
+  - day and month names in English under `[$-407]`, `[$-40C]`, `[$-411]` and `[$-415]`;
+  - a boolean without its format's text section; `[h]` after a date as the hours since 1900; the 1904 system's negative serials as `########`;
+  - a Strict workbook's `dateCompatibility="0"` ignored; a pivot table's cells, which Excel builds, empty;
+  - a legacy array formula's other cells without a formula, a structured reference within its own table with the table's name, and a formula's line breaks dropped;
+  - the largest double written past its range (Excel's `#NULL!`) as no value, and a subnormal (Excel's 0) kept; white space kept around a text without `xml:space="preserve"`;
+  - `_xHHHH_` undecoded in a formula's strings and its `str` value, and `_x005F_` in a sheet's name;
+  - no hidden row past the file's last that a default height of 0 hides, nor one of height 0 without `hidden`; no built-in or `_xlfn.` name, and a deleted sheet's range as `=#REF!`; a link to a file as its `file:` URI;
+  - and the written set's text at any width, where Excel's answers show `########` or General narrowed to the column.
+  - The round trips' workbooks read as the tests expect, every cell.
+
 ## The typed workbook
 
 Defined once in `tools/CsvHelper.Excel.Corpus/Typed.cs`, which `spec` doesn't print; the tool hands it to the Python and Java scripts as JSON. Each producer writes as much of it as its library can.

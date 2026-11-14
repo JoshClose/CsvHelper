@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Text;
+using CsvHelper.Excel.Tests.Corpus;
 using CsvHelper.Excel.Tests.Writing;
 
 namespace CsvHelper.Excel.Tests.Conversion;
@@ -13,6 +14,12 @@ namespace CsvHelper.Excel.Tests.Conversion;
 /// </summary>
 public class RoundTripTests
 {
+	/// <summary>A field of each form, and a date and time before 1900 in a column of dates and times.</summary>
+	private const string FieldsCsv =
+		"Name,Qty,Price,Exp,Day,At,Precise,Early,Paid,Code,Note\r\n" +
+		"apple,3,1.50,1e5,2024-01-15,2024-01-15 10:30,2024-01-15T10:30:00.1234567,1899-12-31 10:30,true,00123,\"a, b\"\r\n" +
+		"pear,-4,-0.25,2.5E-3,2024-02-29,2024-02-29,2024-02-29T23:59:59.9996,2024-01-15 10:30,False,123,\r\n";
+
 	/// <summary>Fields near a type's form that match none with the default options: text in any column.</summary>
 	private static readonly string[] NearMisses =
 	[
@@ -49,11 +56,6 @@ public class RoundTripTests
 	[MemberData(nameof(Modes))]
 	public async Task GivesEachFieldBack(bool async)
 	{
-		const string Csv =
-			"Name,Qty,Price,Exp,Day,At,Precise,Early,Paid,Code,Note\r\n" +
-			"apple,3,1.50,1e5,2024-01-15,2024-01-15 10:30,2024-01-15T10:30:00.1234567,1899-12-31 10:30,true,00123,\"a, b\"\r\n" +
-			"pear,-4,-0.25,2.5E-3,2024-02-29,2024-02-29,2024-02-29T23:59:59.9996,2024-01-15 10:30,False,123,\r\n";
-
 		// A number comes back as its cell's text, its exponent's e as E; a date and time as the reader's ISO 8601 text of it,
 		// rounded to the millisecond (into the next day), and one before 1900, a text cell, as it was; a boolean in capitals;
 		// text as it was.
@@ -61,14 +63,14 @@ public class RoundTripTests
 			"Name,Qty,Price,Exp,Day,At,Precise,Early,Paid,Code,Note\r\n" +
 			"apple,3,1.50,1E5,2024-01-15,2024-01-15T10:30:00,2024-01-15T10:30:00.123,1899-12-31 10:30,TRUE,00123,\"a, b\"\r\n" +
 			"pear,-4,-0.25,2.5E-3,2024-02-29,2024-02-29,2024-03-01,2024-01-15T10:30:00,FALSE,123,\r\n",
-			await RoundTripAsync(Csv, async));
+			await RoundTripAsync(FieldsCsv, async));
 
 		// A culture's numbers come back in the invariant culture's form.
 		var german = new CsvToExcelOptions { Csv = new CsvReaderOptions { Separator = ';', FormatProvider = new CultureInfo("de-DE") } };
 		Assert.Equal("Preis,Menge\r\n1.5,-2\r\n-0.25,3\r\n", await RoundTripAsync("Preis;Menge\r\n1,5;-2\r\n-0,25;3\r\n", async, german));
 
 		// Text cells give every field back.
-		Assert.Equal(Csv, await RoundTripAsync(Csv, async, new CsvToExcelOptions { InferTypes = 0 }));
+		Assert.Equal(FieldsCsv, await RoundTripAsync(FieldsCsv, async, new CsvToExcelOptions { InferTypes = 0 }));
 	}
 
 	[Theory]
@@ -76,6 +78,80 @@ public class RoundTripTests
 	public async Task MakesAColumnWithANearMissText(bool async)
 	{
 		// Each near miss below a field of the type it is near: every column is text, each field as it was.
+		var (header, pairs, csv) = NearMissCsv();
+		var workbook = await ToExcelAsync(csv, async);
+
+		AssertSame("near misses", "ClosedXML", NearMissCells(header, pairs), Written.ClosedXmlValues(workbook));
+		Assert.Equal([[.. header], [.. pairs.Select(p => p.Valid)], [.. pairs.Select(p => p.Miss)]], Records(await ToCsvAsync(workbook, async)));
+	}
+
+	[GridCraftFact]
+	public async Task GridCraftReadsTheNearMisses()
+	{
+		var (header, pairs, csv) = NearMissCsv();
+
+		AssertSame("near misses", "GridCraft", NearMissCells(header, pairs), GridCraft.Values(await ToExcelAsync(csv, false)));
+	}
+
+	[GridCraftFact]
+	public async Task GridCraftReadsEachField()
+	{
+		// GivesEachFieldBack's cells: numbers, dates and dates and times to the millisecond (into the next day), the date and
+		// time before 1900 as its text, booleans, and text.
+		object?[][] rows =
+		[
+			["Name", "Qty", "Price", "Exp", "Day", "At", "Precise", "Early", "Paid", "Code", "Note"],
+			["apple", 3d, 1.5, 1e5, new DateTime(2024, 1, 15), new DateTime(2024, 1, 15, 10, 30, 0), new DateTime(2024, 1, 15, 10, 30, 0, 123), "1899-12-31 10:30", true, "00123", "a, b"],
+			["pear", -4d, -0.25, 2.5e-3, new DateTime(2024, 2, 29), new DateTime(2024, 2, 29), new DateTime(2024, 3, 1), new DateTime(2024, 1, 15, 10, 30, 0), false, "123", null],
+		];
+		var expected = rows.SelectMany((row, r) => row.Select((cell, c) => (Cell: cell, Column: c)).Where(x => x.Cell is not null).Select(x => $"{CellReference.ColumnName(x.Column)}{r + 1}={ClosedXmlValue(x.Cell!)}")).ToList();
+
+		AssertSame("each field", "GridCraft", expected, GridCraft.Values(await ToExcelAsync(FieldsCsv, false)));
+	}
+
+	[Theory]
+	[MemberData(nameof(Seeds))]
+	public async Task GivesRandomColumnsBack(int seed)
+	{
+		var (description, rows, columns, csv) = RandomCsv(seed);
+		var async = seed % 2 == 1;
+		var workbook = await ToExcelAsync(csv, async);
+
+		Assert.True(Written.ValidationErrors(workbook).Count == 0, description + ": " + string.Join("; ", Written.ValidationErrors(workbook)));
+
+		// ClosedXML's values, cell by cell. ClosedXML reads a line feed in a cell's text as CR LF, which the cell doesn't hold
+		// (ExcelDataReader reads it as written).
+		AssertSame(description, "ClosedXML", RandomCells(rows, columns), [.. Written.ClosedXmlValues(workbook).Select(v => v.Replace("\r\n", "\n"))]);
+
+		// ExcelDataReader's values, row by row.
+		var dataReader = new List<string> { string.Join("|", ["String:id", .. columns.Select((_, i) => $"String:c{i + 1}")]) };
+		dataReader.AddRange(Enumerable.Range(0, rows).Select(r => string.Join("|", [$"String:r{r + 1}", .. columns.Select(c => c.Cells[r] is { } cell ? DataReaderValue(cell) : "")])));
+		AssertSame(description, "ExcelDataReader", dataReader, Written.ExcelDataReaderValues(workbook));
+
+		// And back to CSV, record by record.
+		List<string[]> back = [["id", .. columns.Select((_, i) => $"c{i + 1}")]];
+		back.AddRange(Enumerable.Range(0, rows).Select(r => (string[])[$"r{r + 1}", .. columns.Select(c => c.Back[r])]));
+		var records = Records(await ToCsvAsync(workbook, async));
+		Assert.Equal(back.Count, records.Count);
+		foreach (var (want, got) in back.Zip(records, (w, g) => (w, g)))
+		{
+			Assert.Equal(want, got);
+		}
+	}
+
+	[GridCraftTheory]
+	[MemberData(nameof(Seeds))]
+	public async Task GridCraftReadsTheRandomColumns(int seed)
+	{
+		var (description, rows, columns, csv) = RandomCsv(seed);
+
+		AssertSame(description, "GridCraft", RandomCells(rows, columns), GridCraft.Values(await ToExcelAsync(csv, false)));
+	}
+
+	/// <summary>Each near miss below a field of the type it is near, a column each.</summary>
+	/// <returns>The columns' names, each column's field and near miss, and the CSV.</returns>
+	private static (List<string> Header, List<(string Valid, string Miss)> Pairs, string Csv) NearMissCsv()
+	{
 		(string Valid, string[] Misses)[] types =
 		[
 			("123", ["00123", "007", "+5", ".5", "5.", "1.", "1e", "1E+", "1,5", "1,234", "$5", "50%", " 5", "5 ", "0x10", "NaN", "Infinity", "-", "--1", "1.5.5", "1234567890123456", "1E308", "1E400", "1E-308", "1E-400"]),
@@ -87,21 +163,28 @@ public class RoundTripTests
 		var header = pairs.Select((_, i) => $"c{i + 1}").ToList();
 		var csv = string.Join(",", header) + "\r\n" + string.Join(",", pairs.Select(p => p.Valid)) + "\r\n" + string.Join(",", pairs.Select(p => Quoted(p.Miss))) + "\r\n";
 
-		var workbook = await ToExcelAsync(csv, async);
+		return (header, pairs, csv);
+	}
 
+	/// <summary>The near misses' cells, each a text cell of its field, as <see cref="Written.ClosedXmlValues"/> gives them.</summary>
+	/// <param name="header">The columns' names.</param>
+	/// <param name="pairs">Each column's field and near miss.</param>
+	/// <returns>The cells.</returns>
+	private static List<string> NearMissCells(List<string> header, List<(string Valid, string Miss)> pairs)
+	{
 		List<string> expected = [.. header.Select((h, i) => $"{CellReference.ColumnName(i)}1=Text:{h}")];
 		expected.AddRange(pairs.Select((p, i) => $"{CellReference.ColumnName(i)}2=Text:{p.Valid}"));
 		expected.AddRange(pairs.Select((p, i) => $"{CellReference.ColumnName(i)}3=Text:{p.Miss}"));
-		AssertSame("near misses", "ClosedXML", expected, Written.ClosedXmlValues(workbook));
-		Assert.Equal([[.. header], [.. pairs.Select(p => p.Valid)], [.. pairs.Select(p => p.Miss)]], Records(await ToCsvAsync(workbook, async)));
+
+		return expected;
 	}
 
-	[Theory]
-	[MemberData(nameof(Seeds))]
-	public async Task GivesRandomColumnsBack(int seed)
+	/// <summary>A seed's random columns.</summary>
+	/// <param name="seed">The seed.</param>
+	/// <returns>A description for messages, the number of records, the columns and the CSV.</returns>
+	private static (string Description, int Rows, List<Column> Columns, string Csv) RandomCsv(int seed)
 	{
 		var random = new Random(seed);
-		var async = seed % 2 == 1;
 		var rows = random.Next(1, 25);
 		var columns = Enumerable.Range(0, random.Next(1, 9)).Select(_ => RandomColumn(random, rows)).ToList();
 		var csv = new StringBuilder("id");
@@ -124,11 +207,16 @@ public class RoundTripTests
 		}
 
 		var description = $"seed {seed}: " + string.Join(", ", columns.Select((c, i) => $"c{i + 1} {c.Type}"));
-		var workbook = await ToExcelAsync(csv.ToString(), async);
 
-		Assert.True(Written.ValidationErrors(workbook).Count == 0, description + ": " + string.Join("; ", Written.ValidationErrors(workbook)));
+		return (description, rows, columns, csv.ToString());
+	}
 
-		// ClosedXML's values, cell by cell.
+	/// <summary>A seed's random columns' cells, row by row, as <see cref="Written.ClosedXmlValues"/> gives them.</summary>
+	/// <param name="rows">The number of records.</param>
+	/// <param name="columns">The columns.</param>
+	/// <returns>The cells.</returns>
+	private static List<string> RandomCells(int rows, List<Column> columns)
+	{
 		var expected = new List<string> { "A1=Text:id" };
 		expected.AddRange(columns.Select((_, i) => $"{CellReference.ColumnName(i + 1)}1=Text:c{i + 1}"));
 		for (var r = 0; r < rows; r++)
@@ -137,23 +225,7 @@ public class RoundTripTests
 			expected.AddRange(columns.Select((c, i) => (c.Cells[r], i)).Where(c => c.Item1 is not null).Select(c => $"{CellReference.ColumnName(c.i + 1)}{r + 2}={ClosedXmlValue(c.Item1!)}"));
 		}
 
-		// ClosedXML reads a line feed in a cell's text as CR LF, which the cell doesn't hold (ExcelDataReader reads it as written).
-		AssertSame(description, "ClosedXML", expected, [.. Written.ClosedXmlValues(workbook).Select(v => v.Replace("\r\n", "\n"))]);
-
-		// ExcelDataReader's values, row by row.
-		var dataReader = new List<string> { string.Join("|", ["String:id", .. columns.Select((_, i) => $"String:c{i + 1}")]) };
-		dataReader.AddRange(Enumerable.Range(0, rows).Select(r => string.Join("|", [$"String:r{r + 1}", .. columns.Select(c => c.Cells[r] is { } cell ? DataReaderValue(cell) : "")])));
-		AssertSame(description, "ExcelDataReader", dataReader, Written.ExcelDataReaderValues(workbook));
-
-		// And back to CSV, record by record.
-		List<string[]> back = [["id", .. columns.Select((_, i) => $"c{i + 1}")]];
-		back.AddRange(Enumerable.Range(0, rows).Select(r => (string[])[$"r{r + 1}", .. columns.Select(c => c.Back[r])]));
-		var records = Records(await ToCsvAsync(workbook, async));
-		Assert.Equal(back.Count, records.Count);
-		foreach (var (want, got) in back.Zip(records, (w, g) => (w, g)))
-		{
-			Assert.Equal(want, got);
-		}
+		return expected;
 	}
 
 	/// <summary>Converts CSV to a workbook and back to CSV, as the mode says.</summary>

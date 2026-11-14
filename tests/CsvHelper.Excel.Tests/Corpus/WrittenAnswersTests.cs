@@ -471,7 +471,16 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 	/// <summary>A workbook of the set and its answers, or <see langword="null"/> answers when this runtime's culture data isn't theirs.</summary>
 	/// <param name="name">The workbook's name.</param>
 	/// <returns>The workbook and its answers.</returns>
-	private (WrittenWorkbook Workbook, WrittenAnswers? Answers) Comparable(string name)
+	private (WrittenWorkbook Workbook, WrittenAnswers? Answers) Comparable(string name) => Comparable(name, output);
+
+	/// <summary>
+	/// A workbook of the set and its answers, or <see langword="null"/> answers when this runtime's culture data isn't theirs,
+	/// which the tests' output then says.
+	/// </summary>
+	/// <param name="name">The workbook's name.</param>
+	/// <param name="output">The tests' output.</param>
+	/// <returns>The workbook and its answers.</returns>
+	internal static (WrittenWorkbook Workbook, WrittenAnswers? Answers) Comparable(string name, ITestOutputHelper output)
 	{
 		var workbook = Written.Workbooks.Single(w => w.Name == name);
 		var answers = WrittenAnswers.Load(name);
