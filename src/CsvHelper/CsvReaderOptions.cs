@@ -181,6 +181,14 @@ public sealed record CsvReaderOptions
 	public char? CommentPrefix { get; init; }
 
 	/// <summary>
+	/// The number of lines at the start of the input to skip, such as a title or a report date above the header.
+	/// Defaults to 0. The lines are not parsed, so quotes and separators in them have no effect, and the separator is
+	/// detected from the lines after them. A line ends at CR, LF or CR LF; a byte order mark is not a line. Skipped lines
+	/// count for <see cref="CsvReader.LineNumber"/>.
+	/// </summary>
+	public int SkipLines { get; init; }
+
+	/// <summary>
 	/// Whether spaces and tabs around field values are removed. Whitespace inside quotes is kept, a quote that follows
 	/// leading whitespace still opens a quoted field, and escaped whitespace is kept. Defaults to
 	/// <see langword="null"/>: values are trimmed in <see cref="CsvMode.FixedWidth"/> mode (where columns are padded)
@@ -335,6 +343,8 @@ public sealed record CsvReaderOptions
 		{
 			throw new ArgumentOutOfRangeException(nameof(MaxRecordSize), MaxRecordSize, "MaxRecordSize must be positive.");
 		}
+
+		if (SkipLines < 0) throw new ArgumentOutOfRangeException(nameof(SkipLines), SkipLines, "SkipLines cannot be negative.");
 
 		ValidateWhitespace();
 		ValidateValues(NullValues, nameof(NullValues));

@@ -72,6 +72,27 @@ public class SeparatorStreamTests
 	}
 
 	[Fact]
+	public void PassesSkippedLinesThrough()
+	{
+		// A quote at the start of a skipped line would otherwise open a field that runs over the records.
+		var text = "\"Report||2026\r\r\nId||Name\n1||\"a||b\"\n";
+		var options = new CsvReaderOptions { SkipLines = 2 };
+		using (var reader = CsvReader.Create(Stream(text), options))
+		{
+			Assert.Equal(["Id", "Name"], reader.Headers);
+			Assert.Equal([["1", "a||b"]], TestUtil.ReadAll(reader));
+		}
+
+		// The skipped lines are not changed, wherever the reads of the stream split them.
+		for (var seed = 0; seed < 20; seed++)
+		{
+			var stream = new CsvSeparatorStream(new ChunkedStream(Encoding.UTF8.GetBytes(text), seed, 1 + seed % 3), "||");
+			stream.Attach(options);
+			Assert.Equal($"\"Report||2026\r\r\nId{Unit}Name\n1{Unit}\"a||b\"\n", ReadAllText(stream));
+		}
+	}
+
+	[Fact]
 	public void OpensQuotesAfterTrimmedWhitespace()
 	{
 		var options = new CsvReaderOptions { TrimWhitespace = true, HasHeader = false };

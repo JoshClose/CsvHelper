@@ -111,7 +111,7 @@ recovered from instead of thrown, which is what `BadDataFound = null` asked for.
 | `TrimOptions.InsideQuotes` | `TrimInsideQuotes` | |
 | `WhiteSpaceChars` | `WhitespaceCharacters` | A string; defaults to space and tab. |
 | `PrepareHeaderForMatch` | `NormalizeHeaderName` | A `Func<string, string>`; usually not needed (see above). |
-| `ShouldSkipRecord` | `ShouldSkipRecord` | Gets the record as a `CsvRow`. |
+| `ShouldSkipRecord` | `ShouldSkipRecord`, `SkipLines` | Gets the record as a `CsvRow`, and only data records. Lines above the header are skipped with `SkipLines` (from 34.1). |
 | `BadDataFound` | `MalformedData`, `OnMalformedRecord` | See [Bad data and errors](#bad-data-and-errors). |
 | `LineBreakInQuotedFieldIsBadData` | `AllowLineBreaksInQuotes = false` | |
 | `MissingFieldFound` | `MissingField` | |
@@ -725,6 +725,7 @@ These compile once the code is ported, but behave differently:
 | Quoting when writing | Also fields that start or end with a space | Only fields that need it; `CsvQuoting.WhenNeededOrWhitespace` keeps the old rule |
 | Dates and times when writing | The culture's default format (`"G"` for `DateTime`) | ISO 8601 (`"O"`) unless you give a format |
 | Columns of `WriteRecords` | Every public property with a getter | The columns that are read: no computed properties |
+| `ShouldSkipRecord` | Also gets the header and the lines above it | Gets data records only; `SkipLines` (from 34.1) skips lines above the header |
 | Field counts when writing | Not checked | A record with another field count than the first throws (`ValidateFieldCount = false` allows it) |
 | When written records reach the destination | At each `NextRecord()` | When the buffer is mostly full, on `Flush` and on `Dispose` |
 | Dynamic records | `IDictionary<string, object>`, can be changed | `CsvDynamicRecord`, read-only |

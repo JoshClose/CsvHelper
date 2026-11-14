@@ -252,6 +252,7 @@ public class FuzzTests
 			SkipMalformed = rng.Next(5) == 0,
 			SkipFieldCountMismatch = rng.Next(7) == 0,
 			PoolStrings = rng.Next(2) == 0,
+			SkipLines = rng.Next(5) == 0 ? rng.Next(1, 4) : 0,
 		};
 	}
 

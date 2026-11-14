@@ -386,4 +386,118 @@ public class ReaderOptionTests
 		Assert.Equal(Enumerable.Range(0, 100_000).Where(i => i % 10 != 7), rows.Select(r => r.Id));
 		Assert.Equal(Enumerable.Range(1, rows.Count).Select(i => (long)i), rows.Select(r => r.RowNumber));
 	}
+
+	[Fact]
+	public void SkipLinesAboveTheHeader()
+	{
+		var csv = "1111 20261105 XXXXXXXXX\r\nId|Name|Age\r\n1|Josh|29\r\n2|Jane|30";
+		using var reader = CsvReader.FromText(csv, new CsvReaderOptions { SkipLines = 1 });
+
+		Assert.Equal(["Id", "Name", "Age"], reader.Headers);
+		Assert.Equal('|', reader.Separator);
+		Assert.Equal([["1", "Josh", "29"], ["2", "Jane", "30"]], TestUtil.ReadAll(reader));
+	}
+
+	[Fact]
+	public void SkippedLinesAreNotParsed()
+	{
+		// A quote that would open a field over the lines after it, and separators that would win the detection.
+		var csv = "\"Sales; by region\r2026;\ttotals;\t\r\n\"\nregion,amount\nNorth,5\n";
+		using var reader = CsvReader.FromText(csv, new CsvReaderOptions { SkipLines = 3 });
+
+		Assert.Equal(',', reader.Separator);
+		Assert.Equal(["region", "amount"], reader.Headers);
+		Assert.Equal([["North", "5"]], TestUtil.ReadAll(reader));
+	}
+
+	[Fact]
+	public async Task SkipLinesFromEverySource()
+	{
+		// Every line ending, with a CR LF and two lone CRs that chunked sources split from what follows them.
+		const string csv = "title \"x\r\n\r\rnote\nh1;h2\r\n1;2\n";
+		var utf8 = Encoding.UTF8.GetBytes(csv);
+		var options = new CsvReaderOptions { SkipLines = 4, TrackLineNumbers = true, BufferSize = 256 };
+		var padded = new byte[utf8.Length + 200];
+		padded.AsSpan().Fill((byte)'\r');
+		utf8.CopyTo(padded, 100);
+		var readers = new List<(string, Func<CsvReader>)>
+		{
+			("string", () => CsvReader.FromText(csv, options)),
+			("byte[]", () => CsvReader.Create(utf8, options)),
+			("memory segment", () => CsvReader.Create(new ReadOnlyMemory<byte>(padded, 100, utf8.Length), options)),
+			("byte order mark", () => CsvReader.Create(new MemoryStream([0xEF, 0xBB, 0xBF, .. utf8]), options)),
+		};
+		for (var seed = 0; seed < 40; seed++)
+		{
+			var s = seed;
+			readers.Add(($"chunked stream {s}", () => CsvReader.Create(new ChunkedStream(utf8, s, 1 + s % 4), options)));
+			readers.Add(($"chunked text reader {s}", () => CsvReader.Create(new ChunkedTextReader(csv, s, 1 + s % 4), options)));
+		}
+
+		foreach (var (source, create) in readers)
+		{
+			var bom = source == "byte order mark" ? 3 : 0;
+			using (var reader = create())
+			{
+				Assert.True(reader.Read(), source);
+				Assert.Equal(["h1", "h2"], reader.Headers);
+				Assert.Equal(["1", "2"], TestUtil.Record(reader));
+				// Skipped lines count for the line numbers, and byte offsets count from the start of the input.
+				Assert.Equal(6, reader.LineNumber);
+				Assert.Equal(24 + bom, reader.ByteOffset);
+				Assert.False(reader.Read(), source);
+			}
+
+			await using (var reader = create())
+			{
+				Assert.True(await reader.ReadAsync(), source);
+				Assert.Equal(["1", "2"], TestUtil.Record(reader));
+				Assert.Equal(6, reader.LineNumber);
+				Assert.False(await reader.ReadAsync(), source);
+			}
+		}
+	}
+
+	[Fact]
+	public void SkipLinesLongerThanTheBuffer()
+	{
+		// Skipped lines are dropped as they are read, so they need not fit in the buffer or in a batch of a parallel read.
+		var csv = new string('x', 600_000) + "\"\n" + new string('y', 70_000) + "\rid\n" +
+				  string.Concat(Enumerable.Range(0, 1000).Select(i => i + "\n"));
+		var utf8 = Encoding.UTF8.GetBytes(csv);
+		var options = new CsvReaderOptions { SkipLines = 2, BufferSize = 256 };
+		using (var reader = CsvReader.Create(new ChunkedStream(utf8, 1, 5000), options))
+		{
+			Assert.Equal(["id"], reader.Headers);
+			Assert.Equal(Enumerable.Range(0, 1000).Select(i => i.ToString()), TestUtil.ReadAll(reader).Select(r => r[0]));
+		}
+
+		using (var reader = CsvReader.Create(new MemoryStream(utf8), options))
+		{
+			Assert.Equal(Enumerable.Range(0, 1000), reader.ParallelEnumerate(r => r.Parse<int>(0)));
+		}
+	}
+
+	[Fact]
+	public void SkipLinesBeforeOtherRules()
+	{
+		// More lines than the input has: nothing is left.
+		using (var reader = CsvReader.FromText("a\nb", new CsvReaderOptions { SkipLines = 5 }))
+		{
+			Assert.False(reader.Read());
+			Assert.Empty(reader.Headers);
+		}
+
+		// Without a header, the first line after the skipped ones is data; empty lines and comments count as lines.
+		Assert.Equal(["1|2"], Lines("\n#x\n1,2\n", new CsvReaderOptions { SkipLines = 2, HasHeader = false, CommentPrefix = '#' }));
+		// Excel's sep= line is a line like any other, and is honored right after the skipped ones.
+		Assert.Equal(["1|2"], Lines("title\nsep=|\nh1|h2\n1|2\n", new CsvReaderOptions { SkipLines = 1 }));
+		Assert.Equal(["1|2"], Lines("sep=;\nh,x\n1,2\n", new CsvReaderOptions { SkipLines = 1 }));
+		// Fixed-width files too.
+		Assert.Equal(["ab|12"], Lines("Report\r\nab 12\n", new CsvReaderOptions
+		{
+			Mode = CsvMode.FixedWidth, FieldWidths = [3, 2], SkipLines = 1, HasHeader = false,
+		}));
+		Assert.Throws<ArgumentOutOfRangeException>(() => CsvReader.FromText("a", new CsvReaderOptions { SkipLines = -1 }));
+	}
 }

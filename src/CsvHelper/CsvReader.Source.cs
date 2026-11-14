@@ -24,6 +24,7 @@ public sealed partial class CsvReader
 	private char[]? chars;
 	private int charsPending;
 	private bool hintChecked;
+	private int linesToSkip;                // SkipLines: the lines at the start of the input not skipped yet
 
 	/// <summary>Creates a reader over a stream. The stream is read sequentially; it does not need to be seekable.</summary>
 	/// <param name="stream">
@@ -396,6 +397,8 @@ public sealed partial class CsvReader
 			if (!CheckEncoding()) return false;
 		}
 
+		if (linesToSkip > 0 && !TrySkipLines()) return false;
+
 		if (options.DetectSeparatorHint && !hintChecked && !fixedWidth)
 		{
 			// Excel's "sep=;" first line names the separator.
@@ -433,6 +436,46 @@ public sealed partial class CsvReader
 		initialized = true;
 
 		return true;
+	}
+
+	/// <summary>
+	/// Passes over the lines at the start of the input that <see cref="CsvReaderOptions.SkipLines"/> skips, without parsing
+	/// them, and drops each as it is read, so a long one does not grow the buffer. Returns false when more input is needed.
+	/// </summary>
+	private bool TrySkipLines()
+	{
+		while (linesToSkip > 0)
+		{
+			ReadOnlySpan<byte> rest = buffer.AsSpan(dataStart, dataEnd - dataStart);
+			var k = rest.IndexOfAny((byte)'\r', (byte)'\n');
+			if (k < 0 || (k == rest.Length - 1 && rest[k] == (byte)'\r' && !eof))
+			{
+				// The line goes on past what has been read, or ends at a CR that an LF may follow: drop what has been read
+				// before its end.
+				SkipTo(dataStart + (k < 0 ? rest.Length : k));
+				if (!eof) return false;
+				// The last line of the input has no line break.
+				linesToSkip = 0;
+
+				return true;
+			}
+
+			var length = k + 1;
+			if (rest[k] == (byte)'\r' && length < rest.Length && rest[length] == (byte)'\n') length++;
+			SkipTo(dataStart + length);
+			linesToSkip--;
+			nextLine++;
+		}
+
+		return true;
+	}
+
+	/// <summary>Makes <paramref name="position"/> the start of the input, before anything has been scanned.</summary>
+	private void SkipTo(int position)
+	{
+		dataStart = position;
+		scanPos = position;
+		ends[0] = position;
 	}
 
 	/// <summary>Returns false if the source was replaced by a transcoding source and must be read again.</summary>

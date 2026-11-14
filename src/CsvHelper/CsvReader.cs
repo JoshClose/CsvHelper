@@ -222,6 +222,7 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		}
 
 		skipEmpty = options.SkipEmptyLines;
+		linesToSkip = options.SkipLines;
 		fieldCountMode = options.FieldCountMismatch;
 		throwOnMissing = options.MissingField == CsvMissingFieldHandling.Throw;
 		// Trimming needs the slow path too: a line of only whitespace counts as empty. A fixed-width line has as many
