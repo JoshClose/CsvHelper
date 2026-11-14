@@ -4,6 +4,7 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 
 namespace CsvHelper.Excel.Aot;
 
@@ -12,6 +13,8 @@ namespace CsvHelper.Excel.Aot;
 /// <see cref="ExcelColumnAttribute"/>s CsvHelper.Excel reads through reflection, checks that the workbook has what they
 /// say (its title, table, frozen column, widths, formats, hidden column and links), and reads the orders back, by the
 /// header's row and by finding it. Published with NativeAOT, a member the trimmer dropped would lose its look or its value.
+/// Phase 6's conversions too: the orders as CSV converted to a sheet, its columns' types inferred and through
+/// <see cref="Order"/>, and each sheet back to CSV.
 /// </summary>
 internal static class Program
 {
@@ -58,14 +61,102 @@ internal static class Program
 			}
 		}
 
+		Convert(problems, orders);
 		foreach (var problem in problems)
 		{
 			Console.Error.WriteLine(problem);
 		}
 
-		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes." : $"{problems.Count} problems.");
+		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, and converted them from CSV and back." : $"{problems.Count} problems.");
 
 		return problems.Count == 0 ? 0 : 1;
+	}
+
+	/// <summary>
+	/// Phase 6's conversions: the orders as CSV converted to a sheet, its columns' types inferred, and through
+	/// <see cref="Order"/>, whose attributes give it their look; then each sheet back to CSV.
+	/// </summary>
+	/// <param name="problems">Takes what isn't as converted.</param>
+	/// <param name="orders">The orders, which the second sheet must read back as.</param>
+	private static void Convert(List<string> problems, Order[] orders)
+	{
+		const string csv =
+			"Id,Customer,Placed,Total,Paid,Site,Note\r\n" +
+			"1,Ada,2024-01-15,1234.5,true,https://example.com/ada,first\r\n" +
+			"2,Grace,2024-02-29,0.25,FALSE,,\r\n";
+
+		// Inferred: numbers, dates, booleans and text, each column by its fields; an empty field is no cell.
+		var inferred = ToExcel(csv, null);
+		var sheet = Entry(inferred, "xl/worksheets/sheet1.xml");
+		Expect(problems, sheet, "<c r=\"A2\"><v>1</v></c>", "the first id, a number");
+		Expect(problems, sheet, "<c r=\"D3\"><v>0.25</v></c>", "the second total, a number");
+		Expect(problems, sheet, "<c r=\"E2\" t=\"b\"><v>1</v></c>", "the first order's paid, a boolean");
+		Expect(problems, sheet, "<c r=\"B2\" t=\"inlineStr\"><is><t>Ada</t></is></c>", "the first customer, text");
+		Expect(problems, sheet, "<c r=\"C3\" s=\"2\"><v>45351</v></c>", "the second order's date, 2024-02-29");
+		if (sheet.Contains("<c r=\"F3\"", StringComparison.Ordinal))
+		{
+			problems.Add("The inferred sheet has a cell for an empty field: F3.");
+		}
+
+		// Back to CSV: a boolean in capitals, as the reader gives typed cells.
+		var back = ToCsv(inferred, null);
+		var expected = csv.Replace(",true,", ",TRUE,", StringComparison.Ordinal);
+		if (back != expected)
+		{
+			problems.Add($"The inferred sheet came back as {back}, not {expected}");
+		}
+
+		// Through Order: its title, table and look, and the orders, read by the header's row.
+		var typed = ToExcel(csv, true);
+		Expect(problems, Entry(typed, "xl/tables/table1.xml"), "name=\"Orders\"", "the converted sheet's table");
+		using (var book = ExcelWorkbook.Open(new MemoryStream(typed)))
+		{
+			using var reader = book.OpenReader(new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.At(2) });
+			var read = reader.GetRecords<Order>().ToList();
+			if (!read.Select(Text).SequenceEqual(orders.Select(Text)))
+			{
+				problems.Add($"Converted through Order: {string.Join(" / ", read.Select(Text))}, not {string.Join(" / ", orders.Select(Text))}.");
+			}
+		}
+
+		var typedBack = ToCsv(typed, new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.At(2) });
+		if (typedBack != expected)
+		{
+			problems.Add($"The sheet of Order came back as {typedBack}, not {expected}");
+		}
+	}
+
+	/// <summary>Converts CSV to a workbook, its columns' types inferred, or through <see cref="Order"/>.</summary>
+	/// <param name="csv">The CSV.</param>
+	/// <param name="typed">Whether to convert through <see cref="Order"/>; <see langword="null"/> to infer.</param>
+	/// <returns>The workbook's bytes.</returns>
+	private static byte[] ToExcel(string csv, bool? typed)
+	{
+		using var input = new MemoryStream(Encoding.UTF8.GetBytes(csv));
+		using var output = new MemoryStream();
+		if (typed == true)
+		{
+			ExcelConvert.ToExcel<Order>(input, output);
+		}
+		else
+		{
+			ExcelConvert.ToExcel(input, output);
+		}
+
+		return output.ToArray();
+	}
+
+	/// <summary>Converts a workbook's first worksheet to CSV.</summary>
+	/// <param name="workbook">The workbook's bytes.</param>
+	/// <param name="options">How to read the sheet, or <see langword="null"/>.</param>
+	/// <returns>The CSV.</returns>
+	private static string ToCsv(byte[] workbook, ExcelReaderOptions? options)
+	{
+		using var input = new MemoryStream(workbook);
+		using var output = new MemoryStream();
+		ExcelConvert.ToCsv(input, output, options is null ? null : new ExcelToCsvOptions { Excel = options });
+
+		return Encoding.UTF8.GetString(output.ToArray());
 	}
 
 	/// <summary>Adds a problem when a part lacks some text.</summary>

@@ -17,8 +17,9 @@ namespace CsvHelper.Excel;
 /// surrogates are <c>_</c>, so that no name is a path; it is cut to <see cref="MaxStemLength"/> UTF-16 code units, which
 /// every sheet name Excel writes fits, so that a crafted one can't pass a file system's limit; dots and spaces at its end
 /// are dropped, as Windows drops them; a name of Windows' devices (<c>CON</c>, <c>PRN</c>, <c>AUX</c>, <c>NUL</c>,
-/// <c>COM0</c> to <c>COM9</c> and <c>LPT0</c> to <c>LPT9</c>, with superscript digits too), alone or before a dot, gets
-/// <c>_</c> before it; and an empty one is <c>Sheet</c> and the sheet's number.
+/// <c>CONIN$</c>, <c>CONOUT$</c>, <c>COM0</c> to <c>COM9</c> and <c>LPT0</c> to <c>LPT9</c>, with superscript digits
+/// too), alone or before a dot, gets
+/// <c>_</c> before it, within the 64; and an empty one is <c>Sheet</c> and the sheet's number.
 /// </para>
 /// <para>
 /// Names then taken to be the same are numbered as Excel numbers a copy of a sheet, <c>Data (2)</c>, by the key of
@@ -44,10 +45,13 @@ internal static class ConversionNames
 	/// <summary>The characters a file name can't have on Windows, besides control characters; <c>/</c> is the only one elsewhere.</summary>
 	private static readonly char[] Forbidden = ['<', '>', ':', '"', '/', '\\', '|', '?', '*'];
 
-	/// <summary>Windows' device names, which a file name can't be, with or without an extension.</summary>
+	/// <summary>
+	/// Windows' device names, which a file name can't be, with or without an extension: those Windows' documentation lists,
+	/// and the console's <c>CONIN$</c> and <c>CONOUT$</c>, which Python's <c>os.path.isreserved</c> takes as reserved too.
+	/// </summary>
 	private static readonly HashSet<string> Devices = new(StringComparer.OrdinalIgnoreCase)
 	{
-		"CON", "PRN", "AUX", "NUL",
+		"CON", "PRN", "AUX", "NUL", "CONIN$", "CONOUT$",
 		"COM0", "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM¹", "COM²", "COM³",
 		"LPT0", "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT¹", "LPT²", "LPT³",
 	};
@@ -184,7 +188,18 @@ internal static class ConversionNames
 
 		var stem = text.ToString(0, end);
 		var dot = stem.IndexOf('.');
+		if (!Devices.Contains((dot < 0 ? stem : stem.Substring(0, dot)).TrimEnd(' ')))
+		{
+			return stem;
+		}
 
-		return Devices.Contains((dot < 0 ? stem : stem.Substring(0, dot)).TrimEnd(' ')) ? "_" + stem : stem;
+		// The _ counts toward the most code units: a name cut to them gives its last character, or pair, for it, and then
+		// the dots and spaces that leaves at its end. The device's name, before them, stays.
+		if (stem.Length == MaxStemLength)
+		{
+			stem = stem.Substring(0, stem.Length - (char.IsLowSurrogate(stem[stem.Length - 1]) ? 2 : 1)).TrimEnd('.', ' ');
+		}
+
+		return "_" + stem;
 	}
 }

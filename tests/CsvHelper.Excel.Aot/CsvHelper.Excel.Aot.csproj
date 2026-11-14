@@ -2,8 +2,9 @@
 
 	<!-- Phase 5's NativeAOT check (decision 14): an app that writes a sheet of a type with [ExcelSheet] and [ExcelColumn],
 	     whose attributes CsvHelper.Excel reads through reflection over the members T's annotation keeps, and reads it
-	     back. CI publishes it with NativeAOT, where a trim or AOT warning is an error, and runs it. It builds as a plain app
-	     with the solution. -->
+	     back; and Phase 6's conversions of the same records as CSV, inferred and through T, to a sheet and back. CI
+	     publishes it with NativeAOT, where a trim or AOT warning is an error, and runs it. It builds as a plain app with
+	     the solution. -->
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>

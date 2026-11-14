@@ -14,7 +14,8 @@ namespace CsvHelper.Excel;
 /// The records after the header, up to the number that infers types, are held (<see cref="HeldRecords"/>), and each
 /// column's type is the narrowest that every non-null field of it among them matches (<see cref="ColumnTypes"/>): text when
 /// one doesn't, or when none isn't null, and for a column that no record held reaches. The held records are then written,
-/// and the rest as they are read.
+/// and the rest as they are read. A record with a text longer than a cell can hold ends the holding before it is held: the
+/// records before it decide, and writing it then fails, naming its cell, without the records after it held first.
 /// </para>
 /// <para>
 /// A null field, empty or one of the reader's null values, is an empty field, which is no cell. A field of a typed column
@@ -62,8 +63,18 @@ internal static class CsvToSheet
 		if (inferTypes > 0)
 		{
 			using var held = new HeldRecords();
+			var refused = false;
 			while (held.Count < inferTypes && (async ? await csv.ReadAsync(cancellationToken).ConfigureAwait(false) : csv.Read()))
 			{
+				// A record with a text no cell can take fails when it is written, so it ends the holding: the records before it
+				// decide the columns, and it is written after them, where the sheet's limit names its cell, before more is held.
+				if (HasTooLongText(csv))
+				{
+					refused = true;
+
+					break;
+				}
+
 				held.Add(csv);
 			}
 
@@ -71,6 +82,12 @@ internal static class CsvToSheet
 			for (var record = 0; record < held.Count; record++)
 			{
 				WriteHeld(held, record, csv, sheet, columns, types);
+				await EndRecordAsync(sheet, async, cancellationToken).ConfigureAwait(false);
+			}
+
+			if (refused)
+			{
+				WriteRecord(csv, sheet, columns, types);
 				await EndRecordAsync(sheet, async, cancellationToken).ConfigureAwait(false);
 			}
 		}
@@ -116,6 +133,33 @@ internal static class CsvToSheet
 		}
 
 		return columns;
+	}
+
+	/// <summary>
+	/// Whether the reader's record has a field that isn't null and is longer than a cell's text can be
+	/// (<see cref="XmlOutput.MaxCellLength"/> UTF-16 code units, as the sink counts them), which no type matches, so that
+	/// writing it fails.
+	/// </summary>
+	/// <param name="csv">The reader, on a record.</param>
+	/// <returns>Whether it has one.</returns>
+	private static bool HasTooLongText(CsvReader csv)
+	{
+		var count = csv.FieldCount;
+		for (var i = 0; i < count; i++)
+		{
+			// A field has no more code units than bytes, as UTF-8 or with its invalid bytes replaced, so most are shorter.
+			var field = csv.GetSpan(i);
+			if (field.Length > XmlOutput.MaxCellLength && !csv.IsNullSpan(field))
+			{
+				var text = XmlOutput.IsValidUtf8(field) ? field : XmlOutput.ReplaceInvalidUtf8(field);
+				if (XmlOutput.Utf16Length(text) > XmlOutput.MaxCellLength)
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 	/// <summary>Writes a held record's fields, each by its column's type.</summary>

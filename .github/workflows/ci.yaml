@@ -48,7 +48,8 @@ jobs:
       - name: Check CsvHelper.Excel with NativeAOT
         # CsvHelper.Excel reads [ExcelSheet] and [ExcelColumn] through reflection over the members a record type's
         # annotation keeps. The app (tests/CsvHelper.Excel.Aot) is published with NativeAOT, where its project makes a trim
-        # or AOT warning an error, and its native build writes a sheet of such a type, checks its look, and reads it back.
+        # or AOT warning an error, and its native build writes a sheet of such a type, checks its look, and reads it back;
+        # then converts the same records as CSV to a sheet, its columns' types inferred and through the type, and back.
         run: |
           dotnet publish tests/CsvHelper.Excel.Aot --configuration Release --runtime win-x64 -o aot-check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

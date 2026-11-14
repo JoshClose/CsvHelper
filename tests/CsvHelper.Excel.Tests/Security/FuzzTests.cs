@@ -680,10 +680,23 @@ public class FuzzTests(ITestOutputHelper output)
 	/// <returns>The field's bytes as text, cut short.</returns>
 	private static string Shown(CsvReader reader, int index) => CellValue.Show(Encoding.UTF8.GetString(reader.GetSpan(index).ToArray()));
 
+	/// <summary>
+	/// A seed's mutated workbook, as this fuzzer reads it when it reads every worksheet whole, for the fuzzers of what else
+	/// reads workbooks (<see cref="ToCsvFuzzTests"/>).
+	/// </summary>
+	/// <param name="seed">The seed.</param>
+	/// <returns>Where the workbook comes from and how it was mutated, and its bytes.</returns>
+	internal static (string Description, byte[] Zip) MutatedWorkbook(int seed)
+	{
+		var input = Mutate(seed, AreaMode.Sheet);
+
+		return (input.Description, input.Zip);
+	}
+
 	/// <summary>Whether an exception is one a workbook that can't be read may end in.</summary>
 	/// <param name="e">The exception.</param>
 	/// <returns>Whether it is.</returns>
-	private static bool IsExpected(Exception e) => e is InvalidDataException or CsvFormatException or NotSupportedException;
+	internal static bool IsExpected(Exception e) => e is InvalidDataException or CsvFormatException or NotSupportedException;
 
 	/// <summary>
 	/// Makes the input of a seed: a source workbook, mutated in one XML part or in its zip bytes. A seed that reads a table
@@ -1203,11 +1216,14 @@ public class FuzzTests(ITestOutputHelper output)
 		/// <summary>Its bytes.</summary>
 		public byte[] Zip { get; } = zip;
 
+		/// <summary>Where it comes from, and its mutations.</summary>
+		public string Description => $"{source}: {steps}";
+
 		/// <summary>Describes the input for a failure.</summary>
 		/// <param name="seed">Its seed.</param>
 		/// <param name="settings">How it was read.</param>
 		/// <returns>The description.</returns>
-		public string Describe(int seed, Settings settings) => $"Seed {seed} ({settings}), {source}: {steps}";
+		public string Describe(int seed, Settings settings) => $"Seed {seed} ({settings}), {Description}";
 	}
 
 	/// <summary>

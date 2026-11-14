@@ -55,10 +55,27 @@ public class ConversionNamesTests
 	[InlineData("nul.tar.gz")]
 	[InlineData("CON .txt")]
 	[InlineData("AUX.")]
+	[InlineData("CONIN$")]
+	[InlineData("conout$")]
+	[InlineData("CONOUT$.csv")]
 	public void PutsAnUnderscoreBeforeADevicesName(string name) => Assert.Equal("_" + name.TrimEnd('.'), ConversionNames.FileStem(name, 1));
+
+	[Fact]
+	public void CountsADevicesUnderscoreInTheCut()
+	{
+		// A device's name cut to 64 code units gives its last for the _, then the dots and spaces that leaves at its end, or
+		// a pair whole.
+		Assert.Equal("_NUL." + new string('w', 59), ConversionNames.FileStem("NUL." + new string('w', 100), 1));
+		Assert.Equal("_COM1." + new string('w', 57), ConversionNames.FileStem("COM1." + new string('w', 57) + ".xyz", 1));
+		Assert.Equal("_AUX." + new string('w', 58), ConversionNames.FileStem("AUX." + new string('w', 58) + "😀x", 1));
+		Assert.Equal("_CON." + new string('w', 58), ConversionNames.FileStem("CON." + new string('w', 58), 1));
+	}
 
 	[Theory]
 	[InlineData("CONSOLE")]
+	[InlineData("CONIN")]
+	[InlineData("CONIN$1")]
+	[InlineData("CLOCK$")]
 	[InlineData("CON1")]
 	[InlineData("COM10")]
 	[InlineData("LPT")]
