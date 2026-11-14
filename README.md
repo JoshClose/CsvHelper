@@ -253,7 +253,7 @@ The generator reports problems when you compile:
 | Id | Problem |
 |---|---|
 | CSVH001 | The type, or a type that contains it, is not `partial`. |
-| CSVH002 | A member's type cannot be read from a field. |
+| CSVH002 | A member's or constructor parameter's type cannot be read from a field. |
 | CSVH003 | No constructor to use: the type is abstract or static, has no public or internal constructor, or several constructors have the most parameters. |
 | CSVH004 | The type is generic, a `ref struct`, file-local or not accessible from its whole assembly, or it contains itself through nested records. |
 | CSVH005 | Warning: `[CsvColumn]` is on a member that cannot be set. |

@@ -104,6 +104,8 @@ internal sealed class RecordParser
 	private int owner;
 	// How the member being read is read, set by MemberValue: Column, Collection, Nested or Constant.
 	private string memberKind = "Column";
+	// What CSVH002 tells to do when the member being read has a type that cannot be read: MemberAdvice, or ParameterAdvice.
+	private string unsupportedAdvice = MemberAdvice;
 
 	private RecordParser(GeneratorAttributeSyntaxContext context, INamedTypeSymbol? mappedType, CancellationToken cancellationToken)
 	{
@@ -280,7 +282,9 @@ internal sealed class RecordParser
 			var access = settings.Constant is null ? WriteAccess(property, display, parameter.Name) : null;
 			var optional = settings.Optional || parameter.HasExplicitDefaultValue;
 			owner = members.Count;
+			unsupportedAdvice = ParameterAdvice(constructor, property?.Name ?? parameter.Name);
 			var value = MemberValue(parameter.Type, settings, display, location, access, 0, 0, optional, out var column);
+			unsupportedAdvice = MemberAdvice;
 			if (value is null)
 			{
 				continue;
@@ -493,7 +497,7 @@ internal sealed class RecordParser
 		var value = ReadMember(memberType, Field(column), settings, display, location);
 		if (value is null)
 		{
-			Report(Diagnostics.UnsupportedMemberType, location, display, memberType.ToDisplayString());
+			Report(Diagnostics.UnsupportedMemberType, location, display, memberType.ToDisplayString(), unsupportedAdvice);
 
 			return null;
 		}
@@ -637,7 +641,7 @@ internal sealed class RecordParser
 		var value = ReadMember(element, "i", elementSettings, display, location);
 		if (value is null)
 		{
-			Report(Diagnostics.UnsupportedMemberType, location, display, memberType.ToDisplayString());
+			Report(Diagnostics.UnsupportedMemberType, location, display, memberType.ToDisplayString(), unsupportedAdvice);
 
 			return "default!";
 		}
@@ -1026,6 +1030,28 @@ internal sealed class RecordParser
 
 	private static bool IsCopyConstructor(IMethodSymbol constructor, INamedTypeSymbol record) =>
 		constructor.Parameters.Length == 1 && SymbolEqualityComparer.Default.Equals(constructor.Parameters[0].Type, record);
+
+	/// <summary>What CSVH002 tells to do about a property or field whose type cannot be read.</summary>
+	private const string MemberAdvice = "use a type with a static Parse method or add [CsvIgnore]";
+
+	/// <summary>
+	/// What CSVH002 tells to do about a parameter of <paramref name="constructor"/> whose type cannot be read. Unlike a
+	/// member, it cannot be ignored: the constructor is called with every parameter, and the only value the generator
+	/// could pass for a left-out one is <c>default</c>, which the constructor may not expect.
+	/// </summary>
+	/// <param name="constructor">The constructor that creates the records.</param>
+	/// <param name="name">The name of the member the parameter sets, or of the parameter: the name of its stand-in in a map class.</param>
+	private string ParameterAdvice(IMethodSymbol constructor, string name)
+	{
+		var marked = Attribute(constructor, constructorAttribute) is not null;
+		var which = marked ? "the [CsvConstructor] constructor" : "the constructor that creates the records (the one with the most parameters)";
+		// A map class cannot use a private constructor of the mapped type, and cannot mark one of a type it cannot change.
+		var remedy = mapped ? $"give the map class a stand-in '{name}' with a [CsvConverter]"
+			: marked ? "give the parameter a [CsvConverter], or mark another constructor [CsvConstructor]"
+			: "mark another constructor [CsvConstructor] (it can be private), or give the parameter a [CsvConverter]";
+
+		return $"it is a parameter of {which}, and constructor parameters cannot be ignored; {remedy}";
+	}
 
 	/// <summary>
 	/// The instance properties and fields of the type and its base types (unless [CsvIgnoreBase] leaves them out); members

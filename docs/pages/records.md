@@ -330,6 +330,9 @@ a type that can't be read from a field must be ignored, or the build fails with
 [CSVH002](#compile-time-diagnostics). A `required` member can only be ignored when the constructor is marked
 `[SetsRequiredMembers]`; otherwise nothing would set it ([CSVH006](#compile-time-diagnostics)).
 
+Constructor parameters can't be ignored, since the constructor is called with all of them. When the constructor takes
+something that is not in the file, [use another one](#a-constructor-for-types-made-from-other-objects).
+
 ### Leaving out base classes: [CsvIgnoreBase]
 
 `[CsvIgnoreBase]` on a class reads and writes only the members it declares itself, for base classes whose members don't
@@ -391,6 +394,29 @@ public partial class Person
 
 Without `[CsvConstructor]`, two constructors with the same, largest number of parameters are ambiguous, and so is a
 constructor with `ref` or `out` parameters; the generator reports [CSVH003](#compile-time-diagnostics).
+
+### A constructor for types made from other objects
+
+A type that copies another object into the columns of a file takes that object in its constructor, which then has a
+parameter that can't be read from a field: [CSVH002](#compile-time-diagnostics). Mark another constructor
+`[CsvConstructor]`; it can be private:
+
+```csharp
+[CsvRecord]
+public partial class ProjectRow(Project project)
+{
+    [CsvConstructor]
+    private ProjectRow() : this(new Project()) { }
+
+    public string? Name { get; set; } = project.Name;
+    public string Frameworks { get; set; } = string.Join(';', project.TargetFrameworks);
+}
+
+writer.WriteRecords(projects.Select(p => new ProjectRow(p)));
+```
+
+A type that is only written doesn't need `[CsvRecord]`: [`WriteCsv`](linq.html#writing-query-results) of
+CsvHelper.Linq writes the public properties of any class.
 
 ## Supported types
 
@@ -1440,7 +1466,7 @@ The generator reports problems when you compile:
 | Id | Problem |
 |---|---|
 | CSVH001 | The type, or a type that contains it, is not `partial`. |
-| CSVH002 | A member's type cannot be read from a field. |
+| CSVH002 | A member's or constructor parameter's type cannot be read from a field. |
 | CSVH003 | No constructor to use: the type is abstract or static, has no public or internal constructor, or several constructors have the most parameters. |
 | CSVH004 | The type is generic, a `ref struct`, file-local or not accessible from its whole assembly, or it contains itself through [nested records](#nested-records). |
 | CSVH005 | Warning: `[CsvColumn]` is on a member that cannot be set. |
