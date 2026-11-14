@@ -21,3 +21,8 @@ changes files quoted with another character than `"` instead of throwing `NotSup
 
 Listing the column names of a `CsvDynamicRecord`, as its dictionary `Keys` or as the member names that a `dynamic`
 binder asks for, no longer reads each value as a string.
+
+When a constructor parameter's type can't be read, CSVH002 no longer suggests `[CsvIgnore]`, which doesn't apply to
+parameters. It says which constructor was chosen and suggests marking another one `[CsvConstructor]` or giving the
+parameter a `[CsvConverter]`. See
+[A constructor for types made from other objects](../../pages/records.md#a-constructor-for-types-made-from-other-objects).

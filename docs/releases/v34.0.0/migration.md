@@ -263,7 +263,10 @@ var orders = csv.GetRecords<Order>().ToList();
   and the parameters of the constructor. 33 read only public properties by default, so a public field or an internal
   property is now a required column too: mark it `[CsvIgnore]` if the file has no column for it. A private member, or
   a property with a `private set`, is read only with `[CsvColumn]`. Records with a primary constructor work as they
-  are; `[CsvConstructor]` picks a constructor when there are several.
+  are; `[CsvConstructor]` picks a constructor when there are several. A class whose constructor takes an object that
+  is not in the file, such as one it copies for writing, needs
+  [another constructor](../../pages/records.md#a-constructor-for-types-made-from-other-objects): constructor
+  parameters can't be `[CsvIgnore]`d.
 - **Members of other classes:** 33 read the properties of a member whose type is a class as columns of the same
   record (a reference map). Now that type must be `[CsvRecord]` too, to be a
   [nested record](../../pages/records.md#nested-records); without it, a static `Parse` method or a converter, the

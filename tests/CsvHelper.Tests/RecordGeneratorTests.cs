@@ -813,6 +813,82 @@ public class RecordGeneratorTests
 	}
 
 	[Fact]
+	public void ReportsUnsupportedConstructorParameterTypes()
+	{
+		const string types = "using CsvHelper; public class Source { public string? Name { get; set; } } ";
+
+		// A parameter cannot be ignored, so the message points to another constructor rather than to [CsvIgnore].
+		var primary = Single(types + "[CsvRecord] public partial class A(Source source) { public string? Name { get; set; } = source.Name; }", "CSVH002").GetMessage();
+		Assert.Contains("'A.source' has type 'Source'", primary);
+		Assert.Contains("parameter of the constructor that creates the records (the one with the most parameters)", primary);
+		Assert.Contains("mark another constructor [CsvConstructor] (it can be private), or give the parameter a [CsvConverter]", primary);
+		Assert.DoesNotContain("[CsvIgnore]", primary);
+
+		// The parameter of a positional record is named by its property, and is still a parameter.
+		Assert.Contains("constructor parameters cannot be ignored",
+			Single("[CsvHelper.CsvRecord] public partial record R(System.IO.Stream S);", "CSVH002").GetMessage());
+
+		var marked = Single(types + "[CsvRecord] public partial class B { [CsvConstructor] public B(Source source) { } public B() { } }", "CSVH002").GetMessage();
+		Assert.Contains("parameter of the [CsvConstructor] constructor", marked);
+		Assert.Contains("give the parameter a [CsvConverter], or mark another constructor [CsvConstructor]", marked);
+
+		// A map class can neither mark a constructor of a type it cannot change nor use a private one.
+		var map = Single(types + "public class T { public T(Source source) { } } [CsvRecordMap(typeof(T))] partial class M { }", "CSVH002").GetMessage();
+		Assert.Contains("give the map class a stand-in 'source' with a [CsvConverter]", map);
+		Assert.DoesNotContain("private", map);
+	}
+
+	[Fact]
+	public void ConstructorParametersThatCannotBeReadHaveRemedies()
+	{
+		// What CSVH002 suggests for a constructor parameter compiles: another constructor, or a converter.
+		var (generator, compilation, _) = Run("""
+			using CsvHelper;
+
+			public class Source { public string? Name { get; set; } }
+
+			public sealed class SourceConverter : ICsvConverter<Source>
+			{
+			    public Source Read(CsvReader reader, int index) => new();
+
+			    public void Write(CsvWriter writer, Source value) => writer.WriteField(value.Name);
+			}
+
+			[CsvRecord]
+			public partial class Chained(Source source)
+			{
+			    [CsvConstructor]
+			    private Chained() : this(new Source()) { }
+
+			    public string? Name { get; set; } = source.Name;
+			}
+
+			[CsvRecord]
+			public partial class Converted([CsvConverter(typeof(SourceConverter))] Source source)
+			{
+			    public string? Name { get; set; } = source.Name;
+			}
+
+			public class Foreign
+			{
+			    public Foreign(Source source) => Name = source.Name;
+
+			    public string? Name { get; set; }
+			}
+
+			[CsvRecordMap(typeof(Foreign))]
+			internal partial class ForeignMap
+			{
+			    [CsvConverter(typeof(SourceConverter))]
+			    public Source source { get; set; } = null!;
+			}
+			""");
+
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+	}
+
+	[Fact]
 	public void ReportsMissingOrAmbiguousConstructors()
 	{
 		Single("[CsvHelper.CsvRecord] public partial class A { public A(int x) { } public A(string y) { } }", "CSVH003");

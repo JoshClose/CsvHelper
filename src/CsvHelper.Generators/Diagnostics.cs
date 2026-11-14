@@ -14,12 +14,14 @@ internal static class Diagnostics
 		Category, DiagnosticSeverity.Error, isEnabledByDefault: true);
 
 	/// <summary>
-	/// CSVH002: a member's type cannot be read from a field (not a built-in type of <c>CsvReader.Parse&lt;T&gt;</c>, nor an
-	/// enum, or a type with a <c>Parse</c> method, converter or record type). Arguments: the member and its type.
+	/// CSVH002: a member's or constructor parameter's type cannot be read from a field (not a built-in type of
+	/// <c>CsvReader.Parse&lt;T&gt;</c>, nor an enum, or a type with a <c>Parse</c> method, converter or record type).
+	/// Arguments: the member, its type, and what to do about it, which differs for constructor parameters: they cannot be
+	/// ignored, since the constructor is called with all of them.
 	/// </summary>
 	public static readonly DiagnosticDescriptor UnsupportedMemberType = new(
 		"CSVH002", "Unsupported CSV member type",
-		"'{0}' has type '{1}', which cannot be read from a CSV field; use a type with a static Parse method or add [CsvIgnore]",
+		"'{0}' has type '{1}', which cannot be read from a CSV field; {2}",
 		Category, DiagnosticSeverity.Error, isEnabledByDefault: true);
 
 	/// <summary>
