@@ -127,6 +127,37 @@ public partial record ColumnedPosition([ExcelColumn(Width = 20)] string Name, [p
 /// workbook's <see cref="ExcelWriterOptions.Sheets"/>), each taken whole; their checks; and the columns' options by the
 /// header's names.
 /// </summary>
+[CsvRecord]
+[ExcelSheet(Validate = true, Protect = true)]
+public partial class TemplatedOrder
+{
+	[ExcelColumn(List = new[] { "Open", "Closed" }, Prompt = "The order's state.")]
+	public string State { get; set; } = "";
+
+	public int Count { get; set; }
+}
+
+[CsvRecord]
+[ExcelSheet(Protect = true, Table = true)]
+public partial class ProtectedTable
+{
+	public string Name { get; set; } = "";
+}
+
+[CsvRecord]
+public partial class BadColumnList
+{
+	[ExcelColumn(List = new[] { "Open", "" })]
+	public string State { get; set; } = "";
+}
+
+[CsvRecord]
+public partial class BadColumnPrompt
+{
+	[ExcelColumn(Prompt = "")]
+	public string State { get; set; } = "";
+}
+
 public class SheetSettingsTests
 {
 	/// <summary>Options that differ from the defaults in every setting.</summary>
@@ -263,6 +294,14 @@ public class SheetSettingsTests
 	{
 		var writer = new ExcelWriterOptions { Csv = new CsvWriterOptions { HasHeader = false } };
 
+		var validate = Assert.Throws<ArgumentException>(() => SheetSettings.Resolve(new ExcelSheetOptions { Validate = true }, null, null, writer));
+		var protect = Assert.Throws<ArgumentException>(() => SheetSettings.Resolve(new ExcelSheetOptions { Protect = true }, null, null, writer));
+		Assert.StartsWith("ExcelSheetOptions: Validate needs a header, to validate the cells below it, and CsvWriterOptions.HasHeader is off.", validate.Message);
+		Assert.StartsWith("ExcelSheetOptions: Protect needs a header, to lock it, and CsvWriterOptions.HasHeader is off.", protect.Message);
+
+		// A column's list and prompt don't need one.
+		Assert.NotNull(SheetSettings.Resolve(Column(new ExcelColumnOptions { List = ["a"], Prompt = "p" }), null, null, writer));
+
 		var filter = Assert.Throws<ArgumentException>(() => SheetSettings.Resolve(new ExcelSheetOptions { AutoFilter = true }, null, null, writer));
 		var table = Assert.Throws<ArgumentException>(() => SheetSettings.Resolve(new ExcelSheetOptions { Table = new ExcelTableOptions() }, null, null, writer));
 		var attribute = Assert.Throws<InvalidOperationException>(() => SheetSettings.Resolve(null, typeof(SheetedDerived), MemberFormats.For<SheetedDerived>(), writer));
@@ -303,6 +342,16 @@ public class SheetSettingsTests
 		{ Column(new ExcelColumnOptions { Format = "" }), "The column \"Amount\" has an empty format: use null for none." },
 		{ Column(new ExcelColumnOptions { Format = "0.00 kg" }), "The column \"Amount\" has a format Excel doesn't open. The format code \"0.00 kg\" has the letter k outside quotes" },
 		{ Column(null!), "Columns has no options for the column \"Amount\": leave it out for none." },
+		{ new ExcelSheetOptions { Password = "secret" }, "A password protects a sheet, and Protect is off: set Protect = true." },
+		{ new ExcelSheetOptions { Protect = true, Password = "" }, "The password has 0 characters, and Excel takes 1 to 255: use null for none." },
+		{ new ExcelSheetOptions { Protect = true, Password = new string('p', 256) }, "The password has 256 characters" },
+		{ new ExcelSheetOptions { Protect = true, Table = new ExcelTableOptions() }, "A protected sheet can't have a table, since Excel doesn't add rows to a table on a protected sheet: set Protect or Table, not both." },
+		{ Column(new ExcelColumnOptions { List = [] }), "The column \"Amount\" has an empty list: use null for none." },
+		{ Column(new ExcelColumnOptions { List = ["a", null!] }), "The column \"Amount\" has a null value in its list." },
+		{ Column(new ExcelColumnOptions { List = ["a", ""] }), "The column \"Amount\" has a value of 0 characters in its list, and Excel matches values of 1 to 255." },
+		{ Column(new ExcelColumnOptions { List = [new string('v', 256)] }), "has a value of 256 characters in its list" },
+		{ Column(new ExcelColumnOptions { Prompt = "" }), "The column \"Amount\" has a prompt of 0 characters, and Excel opens prompts of 1 to 255: use null for none." },
+		{ Column(new ExcelColumnOptions { Prompt = new string('p', 256) }), "has a prompt of 256 characters" },
 	};
 
 	[Theory]
@@ -376,6 +425,61 @@ public class SheetSettingsTests
 		Assert.Equal(
 			"The [ExcelColumn] of ExcelColumnOnNested.Address is on a member that nests a record, whose members have their own columns: put it on those members.",
 			AttributeProblem<ExcelColumnOnNested>());
+		Assert.Equal(
+			"The [ExcelSheet] of ProtectedTable: A protected sheet can't have a table, since Excel doesn't add rows to a table on a protected sheet: set Protect or Table, not both.",
+			AttributeProblem<ProtectedTable>());
+		Assert.Equal("The [ExcelColumn] of BadColumnList.State has a value of 0 characters in its list, and Excel matches values of 1 to 255.", AttributeProblem<BadColumnList>());
+		Assert.Equal("The [ExcelColumn] of BadColumnPrompt.State has a prompt of 0 characters, and Excel opens prompts of 1 to 255: use null for none.", AttributeProblem<BadColumnPrompt>());
+	}
+
+	[Fact]
+	public void TakesTemplateSettingsAtTheirLimits()
+	{
+		var options = new ExcelSheetOptions
+		{
+			Validate = true,
+			Protect = true,
+			Password = new string('p', 255),
+			AutoFilter = true,
+			Columns = new Dictionary<string, ExcelColumnOptions>
+			{
+				["a"] = new() { List = [new string('v', 255), "v", "v"], Prompt = new string('p', 255) },
+				["b"] = new() { List = ["x"], Prompt = "One line\nand another" },
+			},
+		};
+
+		var settings = Settings(options);
+
+		Assert.Same(options, settings.Sheet);
+		Assert.Equal(["x"], settings.ColumnsFor(["a", "b"])![1]!.List!);
+		Assert.True(Settings(new ExcelSheetOptions { Protect = true, Password = "x" }).Sheet.Protect);
+	}
+
+	[Fact]
+	public void ReadsTheAttributesTemplateSettings()
+	{
+		var settings = SheetSettings.Resolve(null, typeof(TemplatedOrder), MemberFormats.For<TemplatedOrder>(), ExcelWriterOptions.Default);
+
+		var columns = settings.ColumnsFor(["State", "Count"])!;
+
+		Assert.True(settings.Sheet.Validate);
+		Assert.True(settings.Sheet.Protect);
+		Assert.Null(settings.Sheet.Password);
+		Assert.Equal(["Open", "Closed"], columns[0]!.List!);
+		Assert.Equal("The order's state.", columns[0]!.Prompt);
+		Assert.Null(columns[1]);
+	}
+
+	[Fact]
+	public void PrintsWhetherThereIsAPasswordButNotIt()
+	{
+		var text = new ExcelSheetOptions { Protect = true, Password = "s3cret!" }.ToString();
+
+		Assert.DoesNotContain("s3cret", text);
+		Assert.Contains("Protect = True, Password = (set) }", text);
+		Assert.Equal(
+			"ExcelSheetOptions { Title = , BoldHeader = True, FreezeHeader = True, FreezeColumns = 0, AutoFilter = False, Table = , AutoFit = 100, MaxAutoFitWidth = 60, Columns = , Validate = False, Protect = False, Password =  }",
+			ExcelSheetOptions.Default.ToString());
 	}
 
 	[Fact]
@@ -464,6 +568,18 @@ public class SheetSettingsTests
 		columns["Other"] = new ExcelColumnOptions();
 
 		Assert.Equal<IEnumerable<ExcelColumnOptions?>>([new ExcelColumnOptions { Width = 10 }], settings.ColumnsFor(["Name"])!);
+	}
+
+	[Fact]
+	public void CopiesTheColumnsListsWhenTheSheetIsAdded()
+	{
+		var list = new List<string> { "Open", "Closed" };
+		var settings = Settings(new ExcelSheetOptions { Columns = new Dictionary<string, ExcelColumnOptions> { ["State"] = new() { List = list } } });
+
+		list[1] = "";
+		list.Add("Late");
+
+		Assert.Equal(["Open", "Closed"], settings.ColumnsFor(["State"])![0]!.List!);
 	}
 
 	[Fact]

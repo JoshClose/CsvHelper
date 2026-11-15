@@ -4,7 +4,8 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// How a written sheet shows a member's column: its width, its number format, whether its text wraps, and whether it is
-/// hidden, as <see cref="ExcelColumnOptions"/> says. Read by reflection, once per type, for the sheets of
+/// hidden; and a dropdown of values and a prompt for what users type into it, as <see cref="ExcelColumnOptions"/> says.
+/// Read by reflection, once per type, for the sheets of
 /// <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/> and
 /// <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, System.Collections.Generic.IEnumerable{T}, ExcelSheetOptions)"/>.
 /// </summary>
@@ -42,13 +43,27 @@ public sealed class ExcelColumnAttribute : Attribute
 	/// <summary>Whether the column is hidden. Off by default.</summary>
 	public bool Hidden { get; set; }
 
+	/// <summary>
+	/// A dropdown of these values for the column's cells below the header, in place of the validation of the member's type,
+	/// as <see cref="ExcelColumnOptions.List"/> says; or <see langword="null"/>, the default, for none.
+	/// </summary>
+	public string[]? List { get; set; }
+
+	/// <summary>
+	/// Help that Excel shows when a cell of the column below the header is selected, as <see cref="ExcelColumnOptions.Prompt"/>
+	/// says; or <see langword="null"/>, the default, for none.
+	/// </summary>
+	public string? Prompt { get; set; }
+
 	/// <summary>The attribute's options.</summary>
-	/// <returns>The options, with no width for a width of 0.</returns>
+	/// <returns>The options, with no width for a width of 0, and a copy of the list.</returns>
 	internal ExcelColumnOptions ToOptions() => new()
 	{
 		Width = Width == 0 ? null : Width,
 		Format = Format,
 		Wrap = Wrap,
 		Hidden = Hidden,
+		List = List is null ? null : [.. List],
+		Prompt = Prompt,
 	};
 }

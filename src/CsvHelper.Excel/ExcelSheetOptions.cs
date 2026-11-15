@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
 namespace CsvHelper.Excel;
 
 /// <summary>
 /// How a written sheet looks: a title above the header, a bold and frozen header, a filter or an Excel table, columns as
-/// wide as their text, and each column's width, number format, wrap and visibility. Immutable: use <c>with</c> to change a
-/// copy.
+/// wide as their text, and each column's width, number format, wrap and visibility; and what users can type into it:
+/// validations from the members' types, dropdowns and prompts, and protection. Immutable: use <c>with</c> to change a copy.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -18,8 +19,9 @@ namespace CsvHelper.Excel;
 /// </para>
 /// <para>
 /// The header is the sheet's first record, with <see cref="CsvWriterOptions.HasHeader"/>. Without it there is none:
-/// <see cref="BoldHeader"/> and <see cref="FreezeHeader"/> do nothing, and <see cref="AutoFilter"/> and
-/// <see cref="Table"/> throw.
+/// <see cref="BoldHeader"/> and <see cref="FreezeHeader"/> do nothing, and <see cref="AutoFilter"/>,
+/// <see cref="Table"/>, <see cref="Validate"/> and <see cref="Protect"/> throw. A column's
+/// <see cref="ExcelColumnOptions.List"/> and <see cref="ExcelColumnOptions.Prompt"/> then cover it from the first record's row.
 /// </para>
 /// </remarks>
 public sealed record ExcelSheetOptions
@@ -32,6 +34,9 @@ public sealed record ExcelSheetOptions
 
 	/// <summary>The most columns that can be frozen: every column but Excel's last.</summary>
 	internal const int MaxFreezeColumns = 16383;
+
+	/// <summary>The longest password: Excel's Protect refuses a longer one, and can't unprotect a sheet hashed from one.</summary>
+	internal const int MaxPasswordLength = 255;
 
 	/// <summary>
 	/// The default options: a bold, frozen header, and columns auto-fitted over the header and the first 100 records, at
@@ -109,6 +114,39 @@ public sealed record ExcelSheetOptions
 	/// </summary>
 	public IReadOnlyDictionary<string, ExcelColumnOptions>? Columns { get; init; }
 
+	/// <summary>
+	/// Whether each column below the header gets a validation from its member's type, which Excel applies to what users
+	/// type there: a dropdown of <c>TRUE</c> and <c>FALSE</c> for a <see cref="bool"/>, and of an enum's members as the
+	/// record writer writes them; whole numbers in an integer type's range, of at most 15 digits for <see cref="long"/> and
+	/// <see cref="ulong"/>, the digits Excel keeps; numbers in a floating-point or <see cref="decimal"/> type's range; and
+	/// dates and times in Excel's. Each typed column's default style is also its type's format, which the cells users add
+	/// take: Text for text, so that <c>00123</c> stays as typed, and a date's format for dates. Off by default.
+	/// </summary>
+	/// <remarks>
+	/// Types are known for the sheets of <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/>,
+	/// <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> and
+	/// <see cref="ExcelConvert.ToExcel{T}(string, string, CsvToExcelOptions)"/>; a sheet without them gets only its columns'
+	/// <see cref="ExcelColumnOptions.List"/> and <see cref="ExcelColumnOptions.Prompt"/>, which apply whether it validates or
+	/// not. Excel doesn't check values pasted in, so a sheet read back is read by each member's type, whatever it holds.
+	/// </remarks>
+	public bool Validate { get; init; }
+
+	/// <summary>
+	/// Whether the sheet is protected, so that users change only the cells of the header's columns below the header: the
+	/// title and the header are locked, and so is every column past the header's. Users can still resize columns and rows,
+	/// and sort and filter with an <see cref="AutoFilter"/>. Off by default. A protected sheet can't have a
+	/// <see cref="Table"/>, since Excel doesn't add rows to a table on a protected sheet. Protection keeps out slips, not
+	/// people: tools remove it.
+	/// </summary>
+	public bool Protect { get; init; }
+
+	/// <summary>
+	/// The password that unprotecting the sheet asks for, 1 to 255 characters, the most Excel takes; stored as Excel stores
+	/// it, as a SHA-512 hash with a random salt. Only with <see cref="Protect"/>. <see langword="null"/>, the default, for
+	/// none, when Excel unprotects the sheet without asking. The options' <see cref="ToString"/> doesn't show it.
+	/// </summary>
+	public string? Password { get; init; }
+
 	/// <summary>What is wrong with the options, if anything: each setting on its own, and the columns' options.</summary>
 	/// <param name="columns">The columns' options to check, which are <see cref="Columns"/> or a copy of them; or <see langword="null"/>.</param>
 	/// <returns>What is wrong, or <see langword="null"/>.</returns>
@@ -139,6 +177,24 @@ public sealed record ExcelSheetOptions
 			return "The table " + table;
 		}
 
+		if (Password is { } password)
+		{
+			if (!Protect)
+			{
+				return "A password protects a sheet, and Protect is off: set Protect = true.";
+			}
+
+			if (password.Length is 0 or > MaxPasswordLength)
+			{
+				return $"The password has {password.Length.ToString(CultureInfo.InvariantCulture)} characters, and Excel takes 1 to {MaxPasswordLength.ToString(CultureInfo.InvariantCulture)}: use null for none.";
+			}
+		}
+
+		if (Protect && Table is not null)
+		{
+			return "A protected sheet can't have a table, since Excel doesn't add rows to a table on a protected sheet: set Protect or Table, not both.";
+		}
+
 		if (columns is not null)
 		{
 			foreach (var column in columns)
@@ -163,6 +219,30 @@ public sealed record ExcelSheetOptions
 		return null;
 	}
 
+	/// <summary>
+	/// Writes the options' settings for <see cref="ToString"/>, as a record writes them, but a password's text: whether
+	/// there is one, so that logs of the options don't hold it.
+	/// </summary>
+	/// <param name="builder">The text so far.</param>
+	/// <returns><see langword="true"/>, since there are settings.</returns>
+	private bool PrintMembers(StringBuilder builder)
+	{
+		builder.Append("Title = ").Append(Title)
+			.Append(", BoldHeader = ").Append(BoldHeader)
+			.Append(", FreezeHeader = ").Append(FreezeHeader)
+			.Append(", FreezeColumns = ").Append(FreezeColumns)
+			.Append(", AutoFilter = ").Append(AutoFilter)
+			.Append(", Table = ").Append(Table)
+			.Append(", AutoFit = ").Append(AutoFit)
+			.Append(", MaxAutoFitWidth = ").Append(MaxAutoFitWidth)
+			.Append(", Columns = ").Append(Columns)
+			.Append(", Validate = ").Append(Validate)
+			.Append(", Protect = ").Append(Protect)
+			.Append(", Password = ").Append(Password is null ? null : "(set)");
+
+		return true;
+	}
+
 	/// <summary>What is wrong with the options for a sheet with or without a header, if anything.</summary>
 	/// <param name="hasHeader">Whether the sheet's first record is its header (<see cref="CsvWriterOptions.HasHeader"/>).</param>
 	/// <param name="setting">
@@ -174,5 +254,7 @@ public sealed record ExcelSheetOptions
 		hasHeader ? null :
 		AutoFilter ? $"AutoFilter needs a header, and {setting} is off." :
 		Table is not null ? $"A table needs a header, and {setting} is off." :
+		Validate ? $"Validate needs a header, to validate the cells below it, and {setting} is off." :
+		Protect ? $"Protect needs a header, to lock it, and {setting} is off." :
 		null;
 }

@@ -14,7 +14,8 @@ namespace CsvHelper.Excel;
 /// It has <see cref="ExcelSheetOptions"/>' settings but <see cref="ExcelSheetOptions.Columns"/>, which its members'
 /// <see cref="ExcelColumnAttribute"/>s give, and a table's as <see cref="Table"/>, <see cref="TableName"/> and
 /// <see cref="TableStyle"/>, with banded rows and filter buttons. A setting Excel wouldn't open throws when the sheet is
-/// added. A sheet's name is given when it is added, so the attribute has none.
+/// added. A sheet's name is given when it is added, so the attribute has none; nor has it a
+/// <see cref="ExcelSheetOptions.Password"/>, since an attribute's text is in the assembly for anyone to read.
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
 public sealed class ExcelSheetAttribute : Attribute
@@ -55,6 +56,18 @@ public sealed class ExcelSheetAttribute : Attribute
 	/// <summary>The widest auto-fit makes a column for its text, in characters (<see cref="ExcelSheetOptions.MaxAutoFitWidth"/>): 60 by default.</summary>
 	public double MaxAutoFitWidth { get; set; } = 60;
 
+	/// <summary>
+	/// Whether each column below the header gets a validation from its member's type (<see cref="ExcelSheetOptions.Validate"/>).
+	/// Off by default.
+	/// </summary>
+	public bool Validate { get; set; }
+
+	/// <summary>
+	/// Whether the sheet is protected, with the header locked and the header's columns below it unlocked
+	/// (<see cref="ExcelSheetOptions.Protect"/>), without a password. Off by default.
+	/// </summary>
+	public bool Protect { get; set; }
+
 	/// <summary>The attribute's options.</summary>
 	/// <returns>The options.</returns>
 	internal ExcelSheetOptions ToOptions() => new()
@@ -67,6 +80,8 @@ public sealed class ExcelSheetAttribute : Attribute
 		Table = Table ? new ExcelTableOptions { Name = TableName, Style = TableStyle } : null,
 		AutoFit = AutoFit,
 		MaxAutoFitWidth = MaxAutoFitWidth,
+		Validate = Validate,
+		Protect = Protect,
 	};
 
 	/// <summary>What is wrong with the attribute's settings that its options can't say, if anything.</summary>

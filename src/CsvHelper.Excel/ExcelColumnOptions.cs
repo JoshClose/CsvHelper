@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 
 namespace CsvHelper.Excel;
@@ -6,12 +7,19 @@ namespace CsvHelper.Excel;
 /// <summary>
 /// How a written sheet shows a column (<see cref="ExcelSheetOptions.Columns"/>, by its header name, or
 /// <see cref="ExcelColumnAttribute"/> on its member): its width, its number format, whether its text wraps, and whether it
-/// is hidden. Immutable: use <c>with</c> to change a copy.
+/// is hidden; and a dropdown of values and a prompt for what users type into it. Immutable: use <c>with</c> to change a
+/// copy; a sheet copies a column's list when it is added.
 /// </summary>
 public sealed record ExcelColumnOptions
 {
 	/// <summary>The widest a column can be, in characters: Excel's <c>ColumnWidth</c> takes at most 255.</summary>
 	internal const double MaxWidth = 255;
+
+	/// <summary>The longest value of a list: Excel matches no longer one, even typed exactly.</summary>
+	internal const int MaxListValueLength = 255;
+
+	/// <summary>The longest prompt: Excel repairs a workbook with a longer one by dropping its validation.</summary>
+	internal const int MaxPromptLength = 255;
 
 	/// <summary>
 	/// The column's width, as Excel's <c>ColumnWidth</c> counts it: the number of the default font's digits it shows, 0 to
@@ -38,10 +46,54 @@ public sealed record ExcelColumnOptions
 	/// <summary>Whether the column is hidden. Off by default.</summary>
 	public bool Hidden { get; init; }
 
+	/// <summary>
+	/// A dropdown of these values for the column's cells below the header, which Excel applies to what users type there, in
+	/// place of the validation of its member's type (<see cref="ExcelSheetOptions.Validate"/>); on any sheet, validated or
+	/// not. Each value has 1 to 255 characters, since Excel doesn't match a longer one; a value repeated is listed once.
+	/// The values are written in the validation when, joined by commas, they have at most 255 characters and none has a
+	/// comma or a space at either end; else in a very hidden sheet named <c>Lists</c>, after the workbook's other sheets.
+	/// <see langword="null"/>, the default, for none. Reading the sheet back doesn't check its cells against the list: a
+	/// member's type, or its <see cref="CsvValidateAttribute"/>, says what it takes.
+	/// </summary>
+	public IReadOnlyList<string>? List { get; init; }
+
+	/// <summary>
+	/// Help that Excel shows when a cell of the column below the header is selected, with the column's header name as its
+	/// title: 1 to 255 characters, the most Excel opens, line breaks kept; on any sheet. <see langword="null"/>, the
+	/// default, for none.
+	/// </summary>
+	public string? Prompt { get; init; }
+
 	/// <summary>What is wrong with the options, if anything.</summary>
 	/// <returns>What is wrong, to follow the column's name in a message, or <see langword="null"/>.</returns>
 	internal string? Problem()
 	{
+		if (List is { } list)
+		{
+			if (list.Count == 0)
+			{
+				return "has an empty list: use null for none.";
+			}
+
+			foreach (var value in list)
+			{
+				if (value is null)
+				{
+					return "has a null value in its list.";
+				}
+
+				if (value.Length is 0 or > MaxListValueLength)
+				{
+					return $"has a value of {value.Length.ToString(CultureInfo.InvariantCulture)} characters in its list, and Excel matches values of 1 to {MaxListValueLength.ToString(CultureInfo.InvariantCulture)}.";
+				}
+			}
+		}
+
+		if (Prompt is { } prompt && prompt.Length is 0 or > MaxPromptLength)
+		{
+			return $"has a prompt of {prompt.Length.ToString(CultureInfo.InvariantCulture)} characters, and Excel opens prompts of 1 to {MaxPromptLength.ToString(CultureInfo.InvariantCulture)}: use null for none.";
+		}
+
 		if (Width is { } width && !(width is >= 0 and <= MaxWidth))
 		{
 			return $"has the width {width.ToString(CultureInfo.InvariantCulture)}, and Excel's widths are 0 to 255 characters.";

@@ -15,8 +15,9 @@ namespace CsvHelper.Excel;
 /// its entry in <see cref="ExcelSheetOptions.Columns"/>, else its member's <see cref="ExcelColumnAttribute"/>, also whole.
 /// </para>
 /// <para>
-/// The columns' options are copied when the sheet is added, and the copy is checked, so that options changed later (a
-/// dictionary is mutable) can't reach the sheet unchecked. Names match ordinally, as the members' formats' do.
+/// The columns' options are copied when the sheet is added, their lists with them, and the copy is checked, so that
+/// options changed later (a dictionary and a list are mutable) can't reach the sheet unchecked. Names match ordinally, as
+/// the members' formats' do.
 /// </para>
 /// </remarks>
 internal sealed class SheetSettings
@@ -240,8 +241,8 @@ internal sealed class SheetSettings
 		var copy = new Dictionary<string, ExcelColumnOptions>(columns.Count, StringComparer.Ordinal);
 		foreach (var column in columns)
 		{
-			// Null options stay, for the check to report.
-			copy[column.Key] = column.Value;
+			// Null options stay, for the check to report; a list is copied too, since a list given can change.
+			copy[column.Key] = column.Value is { List: { } list } options ? options with { List = [.. list] } : column.Value;
 		}
 
 		return copy;
