@@ -256,7 +256,8 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 
 	/// <summary>
 	/// Creates (or overwrites) a file, which other processes can read while it is written. The writer closes the
-	/// file when it is disposed. See <see cref="Create(Stream, CsvWriterOptions?, bool)"/>.
+	/// file when it is disposed. See <see cref="Create(Stream, CsvWriterOptions?, bool)"/>. The options are checked
+	/// first, so options that are not valid leave no file, and an existing file as it was.
 	/// </summary>
 	/// <param name="path">The path of the file.</param>
 	/// <param name="options">The options, or <see langword="null"/> for <see cref="CsvWriterOptions.Default"/>.</param>
@@ -273,9 +274,20 @@ public sealed partial class CsvWriter : IDisposable, IAsyncDisposable
 	/// <exception cref="IOException">The file cannot be created, for example because another process has it open.</exception>
 	public static CsvWriter ToFile(string path, CsvWriterOptions? options = null, FileOptions fileOptions = FileOptions.None)
 	{
+		// The options are checked before the file is created, which would empty an existing one; the writer checks them
+		// again.
+		ArgumentNullException.ThrowIfNull(path);
+		(options ?? CsvWriterOptions.Default).Validate();
 		var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, bufferSize: 1, fileOptions);
-
-		return Create(stream, options, leaveOpen: false);
+		try
+		{
+			return Create(stream, options, leaveOpen: false);
+		}
+		catch
+		{
+			stream.Dispose();
+			throw;
+		}
 	}
 
 	/// <summary>The options this writer was created with.</summary>

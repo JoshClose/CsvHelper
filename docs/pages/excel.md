@@ -514,7 +514,7 @@ decide: a column is the narrowest type that every field of it there matches, or 
 
 | Type | Matches |
 | --- | --- |
-| Number | a minus or none, digits without a leading zero, then a fraction and an exponent if any (`0`, `-12`, `3.5`, `1E+5`), in the CSV's culture (`1,5` in de-DE), with at most 15 significant digits |
+| Number | a minus or none, digits without a leading zero, then a fraction and an exponent if any (`0`, `-12`, `3.5`, `1E+5`), in the CSV's culture (`1,5` in de-DE), with at most 15 significant digits, or a double's own text |
 | Date | `yyyy-MM-dd`, of a day that exists |
 | Date and time | a date, `T` or a space, then `HH:mm`, `:ss` and a fraction of up to 7 digits; a column of dates and dates and times is one of dates and times |
 | Boolean | `true` or `false`, in any case |
@@ -524,9 +524,11 @@ decide: a column is the narrowest type that every field of it there matches, or 
   such as `N/A` in a column of numbers, is text. Empty fields, and the CSV reader's `NullValues`, are empty cells.
 - Inference keeps what a field shows: `00123`, `+5`, `1,234`, `$5`, `50%` and `1/15/2024` are text, where Excel would
   read them as numbers and dates and drop their zeros or signs. Times alone and durations are text too.
-- **Doubles written by .NET**, Python or JavaScript have up to 17 significant digits (`4.505630514819934`), so a column
-  of them is text. `Excel = new ExcelWriterOptions { LongNumbers = ExcelLongNumbers.Number }` makes them numbers, which
-  hold the same doubles.
+- **Doubles written by .NET**, Python or JavaScript have up to 17 significant digits (`4.505630514819934`), past the 15
+  Excel shows. A number with a fraction or an exponent that is its double's own text, the shortest that reads back as
+  that double, is a number cell holding that double, whatever `LongNumbers` says. Other numbers of more than 15
+  significant digits, such as a 16-digit ID or `0.30000000000000005`, are text, unless
+  `Excel = new ExcelWriterOptions { LongNumbers = ExcelLongNumbers.Number }` makes them numbers that Excel rounds.
 - Dates and times with an offset (`2024-01-15T10:30:00+02:00`) follow `DateTimeOffsets`, so they are text by default.
 
 `ToExcel<T>` reads `T`'s records and writes them as `WriteSheet<T>` does, so that every cell is typed by its member.

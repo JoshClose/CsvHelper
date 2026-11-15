@@ -18,8 +18,10 @@ namespace CsvHelper.Excel;
 /// number (<see cref="DotNetText.IsInvariantNumber"/>) with <c>e</c> too, in the CSV's culture: its negative and positive
 /// signs and its decimal separator, so <c>1,5</c> in <c>de-DE</c>. Zero, or from 1E-307 to below 1E+308, the numbers
 /// Excel takes typed in. At most 15 significant digits (from the first digit that isn't 0 to the last, as the sink counts
-/// them), unless <see cref="ExcelWriterOptions.LongNumbers"/> isn't <see cref="ExcelLongNumbers.Text"/>, when the sink
-/// writes the longer ones as that says.
+/// them); or more, when it has a fraction or an exponent and is its double's own text, the shortest text that reads back
+/// as that double, as .NET, Python and JavaScript write doubles (<c>4.505630514819934</c>), so that the cell's double
+/// gives its digits back; or more still, when <see cref="ExcelWriterOptions.LongNumbers"/> isn't
+/// <see cref="ExcelLongNumbers.Text"/>, when the sink writes the longer ones as that says.
 /// </description></item>
 /// <item><description><see cref="ColumnType.Date"/>: <c>yyyy-MM-dd</c>, of a day that exists; and <see cref="ColumnType.DateTime"/> too.</description></item>
 /// <item><description>
@@ -36,7 +38,8 @@ namespace CsvHelper.Excel;
 /// <para>
 /// A field of a typed column is handed to the sink in the form a record writer gives it for its type, so that the sink
 /// writes it as it writes that type: a number's invariant text as a <see cref="decimal"/>'s (so
-/// <see cref="ExcelWriterOptions.LongNumbers"/> applies), a date's <c>"O"</c> text as a <c>DateOnly</c>'s, a date and
+/// <see cref="ExcelWriterOptions.LongNumbers"/> applies), or as a <see cref="double"/>'s when it has more than 15
+/// significant digits and is its double's own text (so it doesn't), a date's <c>"O"</c> text as a <c>DateOnly</c>'s, a date and
 /// time's as a <see cref="DateTime"/>'s, one with an offset as a <see cref="DateTimeOffset"/>'s, and <c>True</c> or
 /// <c>False</c> as a <see cref="bool"/>'s. A date the sink would write as text, one before 1900 with
 /// <see cref="ExcelWriterOptions.OutOfRangeDates"/> at <see cref="ExcelOutOfRangeDates.Text"/>, is left as the field's
@@ -50,6 +53,9 @@ internal sealed class ColumnTypes
 
 	/// <summary>The most significant digits Excel keeps of a number.</summary>
 	private const int MaxSignificantDigits = 15;
+
+	/// <summary>The most significant digits of a double's shortest round-trip text.</summary>
+	private const int MaxDoubleDigits = 17;
 
 	/// <summary>The decimal exponent of the smallest number that isn't 0, 1E-307: Excel takes no smaller one typed in.</summary>
 	private const int MinMagnitude = -307;
@@ -145,7 +151,7 @@ internal sealed class ColumnTypes
 		}
 
 		Span<byte> number = stackalloc byte[MaxFormLength];
-		if (TryNumber(field, number) >= 0)
+		if (TryNumber(field, number, out _) >= 0)
 		{
 			return Bit(ColumnType.Number);
 		}
@@ -170,13 +176,24 @@ internal sealed class ColumnTypes
 	/// <param name="field">The field, which isn't null.</param>
 	/// <param name="type">The column's type, not <see cref="ColumnType.Text"/>.</param>
 	/// <param name="destination">The form, of at most <see cref="MaxFormLength"/> bytes.</param>
+	/// <param name="cellType">
+	/// The type the form is handed to the sink as: the column type's (<see cref="CellType"/>), or <see cref="double"/> for a
+	/// number of more than 15 significant digits that is its double's own text.
+	/// </param>
 	/// <returns>The form's length, or -1 for a field to write as text: one that doesn't match, or a date before 1900 that is text.</returns>
-	public int Format(ReadOnlySpan<byte> field, ColumnType type, Span<byte> destination)
+	public int Format(ReadOnlySpan<byte> field, ColumnType type, Span<byte> destination, out Type cellType)
 	{
+		cellType = CellType(type);
 		switch (type)
 		{
 			case ColumnType.Number:
-				return TryNumber(field, destination);
+				var length = TryNumber(field, destination, out var isDouble);
+				if (isDouble)
+				{
+					cellType = typeof(double);
+				}
+
+				return length;
 			case ColumnType.Bool:
 				if (!TryBool(field, out var value))
 				{
@@ -329,9 +346,14 @@ internal sealed class ColumnTypes
 	/// </summary>
 	/// <param name="field">The field.</param>
 	/// <param name="destination">The invariant text, which is no longer than the field.</param>
+	/// <param name="isDouble">
+	/// Whether the number has more than 15 significant digits and is its double's own text, which the sink writes as a
+	/// double's whatever <see cref="ExcelWriterOptions.LongNumbers"/> says.
+	/// </param>
 	/// <returns>The invariant text's length, or -1 when the field isn't a number that matches.</returns>
-	private int TryNumber(ReadOnlySpan<byte> field, Span<byte> destination)
+	private int TryNumber(ReadOnlySpan<byte> field, Span<byte> destination, out bool isDouble)
 	{
+		isDouble = false;
 		if (field.Length > MaxFormLength)
 		{
 			return -1;
@@ -379,8 +401,10 @@ internal sealed class ColumnTypes
 		}
 
 		var exponent = 0;
+		var hasExponent = false;
 		if (i < field.Length && field[i] is (byte)'E' or (byte)'e')
 		{
+			hasExponent = true;
 			destination[n++] = (byte)'E';
 			i++;
 			var negativeExponent = false;
@@ -423,12 +447,124 @@ internal sealed class ColumnTypes
 		}
 
 		var magnitude = integer - 1 - first + exponent;
-		if ((last - first + 1 > MaxSignificantDigits && !longNumbers) || magnitude is < MinMagnitude or > MaxMagnitude)
+		if (magnitude is < MinMagnitude or > MaxMagnitude)
 		{
 			return -1;
 		}
 
+		var significant = last - first + 1;
+		if (significant > MaxSignificantDigits)
+		{
+			// A double's text: an integer's digits alone, such as an ID's, are never one, as a 16-digit ID isn't a double.
+			isDouble = (hasExponent || digits > integer) && IsDoubleText(destination.Slice(0, n), significant);
+			if (!isDouble && !longNumbers)
+			{
+				return -1;
+			}
+		}
+
 		return n;
+	}
+
+	/// <summary>
+	/// Whether a number's invariant text is its double's own: it has the significant digits, and the magnitude, of the
+	/// shortest text that reads back as the double nearest it, so that the double gives them back.
+	/// </summary>
+	/// <param name="text">The invariant text: <c>-</c>, digits, <c>.</c>, and <c>E</c> with <c>+</c> or <c>-</c>.</param>
+	/// <param name="significant">Its significant digits' count.</param>
+	/// <returns>Whether it is.</returns>
+	private static bool IsDoubleText(ReadOnlySpan<byte> text, int significant)
+	{
+		if (significant > MaxDoubleDigits || !FastFloat.TryParseDouble(text, out var value))
+		{
+			return false;
+		}
+
+		Span<byte> shortest = stackalloc byte[FloatFormatter.MaxDoubleLength];
+		if (!FloatFormatter.TryFormat(value, shortest, out var written))
+		{
+			return false;
+		}
+
+		Span<byte> digits = stackalloc byte[MaxDoubleDigits];
+		Span<byte> shortestDigits = stackalloc byte[MaxDoubleDigits];
+		var count = Significant(text, digits, out var magnitude);
+		var shortestCount = Significant(shortest.Slice(0, written), shortestDigits, out var shortestMagnitude);
+
+		return count == shortestCount && magnitude == shortestMagnitude && digits.Slice(0, count).SequenceEqual(shortestDigits.Slice(0, count));
+	}
+
+	/// <summary>
+	/// The significant digits of a number's invariant text, from the first that isn't 0 to the last, and the decimal
+	/// exponent of the first: <c>0.0123E2</c> has <c>123</c> and 0.
+	/// </summary>
+	/// <param name="text">The text, of a number that isn't 0, with at most <see cref="MaxDoubleDigits"/> significant digits.</param>
+	/// <param name="digits">The digits, of <see cref="MaxDoubleDigits"/> bytes.</param>
+	/// <param name="magnitude">The decimal exponent of the first digit.</param>
+	/// <returns>The digits' count.</returns>
+	private static int Significant(ReadOnlySpan<byte> text, Span<byte> digits, out int magnitude)
+	{
+		var count = 0;
+		var kept = 0;
+		var first = -1;
+		var integer = 0;
+		var inFraction = false;
+		var i = 0;
+		var position = 0;
+		for (; i < text.Length && text[i] is not ((byte)'E' or (byte)'e'); i++)
+		{
+			var b = text[i];
+			if (b == (byte)'.')
+			{
+				inFraction = true;
+			}
+			else if (IsDigit(b))
+			{
+				if (!inFraction)
+				{
+					integer++;
+				}
+
+				if (b != (byte)'0' && first < 0)
+				{
+					first = position;
+				}
+
+				if (first >= 0)
+				{
+					// Past the room, only zeros at the end can come, which aren't kept.
+					if (count < digits.Length)
+					{
+						digits[count] = b;
+					}
+
+					count++;
+					if (b != (byte)'0')
+					{
+						kept = count;
+					}
+				}
+
+				position++;
+			}
+		}
+
+		var exponent = 0;
+		if (i < text.Length)
+		{
+			var negative = text[++i] == (byte)'-';
+			i += text[i] is (byte)'-' or (byte)'+' ? 1 : 0;
+			for (; i < text.Length; i++)
+			{
+				exponent = Math.Min((exponent * 10) + (text[i] - '0'), ExponentCap);
+			}
+
+			exponent = negative ? -exponent : exponent;
+		}
+
+		magnitude = integer - 1 - first + exponent;
+
+		return kept;
 	}
 
 	/// <summary>Copies a mantissa's digit, and counts it.</summary>

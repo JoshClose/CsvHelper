@@ -215,10 +215,10 @@ internal static class CsvToSheet
 
 		if (type != ColumnType.Text)
 		{
-			var length = types.Format(field, type, room);
+			var length = types.Format(field, type, room, out var cellType);
 			if (length >= 0)
 			{
-				sheet.WriteField(room.Slice(0, length), ColumnTypes.CellType(type));
+				sheet.WriteField(room.Slice(0, length), cellType);
 
 				return;
 			}

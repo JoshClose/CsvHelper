@@ -88,7 +88,8 @@ public class ColumnTypesTests
 		{ "0E999999", true },
 		{ "10000000000000000000", true },          // one significant digit
 		{ "0.00000000000000000001", true },
-		{ "123456789012345.5", false },            // 16 significant digits
+		{ "123456789012345.5", true },             // 16 significant digits, its double's own text
+		{ "9.007199254740993E15", false },         // 16, 2^53 + 1, not its double's own text (9007199254740992)
 		{ "0.000123456789012345", true },          // 15
 		{ "1.5000000000000000", true },            // zeros at the end don't count, as the sink counts them
 		{ "9.99E307", true },
@@ -185,11 +186,70 @@ public class ColumnTypesTests
 	{
 		var types = new ColumnTypes(CultureInfo.InvariantCulture, new ExcelWriterOptions { LongNumbers = longNumbers });
 
-		// 15 digits always; 16 and 19 as the option says, so that the sink writes them as it says.
+		// 15 digits always; 16 and 19 as the option says, so that the sink writes them as it says, as decimals.
 		Assert.Equal(ColumnTypes.Bit(ColumnType.Number), types.Matches(Bytes("123456789012345")));
 		Assert.Equal(matches, types.Matches(Bytes("1234567890123456")) != 0);
 		Assert.Equal(matches, types.Matches(Bytes("-12345678901234567.89")) != 0);
 		Assert.Equal(matches ? "1234567890123456789" : null, Form(types, "1234567890123456789", ColumnType.Number));
+		if (matches)
+		{
+			Assert.Equal(typeof(decimal), CellTypeOf(types, "1234567890123456789"));
+		}
+
+		// A double's own text always, as a double, which the option doesn't apply to.
+		Assert.Equal("4.505630514819934", Form(types, "4.505630514819934", ColumnType.Number));
+		Assert.Equal(typeof(double), CellTypeOf(types, "4.505630514819934"));
+		Assert.Equal(typeof(decimal), CellTypeOf(types, "4.50563051481993"));
+	}
+
+	/// <summary>
+	/// Numbers of more than 15 significant digits with a fraction or an exponent, and whether each is its double's own
+	/// text (the shortest that reads back as its double, as .NET's <c>"R"</c> gives it), which matches as a double.
+	/// </summary>
+	public static TheoryData<string, bool> DoubleTexts => new()
+	{
+		{ "4.505630514819934", true },               // 16 digits, as .NET writes the double
+		{ "-4.505630514819934", true },
+		{ "0.30000000000000004", true },             // 17: 0.1 + 0.2
+		{ "0.30000000000000005", false },            // its double's text is 0.30000000000000004
+		{ "1234567890123456.7", false },             // its double's text is 1234567890123456.8
+		{ "12345678901234.567", false },             // 12345678901234.566
+		{ "1.2345678901234568E+16", true },          // .NET writes 12345678901234568, the same digits
+		{ "1.2345678901234568e16", true },
+		{ "1234567890123456E0", true },              // an exponent makes it a double's text
+		{ "4.5056305148199340", true },              // zeros at the end don't count
+		{ "45056305148199.34E-13", true },           // 4.505630514819934, the same digits and magnitude
+		{ "0.000000004505630514819934", true },
+		{ "1.7976931348623157E+308", false },        // past Excel's numbers, whatever it is
+		{ "0.1234567890123456789", false },          // 19 digits: no double's text has more than 17
+		{ "1234567890123456", false },               // an integer's digits alone: an ID, not a double
+	};
+
+	[Theory]
+	[MemberData(nameof(DoubleTexts))]
+	public void MatchesADoublesOwnText(string field, bool matches)
+	{
+		Assert.Equal(matches, Default.Matches(Bytes(field)) == ColumnTypes.Bit(ColumnType.Number));
+		if (matches)
+		{
+			Assert.Equal(typeof(double), CellTypeOf(Default, field));
+		}
+	}
+
+	[Theory]
+	[InlineData("de-DE", "4,505630514819934", "4.505630514819934")]
+	[InlineData("de-DE", "-4,505630514819934E-3", "-4.505630514819934E-3")]
+	[InlineData("fr-FR", "0,30000000000000004", "0.30000000000000004")]
+	[InlineData("de-DE", "0,30000000000000005", null)]
+	public void MatchesADoublesOwnTextInTheCsvsCulture(string culture, string field, string? expected)
+	{
+		var types = new ColumnTypes(new CultureInfo(culture), ExcelWriterOptions.Default);
+
+		Assert.Equal(expected, Form(types, field, ColumnType.Number));
+		if (expected is not null)
+		{
+			Assert.Equal(typeof(double), CellTypeOf(types, field));
+		}
 	}
 
 	[Theory]
@@ -392,8 +452,17 @@ public class ColumnTypesTests
 	private static string? Form(ColumnTypes types, string field, ColumnType type)
 	{
 		var destination = new byte[ColumnTypes.MaxFormLength];
-		var length = types.Format(Bytes(field), type, destination);
+		var length = types.Format(Bytes(field), type, destination, out _);
 
 		return length < 0 ? null : Encoding.UTF8.GetString(destination, 0, length);
+	}
+
+	/// <summary>The type a number column's field is handed to the sink as, or <see langword="null"/> when it is text.</summary>
+	private static Type? CellTypeOf(ColumnTypes types, string field)
+	{
+		var destination = new byte[ColumnTypes.MaxFormLength];
+		var length = types.Format(Bytes(field), ColumnType.Number, destination, out var cellType);
+
+		return length < 0 ? null : cellType;
 	}
 }

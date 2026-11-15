@@ -249,8 +249,11 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <item><description>
 	/// a number: <c>-?(0|[1-9][0-9]*)(\.[0-9]+)?([Ee][+-]?[0-9]+)?</c>, with the signs and decimal separator of the reader's
 	/// <see cref="CsvReaderOptions.FormatProvider"/> (<c>1,5</c> in <c>de-DE</c>), from 1E-307 to below 1E+308, and of at
-	/// most 15 significant digits when <see cref="ExcelWriterOptions.LongNumbers"/> is <see cref="ExcelLongNumbers.Text"/>;
-	/// so not <c>00123</c>, <c>+5</c>, <c>.5</c>, <c>1,234</c>, <c>$5</c>, <c>50%</c> or <c>NaN</c>;
+	/// most 15 significant digits when <see cref="ExcelWriterOptions.LongNumbers"/> is <see cref="ExcelLongNumbers.Text"/>,
+	/// but for a double's own text: a number with a fraction or an exponent whose 16 or 17 digits are the shortest that read
+	/// back as its double, as .NET, Python and JavaScript write doubles (<c>4.505630514819934</c>), which is a number cell
+	/// whatever <see cref="ExcelWriterOptions.LongNumbers"/> says, as a <see cref="double"/> is; so not <c>00123</c>,
+	/// <c>+5</c>, <c>.5</c>, <c>1,234</c>, <c>$5</c>, <c>50%</c> or <c>NaN</c>;
 	/// </description></item>
 	/// <item><description>a date, <c>yyyy-MM-dd</c>, of a day that exists;</description></item>
 	/// <item><description>

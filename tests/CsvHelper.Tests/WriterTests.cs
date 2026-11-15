@@ -409,6 +409,32 @@ public class WriterTests
 	}
 
 	[Fact]
+	public void ChecksTheOptionsBeforeCreatingAFile()
+	{
+		var invalid = new CsvWriterOptions { Separator = '"' };
+		var path = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N") + ".csv");
+
+		// No file is created.
+		Assert.ThrowsAny<ArgumentException>(() => CsvWriter.ToFile(path, invalid));
+		Assert.False(File.Exists(path));
+
+		// An existing file is left as it was, and isn't held open: it can be deleted at once.
+		File.WriteAllText(path, "kept");
+		try
+		{
+			Assert.ThrowsAny<ArgumentException>(() => CsvWriter.ToFile(path, invalid));
+			Assert.Equal("kept", File.ReadAllText(path));
+		}
+		finally
+		{
+			File.Delete(path);
+		}
+
+		Assert.False(File.Exists(path));
+		Assert.Throws<ArgumentNullException>(() => CsvWriter.ToFile(null!, invalid));
+	}
+
+	[Fact]
 	public void DoublesRoundTrip()
 	{
 		var rng = new Random(5);

@@ -50,6 +50,9 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 	/// <summary>A boolean: <c>true</c> or <c>false</c>, in any ASCII case.</summary>
 	private static readonly Regex Boolean = new(@"\A(?:[Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee])\z", RegexOptions.CultureInvariant);
 
+	/// <summary>An invariant number's text, as .NET formats a double or a form holds it: its integer digits, its fraction's and its exponent.</summary>
+	private static readonly Regex InvariantNumber = new(@"\A-?([0-9]+)(?:\.([0-9]+))?(?:[Ee]([+-]?[0-9]+))?\z", RegexOptions.CultureInvariant);
+
 	/// <summary>
 	/// A date, or a date and time with <c>T</c> or a space, minutes, seconds and a fraction of 1 to 7 digits if any, and an
 	/// offset if any: the forms, before their ranges are checked.
@@ -331,7 +334,8 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 
 	/// <summary>
 	/// A number at an edge of what inference types, in the culture's form, on either side: 15 or 16 significant digits, a
-	/// point among them or not, zeros around them; or a magnitude of 307 or 308, positive or negative.
+	/// point among them or not, zeros around them; a magnitude of 307 or 308, positive or negative; or a double's text, as
+	/// .NET writes it (<c>"R"</c>), or with its last digit changed, which is mostly not its double's own.
 	/// </summary>
 	/// <param name="random">The seed's random numbers.</param>
 	/// <param name="format">The culture's numbers.</param>
@@ -340,6 +344,19 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 	{
 		var sign = random.Next(3) == 0 ? format.NegativeSign : "";
 		var point = format.NumberDecimalSeparator;
+		if (random.Next(3) == 0)
+		{
+			var text = (random.NextDouble() * Math.Pow(10, random.Next(-12, 18))).ToString("R", CultureInfo.InvariantCulture);
+			var end = text.IndexOfAny(['E', 'e']) is var e and >= 0 ? e : text.Length;
+			if (random.Next(2) == 0 && char.IsDigit(text[end - 1]))
+			{
+				var digit = (char)('0' + ((text[end - 1] - '0' + random.Next(1, 10)) % 10));
+				text = text.Substring(0, end - 1) + digit + text.Substring(end);
+			}
+
+			return sign + text.Replace(".", point).Replace("E-", "E" + format.NegativeSign).Replace("E+", "E" + format.PositiveSign);
+		}
+
 		if (random.Next(2) == 0)
 		{
 			var digits = Digits(random, random.Next(15, 17));
@@ -627,8 +644,8 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 
 		/// <summary>
 		/// The types a field matches, as bits of <see cref="Kind"/>: a number of the culture's form, in Excel's range, of at
-		/// most 15 significant digits unless long numbers aren't text; a date of a day that exists, which a date and time
-		/// takes too; a date and time; one with an offset, unless offsets are text; a boolean.
+		/// most 15 significant digits unless it is a double's own text or long numbers aren't text; a date of a day that
+		/// exists, which a date and time takes too; a date and time; one with an offset, unless offsets are text; a boolean.
 		/// </summary>
 		/// <param name="field">The field.</param>
 		/// <returns>The bits.</returns>
@@ -639,7 +656,7 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 				return 1 << (int)Kind.Bool;
 			}
 
-			if (TryNumber(field, out _, out var digits) && (digits <= MaxDigits || options.LongNumbers != ExcelLongNumbers.Text))
+			if (TryNumber(field, out var form, out var digits, out var isDouble) && (digits <= MaxDigits || isDouble || options.LongNumbers != ExcelLongNumbers.Text))
 			{
 				return 1 << (int)Kind.Number;
 			}
@@ -667,8 +684,9 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 			var text = ("Text:" + AsClosedXmlReads(field), (string?)null);
 			switch (kind)
 			{
-				case Kind.Number when TryNumber(field, out var form, out var digits) && (digits <= MaxDigits || options.LongNumbers != ExcelLongNumbers.Text):
-					return digits > MaxDigits && options.LongNumbers == ExcelLongNumbers.Throw
+				case Kind.Number when TryNumber(field, out var form, out var digits, out var isDouble) && (digits <= MaxDigits || isDouble || options.LongNumbers != ExcelLongNumbers.Text):
+					// A double's own text is a double's cell, which long numbers don't apply to.
+					return digits > MaxDigits && !isDouble && options.LongNumbers == ExcelLongNumbers.Throw
 						? (null, nameof(ExcelWriterOptions.LongNumbers))
 						: ("Number:" + double.Parse(form, NumberStyles.Float, CultureInfo.InvariantCulture).ToString("R", CultureInfo.InvariantCulture), null);
 				case Kind.Bool when Boolean.IsMatch(field):
@@ -710,11 +728,16 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 		/// <param name="field">The field.</param>
 		/// <param name="form">The invariant text.</param>
 		/// <param name="digits">The significant digits.</param>
+		/// <param name="isDouble">
+		/// Whether it has more than 15 significant digits, a fraction or an exponent, and is its double's own text
+		/// (<see cref="IsDoubleText"/>).
+		/// </param>
 		/// <returns>Whether the field is such a number.</returns>
-		private bool TryNumber(string field, out string form, out int digits)
+		private bool TryNumber(string field, out string form, out int digits, out bool isDouble)
 		{
 			form = "";
 			digits = 0;
+			isDouble = false;
 			var match = number.Match(field);
 			if (!match.Success || Encoding.UTF8.GetByteCount(field) > MaxNumberBytes)
 			{
@@ -736,8 +759,136 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 
 			digits = mantissa.LastIndexOfAny(['1', '2', '3', '4', '5', '6', '7', '8', '9']) - firstDigit + 1;
 			var magnitude = integer.Length - 1 - firstDigit + (negativeExponent ? -exponent : exponent);
+			if (magnitude < MinMagnitude || magnitude > MaxMagnitude)
+			{
+				return false;
+			}
 
-			return magnitude >= MinMagnitude && magnitude <= MaxMagnitude;
+			isDouble = digits > MaxDigits && (match.Groups[3].Success || match.Groups[5].Success) && IsDoubleText(form);
+
+			return true;
+		}
+
+		/// <summary>
+		/// Whether a number's invariant text is its double's own: the significant digits and magnitude of the shortest text
+		/// that reads back as the double nearest it. Worked out exactly, with <see cref="BigInteger"/>, apart from the
+		/// converter's parser and formatter and from the runtime's, which .NET Framework rounds to 15 digits.
+		/// </summary>
+		/// <param name="form">The invariant text, of a number in Excel's range that isn't 0.</param>
+		/// <returns>Whether it is.</returns>
+		private static bool IsDoubleText(string form)
+		{
+			var (digits, magnitude) = Significant(form);
+			if (digits.Length > 17)
+			{
+				return false;
+			}
+
+			var value = NearestDouble(BigInteger.Parse(digits, CultureInfo.InvariantCulture), (int)magnitude - (digits.Length - 1));
+			for (var precision = 1; precision <= 17; precision++)
+			{
+				var (rounded, scale) = RoundToDigits(value, precision);
+				if (NearestDouble(rounded, scale) == value)
+				{
+					var shortest = rounded.ToString(CultureInfo.InvariantCulture).TrimEnd('0');
+
+					return shortest == digits && scale + (rounded.ToString(CultureInfo.InvariantCulture).Length - 1) == magnitude;
+				}
+			}
+
+			return false;
+		}
+
+		/// <summary>
+		/// The double nearest a positive number, rounding half to even, as its mantissa (2^52 to below 2^53) and binary
+		/// exponent: a normal double, as every number in Excel's range is.
+		/// </summary>
+		/// <param name="digits">The number's digits, an integer.</param>
+		/// <param name="scale">The power of ten they are multiplied by.</param>
+		/// <returns>The mantissa and the exponent, the double being their product.</returns>
+		private static (BigInteger Mantissa, int Exponent) NearestDouble(BigInteger digits, int scale)
+		{
+			var (numerator, denominator) = scale >= 0 ? (digits * BigInteger.Pow(10, scale), BigInteger.One) : (digits, BigInteger.Pow(10, -scale));
+			var exponent = (int)Math.Floor(BigInteger.Log(numerator, 2) - BigInteger.Log(denominator, 2)) - 52;
+			while (true)
+			{
+				var (top, bottom) = exponent >= 0 ? (numerator, denominator << exponent) : (numerator << -exponent, denominator);
+				var mantissa = BigInteger.DivRem(top, bottom, out var remainder);
+				if (mantissa < BigInteger.One << 52)
+				{
+					exponent--;
+
+					continue;
+				}
+
+				if (mantissa >= BigInteger.One << 53)
+				{
+					exponent++;
+
+					continue;
+				}
+
+				var twice = remainder * 2;
+				if (twice > bottom || (twice == bottom && !mantissa.IsEven))
+				{
+					mantissa++;
+				}
+
+				return mantissa == BigInteger.One << 53 ? (BigInteger.One << 52, exponent + 1) : (mantissa, exponent);
+			}
+		}
+
+		/// <summary>A double rounded to a number of significant digits, half to even, exactly.</summary>
+		/// <param name="value">The double's mantissa and exponent.</param>
+		/// <param name="precision">The digits.</param>
+		/// <returns>The rounded digits, an integer, and the power of ten they are multiplied by.</returns>
+		private static (BigInteger Digits, int Scale) RoundToDigits((BigInteger Mantissa, int Exponent) value, int precision)
+		{
+			var (numerator, denominator) = value.Exponent >= 0 ? (value.Mantissa << value.Exponent, BigInteger.One) : (value.Mantissa, BigInteger.One << -value.Exponent);
+			var magnitude = (int)Math.Floor(BigInteger.Log10(numerator) - BigInteger.Log10(denominator));
+			while (Below(numerator, denominator, magnitude))
+			{
+				magnitude--;
+			}
+
+			while (!Below(numerator, denominator, magnitude + 1))
+			{
+				magnitude++;
+			}
+
+			var scale = magnitude - precision + 1;
+			var (top, bottom) = scale >= 0 ? (numerator, denominator * BigInteger.Pow(10, scale)) : (numerator * BigInteger.Pow(10, -scale), denominator);
+			var digits = BigInteger.DivRem(top, bottom, out var remainder);
+			var twice = remainder * 2;
+			if (twice > bottom || (twice == bottom && !digits.IsEven))
+			{
+				digits++;
+			}
+
+			return digits == BigInteger.Pow(10, precision) ? (BigInteger.Pow(10, precision - 1), scale + 1) : (digits, scale);
+		}
+
+		/// <summary>Whether a fraction is below a power of ten.</summary>
+		/// <param name="numerator">The fraction's numerator.</param>
+		/// <param name="denominator">Its denominator.</param>
+		/// <param name="power">The power of ten.</param>
+		/// <returns>Whether the fraction is below 10 to the power.</returns>
+		private static bool Below(BigInteger numerator, BigInteger denominator, int power) =>
+			power >= 0 ? numerator < denominator * BigInteger.Pow(10, power) : numerator * BigInteger.Pow(10, -power) < denominator;
+
+		/// <summary>The significant digits of an invariant number's text, and the decimal exponent of the first.</summary>
+		/// <param name="text">The text, of a number that isn't 0.</param>
+		/// <returns>The digits, from the first that isn't 0 to the last, and the exponent.</returns>
+		private static (string Digits, BigInteger Magnitude) Significant(string text)
+		{
+			var match = InvariantNumber.Match(text);
+			var integer = match.Groups[1].Value;
+			var mantissa = integer + match.Groups[2].Value;
+			var first = mantissa.IndexOfAny(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+			var last = mantissa.LastIndexOfAny(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
+			var exponent = match.Groups[3].Success ? BigInteger.Parse(match.Groups[3].Value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture) : BigInteger.Zero;
+
+			return (mantissa.Substring(first, last - first + 1), integer.Length - 1 - first + exponent);
 		}
 
 		/// <summary>
