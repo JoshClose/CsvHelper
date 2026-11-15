@@ -49,6 +49,12 @@ internal sealed class TestPackage
 	/// <summary>The namespace of the content types part.</summary>
 	public const string ContentTypesNamespace = "http://schemas.openxmlformats.org/package/2006/content-types";
 
+	/// <summary>
+	/// The date of every entry, as the writer's own entries have: fixed, so that a package's bytes are the same whenever
+	/// it's built. A zip entry's date is otherwise the current time, in steps of two seconds.
+	/// </summary>
+	public static readonly DateTimeOffset EntryDate = new(1980, 1, 1, 0, 0, 0, TimeSpan.Zero);
+
 	private readonly List<(string Name, byte[]? Data, Action<Stream>? Write, CompressionLevel Level)> entries = [];
 
 	/// <summary>The names of the entries, in order.</summary>
@@ -311,8 +317,8 @@ internal sealed class TestPackage
 	/// <returns>The text.</returns>
 	public string Text(string name) => Encoding.UTF8.GetString(entries.Single(e => e.Name == name).Data ?? throw new InvalidOperationException($"{name} is streamed."));
 
-	/// <summary>Writes the package as a zip archive.</summary>
-	/// <returns>The bytes of the archive.</returns>
+	/// <summary>Writes the package as a zip archive, every entry dated <see cref="EntryDate"/>.</summary>
+	/// <returns>The bytes of the archive, the same whenever it's built.</returns>
 	public byte[] ToArray()
 	{
 		var output = new MemoryStream();
@@ -320,7 +326,9 @@ internal sealed class TestPackage
 		{
 			foreach (var (name, data, write, level) in entries)
 			{
-				using var stream = zip.CreateEntry(name, level).Open();
+				var entry = zip.CreateEntry(name, level);
+				entry.LastWriteTime = EntryDate;
+				using var stream = entry.Open();
 				if (data is not null)
 				{
 					stream.Write(data, 0, data.Length);
