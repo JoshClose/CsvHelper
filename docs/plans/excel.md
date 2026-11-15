@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11. Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11, and step 8 (benchmarks) 2026-11-12. Step 9 ("As built") was written, approved and committed 2026-11-12, with the gate re-checked. Phase 5 is complete, its gate met; see "As built" under Phase 5, which opens with a summary. The branch was pushed that day, and CI's run 43342222558 passed every step (Phase 5's "Left open"). Phase 6's detailed design was written 2026-11-12, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (core hooks) was built, approved, with every recommendation, and committed that day, with its gate met, and step 2 (`.xlsx` → CSV) was built that day, and approved, with every recommendation, and committed 2026-11-13. Step 3 (CSV → `.xlsx`) was built 2026-11-13, and approved, with every recommendation, and committed 2026-11-14. Step 4 (corpus and oracles) was built 2026-11-14, and approved, with every recommendation, and committed that day. GridCraft as an oracle followed (see step 4's "On approval"): its design was written that day, after asking GridCraft 0.18.0 about every cell Excel answered about, which found it reading 338 otherwise than Excel; the user chose to treat it as another product, like LibreOffice, its differences listed; and it was built, approved, with every recommendation, and committed that day. Step 5 (security, fuzzing and AOT) was built that day, and approved, with every recommendation, and committed that day. The branch was pushed through step 5 that day, and CI's run 43641418718 failed one test, `AllocatesTheSameForAnyNumberOfRows`, on an allocation the runtime makes once, at a moment the JIT's tiering sets; the two allocation tests with a 4 KB budget now keep the smaller of two passes, approved, with every recommendation, and committed that day (see "CI's run on step 5" under Phase 6's "As built"). Step 6 (benchmarks) was built that day, and approved, with every recommendation, and committed that day. Step 7 (the guide and publishing) was built that day, and approved, with every recommendation, and committed that day, and the branch pushed: CI's run 43657267012 passed every step. Step 8 ("As built") was written, approved and committed that day, with the gate re-checked. Phase 6 is complete, its gate met; see "As built" under Phase 6, which opens with a summary. v1.0's phases 0 to 6 are complete; the release isn't tagged. Before the release, at the approval of step 8: inference takes a double's own text of 16 or 17 digits as a number, and core's `CsvWriter.ToFile` checks its options before it creates its file; built, approved, with every recommendation, and committed that day, and the branch pushed (see "Before the release" under Phase 6's "As built"). CI's run 43662883270 of that push failed one test, on the dates the tests' own zips gave their entries; the tests' packages now have a fixed date, approved, with every recommendation, and committed that day (see "CI's run before the release"). Next: Phase 7's detailed design.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11. Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11, and step 8 (benchmarks) 2026-11-12. Step 9 ("As built") was written, approved and committed 2026-11-12, with the gate re-checked. Phase 5 is complete, its gate met; see "As built" under Phase 5, which opens with a summary. The branch was pushed that day, and CI's run 43342222558 passed every step (Phase 5's "Left open"). Phase 6's detailed design was written 2026-11-12, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (core hooks) was built, approved, with every recommendation, and committed that day, with its gate met, and step 2 (`.xlsx` → CSV) was built that day, and approved, with every recommendation, and committed 2026-11-13. Step 3 (CSV → `.xlsx`) was built 2026-11-13, and approved, with every recommendation, and committed 2026-11-14. Step 4 (corpus and oracles) was built 2026-11-14, and approved, with every recommendation, and committed that day. GridCraft as an oracle followed (see step 4's "On approval"): its design was written that day, after asking GridCraft 0.18.0 about every cell Excel answered about, which found it reading 338 otherwise than Excel; the user chose to treat it as another product, like LibreOffice, its differences listed; and it was built, approved, with every recommendation, and committed that day. Step 5 (security, fuzzing and AOT) was built that day, and approved, with every recommendation, and committed that day. The branch was pushed through step 5 that day, and CI's run 43641418718 failed one test, `AllocatesTheSameForAnyNumberOfRows`, on an allocation the runtime makes once, at a moment the JIT's tiering sets; the two allocation tests with a 4 KB budget now keep the smaller of two passes, approved, with every recommendation, and committed that day (see "CI's run on step 5" under Phase 6's "As built"). Step 6 (benchmarks) was built that day, and approved, with every recommendation, and committed that day. Step 7 (the guide and publishing) was built that day, and approved, with every recommendation, and committed that day, and the branch pushed: CI's run 43657267012 passed every step. Step 8 ("As built") was written, approved and committed that day, with the gate re-checked. Phase 6 is complete, its gate met; see "As built" under Phase 6, which opens with a summary. v1.0's phases 0 to 6 are complete; the release isn't tagged. Before the release, at the approval of step 8: inference takes a double's own text of 16 or 17 digits as a number, and core's `CsvWriter.ToFile` checks its options before it creates its file; built, approved, with every recommendation, and committed that day, and the branch pushed (see "Before the release" under Phase 6's "As built"). CI's run 43662883270 of that push failed one test, on the dates the tests' own zips gave their entries; the tests' packages now have a fixed date, approved, with every recommendation, and committed that day (see "CI's run before the release"). Phase 7's detailed design was written that day, after checks of Excel, LibreOffice and GridCraft, and approved that day, with every recommendation accepted; it makes the phase L.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -82,6 +82,7 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { AutoFilter = t
 - **`ExcelSheetOptions`** (Phase 5): `Title` (a row above the header, merged across it), `BoldHeader` and `FreezeHeader` (both on), `FreezeColumns`, `AutoFilter`, `Table` (an `ExcelTableOptions`: name, style, banded rows, filter buttons), `AutoFit` (rows to measure, 100; 0 for none) and `MaxAutoFitWidth` (60 characters), and `Columns` (per header name, an `ExcelColumnOptions`: `Width`, `Format`, `Wrap`, `Hidden`). A sheet's are the argument, else `T`'s `[ExcelSheet]`, else `ExcelWriterOptions.Sheets`, each taken whole.
 - **Attributes** (Phase 5): `[ExcelColumn(Width, Format, Wrap, Hidden)]` on members, and `[ExcelSheet]` on the class, with `ExcelSheetOptions`' settings but `Columns` (the table's as `Table`, `TableName` and `TableStyle`) and no `Name`, since a sheet's name is always given.
 - **`ExcelConvert`** (Phase 6): `ToCsv` (one sheet, from paths, streams, or a sheet's reader into a CSV writer), `ToCsvFiles` (every worksheet, a file each in a folder), `ToExcel` (one sheet, its columns' types inferred) and `ToExcel<T>` (typed through `T`), each sync and async, with `ExcelToCsvOptions` (`Excel`, `Csv`) and `CsvToExcelOptions` (`Csv`, `Excel`, `SheetName`, `Sheet`, `InferTypes`: records that decide the types, 1,000; 0 for text). `ExcelWorkbookWriter.WriteSheet(name, CsvReader)` writes a CSV reader's records into a sheet, for several CSV files in one workbook.
+- **Templates and the import** (Phase 7): `ExcelSheetOptions` gains `Validate` (each column's dropdown or validation from its member's type), `Protect` (the header locked, the cells below it unlocked) and `Password`, and `[ExcelSheet]` the first two; `ExcelColumnOptions` and `[ExcelColumn]` gain `List` (a dropdown of values) and `Prompt` (help shown when a cell is selected). `ExcelTemplate.Create<T>` writes a workbook of one such sheet with `T`'s header and no records, from paths and streams, sync and async, with `ExcelTemplateOptions` (`SheetName`, `Excel`, `Sheet`). `ExcelReader.Import<T>` reads a sheet's records into an `ExcelImportResult<T>`: `Records`, and `Errors`, an `ExcelImportError` for every cell that doesn't read (its `Location`, `Row`, `Column`, `Member`, `Value` and `Message`), up to `maxErrors` (1,000).
 
 ## Phases
 
@@ -7175,7 +7176,11 @@ Filled in step by step; the code is the reference.
 
 **v1.0 release: phases 0–6.**
 
-### Phase 7: import templates (M)
+### Phase 7: import templates (L)
+
+Status: the detailed design below was written on 2026-11-14, after the Excel, LibreOffice and GridCraft checks under "Checked on 2026-11-14", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. The design makes the phase L rather than M: an import that names every cell at fault needs a method that core's generator writes (decision 8), and the corpus gains templates that Excel fills in.
+
+Scope, as planned:
 
 - **`ExcelTemplate.Create<T>`:**
   - Header-only sheet, with column default formats.
@@ -7184,6 +7189,312 @@ Filled in step by step; the code is the reference.
   - Help text shown when a cell is selected, using validation input prompts. These need none of the VML drawing parts that cell comments do.
 - **Locking:** sheet protection, with the header locked and data cells unlocked.
 - **`ExcelImportResult<T>`:** the records plus every error with its cell address, for "fix these cells" feedback to users.
+
+#### Public API
+
+Phase 7 adds validations, prompts and protection to Phase 5's sheet and column settings, so that any sheet can have them (decision 1); `ExcelTemplate`, a workbook of one such sheet with a header and no records; and `ExcelReader.Import<T>`, which reads a sheet's records and every cell that doesn't read.
+
+```csharp
+public sealed record ExcelSheetOptions
+{
+	// Phase 5's, and:
+	public bool Validate { get; init; }		// each column's dropdown or validation, from its member's type
+	public bool Protect { get; init; }		// the header and title locked, the header's columns below it unlocked
+	public string? Password { get; init; }		// null for none; needs Protect
+}
+
+public sealed record ExcelColumnOptions
+{
+	// Phase 5's, and:
+	public IReadOnlyList<string>? List { get; init; }	// a dropdown of these values, in place of the type's validation
+	public string? Prompt { get; init; }			// shown when a cell below the header is selected
+}
+
+public sealed class ExcelColumnAttribute : Attribute
+{
+	// Phase 5's, and:
+	public string[]? List { get; set; }
+	public string? Prompt { get; set; }
+}
+
+public sealed class ExcelSheetAttribute : Attribute
+{
+	// Phase 5's, and, without a password (decision 9):
+	public bool Validate { get; set; }
+	public bool Protect { get; set; }
+}
+
+public static class ExcelTemplate
+{
+	// A workbook of one sheet: T's header, no records, Validate and Protect on.
+	public static void Create<[DynamicallyAccessedMembers(Members)] T>(string path, ExcelTemplateOptions? options = null);
+	public static void Create<[DynamicallyAccessedMembers(Members)] T>(Stream stream, ExcelTemplateOptions? options = null);
+	public static ValueTask CreateAsync<[DynamicallyAccessedMembers(Members)] T>(string path, ExcelTemplateOptions? options = null, CancellationToken cancellationToken = default);
+	public static ValueTask CreateAsync<[DynamicallyAccessedMembers(Members)] T>(Stream stream, ExcelTemplateOptions? options = null, CancellationToken cancellationToken = default);
+}
+
+public sealed record ExcelTemplateOptions
+{
+	public static ExcelTemplateOptions Default { get; } = new();
+	public string? SheetName { get; init; }					// null: T's name
+	public ExcelWriterOptions Excel { get; init; } = ExcelWriterOptions.Default;	// strings, compression, dates, links
+	public ExcelSheetOptions? Sheet { get; init; }				// null: T's [ExcelSheet], else Excel.Sheets
+}
+
+public static class ExcelReader
+{
+	// Phase 1's, and: a sheet's records, and every cell that doesn't read, by its address.
+	public static ExcelImportResult<T> Import<T>(string path, ExcelReaderOptions? options = null, int maxErrors = 1000);
+	public static ExcelImportResult<T> Import<T>(Stream stream, ExcelReaderOptions? options = null, int maxErrors = 1000);
+	public static ValueTask<ExcelImportResult<T>> ImportAsync<T>(string path, ExcelReaderOptions? options = null, int maxErrors = 1000, CancellationToken cancellationToken = default);
+	public static ValueTask<ExcelImportResult<T>> ImportAsync<T>(Stream stream, ExcelReaderOptions? options = null, int maxErrors = 1000, CancellationToken cancellationToken = default);
+
+	// From a reader: a sheet of a workbook already open, or a CSV file.
+	public static ExcelImportResult<T> Import<T>(CsvReader reader, int maxErrors = 1000);
+	public static ValueTask<ExcelImportResult<T>> ImportAsync<T>(CsvReader reader, int maxErrors = 1000, CancellationToken cancellationToken = default);
+}
+
+public sealed class ExcelImportResult<T>
+{
+	public IReadOnlyList<T> Records { get; }			// the records that read, in the sheet's order
+	public IReadOnlyList<ExcelImportError> Errors { get; }		// every cell that didn't, by row, then column
+	public bool HasErrors { get; }
+	public bool Complete { get; }					// false when reading stopped at maxErrors
+}
+
+public sealed class ExcelImportError
+{
+	public string? Location { get; }	// Orders!C14; a record's row, Orders!14:14; null for CSV
+	public long Row { get; }		// the sheet's row; for CSV, the record's number
+	public string? Column { get; }		// the header's name of the cell's column
+	public string? Member { get; }		// Order.Price
+	public string? Value { get; }		// the cell's text, as the reader reads it
+	public string Message { get; }		// what is wrong: the cause's message
+	public Exception Exception { get; }
+}
+```
+
+`Members` is Phase 4's. Only the import makes an `ExcelImportError`, so it has no public constructor. Reading needs no reflection, so `Import<T>` has no `[DynamicallyAccessedMembers]`: `T` is a `[CsvRecord]` type, read by its generated mapper.
+
+**Where the settings come from:** as Phase 5's: a sheet's are the `options` argument, else `T`'s `[ExcelSheet]`, else `ExcelWriterOptions.Sheets`, each taken whole; a column's are its entry in `Columns`, else its member's `[ExcelColumn]`. They are checked when the sheet is added, and a bad one throws `ArgumentException`.
+
+**`Validate`** (off; decisions 2 to 4): each column whose member's type is known gets a validation from it, and its type's format as its default style (`col style`), so that the cells users type take it. Types are known for `WriteSheet<T>`, `AddSheet<T>` and `ToExcel<T>`; a sheet without them (`AddSheet`, `WriteSheet(name, CsvReader)`) gets only its columns' lists and prompts (decision 18).
+
+| Member's type (or its `Nullable<T>`) | Validation | Column's format |
+| --- | --- | --- |
+| `bool` | a dropdown of `TRUE,FALSE`, which Excel enters as booleans | General |
+| `bool` with `[CsvBooleanValues]` | a dropdown of its first true and first false value | Text (`@`) |
+| an enum without `[Flags]` | a dropdown of its members as the record writer writes them (the first `[CsvEnumName]`, else the name), in declaration order, each text once | Text |
+| an enum with `[Flags]` | none | Text |
+| `sbyte`, `byte`, `short`, `ushort`, `int`, `uint` | a whole number in the type's range | General |
+| `long`, `ulong` | a whole number of at most 15 digits: `-999999999999999` (0 for `ulong`) to `999999999999999` | General |
+| `float` | a decimal within ±3.40282346638529E+38 | General |
+| `double` | a decimal within ±9.99999999999999E+307, Excel's largest | General |
+| `decimal` | a decimal within ±7.92281625142643E+28 | General |
+| `DateTime` | a date from 1900-01-01 to 9999-12-31 23:59:59.999 | `yyyy-mm-dd hh:mm:ss` |
+| `DateOnly` | the same | `yyyy-mm-dd` |
+| `TimeOnly` | a time from 00:00:00 to 23:59:59.999 | `hh:mm:ss` |
+| `TimeSpan` | a time from 0 to Excel's last serial: durations past a day too, not negative ones | `[h]:mm:ss` |
+| `DateTimeOffset` | as `DateTime` under `DateTimeOffsets` `Utc` and `ClockTime`; none under `Text` | as `DateTime`; Text under `Text` |
+| `char` | a text of length 1 | Text |
+| `string`, `Guid`, `Uri`, and other types | none | Text |
+| a member with `[CsvConverter]`, or a collection's columns | none | General |
+
+- A column's own `Format` takes the place of its type's, as in Phase 5. A date member's translated `[CsvFormat]` does too; one Phase 4 can't translate, whose values it writes as text, gets Text and no validation, so that users type the member's format.
+- Written cells keep their own formats, as Phase 4 gives them; the type's format is the column's default style only.
+- Dates', times' and durations' columns are at least as wide as their format's values, as Phase 4 sizes a typed column from its first record, since a header-only sheet has none.
+- A `DateOnly` column takes a date with a time, as Excel's date validation does, and the import reads its date (Phase 2's rule).
+- Excel's date validation refuses ISO's `2024-01-15T10:30:00`, which Excel reads as text (checked); `2024-01-15 10:30` is a date.
+
+**Lists** (`List` and `[ExcelColumn(List)]`, on any sheet, `Validate` or not; decision 5):
+
+- A dropdown of the values, in place of the type's validation, so an `int` column of `1,2,3` takes the numbers 1 to 3. Each value has 1 to 255 characters, since Excel doesn't match a longer one even typed exactly (checked); a value repeated is listed once.
+- **Inline** when the values, joined by commas, have at most 255 characters, as Excel holds them (a quote counts once), and none has a comma or a space at either end. 256 opens only in newer Excel, which marks it with `_xlfn._LONGTEXT` (checked).
+- **Otherwise in the lists sheet:** a worksheet named `Lists` (numbered when taken, `Lists2`), very hidden, written when the workbook ends, after every other sheet. Each distinct list is a column of text cells, and has a hidden name over it (`_CsvHelperList1`, …) that the validations refer to: a sheet's validations are written before the workbook knows the lists sheet's name, and the names are written with the workbook's. The names are registered with the tables', so that none collides. The sheet is protected, without a password. Excel shows a very hidden sheet only through VBA; LibreOffice reads it as hidden (checked).
+- Excel matches inline values in their case and listed ones ignoring it (checked). The import reads a value as the member's type does: an enum ignoring case.
+
+**Prompts** (`Prompt`): shown when a cell of the column below the header is selected, with the column's header name as its title, cut to 32 characters, the most Excel's dialog takes (decision 17). 1 to 255 characters, line breaks kept; a longer one throws, since Excel repairs such a workbook by dropping the validation (checked). A prompt on a column without a validation is a validation of no type, Excel's "Any value".
+
+**Error alerts:** Excel's own message, in its user's language, with its Stop style: a value the validation refuses isn't entered (decision 6).
+
+**Each validation's cells:** the column from the row below the header to the last row (`B2:B1048576`, `B3:B1048576` under a title), as Excel's own "whole column" validations cover them. With `RowLimit.NewSheet`, each sheet has its own.
+
+**`Protect`** (off; decisions 9 to 11):
+
+- `sheetProtection`, after `sheetData`, with Excel's defaults (selecting locked and unlocked cells), and resizing columns and rows; with an autofilter, sorting and filtering too.
+- **Locked:** the title's and the header's rows, and every column past the header's. **Unlocked:** the header's columns below it: each cell written there, through its style's unlocked form, and the cells users add, through each column's default style. So users type below the header and can't change it (checked).
+- **`Password`:** SHA-512 with a random salt of 16 bytes and 100,000 spins, as Excel 2013 and later write it. Excel and GridCraft refuse a wrong one and take the right one, and LibreOffice keeps the hash (checked). A password without `Protect` throws.
+- `Protect` with a `Table` throws, since Excel doesn't grow a table on a protected sheet, nor add its rows (checked).
+
+**`ExcelTemplate.Create<T>`:** a workbook of one sheet, `WriteSheet<T>(name, [], sheet)`: named `SheetName`, else `T`'s name made a sheet name; its look from `Sheet`, else `T`'s `[ExcelSheet]`, else `Excel.Sheets`, with `Validate` and `Protect` on (decision 16). The path overloads create or overwrite the file, and delete it after a failure; the stream overloads leave the stream open (Phase 6's decision 16). A sheet that needn't validate or protect, or that holds records to edit, is `WriteSheet<T>` with the settings asked for.
+
+**`Import<T>`** (decisions 7, 8 and 12 to 15):
+
+- Opens the workbook as `ExcelReader.FromFile` and `Create` do, with `options`, and reads the sheet they choose: by default the first worksheet, so not the lists sheet, which is last.
+- **The header** must have `T`'s required columns: each one missing is an error at the header's row (`Orders!1:1`), and no record is read.
+- **Each record** is read with `T`'s mapper. One that reads is added to `Records`. One that fails is left out and gives an error for each member whose field doesn't read, found by core's `FindFailingMembers` (below), each naming its cell, column, member and text, with the cause's message (a `FormatException`'s, or `[CsvValidate]`'s); and one error at the record's row when no member is at fault, such as when its constructor throws.
+- Empty rows are skipped, as `SkipEmptyLines` (on by default) skips them. Error cells read as `ErrorCells` says, so with `Text` a `#N/A` in a number column is an error of its own.
+- **`maxErrors`** (1,000; 1 or more): reading stops at that many errors, and `Complete` is false.
+- `Csv.OnRecordError` isn't called, since every error is in the result. A workbook that can't be read throws, as `ExcelReader` throws.
+- From a reader: its records from where it stands. For CSV, `Location` is null and `Row` is the record's number.
+- Sync and async; the async forms read with `ReadAsync`.
+
+**Messages** (`ArgumentException`):
+
+- "The sheet Orders can't have a table and be protected: Excel doesn't add rows to a table on a protected sheet."
+- "A password protects a sheet, so it needs Protect."
+- "The list of the column Status has a value of 300 characters; Excel matches values of at most 255."
+- "The prompt of the column Notes has 312 characters; Excel opens prompts of at most 255."
+
+#### Checked on 2026-11-14
+
+Excel 365 (16.0 build 20527) through COM, LibreOffice 26.8.2.2 and GridCraft 0.18.0, on this machine's en-US settings. The probes, their scripts and the answers are in `Csv\_bench\results\phase7\design`: `make_probes.py` writes 48 workbooks (`probes`) and the texts to enter in them (`entries.json`); `probe.ps1` opens each in Excel, enters each text as typing does (`Range.Formula`, which no validation stops, as pasting isn't stopped) and asks Excel whether its validation takes it (`answers.txt`); `lo_report.py` reports what LibreOffice's own `.xlsx` of each kept (`lo`, `lo-answers.txt`), and of four more on a validation's extent (`make_probes2.py`, `lo2`); `gridcraft_probe.py` asks GridCraft's `data.validate` about the same entries, and reads its locks and passwords (`gridcraft-answers.txt`); `ignored.ps1` (`ignored.txt`) and `table.ps1` (`table.txt`) ask the last two questions below.
+
+- **Lists inline:** `"Red,Green,Blue"` is a dropdown that matches its values in their case: `Red` is taken, `red` and `Purple` refused, and ` Red`, with a space before it, taken. A list of numbers matches numbers: `1` and `2.0` taken for `1,2,3`, `4` refused, the text `'1` taken. In `TRUE,FALSE`, typed `TRUE` and `true` are Excel's booleans and taken, the text `'TRUE` taken, `yes` and `1` refused. A doubled quote is a quote: `a""b,c` lists `a"b`.
+- **255 characters:** a list of 255 opens as it is. One of 256 opens in this Excel, which adds a hidden name `_xlfn._LONGTEXT`, the mark of a feature only newer Excel has. The count is of the values as Excel holds them: 255 with ten quotes, 265 as written, opens without the mark.
+- **Lists on another sheet:** `Lists!$A$1:$A$3`, `'My Lists'!$A$1:$A$3`, a name over the range (`Colors`), and a hidden name (`_Colors`) over a very hidden sheet are each a dropdown, matching ignoring case (`green` taken for `Green`). Values with a comma or a quote match; one of 300 characters is refused, even typed exactly.
+- **Whole numbers:** between -2147483648 and 2147483647, `5`, `1E+3` and `-2147483648` are taken, and `5.5`, `abc`, `2147483648` and the text `'5` refused. Between `long`'s limits, Excel holds the bounds as doubles (`-9223372036854770000`), and takes `123456789012345678`, stored as `1.23456789012345E+17`, its digits past 15 lost; between ±999999999999999, `1000000000000000` is refused.
+- **Decimals:** ±9.99999999999999E+307, ±3.4028234663852886E+38 and ±79228162514264337593543950335 open; Excel holds the last as ±7.92281625142643E+28 and refuses `1E+29`. **±1.7976931348623157E+308 makes Excel refuse the workbook**, even with a repair.
+- **Dates:** between 1 and 2958465.9999999884, `2024-01-15`, `2024-01-15 10:30`, `1/15/2024`, `45306` and `9999-12-31 12:00` are taken, and `abc`, `1899-12-31` (text), `10:30` (0.4375, before serial 1) and `2024-01-15T10:30:00` (text: Excel reads no ISO `T`) refused. Up to 2958465, `9999-12-31 12:00` is refused.
+- **Times and durations:** between 0 and 0.99999998842592586, `10:30`, `23:59:59` and `0.5` are taken, and `36:00:00` and a date and time refused. Up to 2958465.9999999884, `36:00:00` is taken; `-1:00` is text, refused. A decimal validation takes `36:00:00` too.
+- **Text length:** equal to 1 takes `a` and the number `1`, and refuses `ab`.
+- **Prompts and messages:** a prompt alone is a validation of no type (`xlValidateInputOnly`), its line breaks kept. Excel keeps a title of 33 characters, though its dialog takes 32, and a prompt of 255; **a prompt of 256 makes Excel repair the workbook**, its log "Repaired Records: Data validation", dropping the validation. An error message of 225, 226 and 255 characters opens, though the dialog takes 225; **one of 256 makes Excel refuse the workbook**. Without a message, Excel shows its own; `errorStyle="warning"` is its Warning.
+- **Protection:** with columns A to C unlocked by their default style (`col style`, `<protection locked="0"/>`), the header and column D are locked and A2 to C1048576 unlocked: text is entered in A2 and C1048576, and refused in A1, D1 and D2 ("The cell or chart you're trying to change is on a protected sheet."). `formatColumns="0" formatRows="0"` allow resizing, and `sort="0" autoFilter="0"` sorting and filtering. A SHA-512 hash of `secret` (salt `00`…`0F`, 100,000 spins, as Excel 2013 writes it): `Unprotect("wrong")` is refused and `Unprotect("secret")` taken. Without a password, `Unprotect()` asks for none.
+- **A table on a protected sheet** (`table.txt`): a value entered below a table grows it on an unprotected sheet (`A1:B2` to `A1:B3`); on a protected one, with the cells below unlocked, the table stays `A1:B2`, and `ListRows.Add` and `Resize` fail: "Table features aren't available because the sheet is protected."
+- **Formats of empty columns:** a column's default style formats the cells typed later. In Text (`@`), `00123`, `1/2`, `=1+1` and `1.50` stay text; in `yyyy-mm-dd`, `2024-01-15` and `1/15/2024` are dates shown as `2024-01-15`; in General, `00123` is 123 and `1/2` the date 2 January. Excel flags a typed `00123` in Text as a number stored as text, with or without `ignoredErrors` over the column (`ignored.txt`), which covers only the cells in the file. Dates entered through COM in a column of the default width show `########`.
+- **LibreOffice** keeps every validation: types, operators, bounds, lists inline and by range or name, prompts and their titles, messages and styles, and the 256-character list and the bounds Excel refuses. It saves each over the rows it uses and 1,000 more: `A2:A1001` on an empty sheet, `A2:A6000` with a cell in row 5000. It keeps the protection and its SHA-512 hash, the columns' unlocked styles and formats, and the hidden names, and makes a very hidden sheet hidden. It drops `ignoredErrors`.
+- **GridCraft** judges every entry above as Excel does, but: inline lists ignoring case (`red` taken), ` Red` refused, `2.0` not matching `2`, the texts `'TRUE` and `'1` not matching, and the value of 300 characters matched. It reads the columns' locks, refuses the wrong password and takes the right one, and opens the bounds Excel refuses.
+
+#### Internal design
+
+**New files:**
+
+- Public: `ExcelTemplate.cs`, `ExcelTemplateOptions.cs`, `ExcelImportResult.cs` and `ExcelImportError.cs`; `Import` and `ImportAsync` in `ExcelReader.cs`.
+- `Internal/Writing/`:
+  - `ColumnValidation.cs`: a column's validation, from its member's type, its list or its prompt: the kind, operator and bounds, the list inline or by name, the prompt and its title; and its `dataValidation` XML.
+  - `ValidationLists.cs`: the workbook's lists: each distinct one's name and column; the lists sheet, written when the workbook ends; and the hidden names.
+  - `SheetProtection.cs`: the `sheetProtection` element, and a password's salt and SHA-512 hash.
+- `Internal/Import/Importer.cs`: the header check, the loop over the records, and each failing member's error with its cell, sync and async.
+- **Changed:**
+  - `MemberFormats`: each member's type, beside its format, found by the same walk, with an enum's names as the record writer writes them, and whether a converter reads it.
+  - `SheetSettings`: the new settings and their checks.
+  - `SheetSink`: the columns' validations, written after the merged cells, as the schema orders them; the type formats' default styles and widths; the unlocked styles; and `sheetProtection` after `sheetData`.
+  - `StyleRegistry`: a cell format's lock (`CellXf.Unlocked`), written as `applyProtection="1"` and `<protection locked="0"/>`.
+  - `PackageParts` and `ExcelWorkbookWriter`: the lists sheet at disposal, its names in the workbook part beside the filters', and the names registered with the tables'.
+
+**The paths:**
+
+- **Writing:** a cell's path changes only with `Protect`, which takes its style's unlocked form, looked up as a column's style is. The validations and the protection are XML written once a sheet; the lists, once a workbook.
+- **Import:** each record goes through `GetRecord` with `T`'s mapper. Only a record that fails is read again, member by member, by `FindFailingMembers`, and each failing field's cell comes from the record source, as the reader's own errors name theirs.
+
+#### Core changes
+
+1. **`CsvRecordMapper<T>.FindFailingMembers(CsvReader reader, ICollection<CsvMemberError> errors)`,** public and virtual, beside `FindFailingMember`: every member whose field doesn't read on its own, in the order `Read` reads them. The base class's adds the one `FindFailingMember` finds, so a hand-written mapper gives one. The generator writes it from `FindFailingMember`'s steps: each member read again, one that throws added with its field and exception, and the next tried; a nested record adds its own; a collection its first failing field.
+2. **`CsvMemberError(string Member, int FieldIndex, Exception Exception)`,** a public `readonly record struct`.
+3. **`CsvReader.Locate(int field)`,** internal where it was private: a field's place in a record source, which the import's errors name.
+
+Nothing that reads or writes records runs differently: `FindFailingMembers` runs only when the import calls it. CSV users can call it from `OnRecordError` too.
+
+**The gate:** Phase 0's, for what the change can reach: core's and the generator's suites pass on every target; `git diff` over `src/CsvHelper` and `src/CsvHelper.Generators` shows the method, the struct, `Locate` and the emitter; and `PackageAssetsRead`, `FormattedDatesRead` and NCsvPerf, whose generated mappers gain a method they don't call, stay within 1%.
+
+**Considered and avoided:**
+
+- Each field read again in CsvHelper.Excel by its member's type: it would miss converters, `[CsvFormat]`, cultures, `[CsvBooleanValues]`, `[CsvEnumName]` and `[CsvValidate]`.
+- Projections without the failing members: they exist only for types with projections (CsvHelper.Linq or `[CsvRecordProjections]`).
+
+#### Testing
+
+- **Unit:**
+  - `ColumnValidationTests`: every row of the type table, nullable, `[Flags]`, `[CsvEnumName]`, `[CsvBooleanValues]`, converters, `[CsvFormat]` dates that translate and that don't, a column's `Format`, and `DateTimeOffsets` both ways; lists inline and in the sheet (255 and 256 characters, quotes, commas, spaces at either end, repeats, 255- and 256-character values, lists shared by columns); prompts (255 and 256, line breaks, titles cut at 32); and the XML.
+  - `SheetProtectionTests`: the hash of `secret` with the salt `00`…`0F` is the probe's (`M5SOVnbQ…`), which Excel and GridCraft took; the elements with and without a filter; the unlocked styles.
+  - Settings: each check's message; attributes against options; `RowLimit.NewSheet`'s sheets; `ExcelTemplate`'s sheet options.
+  - Core: `FindFailingMembers` in the generator's tests: several failing members, nested records, collections, constructor parameters, `[CsvValidate]`, optional columns missing, projections; and the base class's.
+- **Through the public API,** sync and async, on net10.0, net8.0 and net48: `Create` from paths and streams; `Validate` and `Protect` on `WriteSheet<T>`, `AddSheet<T>` and `ToExcel<T>`; lists and prompts on untyped sheets; several sheets sharing the lists sheet; and `Import` over every overload: all valid; several bad cells in a row, each with its cell; a constructor that throws; missing columns; empty rows; error cells under each `ErrorCells`; `maxErrors` and `Complete`; a prefilled sheet edited; CSV through the reader.
+- **Excel's answers:** the `written` set gains templates: every type of the table, lists of each form, prompts, a title, protection with and without a password (its salt fixed through an internal seam, so the bytes repeat), and a prefilled sheet. Excel's answers are committed as before, and hold each column's validation (type, operator, bounds, list), prompt, lock and format. The corpus tool also fills a copy of each template through COM with a matrix of texts for each column, ones Excel takes and ones it refuses, entered as pasting enters them, saves it as Excel saves it (`written/filled`), and commits what Excel made of each text and whether it took it. The import of each filled copy gives each text Excel took as its member's value, and each it refused as an error naming its cell, but for listed differences where the member's type reads it (a string takes any text; a `DateOnly`, a date with a time).
+- **LibreOffice** converts the templates in CI, and its kept validations, locks and formats match the design but for the listed extent (the rows it uses and 1,000 more).
+- **GridCraft** judges the same matrix, its differences from Excel listed as the probe found them; it runs where it is installed, as Phase 6's tests do.
+- **The validator:** every workbook the tests write, the templates among them, passes `OpenXmlValidator`.
+- **Security and fuzzing:**
+  - Lists and prompts of random text (control characters, `_xHHHH_`, surrogate pairs, quotes and commas, at and past 255 characters) write workbooks that pass the validator, and the corpus tool's on-demand run opens them in Excel without a repair.
+  - `Import` over the reader fuzzers' malformed workbooks fails only with the reader's exceptions.
+  - A filled sheet of a million bad cells stops at `maxErrors`, its memory bounded.
+- **AOT:** the NativeAOT app creates a template of an enum, a `bool` and a date, and imports a filled one with errors.
+
+#### Benchmark
+
+- **The writer's gate:** `ExcelPackageAssetsWrite` and `ExcelOrdersWrite` at their defaults within 1% of Phase 6's end, base and new interleaved, since a cell's path gains `Protect`'s check.
+- **What the settings cost:** the orders written with `Validate`, and with `Protect`, as Phase 5's step 8 measured its settings; `ExcelTemplate.Create<OrderRecord>`'s time, with and without a password (100,000 SHA-512 rounds).
+- **Import:** a million orders, all valid and with one cell in a hundred bad, through `Import<OrderRecord>` against `GetRecords<OrderRecord>`, with allocation.
+- **Core:** the gate above.
+- One BenchmarkDotNet run, recorded in "As built".
+
+#### Decisions
+
+1. **Where the settings live.** Recommended: Phase 5's sheet and column settings gain them (`Validate`, `Protect`, `Password`; `List`, `Prompt`), so that any sheet can have dropdowns, validations, prompts and protection, a sheet of records to edit and import again among them; `ExcelTemplate.Create<T>` is a workbook of one such sheet without records. Alternative: template options of their own, and a `WriteTemplate<T>` on the workbook writer.
+2. **What a type validates.** Recommended: the table: each type's range, booleans and enums as dropdowns, text none. Alternative: dropdowns alone, without number and date validations.
+3. **`long` and `ulong`.** Recommended: whole numbers of at most 15 digits, since Excel keeps 15 digits of a typed number and the type's range takes a longer one, its digits lost (checked). Alternative: the type's range.
+4. **The formats of empty columns.** Recommended: each typed column's default style is its type's format: Text for text, so that `00123` and `1/2` stay as typed (checked); `yyyy-mm-dd` for dates and `yyyy-mm-dd hh:mm:ss` for dates and times; with dates' widths. Written cells keep their own. Alternative: General, as Phase 5 writes a column without options, and `yyyy-mm-dd` for `DateTime` too.
+5. **Long lists.** Recommended: a very hidden `Lists` sheet at the end, with hidden names, since a sheet's validations are written before the workbook knows that sheet's name; and lists with a comma or a space at either end there too. Alternatives: a hidden sheet, which users can show; references to the sheet without names, which would need its name fixed before the first sheet.
+6. **Error alerts.** Recommended: Excel's own message, in its user's language, with Stop. Alternative: a message and style of the column's (at most 255 characters, since Excel refuses a longer message).
+7. **What the import checks.** Recommended: what `T`'s mapping reads: types, enum names, `[CsvValidate]`. A list on a string column, or a bound, isn't checked again, since `[CsvValidate]` says what a member takes. Alternative: the import also checks the lists and bounds the sheet's settings give, taking them as an argument.
+8. **Every cell at fault.** Recommended: an error for every cell that doesn't read, through core's generated `FindFailingMembers`, which runs only after a record fails. Alternative: one error a record, its first failing cell, as `OnRecordError` gives it, without a core change.
+9. **The password.** Recommended: `ExcelSheetOptions.Password`, hashed with SHA-512 and a random salt, as Excel hashes it; not on `[ExcelSheet]`, since an attribute's password is in the assembly for anyone to read. Alternatives: no password, protection against slips only; Excel's old 16-bit hash.
+10. **A table on a protected sheet.** Recommended: throws, since Excel doesn't grow the table (checked). Alternative: allowed, the table over its written rows only.
+11. **What protection allows.** Recommended: Excel's defaults, resizing columns and rows, and sorting and filtering with a filter. Resizing also lets users show hidden columns. Alternative: Excel's defaults alone.
+12. **A cap on errors.** Recommended: `maxErrors`, 1,000, after which reading stops and `Complete` is false, since an upload of the wrong file can have millions of bad cells. Alternative: no cap.
+13. **Missing columns.** Recommended: an error for each, at the header's row, and no records. Alternative: the `KeyNotFoundException` that `GetRecords` throws.
+14. **The import's name and place.** Recommended: `ExcelReader.Import<T>`, from paths, streams and readers, beside `FromFile` and `Create`. Alternative: `ExcelTemplate.Import<T>`, beside `Create`.
+15. **Records' rows.** Recommended: `Records` alone, in the sheet's order. Alternative: each record with its row.
+16. **The template's sheet.** Recommended: named after `T`, with `Validate` and `Protect` on whatever look it takes. Alternative: `Sheet1`, and template options of `Validate` and `Protect`.
+17. **A prompt's title.** Recommended: the column's header name, cut to 32 characters. Alternatives: a `PromptTitle` setting; no title.
+18. **`Validate` without members' types.** Recommended: lists and prompts only. Alternative: a CSV reader's sheet validates its inferred types.
+
+#### Risks
+
+- **A validation isn't a check:** Excel doesn't stop pasted values, and a template saved in LibreOffice keeps its validations over the rows it uses and 1,000 more. The import reads every cell by its member's type whatever the sheet held.
+- **Sheet protection isn't security:** it keeps out slips, and tools remove it. The guide says so.
+- **Enums under trimming and NativeAOT:** an enum's names come from its fields, through the member's type. The generated mapper's `Parse<TEnum>`, whose `[DynamicallyAccessedMembers]` keeps them, reads every enum member; the AOT check shows whether the trimmer warns.
+- **Core's public API grows** by `FindFailingMembers` and `CsvMemberError`, released with core.
+- **The writer's path:** `Protect` adds a check per cell; the gate measures the defaults.
+- **Fifteen-digit longs** refuse IDs of 16 digits or more, which belong in `string` members.
+- **Other locales:** a list's values are separated by commas in the file whatever the locale; only en-US was checked.
+
+#### Order of work
+
+1. **Core (S):** `FindFailingMembers`, `CsvMemberError` and `Locate`, with the generator, their tests and their gate.
+2. **Settings (S):** the options, the attributes, their checks and docs.
+3. **Validations and lists (M):** `ColumnValidation`, `ValidationLists`, the lists sheet and its names, prompts, and the type formats' styles and widths.
+4. **Protection (S):** the unlocked styles, `sheetProtection` and the hash.
+5. **`ExcelTemplate` (S).**
+6. **Import (M):** `Import`, `ExcelImportResult<T>` and `ExcelImportError`.
+7. **Corpus and oracles (M):** the templates in the `written` set, Excel's answers and its filled copies, LibreOffice and GridCraft.
+8. **Security, fuzzing and AOT (S).**
+9. **Benchmarks (S).**
+10. **The guide (S):** templates and the import in `docs/pages/excel.md`.
+11. **"As built" (S).**
+
+#### Gate
+
+- Templates and the import work on net10.0, net8.0 and net48, sync and async, from paths, streams and readers.
+- Every workbook the tests write passes `OpenXmlValidator`.
+- The `written` set's templates open in Excel and LibreOffice without a repair prompt, and Excel's answers match the design: each column's validation, prompt, lock and format.
+- The import of each Excel-filled template gives each text Excel took as its member's value, and each it refused as an error naming its cell, but for the listed differences.
+- The security and fuzz tests pass, and the import's errors stop at `maxErrors`.
+- The core change passes its gate, and the writer's defaults stay within 1%.
+- The benchmark's numbers are recorded.
+- The NativeAOT publish has no warnings.
+- The site builds with the guide's section.
+- CI passes.
+
+#### Changes elsewhere
+
+Applied at approval, 2026-11-14:
+
+- **Status** (top of the plan): Phase 7's design approved.
+- **API sketch:** `ExcelSheetOptions`' `Validate`, `Protect` and `Password`; the columns' `List` and `Prompt`; `ExcelTemplate.Create<T>`; `ExcelReader.Import<T>`, `ExcelImportResult<T>` and `ExcelImportError`.
+- **Defaults:** a sheet validates and is protected only when asked; a template does both; lists past 255 characters go in a very hidden sheet; the import stops at 1,000 errors.
+- **Testing** (the plan's): the `written` set gains templates, and copies that Excel filled in.
+- **Feature coverage:** "Import templates" gains "and the import's errors by cell".
 
 ### Phase 8: displayed text (L)
 
@@ -7267,7 +7578,7 @@ Every feature from the brainstorm, and where it lands.
 | Styled Excel Table output | 5 |
 | Auto-fit from the first N rows | 5 |
 | Merged cells on write | 5 |
-| Import templates | 7 |
+| Import templates, and the import's errors by cell | 7 |
 | Compression level | 4 |
 | Parallel cell XML, parallel deflate | 9 |
 | Same attributes, mappers and generator as CSV | 0, 1, 4 |
@@ -7295,7 +7606,7 @@ Testing runs through every phase.
   - `tools/CsvHelper.Excel.Corpus` makes them from one definition of the content. It drives Excel through COM, LibreOffice and Python by command line, and the .NET producers directly.
   - It runs on demand; the tests only read the committed files.
   - Phase 1's "Testing" has the files, the producer versions and how each is made.
-  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas), `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names) and `written` (Phase 4: workbooks CsvHelper.Excel writes; Phase 5 adds ten in its look).
+  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas), `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names) and `written` (Phase 4: workbooks CsvHelper.Excel writes; Phase 5 adds ten in its look; Phase 7 adds templates, and copies of them that Excel filled in).
 - **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand. From Phase 3 the answers also hold each workbook's tables and defined names, and each sheet's hidden rows and columns and merged ranges. From Phase 4 they cover the written workbooks too, pinned to each workbook's SHA-256, with Excel's text of each formatted cell as the oracle of the format translation. From Phase 5 they also hold each written sheet's look (panes, filters, tables, merged ranges, links, hidden columns, sized rows) and the widths of Excel's own AutoFit.
 - **Oracles** (test-only dependencies):
   - The Open XML SDK (DocumentFormat.OpenXml 3.5.1), for raw cell structure and, from Phase 4, `OpenXmlValidator`.
@@ -7354,6 +7665,8 @@ Chosen during planning, and still open to change:
 - Conversion to CSV writes numbers in 15 significant digits, dates in ISO 8601, and CsvHelper's CSV defaults, without a byte-order mark (Phase 6).
 - Conversion from CSV infers each column's type from its first 1,000 records: numbers without leading zeros and of at most 15 digits, ISO dates, and `true` and `false` (Phase 6).
 - Formulas are written without cached values (Phase 4).
+- A sheet has no validations and isn't protected unless asked; a template has both, its lists past 255 characters in a very hidden sheet (Phase 7).
+- The import stops at 1,000 errors (Phase 7).
 - Long numbers, dates before 1900 and negative durations are written as text (Phase 4).
 - `History` is allowed as a sheet name (Phase 4).
 - Excel attributes are read by reflection.
