@@ -101,6 +101,41 @@ public abstract class CsvRecordMapper<T>
 	}
 
 	/// <summary>
+	/// After <see cref="Read(CsvReader)"/> threw for the current record, finds every member whose field makes it throw, by
+	/// reading the members again one at a time, in the order <see cref="Read(CsvReader)"/> reads them, and adds each to
+	/// <paramref name="errors"/> with its field and what it threw, where <see cref="FindFailingMember"/> finds the first.
+	/// It is for telling users every field of a record to fix, such as from <see cref="CsvReaderOptions.OnRecordError"/>;
+	/// the record methods of <see cref="CsvReader"/> don't call it. Generated mappers implement it, adding a nested
+	/// record's own failing members and a collection's first failing field. This implementation reads the record again,
+	/// and adds the member that <see cref="FindFailingMember"/> finds with what <see cref="Read(CsvReader)"/> threw.
+	/// </summary>
+	/// <param name="reader">The reader, still positioned on the record that failed.</param>
+	/// <param name="errors">The collection that each failing member is added to.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="reader"/> or <paramref name="errors"/> is <see langword="null"/>.</exception>
+	public virtual void FindFailingMembers(CsvReader reader, ICollection<CsvMemberError> errors)
+	{
+		ArgumentNullException.ThrowIfNull(reader);
+		ArgumentNullException.ThrowIfNull(errors);
+		Exception thrown;
+		try
+		{
+			Read(reader);
+
+			return;
+		}
+		catch (Exception e) when (e is not NotSupportedException)
+		{
+			thrown = e;
+		}
+
+		var member = FindFailingMember(reader, out var field);
+		if (member is not null)
+		{
+			errors.Add(new CsvMemberError(member, field, thrown));
+		}
+	}
+
+	/// <summary>
 	/// Finds the column of a member: <paramref name="index"/> when it is not negative, else the header column
 	/// called <see cref="ColumnPrefix"/> followed by <paramref name="name"/>. Missing required columns are reported
 	/// together by <see cref="ThrowIfColumnsMissing"/>.

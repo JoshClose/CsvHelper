@@ -501,6 +501,10 @@ public class RecordGeneratorTests
 		Assert.Contains("keys2 = ColumnNames(reader, 1, -1, \"Collections.Named\");", output);
 		Assert.Contains("public override string? FindFailingMember(global::CsvHelper.CsvReader reader, out int fieldIndex)", output);
 		Assert.Contains("return record0.FindFailingMember(reader, out fieldIndex) ?? \"Constructed.Inner\";", output);
+		Assert.Contains("public override void FindFailingMembers(global::CsvHelper.CsvReader reader, global::System.Collections.Generic.ICollection<global::CsvHelper.CsvMemberError> errors)", output);
+		Assert.Contains("record0.FindFailingMembers(reader, errors);", output);
+		Assert.Contains("errors.Add(new global::CsvHelper.CsvMemberError(\"Constructed.Inner\", -1, exception));", output);
+		Assert.Contains("out int fieldIndex, out global::System.Exception? exception)", output);
 		Assert.Contains("throw new global::CsvHelper.CsvValidationException(\"A note is needed.\");", output);
 		// WriteField(Uri) writes OriginalString as CSV, and a URI to a cell sink.
 		Assert.Contains("if (record.Home is { } value5) writer.WriteField(value5);", output);

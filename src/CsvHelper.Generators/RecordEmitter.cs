@@ -73,6 +73,7 @@ internal static class RecordEmitter
 		EmitRead(w, model);
 		if (model.Refillable) EmitRefill(w, model);
 		EmitFindFailingMember(w, model, false);
+		EmitFindFailingMembers(w, model, false);
 		foreach (var c in model.Collections) EmitCollection(w, c);
 		foreach (var v in model.Validators) EmitValidator(w, v);
 		foreach (var e in model.Enums) EmitEnumParser(w, e);
@@ -337,6 +338,7 @@ internal static class RecordEmitter
 		w.Close();
 
 		EmitFindFailingMember(w, model, true);
+		EmitFindFailingMembers(w, model, true);
 		foreach (var c in model.Collections)
 		{
 			EmitCollection(w, c);
@@ -492,7 +494,7 @@ internal static class RecordEmitter
 
 		if (step.Finder is not null)
 		{
-			w.Open($"if ({step.Finder}(reader, out fieldIndex))");
+			w.Open($"if ({step.Finder}(reader, out fieldIndex, out _))");
 			w.Line($"return {member};");
 			w.Close();
 			if (step.Value is not null)
@@ -515,6 +517,94 @@ internal static class RecordEmitter
 		w.Line($"_ = {step.Value};");
 		w.Continue("catch");
 		w.Line($"return {member};");
+		w.Close();
+		w.Close();
+	}
+
+	/// <summary>
+	/// Writes <c>FindFailingMembers</c>, which reads each member again on its own, in the order <c>Read</c> reads them, as
+	/// <c>FindFailingMember</c> does, and adds each that throws, with its field and exception, rather than returning the
+	/// first: a nested record adds its own, and a collection its first failing field. A projection reads only its selected
+	/// members.
+	/// </summary>
+	/// <param name="w">The writer.</param>
+	/// <param name="model">The record.</param>
+	/// <param name="projection">Whether the mapper is a projection's.</param>
+	private static void EmitFindFailingMembers(CodeWriter w, RecordModel model, bool projection)
+	{
+		w.Line();
+		w.Open("public override void FindFailingMembers(global::CsvHelper.CsvReader reader, global::System.Collections.Generic.ICollection<global::CsvHelper.CsvMemberError> errors)");
+		for (var i = 0; i < model.Steps.Length; i++)
+		{
+			var step = model.Steps[i];
+			if (projection)
+			{
+				w.Open($"if ({Select(step.Owner)})");
+				EmitStepError(w, step, i);
+				w.Close();
+			}
+			else
+			{
+				EmitStepError(w, step, i);
+			}
+		}
+
+		w.Close();
+	}
+
+	/// <summary>
+	/// Writes the statements of <c>FindFailingMembers</c> that read one member again and add its error. Their locals are
+	/// numbered by the step, since an <see langword="out"/> variable of an <see langword="if"/> lives in the method's scope.
+	/// </summary>
+	/// <param name="w">The writer.</param>
+	/// <param name="step">The member.</param>
+	/// <param name="number">The step's number, for its locals.</param>
+	private static void EmitStepError(CodeWriter w, StepModel step, int number)
+	{
+		var member = Quote(step.Member);
+		var n = number.ToString(CultureInfo.InvariantCulture);
+		if (step.Nested is not null)
+		{
+			// The nested record's own members, or the member itself when none of them fails on its own.
+			w.Open("try");
+			w.Line($"_ = {step.Value};");
+			w.Continue("catch (global::System.Exception exception)");
+			w.Line($"var count{n} = errors.Count;");
+			w.Line($"{step.Nested}.FindFailingMembers(reader, errors);");
+			w.Open($"if (errors.Count == count{n})");
+			w.Line($"errors.Add(new global::CsvHelper.CsvMemberError({member}, -1, exception));");
+			w.Close();
+			w.Close();
+
+			return;
+		}
+
+		if (step.Finder is not null)
+		{
+			w.Open($"if ({step.Finder}(reader, out var field{n}, out var exception{n}))");
+			w.Line($"errors.Add(new global::CsvHelper.CsvMemberError({member}, field{n}, exception{n}!));");
+			if (step.Value is not null)
+			{
+				// The check of the whole collection, when each of its fields reads.
+				w.Continue("else");
+				w.Open("try");
+				w.Line($"_ = {step.Value};");
+				w.Continue("catch (global::System.Exception exception)");
+				w.Line($"errors.Add(new global::CsvHelper.CsvMemberError({member}, -1, exception));");
+				w.Close();
+			}
+
+			w.Close();
+
+			return;
+		}
+
+		// An optional column that the header lacks is not read.
+		w.Open($"if ({Field(step.Column)} >= 0)");
+		w.Open("try");
+		w.Line($"_ = {step.Value};");
+		w.Continue("catch (global::System.Exception exception)");
+		w.Line($"errors.Add(new global::CsvHelper.CsvMemberError({member}, {Field(step.Column)}, exception));");
 		w.Close();
 		w.Close();
 	}
@@ -560,18 +650,21 @@ internal static class RecordEmitter
 		w.Close();
 
 		w.Line();
-		w.Open($"private bool Find{c.Method}(global::CsvHelper.CsvReader reader, out int fieldIndex)");
+		w.Open($"private bool Find{c.Method}(global::CsvHelper.CsvReader reader, out int fieldIndex, out global::System.Exception? exception)");
 		count = EmitCollectionLoop(w, c);
 		w.Open($"for (var k = 0; k < {count}; k++)");
 		w.Line(Index(c));
 		w.Line("fieldIndex = i;");
 		w.Open("try");
 		w.Line($"_ = {c.Value};");
-		w.Continue("catch");
+		w.Continue("catch (global::System.Exception thrown)");
+		w.Line("exception = thrown;");
+		w.Line();
 		w.Line("return true;");
 		w.Close();
 		w.Close();
 		w.Line("fieldIndex = -1;");
+		w.Line("exception = null;");
 		w.Line();
 		w.Line("return false;");
 		w.Close();

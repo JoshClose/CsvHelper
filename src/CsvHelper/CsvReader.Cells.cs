@@ -386,10 +386,13 @@ public sealed partial class CsvReader
 			: CsvValue.ParseExact<T>(s, formats!, provider, hideValues);
 	}
 
-	/// <summary>Where the current record, or its field <paramref name="field"/>, is in a record source; <see langword="null"/> for CSV input.</summary>
+	/// <summary>
+	/// Where the current record, or its field <paramref name="field"/>, is in a record source; <see langword="null"/> for
+	/// CSV input. Internal for CsvHelper.Excel's import, which names each field that doesn't read.
+	/// </summary>
 	/// <param name="field">The 0-based index of the field, or -1 for the whole record.</param>
 	/// <returns>The location, such as <c>Orders!C14</c>, or <see langword="null"/>.</returns>
-	private string? Locate(int field) => recordSource?.Locate(lineNumber, field);
+	internal string? Locate(int field) => recordSource?.Locate(lineNumber, field);
 
 	/// <summary>
 	/// Where a <see cref="CsvRecordSource"/> writes its records: the reader's buffer and index, which this appends whole

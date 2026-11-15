@@ -1095,7 +1095,9 @@ public sealed class TemperatureMapper : CsvRecordMapper<Temperature>
 - A mapper must not change after its constructor has run: the threads of `ParallelEnumerate<T>` share one.
 - When `Read` throws, the reader asks `FindFailingMember(reader, out fieldIndex)` which member failed, for the
   [error](#errors). Generated mappers read their members again one at a time; a hand-written one can override it, or
-  leave it, and the error names the record only.
+  leave it, and the error names the record only. `FindFailingMembers(reader, errors)`, which finds [every member that
+  fails](#every-member-that-fails), reads the record again in a hand-written mapper, and adds the member that
+  `FindFailingMember` names.
 
 To use the mapper, put `[CsvConverter]` on the type. The generator registers the mapper as it registers its own, so
 `GetRecords<T>()` and the other methods find it; the type does not need to be `partial`, and must not also have
@@ -1299,6 +1301,38 @@ catch (CsvFormatException e)
 Finding the member costs nothing until a record fails: then the mapper reads its members again, one at a time, and the
 first that throws is the one named. The message includes the inner exception's message, which leaves values out when
 `IncludeValuesInExceptions` is off, except in the messages of your own parsers and converters.
+
+### Every member that fails
+
+To tell users every field of a record to fix, not only the first, read with the type's mapper, and after a record
+fails ask the mapper for every member that does. `FindFailingMembers` reads the members again one at a time, as
+`Read` reads them, and adds each that throws as a `CsvMemberError`: the member, its field's index, and what it threw. A
+nested record adds its own members, and a collection its first field that fails:
+
+```csharp
+// Id,Unit Price,Quantity
+// A-1,9.99,3
+// A-2,abc,x
+using var reader = CsvReader.FromFile("orders.csv");
+var mapper = CsvRecordMapper.Create<Order>(reader);
+var orders = new List<Order>();
+var errors = new List<CsvMemberError>();
+while (reader.Read())
+{
+    try
+    {
+        orders.Add(reader.GetRecord(mapper));
+    }
+    catch (CsvFormatException)
+    {
+        mapper.FindFailingMembers(reader, errors);
+    }
+}
+
+// orders: A-1. errors: Order.Price (field 1) and Order.Quantity (field 2), each with its FormatException.
+```
+
+Like `FindFailingMember`, it costs nothing until a record fails, and the record methods don't call it.
 
 A record that cannot be read ends the enumeration. To skip such records and go on, set `OnRecordError`: it gets the
 row number, the byte offset, the exception (the `CsvFormatException` above) and the raw record, and returns `true` to
