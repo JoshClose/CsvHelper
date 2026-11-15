@@ -514,9 +514,10 @@ public class ExcelToCsvTests
 
 	// .NET 10 only: on .NET 8, the unoptimized (tier 0) code of core's double parser, which a date's and a duration's text
 	// starts with, allocates 64 bytes a call until the JIT optimizes it, which a test's run may not last until. With tiered
-	// compilation off (DOTNET_TieredCompilation=0), .NET 8 allocates nothing per row either (checked 2026-11-12).
+	// compilation off (DOTNET_TieredCompilation=0), .NET 8 allocates nothing per row either (checked 2026-11-12). For the
+	// same reason, it runs in Release builds only (OptimizedFactAttribute).
 #if NET10_0_OR_GREATER
-	[Fact]
+	[OptimizedFact]
 	public void AllocatesTheSameForAnyNumberOfRows()
 	{
 		// Text, numbers rounded and not, dates, durations, booleans and errors: no field makes a string.

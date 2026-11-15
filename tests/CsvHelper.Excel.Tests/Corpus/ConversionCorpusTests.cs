@@ -66,8 +66,9 @@ public class ConversionCorpusTests
 		}
 	}
 
+	// .NET 10 and Release builds only, as ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows.
 #if NET10_0_OR_GREATER
-	[Fact]
+	[OptimizedFact]
 	public void AllocatesTheSameForAHundredOrdersAsForAThousand()
 	{
 		// Excel's own orders: dates, numbers, booleans and shared strings. Opening the workbook allocates the same either way.
