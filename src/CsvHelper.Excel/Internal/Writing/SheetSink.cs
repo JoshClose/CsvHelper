@@ -1140,31 +1140,43 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>
 	/// Works out the columns' widths from the cells measured, once the held records are: they can be written now. With
 	/// <see cref="ExcelSheetOptions.Validate"/>, a date's, time's or duration's column is as wide as its format's widest
-	/// value at least, as a typed cell of it would make it, since a template has no records to measure.
+	/// value at least, as a typed cell of it would make it, since a template has no records to measure. A template's
+	/// (<see cref="SheetSettings.Template"/>) auto-fitted header columns are Excel's default width at least.
 	/// </summary>
 	private void KnowWidths()
 	{
 		widthsKnown = true;
 		measuring = false;
 		columnWidths = measured.Widths(fits, ColumnWidths.FromCharacters(Settings.MaxAutoFitWidth), merges);
-		if (minimumPixels is not { } minimums)
+		if (minimumPixels is { } minimums)
 		{
-			return;
-		}
-
-		if (columnWidths is null || columnWidths.Length < minimums.Length)
-		{
-			var grown = new double[minimums.Length];
-			columnWidths?.CopyTo(grown, 0);
-			columnWidths = grown;
-		}
-
-		for (var at = 0; at < minimums.Length; at++)
-		{
-			if (minimums[at] > 0)
+			if (columnWidths is null || columnWidths.Length < minimums.Length)
 			{
-				var width = fits ? ColumnWidths.Fit(minimums[at]) : ColumnWidths.OfPixels(minimums[at]);
-				columnWidths[at] = Math.Min(Math.Max(columnWidths[at], width), ColumnWidths.Widest);
+				var grown = new double[minimums.Length];
+				columnWidths?.CopyTo(grown, 0);
+				columnWidths = grown;
+			}
+
+			for (var at = 0; at < minimums.Length; at++)
+			{
+				if (minimums[at] > 0)
+				{
+					var width = fits ? ColumnWidths.Fit(minimums[at]) : ColumnWidths.OfPixels(minimums[at]);
+					columnWidths[at] = Math.Min(Math.Max(columnWidths[at], width), ColumnWidths.Widest);
+				}
+			}
+		}
+
+		if (Settings.Template && columnWidths is { } widths)
+		{
+			// A template's header alone sets auto-fit's widths: a short name's column is Excel's default width at least, so
+			// that it takes what users type.
+			for (var at = 0; at < Math.Min(widths.Length, headerColumns); at++)
+			{
+				if (widths[at] > 0 && widths[at] < ColumnWidths.Default)
+				{
+					widths[at] = ColumnWidths.Default;
+				}
 			}
 		}
 	}

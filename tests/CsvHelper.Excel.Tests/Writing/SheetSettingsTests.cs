@@ -122,42 +122,51 @@ public partial record ColumnedPosition([ExcelColumn(Width = 20)] string Name, [p
 	public DateTime Converted { get; init; }
 }
 
+/// <summary>A sheet's attribute that validates and protects, and a column's list and prompt.</summary>
+[CsvRecord]
+[ExcelSheet(Validate = true, Protect = true)]
+public partial class TemplatedOrder
+{
+	/// <summary>A list, with a prompt.</summary>
+	[ExcelColumn(List = new[] { "Open", "Closed" }, Prompt = "The order's state.")]
+	public string State { get; set; } = "";
+
+	/// <summary>Whole numbers.</summary>
+	public int Count { get; set; }
+}
+
+/// <summary>A sheet's attribute that protects a table, which Excel doesn't add rows to.</summary>
+[CsvRecord]
+[ExcelSheet(Protect = true, Table = true)]
+public partial class ProtectedTable
+{
+	/// <summary>Text.</summary>
+	public string Name { get; set; } = "";
+}
+
+/// <summary>A column's list with an empty value.</summary>
+[CsvRecord]
+public partial class BadColumnList
+{
+	/// <summary>The list.</summary>
+	[ExcelColumn(List = new[] { "Open", "" })]
+	public string State { get; set; } = "";
+}
+
+/// <summary>A column's empty prompt.</summary>
+[CsvRecord]
+public partial class BadColumnPrompt
+{
+	/// <summary>The prompt.</summary>
+	[ExcelColumn(Prompt = "")]
+	public string State { get; set; } = "";
+}
+
 /// <summary>
 /// A sheet's settings: where they come from (the options given, the record type's <see cref="ExcelSheetAttribute"/>, the
 /// workbook's <see cref="ExcelWriterOptions.Sheets"/>), each taken whole; their checks; and the columns' options by the
 /// header's names.
 /// </summary>
-[CsvRecord]
-[ExcelSheet(Validate = true, Protect = true)]
-public partial class TemplatedOrder
-{
-	[ExcelColumn(List = new[] { "Open", "Closed" }, Prompt = "The order's state.")]
-	public string State { get; set; } = "";
-
-	public int Count { get; set; }
-}
-
-[CsvRecord]
-[ExcelSheet(Protect = true, Table = true)]
-public partial class ProtectedTable
-{
-	public string Name { get; set; } = "";
-}
-
-[CsvRecord]
-public partial class BadColumnList
-{
-	[ExcelColumn(List = new[] { "Open", "" })]
-	public string State { get; set; } = "";
-}
-
-[CsvRecord]
-public partial class BadColumnPrompt
-{
-	[ExcelColumn(Prompt = "")]
-	public string State { get; set; } = "";
-}
-
 public class SheetSettingsTests
 {
 	/// <summary>Options that differ from the defaults in every setting.</summary>

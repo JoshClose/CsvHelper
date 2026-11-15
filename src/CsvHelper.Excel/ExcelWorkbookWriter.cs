@@ -481,11 +481,47 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <typeparamref name="T"/>'s record writer doesn't write in its header.
 	/// </exception>
 	/// <exception cref="ObjectDisposedException">The workbook writer has been disposed.</exception>
-	public CsvWriter AddSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions? options = null)
+	public CsvWriter AddSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions? options = null) =>
+		AddSheet<T>(name, options, false);
+
+	/// <summary>
+	/// Writes a template's sheet (<see cref="ExcelTemplate"/>): <typeparamref name="T"/>'s header, as
+	/// <see cref="WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/> writes it without records, with the
+	/// template's widths (<see cref="SheetSettings.Template"/>).
+	/// </summary>
+	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type.</typeparam>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="options">How the sheet looks, with <see cref="ExcelSheetOptions.Validate"/> and <see cref="ExcelSheetOptions.Protect"/>.</param>
+	internal void WriteTemplate<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions options)
+	{
+		using var writer = AddSheet<T>(name, options, true);
+		writer.WriteRecords(Array.Empty<T>());
+	}
+
+	/// <summary>Writes a template's sheet, as <see cref="WriteTemplate{T}"/> does, writing to the stream asynchronously.</summary>
+	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type.</typeparam>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="options">How the sheet looks, with <see cref="ExcelSheetOptions.Validate"/> and <see cref="ExcelSheetOptions.Protect"/>.</param>
+	/// <param name="cancellationToken">Cancels writing.</param>
+	/// <returns>A task that completes when the sheet is complete.</returns>
+	internal ValueTask WriteTemplateAsync<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions options, CancellationToken cancellationToken)
+	{
+		var writer = AddSheet<T>(name, options, true);
+
+		return WriteAndCompleteAsync(writer, w => w.WriteRecordsAsync(Array.Empty<T>(), cancellationToken));
+	}
+
+	/// <summary>Adds a sheet of <typeparamref name="T"/>'s records, as <see cref="AddSheet{T}(string, ExcelSheetOptions)"/> does.</summary>
+	/// <typeparam name="T">A <see cref="CsvRecordAttribute"/> type, or any other.</typeparam>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="options">How the sheet looks, or <see langword="null"/>.</param>
+	/// <param name="template">Whether the sheet is a template's (<see cref="ExcelTemplate"/>).</param>
+	/// <returns>The sheet's writer.</returns>
+	private CsvWriter AddSheet<[DynamicallyAccessedMembers(MemberFormats.Members)] T>(string name, ExcelSheetOptions? options, bool template)
 	{
 		var key = CheckNewSheet(name);
 		var members = MemberFormats.For<T>();
-		var settings = SheetSettings.Resolve(options, typeof(T), members, Options);
+		var settings = SheetSettings.Resolve(options, typeof(T), members, Options, template);
 		// The sink reads cells with the members' formats and cultures; their Excel options come through the settings.
 		var formats = members is { HasFormats: true } ? members : null;
 		// Without a header, the names T's record writer writes say which column each member's and each option's is.

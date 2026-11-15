@@ -857,9 +857,12 @@ public static class ExcelConvert
 		}
 	}
 
-	/// <summary>Deletes a file that a failed conversion wrote, if it can: a failure to delete it doesn't hide the conversion's.</summary>
+	/// <summary>
+	/// Deletes a file that a failed conversion (or template, <see cref="ExcelTemplate"/>) wrote, if it can: a failure to
+	/// delete it doesn't hide the conversion's.
+	/// </summary>
 	/// <param name="path">The file's path.</param>
-	private static void Delete(string path)
+	internal static void Delete(string path)
 	{
 		try
 		{
@@ -886,7 +889,7 @@ public static class ExcelConvert
 	/// <param name="value">It.</param>
 	/// <param name="async">Whether to dispose it asynchronously.</param>
 	/// <returns>A task that completes when it is disposed.</returns>
-	private static ValueTask DisposeAsync<T>(T value, bool async)
+	internal static ValueTask DisposeAsync<T>(T value, bool async)
 		where T : IDisposable, IAsyncDisposable
 	{
 		if (async)

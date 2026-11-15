@@ -9,7 +9,8 @@ namespace CsvHelper.Excel;
 /// <summary>
 /// The names of a conversion's files and sheets: a CSV file for each worksheet of <see cref="ExcelConvert.ToCsvFiles"/>,
 /// named after its sheet and made a file name on every system; and the sheet of a CSV file that
-/// <see cref="ExcelConvert.ToExcel(string, string, CsvToExcelOptions?)"/> converts, named after the file as Excel names it.
+/// <see cref="ExcelConvert.ToExcel(string, string, CsvToExcelOptions?)"/> converts, named after the file as Excel names it,
+/// and of a template, named after its record type so.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -106,9 +107,16 @@ internal static class ConversionNames
 	/// </summary>
 	/// <param name="path">The CSV file's path.</param>
 	/// <returns>The sheet's name, which <see cref="SheetNames.Check"/> accepts.</returns>
-	public static string SheetName(string path)
+	public static string SheetName(string path) => SheetNameOf(Path.GetFileNameWithoutExtension(path));
+
+	/// <summary>
+	/// A text made a sheet's name, as <see cref="SheetName"/> makes a CSV file's: a template's record type's name
+	/// (<see cref="ExcelTemplate"/>), or a CSV file's without its extension.
+	/// </summary>
+	/// <param name="stem">The text.</param>
+	/// <returns>The sheet's name, which <see cref="SheetNames.Check"/> accepts.</returns>
+	public static string SheetNameOf(string stem)
 	{
-		var stem = Path.GetFileNameWithoutExtension(path);
 		var text = new StringBuilder(stem.Length);
 		for (var i = 0; i < stem.Length; i++)
 		{

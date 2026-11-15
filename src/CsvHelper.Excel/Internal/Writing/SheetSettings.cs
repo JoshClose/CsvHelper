@@ -34,7 +34,8 @@ internal sealed class SheetSettings
 	/// <param name="hasHeader">Whether the sheet's first record is its header.</param>
 	/// <param name="origin">Where the options came from, as a message names them.</param>
 	/// <param name="given">Whether they were given when the sheet was added, rather than an attribute's or the workbook's.</param>
-	private SheetSettings(ExcelSheetOptions sheet, Dictionary<string, ExcelColumnOptions>? columns, MemberFormats? members, bool hasHeader, string origin, bool given)
+	/// <param name="template">Whether the sheet is a template's (<see cref="ExcelTemplate"/>).</param>
+	private SheetSettings(ExcelSheetOptions sheet, Dictionary<string, ExcelColumnOptions>? columns, MemberFormats? members, bool hasHeader, string origin, bool given, bool template)
 	{
 		Sheet = sheet;
 		this.columns = columns;
@@ -42,13 +43,14 @@ internal sealed class SheetSettings
 		HasHeader = hasHeader;
 		Origin = origin;
 		Given = given;
+		Template = template;
 	}
 
 	/// <summary>
 	/// The settings of the empty sheet that a workbook without sheets gets: nothing to show, so nothing shown, whatever
 	/// <see cref="ExcelWriterOptions.Sheets"/> says.
 	/// </summary>
-	public static SheetSettings Empty { get; } = new(new ExcelSheetOptions { BoldHeader = false, FreezeHeader = false, AutoFit = 0 }, null, null, false, "", false);
+	public static SheetSettings Empty { get; } = new(new ExcelSheetOptions { BoldHeader = false, FreezeHeader = false, AutoFit = 0 }, null, null, false, "", false, false);
 
 	/// <summary>
 	/// Where the options came from, as a message names them: <c>ExcelSheetOptions</c>, <c>The [ExcelSheet] of Order</c>
@@ -67,6 +69,12 @@ internal sealed class SheetSettings
 
 	/// <summary>Whether the sheet's first record is its header (<see cref="CsvWriterOptions.HasHeader"/>).</summary>
 	public bool HasHeader { get; }
+
+	/// <summary>
+	/// Whether the sheet is a template's (<see cref="ExcelTemplate"/>), a header for users to type below: its header's
+	/// columns are Excel's default width at least, where auto-fit would make a short name's narrower.
+	/// </summary>
+	public bool Template { get; }
 
 	/// <summary>
 	/// Whether columns can have options: <see cref="ExcelSheetOptions.Columns"/> has some, or a member of the record type
@@ -124,14 +132,15 @@ internal sealed class SheetSettings
 	/// <param name="recordType">The record type of a sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/>, or <see langword="null"/>.</param>
 	/// <param name="members">The record type's members' formats (<see cref="MemberFormats.For(Type)"/>), or <see langword="null"/>.</param>
 	/// <param name="writerOptions">The workbook's options, which are valid.</param>
+	/// <param name="template">Whether the sheet is a template's (<see cref="ExcelTemplate"/>).</param>
 	/// <returns>The settings.</returns>
 	/// <exception cref="ArgumentException">The options given are not valid, or need a header that the sheet doesn't have.</exception>
 	/// <exception cref="InvalidOperationException">
 	/// The record type's <see cref="ExcelSheetAttribute"/> or <see cref="ExcelColumnAttribute"/>s are not valid, or
 	/// <see cref="ExcelWriterOptions.Sheets"/>' columns were changed, after the writer was created, into ones that are not.
 	/// </exception>
-	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions) =>
-		Resolve(options, recordType, members, writerOptions, writerOptions.Csv.HasHeader, "CsvWriterOptions.HasHeader");
+	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions, bool template = false) =>
+		Resolve(options, recordType, members, writerOptions, writerOptions.Csv.HasHeader, "CsvWriterOptions.HasHeader", template);
 
 	/// <summary>
 	/// Resolves and checks a sheet's settings when it is added, for a sheet whose header may not be the workbook's: a
@@ -143,6 +152,7 @@ internal sealed class SheetSettings
 	/// <param name="writerOptions">The workbook's options, which are valid.</param>
 	/// <param name="hasHeader">Whether the sheet's first record is its header.</param>
 	/// <param name="headerSetting">The setting that says so, as a message names it: <c>CsvReaderOptions.HasHeader</c> for a converted sheet.</param>
+	/// <param name="template">Whether the sheet is a template's (<see cref="ExcelTemplate"/>).</param>
 	/// <returns>The settings.</returns>
 	/// <exception cref="ArgumentException">The options given are not valid, or need a header that the sheet doesn't have.</exception>
 	/// <exception cref="InvalidOperationException">
@@ -150,7 +160,7 @@ internal sealed class SheetSettings
 	/// <see cref="ExcelWriterOptions.Sheets"/>' columns were changed, after the writer was created, into ones that are not, or
 	/// <see cref="ExcelWriterOptions.Sheets"/> need a header that the sheet doesn't have.
 	/// </exception>
-	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions, bool hasHeader, string headerSetting)
+	public static SheetSettings Resolve(ExcelSheetOptions? options, Type? recordType, MemberFormats? members, ExcelWriterOptions writerOptions, bool hasHeader, string headerSetting, bool template = false)
 	{
 		if (members?.Problem is { } attributes)
 		{
@@ -165,7 +175,7 @@ internal sealed class SheetSettings
 				throw new ArgumentException("ExcelSheetOptions: " + problem, nameof(options));
 			}
 
-			return new SheetSettings(options, copy, members, hasHeader, nameof(ExcelSheetOptions), true);
+			return new SheetSettings(options, copy, members, hasHeader, nameof(ExcelSheetOptions), true, template);
 		}
 
 		if (members?.Sheet is { } sheet)
@@ -176,7 +186,7 @@ internal sealed class SheetSettings
 				throw new InvalidOperationException($"{origin}: {problem}");
 			}
 
-			return new SheetSettings(sheet, null, members, hasHeader, origin, false);
+			return new SheetSettings(sheet, null, members, hasHeader, origin, false, template);
 		}
 
 		var defaults = writerOptions.Sheets;
@@ -192,7 +202,7 @@ internal sealed class SheetSettings
 			throw new InvalidOperationException("ExcelWriterOptions.Sheets: " + header);
 		}
 
-		return new SheetSettings(defaults, columns, members, hasHeader, "ExcelWriterOptions.Sheets", false);
+		return new SheetSettings(defaults, columns, members, hasHeader, "ExcelWriterOptions.Sheets", false, template);
 	}
 
 	/// <summary>
