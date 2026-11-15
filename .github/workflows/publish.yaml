@@ -61,6 +61,17 @@ jobs:
           -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
           -p:InformationalVersion=${{ steps.version.outputs.version }}
           -p:PackageVersion=${{ steps.version.outputs.version }}
+      - name: Create CsvHelper.Excel NuGet Package
+        # The same version as CsvHelper, which its package depends on exactly ([version]: it uses CsvHelper's internals;
+        # see the PinCsvHelperVersion target of its project, and CI's package check).
+        run: >
+          dotnet pack src/CsvHelper.Excel
+          --configuration Release
+          -o output
+          -p:AssemblyVersion=${{ steps.gitversion.outputs.major }}.0.0.0
+          -p:FileVersion=${{ steps.gitversion.outputs.version }}.${{ github.run_number }}
+          -p:InformationalVersion=${{ steps.version.outputs.version }}
+          -p:PackageVersion=${{ steps.version.outputs.version }}
       - name: Display Output
         run: dir output
       - name: NuGet Login
@@ -76,3 +87,6 @@ jobs:
       - name: Publish CsvHelper.Linq NuGet Package
         # After CsvHelper, which it depends on. The trusted publishing policy must cover the CsvHelper.Linq package too.
         run: dotnet nuget push output/CsvHelper.Linq.${{ steps.version.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+      - name: Publish CsvHelper.Excel NuGet Package
+        # After CsvHelper, which it depends on. The trusted publishing policy must cover the CsvHelper.Excel package too.
+        run: dotnet nuget push output/CsvHelper.Excel.${{ steps.version.outputs.version }}.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ steps.login.outputs.NUGET_API_KEY }}

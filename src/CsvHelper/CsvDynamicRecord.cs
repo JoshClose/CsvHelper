@@ -31,6 +31,12 @@ namespace CsvHelper;
 /// input itself), so keeping one record keeps its block in memory; <see cref="Detach"/> makes a copy that holds only its
 /// own bytes. Records do not change, so they can be used on any thread.
 /// </para>
+/// <para>
+/// The records of a spreadsheet's reader (CsvHelper.Excel) read their values as text, a date as ISO 8601 text and a
+/// boolean as <c>TRUE</c> or <c>FALSE</c>, but hold each cell's stored form: written to CSV with
+/// <see cref="CsvWriter.WriteRecords{T}(IEnumerable{T})"/>, a date is its serial number and a boolean <c>1</c> or
+/// <c>0</c>. CsvHelper.Excel's <c>ExcelConvert.ToCsv</c> writes their text.
+/// </para>
 /// </remarks>
 public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDictionary<string, string?>
 {

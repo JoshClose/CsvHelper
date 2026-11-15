@@ -22,6 +22,9 @@ and .NET Standard 2.0 and 2.1 (see [Target frameworks](#target-frameworks)):
 - **LINQ**: the CsvHelper.Linq package queries CSV with any LINQ operator, reading only the columns and rows a
   query uses, joins with Entity Framework Core and other providers by sending them only the keys it needs, and
   writes query results as CSV.
+- **Excel**: the CsvHelper.Excel package reads and writes Excel workbooks (`.xlsx`) with the same records: a sheet
+  reads as a `CsvReader` and writes as a `CsvWriter`, with typed cells and constant memory, and workbooks convert to
+  CSV and back.
 
 Benchmarks against [Sep](https://github.com/nietras/Sep) and [Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan)
 are in [`bench/`](bench/CsvHelper.Benchmarks); results are in [Benchmarks](#benchmarks) below.
@@ -375,6 +378,25 @@ report.WriteCsv("report.csv");                                     // anonymous 
 orders.Delete(o => o.Status == Status.Cancelled);                  // the rest of the file is kept byte for byte
 ```
 
+## Excel
+
+The [CsvHelper.Excel](https://joshclose.github.io/CsvHelper/excel.html) package (`dotnet add package CsvHelper.Excel`)
+reads and writes Excel workbooks (`.xlsx`) without an Excel library. A sheet reads as a `CsvReader` and writes as a
+`CsvWriter`, so records, dynamic records and `CsvDataReader` work as for CSV, and cells keep their types: numbers,
+dates and booleans read in any culture and write as Excel's own cells, and `00123` stays text.
+
+```csharp
+using CsvHelper.Excel;
+
+using var reader = ExcelReader.FromFile("orders.xlsx", new ExcelReaderOptions { Sheet = "Orders" });
+var orders = reader.GetRecords<Order>().ToList();
+
+using var workbook = ExcelWorkbookWriter.ToFile("report.xlsx");
+workbook.WriteSheet("Orders", orders);                             // a bold, frozen header; columns fit their text
+
+ExcelConvert.ToCsv("orders.xlsx", "orders.csv");                   // and ExcelConvert.ToExcel back
+```
+
 <!-- /docs:exclude -->
 
 ## Target frameworks
@@ -418,10 +440,11 @@ checked against the SIMD ones. The differences between the .NET builds (`net10.0
 
 ### Trimming and native AOT
 
-The `net10.0` and `net8.0` builds of CsvHelper and CsvHelper.Linq are marked `IsAotCompatible` and `IsTrimmable`, so the trimming
-and AOT analyzers check them on every build. Reading, writing and `[CsvRecord]` types work in trimmed and native AOT
-applications: the generated mappers are registered by a module initializer, not found with reflection. Two things need
-code generated at run time:
+The `net10.0` and `net8.0` builds of CsvHelper, CsvHelper.Linq and CsvHelper.Excel are marked `IsAotCompatible` and
+`IsTrimmable`, so the trimming and AOT analyzers check them on every build. Reading, writing and `[CsvRecord]` types work
+in trimmed and native AOT applications: the generated mappers are registered by a module initializer, not found with
+reflection. CsvHelper.Excel reads `[ExcelSheet]`, `[ExcelColumn]` and `[CsvFormat]` by reflection over the members that
+its methods' annotations keep. Two things need code generated at run time:
 
 - C#'s `dynamic`, which needs the runtime binder (`Microsoft.CSharp`); `GetRecords<CsvDynamicRecord>()` reads the same
   records without it ([Dynamic records](https://joshclose.github.io/CsvHelper/records.html#dynamic-records)).
