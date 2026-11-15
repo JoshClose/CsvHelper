@@ -48,11 +48,15 @@ internal enum CellFont
 	Link,
 }
 
-/// <summary>A cell format: a number format, a font and whether text wraps.</summary>
+/// <summary>A cell format: a number format, a font, whether text wraps, and whether the cell is unlocked.</summary>
 /// <param name="NumberFormatId">The number format's id: 0 for General, a built-in format's, or a custom one's from 164.</param>
 /// <param name="Font">The font.</param>
 /// <param name="Wrap">Whether text wraps at the column's width.</param>
-internal readonly record struct CellXf(int NumberFormatId, CellFont Font, bool Wrap);
+/// <param name="Unlocked">
+/// Whether users can change the cell when its sheet is protected (<see cref="ExcelSheetOptions.Protect"/>): a cell is
+/// locked by default.
+/// </param>
+internal readonly record struct CellXf(int NumberFormatId, CellFont Font, bool Wrap, bool Unlocked = false);
 
 /// <summary>
 /// The workbook's cell formats: an index (a cell's <c>s</c>) for each <see cref="CellXf"/>, handed out in the order
@@ -89,6 +93,8 @@ internal sealed class StyleRegistry
 	// The fonts, in the order of their ids; and each font's id, by CellFont, -1 until it is first used.
 	private readonly List<CellFont> fonts = [CellFont.Regular];
 	private readonly int[] fontIds = [0, -1, -1, -1];
+	// The unlocked form of each cell format, by its index, 0 until it is first asked for (the default format is locked).
+	private int[] unlockedIndexes = [];
 
 	/// <summary>The number of cell formats, the default one included.</summary>
 	public int Count => formats.Count;
@@ -150,6 +156,29 @@ internal sealed class StyleRegistry
 	/// <param name="font">The font.</param>
 	/// <returns>The index of the cell format with that font.</returns>
 	public int WithFont(int index, CellFont font) => IndexOf(formats[index] with { Font = font });
+
+	/// <summary>
+	/// The index of a cell format's unlocked form: a cell below a protected sheet's header, in one of its columns, which
+	/// users can change (<see cref="ExcelSheetOptions.Protect"/>).
+	/// </summary>
+	/// <param name="index">The cell format's index.</param>
+	/// <returns>The index of the cell format unlocked, added when it is first used.</returns>
+	public int Unlocked(int index)
+	{
+		if (index >= unlockedIndexes.Length)
+		{
+			Array.Resize(ref unlockedIndexes, Math.Max(index + 1, unlockedIndexes.Length * 2));
+		}
+
+		var unlocked = unlockedIndexes[index];
+		if (unlocked == 0)
+		{
+			unlocked = IndexOf(formats[index] with { Unlocked = true });
+			unlockedIndexes[index] = unlocked;
+		}
+
+		return unlocked;
+	}
 
 	/// <summary>The id of a number format code, a custom one added when it is first used.</summary>
 	/// <param name="code">The code, which Excel opens.</param>
@@ -251,7 +280,8 @@ internal sealed class StyleRegistry
 
 	/// <summary>
 	/// Writes the cell formats' <c>cellXfs</c>: the default one, then the others in the order of their indexes, each with
-	/// the <c>apply</c> flags of what it sets, as Excel writes them. A link's is in the <c>Hyperlink</c> cell style.
+	/// the <c>apply</c> flags of what it sets, as Excel writes them; an unlocked one with <c>protection locked="0"</c>. A
+	/// link's is in the <c>Hyperlink</c> cell style.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	public void WriteCellFormats(XmlOutput xml)
@@ -277,7 +307,36 @@ internal sealed class StyleRegistry
 				xml.Append(" applyFont=\"1\""u8);
 			}
 
-			xml.Append(format.Wrap ? " applyAlignment=\"1\"><alignment wrapText=\"1\"/></xf>"u8 : "/>"u8);
+			if (!format.Wrap && !format.Unlocked)
+			{
+				xml.Append("/>"u8);
+			}
+			else
+			{
+				// The apply flags, then the elements, in the schema's order.
+				if (format.Wrap)
+				{
+					xml.Append(" applyAlignment=\"1\""u8);
+				}
+
+				if (format.Unlocked)
+				{
+					xml.Append(" applyProtection=\"1\""u8);
+				}
+
+				xml.Append((byte)'>');
+				if (format.Wrap)
+				{
+					xml.Append("<alignment wrapText=\"1\"/>"u8);
+				}
+
+				if (format.Unlocked)
+				{
+					xml.Append("<protection locked=\"0\"/>"u8);
+				}
+
+				xml.Append("</xf>"u8);
+			}
 		}
 
 		xml.Append("</cellXfs>"u8);

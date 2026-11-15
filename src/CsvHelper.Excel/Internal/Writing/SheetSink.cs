@@ -80,6 +80,14 @@ namespace CsvHelper.Excel;
 /// its format at least.
 /// </para>
 /// <para>
+/// With <see cref="ExcelSheetOptions.Protect"/>, the sheet is protected (<see cref="SheetProtection"/>, written after
+/// <c>sheetData</c>, its password hashed once for every sheet of <see cref="ExcelRowLimit.NewSheet"/>). Once the header
+/// ends, each cell below it in its columns takes its style's unlocked form, and so does each of those columns' default
+/// style, which the cells users add take: users change those cells only. The title's and the header's cells stay locked,
+/// since a cell not in the file takes its column's unlocked style: the title's row has the title's style, which its
+/// merged cells take, and the header's empty fields are written as empty cells. So do the columns past the header's.
+/// </para>
+/// <para>
 /// A <see cref="Uri"/> field below the header is a text cell of its text, as for CSV, with a link to it in the
 /// <c>Hyperlink</c> cell style when <see cref="ExcelWriterOptions.Links"/> takes it, up to Excel's 65,530 links a sheet
 /// (<see cref="SheetLinks"/>). The links are written after the merged ranges, and their relationships after the table's,
@@ -184,6 +192,11 @@ internal sealed class SheetSink : CsvCellSink
 	// In the header's row of a sheet whose columns may have styles: the header's cells say their style, General's (s="0")
 	// too, since LibreOffice gives a written cell without one its column's style, where Excel gives it General.
 	private bool headerSaysStyle;
+	// The sheet's protection (sheetProtection), its password hashed once for every sheet of NewSheet; null without
+	// Protect. And the header's columns, whose cells below it are unlocked; 0 until the header has ended, or without
+	// Protect.
+	private readonly byte[]? protection;
+	private int unlockedColumns;
 	// The title's merge: the last column of the first record, which it spans; -1 until known, or without a title.
 	private int titleLastColumn = -1;
 	// The first sheet's table's name, and the name of the table of the sheet being written (a number after the first's in
@@ -286,7 +299,8 @@ internal sealed class SheetSink : CsvCellSink
 		boldHeaderWidths = settings.BoldHeader || (settings.HasHeader && settings.Table?.Style is not null);
 		filterButtons = settings.HasHeader && (settings.AutoFilter || settings.Table is { FilterButtons: true });
 		repeatsHeader = csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
-		headerSaysStyle = csv.HasHeader && (settings.HasColumns || settings.ValidatesMembers);
+		headerSaysStyle = csv.HasHeader && (settings.HasColumns || settings.ValidatesMembers || settings.Protect);
+		protection = settings.Protect ? SheetProtection.ForSheet(settings.Password, settings.AutoFilter) : null;
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
 		firstTableName = this.tableName = csv.HasHeader ? tableName : null;
@@ -352,6 +366,14 @@ internal sealed class SheetSink : CsvCellSink
 
 		if (utf8.IsEmpty)
 		{
+			if (protection is not null && row == headerRowNumber)
+			{
+				// A cell not in the file takes its column's default style, which is unlocked: the header's empty cells are
+				// written, locked.
+				StartCell(at, 0);
+				output.Append("/>"u8);
+			}
+
 			return;
 		}
 
@@ -433,6 +455,12 @@ internal sealed class SheetSink : CsvCellSink
 		if (row == headerRowNumber)
 		{
 			headerColumns = column;
+			if (protection is not null)
+			{
+				// The cells below the header in its columns are unlocked, through their styles and their columns' default
+				// styles; the styles take it once the header's row is over, below.
+				unlockedColumns = column;
+			}
 		}
 
 		var hasRow = rowOpen;
@@ -1299,10 +1327,15 @@ internal sealed class SheetSink : CsvCellSink
 		output.Append((byte)'"');
 	}
 
-	/// <summary>A cell's style in the title's or the header's row, or in a column with a style.</summary>
+	/// <summary>
+	/// A cell's style in the title's or the header's row, in a column with a style, or below a protected sheet's header.
+	/// </summary>
 	/// <param name="at">The cell's column.</param>
 	/// <param name="own">The cell format the cell has of its own.</param>
-	/// <returns>The cell format: its own in the row's font, or in its column's style.</returns>
+	/// <returns>
+	/// The cell format: its own in the row's font, or in its column's style; unlocked below a protected sheet's header, in
+	/// the header's columns.
+	/// </returns>
 	private int StyleOf(int at, int own)
 	{
 		if (rowFont != CellFont.Regular)
@@ -1310,7 +1343,9 @@ internal sealed class SheetSink : CsvCellSink
 			return styles.WithFont(own, rowFont);
 		}
 
-		return columnStyles is { } columns && at < columns.Length && columns[at] is { } column ? column.Of(own) : own;
+		var style = columnStyles is { } columns && at < columns.Length && columns[at] is { } column ? column.Of(own) : own;
+
+		return at < unlockedColumns ? styles.Unlocked(style) : style;
 	}
 
 	/// <summary>Sets the font of the current row's cells, and whether cells need more than their own style.</summary>
@@ -1318,7 +1353,7 @@ internal sealed class SheetSink : CsvCellSink
 	private void SetRowFont(CellFont font)
 	{
 		rowFont = font;
-		styling = font != CellFont.Regular || columnStyles is not null || headerSaysStyle;
+		styling = font != CellFont.Regular || columnStyles is not null || headerSaysStyle || unlockedColumns > 0;
 	}
 
 	/// <summary>
@@ -1536,7 +1571,8 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// Writes the title's row, when the sheet has a title: its cell in bold Calibri 14, as a text cell, before the writer's
-	/// first record. The record's row then starts below it.
+	/// first record; on a protected sheet, the row in the title's style, which locks the title's merged cells. The
+	/// record's row then starts below it.
 	/// </summary>
 	private void WriteTitle()
 	{
@@ -1546,6 +1582,18 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		SetRowFont(CellFont.Title);
+		if (protection is not null)
+		{
+			// The row's style, which its cells not in the file take, so that the title's merged cells are locked too, as
+			// Excel locks them, rather than in their columns' unlocked styles.
+			output.Append("<row r=\""u8);
+			output.AppendNumber(row);
+			output.Append("\" s=\""u8);
+			output.AppendNumber(styles.WithFont(0, CellFont.Title));
+			output.Append("\" customFormat=\"1\">"u8);
+			rowOpen = true;
+		}
+
 		WriteText(title, 0);
 		output.Append("</row>"u8);
 		rowOpen = false;
@@ -1621,12 +1669,13 @@ internal sealed class SheetSink : CsvCellSink
 	/// Writes the columns that have a width, a style or are hidden, in order, each as a <c>col</c> of its own: the width
 	/// its options give (<see cref="ExcelColumnOptions.Width"/>), else the one measured, else the default width, which a
 	/// <c>col</c> needs, since Excel hides one without. A width auto-fit gives is marked <c>bestFit</c>, as Excel marks its
-	/// AutoFit's, which widens such a column as numbers are typed into it.
+	/// AutoFit's, which widens such a column as numbers are typed into it. On a protected sheet, the header's columns' styles
+	/// are unlocked, so that the cells users add below the header are.
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	private void AppendColumns(XmlOutput xml)
 	{
-		var count = Math.Max(Math.Max(columnOptions?.Length ?? 0, columnWidths?.Length ?? 0), columnDefaults?.Length ?? 0);
+		var count = Math.Max(Math.Max(Math.Max(columnOptions?.Length ?? 0, columnWidths?.Length ?? 0), columnDefaults?.Length ?? 0), unlockedColumns);
 		var any = false;
 		for (var at = 0; at < count; at++)
 		{
@@ -1649,6 +1698,12 @@ internal sealed class SheetSink : CsvCellSink
 			}
 
 			var style = columnDefaults is { } defaults && at < defaults.Length ? defaults[at] : 0;
+			if (at < unlockedColumns)
+			{
+				// The cells users add below a protected sheet's header, in its columns.
+				style = styles.Unlocked(style);
+			}
+
 			var hidden = column?.Hidden == true;
 			if (!custom && style == 0 && !hidden)
 			{
@@ -1692,15 +1747,20 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// Writes the XML after the sheet's rows into the buffer, in the schema's order, which Excel keeps to: the end of
-	/// <c>sheetData</c>; the filter over the header's columns, from the header down to the last row (and the workbook's
-	/// hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the columns'
-	/// validations; the links; the page margins; <c>ignoredErrors</c> over the used range when a text cell starts like a number; the table's part; and the
-	/// worksheet's end. The sheet's relationships (its table's, <c>rId1</c>, then its links') and its table's part are
-	/// kept to write once its entry is closed.
+	/// <c>sheetData</c>; the protection; the filter over the header's columns, from the header down to the last row (and
+	/// the workbook's hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the
+	/// columns' validations; the links; the page margins; <c>ignoredErrors</c> over the used range when a text cell starts
+	/// like a number; the table's part; and the worksheet's end. The sheet's relationships (its table's, <c>rId1</c>, then
+	/// its links') and its table's part are kept to write once its entry is closed.
 	/// </summary>
 	private void AppendEnd()
 	{
 		output.Append("</sheetData>"u8);
+		if (protection is not null)
+		{
+			output.Append(protection);
+		}
+
 		if (Settings.AutoFilter && headerColumns > 0)
 		{
 			var filter = new ExcelRange((int)headerRowNumber, 1, (int)Math.Max(lastRow, headerRowNumber), headerColumns);

@@ -105,6 +105,15 @@ internal sealed class SheetSettings
 	/// </summary>
 	public bool ValidatesMembers => Sheet.Validate && HasHeader && members is { HasTypes: true };
 
+	/// <summary>
+	/// Whether the sheet is protected (<see cref="ExcelSheetOptions.Protect"/>), so that users change only the cells of the
+	/// header's columns below it: with a header, which the check of the options asks for.
+	/// </summary>
+	public bool Protect => HasHeader && Sheet.Protect;
+
+	/// <summary>The password that unprotecting the sheet asks for, or <see langword="null"/> for none.</summary>
+	public string? Password => Sheet.Password;
+
 	/// <summary>Each column's member with a type, for the header's names, when the sheet validates its members' types.</summary>
 	/// <param name="names">The header's names, in column order.</param>
 	/// <returns>Each column's member, or <see langword="null"/> for none; <see langword="null"/> when the sheet doesn't validate by type.</returns>

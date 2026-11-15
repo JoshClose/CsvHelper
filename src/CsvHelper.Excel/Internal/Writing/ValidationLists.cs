@@ -34,9 +34,6 @@ internal sealed class ValidationLists
 	/// <summary>The lists sheet's name, which a number follows when a sheet has it.</summary>
 	public const string SheetStem = "Lists";
 
-	/// <summary>The sheet protection of the lists sheet, without a password, as Excel writes it.</summary>
-	private static readonly byte[] Protection = "<sheetProtection sheet=\"1\" objects=\"1\" scenarios=\"1\"/>"u8.ToArray();
-
 	// The workbook's tables' names, which the lists' join.
 	private readonly TableNames names;
 	// Each list's index, by its values; and the lists, in the order of their columns.
@@ -156,7 +153,7 @@ internal sealed class ValidationLists
 			}
 
 			xml.Append("</sheetData>"u8);
-			xml.Append(Protection);
+			xml.Append(SheetProtection.ListsSheet);
 			xml.Append(SheetSink.PageMargins);
 			xml.Append("</worksheet>"u8);
 			await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);

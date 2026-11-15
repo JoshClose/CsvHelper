@@ -146,6 +146,29 @@ public class StyleRegistryTests
 	}
 
 	[Fact]
+	public void UnlocksCellFormatsOnce()
+	{
+		var styles = new StyleRegistry();
+		var wrapped = styles.IndexOf(new CellXf(styles.NumberFormatId("@"), CellFont.Regular, true));
+		var link = styles.IndexOf(new CellXf(0, CellFont.Link, false));
+
+		// General's unlocked form, the others', each added once; an unlocked format is its own.
+		Assert.Equal(3, styles.Unlocked(0));
+		Assert.Equal(4, styles.Unlocked(wrapped));
+		Assert.Equal(5, styles.Unlocked(link));
+		Assert.Equal(3, styles.Unlocked(0));
+		Assert.Equal(4, styles.Unlocked(4));
+		Assert.Equal(6, styles.Count);
+		Assert.Equal(new CellXf(49, CellFont.Regular, true, Unlocked: true), styles[4]);
+		// The protection after the alignment, its flag after the alignment's, as the schema orders them.
+		Assert.EndsWith(
+			"<xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyProtection=\"1\"><protection locked=\"0\"/></xf>" +
+			"<xf numFmtId=\"49\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyNumberFormat=\"1\" applyAlignment=\"1\" applyProtection=\"1\"><alignment wrapText=\"1\"/><protection locked=\"0\"/></xf>" +
+			"<xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"1\" applyFont=\"1\" applyProtection=\"1\"><protection locked=\"0\"/></xf></cellXfs>",
+			Xml(styles).CellFormats);
+	}
+
+	[Fact]
 	public void PutsALinksCellFormatsInTheHyperlinkCellStyle()
 	{
 		// Without a link, Normal alone, as Phase 4 wrote it.
