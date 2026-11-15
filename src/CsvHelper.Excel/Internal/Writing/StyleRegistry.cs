@@ -98,6 +98,11 @@ internal sealed class StyleRegistry
 	/// <returns>The cell format.</returns>
 	public CellXf this[int index] => formats[index];
 
+	/// <summary>The code of one of the writer's own number formats.</summary>
+	/// <param name="format">The format.</param>
+	/// <returns>Its code, such as <c>yyyy-mm-dd</c>.</returns>
+	public static string Code(FixedFormat format) => FixedCodes[(int)format];
+
 	/// <summary>The cell format of one of the writer's own number formats.</summary>
 	/// <param name="format">The format.</param>
 	/// <returns>Its index.</returns>

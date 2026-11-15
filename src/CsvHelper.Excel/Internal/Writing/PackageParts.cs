@@ -8,14 +8,16 @@ using System.Threading.Tasks;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// Writes the parts of a workbook that come after its sheets, once every sheet's name is known: the shared strings
-/// (with <see cref="ExcelStrings.Shared"/>), the styles, the workbook, its relationships, the package's relationships
-/// and, last, the content types. Excel and LibreOffice open a package in that order (checked on 2026-11-06).
+/// Writes the parts of a workbook that come after its sheets (and its lists sheet, <see cref="ValidationLists"/>), once
+/// every sheet's name is known: the shared strings (with <see cref="ExcelStrings.Shared"/>), the styles, the workbook, its
+/// relationships, the package's relationships and, last, the content types. Excel and LibreOffice open a package in that
+/// order (checked on 2026-11-06).
 /// </summary>
 /// <remarks>
 /// There is no theme, no document properties (so no author and no dates), no views and no <c>calcPr</c>: Excel opens a
-/// workbook without them. The styles are Excel's minimal style sheet in Calibri 11, which every Excel since 2007 has and
-/// which LibreOffice replaces with Carlito, of the same widths.
+/// workbook without them, on its first sheet, which is never the lists sheet, the last. The styles are Excel's minimal
+/// style sheet in Calibri 11, which every Excel since 2007 has and which LibreOffice replaces with Carlito, of the same
+/// widths.
 /// </remarks>
 internal static class PackageParts
 {
@@ -34,12 +36,17 @@ internal static class PackageParts
 	/// <param name="styles">The cell formats.</param>
 	/// <param name="filters">The sheets' filters: each sheet's place in tab order, from 0, and the filter's range.</param>
 	/// <param name="tables">The number of tables, whose parts are <see cref="TableWriter.PartName"/>(1) on.</param>
+	/// <param name="lists">
+	/// The lists sheet's name and its lists (<see cref="ValidationLists"/>), whose part, after the sheets', is written; or
+	/// <see langword="null"/> without one.
+	/// </param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when the parts are written.</returns>
 	public static async ValueTask WriteAsync(PackageWriter package, IReadOnlyList<string> sheetNames, SharedStringTable? strings, StyleRegistry styles,
-		IReadOnlyList<(int Sheet, ExcelRange Range)> filters, int tables, bool async, CancellationToken cancellationToken)
+		IReadOnlyList<(int Sheet, ExcelRange Range)> filters, int tables, (string SheetName, ValidationLists Lists)? lists, bool async, CancellationToken cancellationToken)
 	{
+		var sheets = sheetNames.Count + (lists is null ? 0 : 1);
 		using var xml = new XmlOutput(4096);
 		if (strings is not null)
 		{
@@ -51,11 +58,11 @@ internal static class PackageParts
 		await package.WritePartAsync("xl/styles.xml", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
-		WriteWorkbook(xml, sheetNames, filters);
+		WriteWorkbook(xml, sheetNames, filters, lists);
 		await package.WritePartAsync("xl/workbook.xml", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
-		WriteWorkbookRelationships(xml, sheetNames.Count, strings is not null);
+		WriteWorkbookRelationships(xml, sheets, strings is not null);
 		await package.WritePartAsync("xl/_rels/workbook.xml.rels", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
@@ -65,7 +72,7 @@ internal static class PackageParts
 		await package.WritePartAsync("_rels/.rels", xml, async, cancellationToken).ConfigureAwait(false);
 
 		Start(xml);
-		WriteContentTypes(xml, sheetNames.Count, strings is not null, tables);
+		WriteContentTypes(xml, sheets, strings is not null, tables);
 		await package.WritePartAsync("[Content_Types].xml", xml, async, cancellationToken).ConfigureAwait(false);
 	}
 
@@ -140,14 +147,16 @@ internal static class PackageParts
 	}
 
 	/// <summary>
-	/// Writes the workbook part: its sheets, in tab order, each with its relationship; and, for each sheet with a filter,
-	/// Excel's hidden <c>_xlnm._FilterDatabase</c> name of the sheet's own, over the filter's range, as Excel writes it
-	/// (<c>'Q1 Orders'!$A$1:$C$4</c>).
+	/// Writes the workbook part: its sheets, in tab order, each with its relationship, and the very hidden lists sheet last;
+	/// and its names: each list's hidden name over its column of the lists sheet (<c>_CsvHelperList1</c>), and, for each
+	/// sheet with a filter, Excel's hidden <c>_xlnm._FilterDatabase</c> name of the sheet's own, over the filter's range, as
+	/// Excel writes it (<c>'Q1 Orders'!$A$1:$C$4</c>).
 	/// </summary>
 	/// <param name="xml">The buffer.</param>
 	/// <param name="sheetNames">The sheets' names.</param>
 	/// <param name="filters">The sheets' filters.</param>
-	private static void WriteWorkbook(XmlOutput xml, IReadOnlyList<string> sheetNames, IReadOnlyList<(int Sheet, ExcelRange Range)> filters)
+	/// <param name="lists">The lists sheet's name and its lists, or <see langword="null"/> without one.</param>
+	private static void WriteWorkbook(XmlOutput xml, IReadOnlyList<string> sheetNames, IReadOnlyList<(int Sheet, ExcelRange Range)> filters, (string SheetName, ValidationLists Lists)? lists)
 	{
 		xml.Append("<workbook xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheets>"u8);
 		for (var i = 0; i < sheetNames.Count; i++)
@@ -162,10 +171,22 @@ internal static class PackageParts
 			xml.Append("\"/>"u8);
 		}
 
+		if (lists is { } listsSheet)
+		{
+			xml.Append("<sheet name=\""u8);
+			xml.AppendText(Encoding.UTF8.GetBytes(listsSheet.SheetName), attribute: true);
+			xml.Append("\" sheetId=\""u8);
+			xml.AppendNumber(sheetNames.Count + 1);
+			xml.Append("\" state=\"veryHidden\" r:id=\"rId"u8);
+			xml.AppendNumber(sheetNames.Count + 1);
+			xml.Append("\"/>"u8);
+		}
+
 		xml.Append("</sheets>"u8);
-		if (filters.Count > 0)
+		if (filters.Count > 0 || lists is not null)
 		{
 			xml.Append("<definedNames>"u8);
+			lists?.Lists.AppendNames(xml, lists.Value.SheetName);
 			foreach (var (sheet, range) in filters)
 			{
 				xml.Append("<definedName name=\"_xlnm._FilterDatabase\" localSheetId=\""u8);

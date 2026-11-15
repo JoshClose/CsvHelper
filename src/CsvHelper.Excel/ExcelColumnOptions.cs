@@ -49,11 +49,15 @@ public sealed record ExcelColumnOptions
 	/// <summary>
 	/// A dropdown of these values for the column's cells below the header, which Excel applies to what users type there, in
 	/// place of the validation of its member's type (<see cref="ExcelSheetOptions.Validate"/>); on any sheet, validated or
-	/// not. Each value has 1 to 255 characters, since Excel doesn't match a longer one; a value repeated is listed once.
-	/// The values are written in the validation when, joined by commas, they have at most 255 characters and none has a
-	/// comma or a space at either end; else in a very hidden sheet named <c>Lists</c>, after the workbook's other sheets.
-	/// <see langword="null"/>, the default, for none. Reading the sheet back doesn't check its cells against the list: a
-	/// member's type, or its <see cref="CsvValidateAttribute"/>, says what it takes.
+	/// not. Each value has 1 to 255 characters, since Excel doesn't match a longer one; a value repeated is listed once;
+	/// at most 1,048,576 values. The values are written in the validation when, joined by commas, they have at most 255
+	/// characters and none has a comma, or white space at either end, and Excel matches them in their case; else in a very
+	/// hidden sheet after the workbook's other sheets, named <c>Lists</c> (<c>Lists2</c> when a sheet has that name), which
+	/// columns with the same list share, and Excel matches them ignoring case. <see langword="null"/>, the default, for
+	/// none. In a column of General format, Excel enters a value it reads as a number (<c>00123</c>) as one, which a list of
+	/// text doesn't match: give such a column a <see cref="Format"/> of <c>@</c>, as <see cref="ExcelSheetOptions.Validate"/>
+	/// gives text members' columns. Reading the sheet back doesn't check its cells against the list: a member's type, or its
+	/// <see cref="CsvValidateAttribute"/>, says what it takes.
 	/// </summary>
 	public IReadOnlyList<string>? List { get; init; }
 
@@ -73,6 +77,11 @@ public sealed record ExcelColumnOptions
 			if (list.Count == 0)
 			{
 				return "has an empty list: use null for none.";
+			}
+
+			if (list.Count > CellReference.MaxRow)
+			{
+				return $"has {list.Count.ToString("N0", CultureInfo.InvariantCulture)} values in its list, and the lists sheet holds {CellReference.MaxRow.ToString("N0", CultureInfo.InvariantCulture)}, a column's rows.";
 			}
 
 			foreach (var value in list)

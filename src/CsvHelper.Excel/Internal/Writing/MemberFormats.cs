@@ -10,8 +10,8 @@ using System.Reflection;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// A member's <see cref="CsvFormatAttribute"/>, <see cref="CsvCultureAttribute"/> and <see cref="ExcelColumnAttribute"/>,
-/// and the column they are for.
+/// A member's type, its <see cref="CsvFormatAttribute"/>, <see cref="CsvCultureAttribute"/> and
+/// <see cref="ExcelColumnAttribute"/>, and the column they are for.
 /// </summary>
 /// <param name="Name">The column's header name, after the prefixes of the records it is nested in.</param>
 /// <param name="NameIndex">Which of the columns with that name it is (<see cref="CsvColumnAttribute.NameIndex"/>).</param>
@@ -19,23 +19,36 @@ namespace CsvHelper.Excel;
 /// <param name="Format">The format the record writer writes (the attribute's first), or <see langword="null"/>.</param>
 /// <param name="Culture">The culture, or <see langword="null"/> for the writer's.</param>
 /// <param name="Excel">The column's options from its <see cref="ExcelColumnAttribute"/>, or <see langword="null"/>.</param>
-internal sealed record MemberFormat(string Name, int NameIndex, int Index, string? Format, CultureInfo? Culture, ExcelColumnOptions? Excel = null);
+/// <param name="Type">
+/// The member's type, as declared (a <see cref="Nullable{T}"/> too), which <see cref="ExcelSheetOptions.Validate"/> validates
+/// its column by; or <see langword="null"/> when a converter writes it (its own <see cref="CsvConverterAttribute"/> or the
+/// assembly's) or it is a collection's column, whose cells are the converter's or the elements' text.
+/// </param>
+/// <param name="Values">
+/// The texts the record writer writes for the type's values, when they are a few: an enum's members, each value's first
+/// member by its first <see cref="CsvEnumNameAttribute"/> name or else its own, in declaration order (none for a
+/// <see cref="FlagsAttribute"/> enum, whose values combine); or a <see cref="bool"/>'s first true and first false
+/// <see cref="CsvBooleanValuesAttribute"/> values, trimmed. <see langword="null"/> otherwise.
+/// </param>
+internal sealed record MemberFormat(string Name, int NameIndex, int Index, string? Format, CultureInfo? Culture, ExcelColumnOptions? Excel = null, Type? Type = null,
+	IReadOnlyList<string>? Values = null);
 
 /// <summary>
-/// The formats and cultures of a record type's members, their <see cref="ExcelColumnAttribute"/>s and the type's
+/// The types, formats and cultures of a record type's members, their <see cref="ExcelColumnAttribute"/>s and the type's
 /// <see cref="ExcelSheetAttribute"/>, read by reflection once per type, for the sheets that
 /// <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/> adds: a date written with its member's format,
-/// or a number with its member's culture, arrives as that text (Phase 0), which the sink reads back with them.
+/// or a number with its member's culture, arrives as that text (Phase 0), which the sink reads back with them; and a
+/// member's type gives its column a validation and a default format (<see cref="ExcelSheetOptions.Validate"/>).
 /// </summary>
 /// <remarks>
 /// <para>
 /// The members are found as CsvHelper's source generator finds them, for <see cref="CsvRecordAttribute"/> types only:
 /// the parameters of the constructor it uses (with the attributes of the properties they set), then the properties and
 /// fields it reads, the base types' included unless <see cref="CsvIgnoreBaseAttribute"/> says otherwise, and the members
-/// of nested records, after their prefixes. A member read by a <see cref="CsvConverterAttribute"/> has no format (but its
-/// column has its <see cref="ExcelColumnAttribute"/>), and neither has any member of a type that a
-/// <see cref="CsvRecordMapAttribute"/> or a hand-written mapper maps, whose attributes are elsewhere. The
-/// <see cref="ExcelSheetAttribute"/> is read from any type, and its base types.
+/// of nested records, after their prefixes. A member read by a converter, its own <see cref="CsvConverterAttribute"/> or
+/// the assembly's for its type, has no format and no type (but its column has its <see cref="ExcelColumnAttribute"/>),
+/// and neither has any member of a type that a <see cref="CsvRecordMapAttribute"/> or a hand-written mapper maps, whose
+/// attributes are elsewhere. The <see cref="ExcelSheetAttribute"/> is read from any type, and its base types.
 /// </para>
 /// <para>
 /// A member's column is found by its header name, its <see cref="CsvColumnAttribute"/> name or its own, ordinally, and
@@ -60,8 +73,14 @@ internal sealed class MemberFormats
 	/// <summary>The formats of each type read so far: none for a type whose members have none.</summary>
 	private static readonly ConcurrentDictionary<Type, MemberFormats> Cache = new();
 
+	/// <summary>The enum names of each enum type read so far (<see cref="MemberFormat.Values"/>), or null for a <see cref="FlagsAttribute"/> enum's.</summary>
+	private static readonly ConcurrentDictionary<Type, string[]?> EnumNames = new();
+
+	/// <summary>The types the assembly's converters convert, of each assembly read so far.</summary>
+	private static readonly ConcurrentDictionary<Assembly, HashSet<Type>> AssemblyConverted = new();
+
 	/// <summary>Creates the formats of a type, or of no type, for tests of formats no type has.</summary>
-	/// <param name="members">The members with a format, a culture or an <see cref="ExcelColumnAttribute"/>.</param>
+	/// <param name="members">The members with a type, a format, a culture or an <see cref="ExcelColumnAttribute"/>.</param>
 	/// <param name="sheet">The options of the type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/>.</param>
 	/// <param name="problem">What is wrong with the type's Excel attributes, or <see langword="null"/>.</param>
 	internal MemberFormats(MemberFormat[] members, ExcelSheetOptions? sheet = null, string? problem = null)
@@ -73,10 +92,11 @@ internal sealed class MemberFormats
 		{
 			HasFormats |= member.Format is not null || member.Culture is not null;
 			HasExcelColumns |= member.Excel is not null;
+			HasTypes |= member.Type is not null;
 		}
 	}
 
-	/// <summary>The members with a format, a culture or an <see cref="ExcelColumnAttribute"/>, in the order they were found.</summary>
+	/// <summary>The members with a type, a format, a culture or an <see cref="ExcelColumnAttribute"/>, in the order they were found.</summary>
 	public IReadOnlyList<MemberFormat> Entries { get; }
 
 	/// <summary>Whether a member has a format or a culture, which the sink reads its cells with.</summary>
@@ -84,6 +104,9 @@ internal sealed class MemberFormats
 
 	/// <summary>Whether a member has an <see cref="ExcelColumnAttribute"/>, which gives its column options.</summary>
 	public bool HasExcelColumns { get; }
+
+	/// <summary>Whether a member has a type (<see cref="MemberFormat.Type"/>), which <see cref="ExcelSheetOptions.Validate"/> validates its column by.</summary>
+	public bool HasTypes { get; }
 
 	/// <summary>The options of the type's <see cref="ExcelSheetAttribute"/>, or <see langword="null"/> without one.</summary>
 	public ExcelSheetOptions? Sheet { get; }
@@ -94,14 +117,20 @@ internal sealed class MemberFormats
 	/// </summary>
 	public string? Problem { get; }
 
-	/// <summary>The formats of a record type's members.</summary>
+	/// <summary>The types and formats of a record type's members.</summary>
 	/// <typeparam name="T">The record type.</typeparam>
-	/// <returns>The formats, or <see langword="null"/> when no member has one and the type has no <see cref="ExcelSheetAttribute"/>.</returns>
+	/// <returns>
+	/// The members, or <see langword="null"/> when none has a type, a format or Excel options and the type has no
+	/// <see cref="ExcelSheetAttribute"/>: a type that isn't a <see cref="CsvRecordAttribute"/> type, or one with no members.
+	/// </returns>
 	public static MemberFormats? For<[DynamicallyAccessedMembers(Members)] T>() => For(typeof(T));
 
-	/// <summary>The formats of a record type's members.</summary>
+	/// <summary>The types and formats of a record type's members.</summary>
 	/// <param name="type">The record type.</param>
-	/// <returns>The formats, or <see langword="null"/> when no member has one and the type has no <see cref="ExcelSheetAttribute"/>.</returns>
+	/// <returns>
+	/// The members, or <see langword="null"/> when none has a type, a format or Excel options and the type has no
+	/// <see cref="ExcelSheetAttribute"/>: a type that isn't a <see cref="CsvRecordAttribute"/> type, or one with no members.
+	/// </returns>
 	public static MemberFormats? For([DynamicallyAccessedMembers(Members)] Type type)
 	{
 		if (!Cache.TryGetValue(type, out var formats))
@@ -166,6 +195,29 @@ internal sealed class MemberFormats
 			if (at >= 0)
 			{
 				columns[at] ??= member.Excel;
+			}
+		}
+
+		return columns;
+	}
+
+	/// <summary>Each column's member with a type (<see cref="MemberFormat.Type"/>), for the names of a sheet's header.</summary>
+	/// <param name="names">The header's names, in column order.</param>
+	/// <returns>Each column's member, or <see langword="null"/> for a column whose member has no type, or that no member's is.</returns>
+	public MemberFormat?[] Typed(IReadOnlyList<string> names)
+	{
+		var columns = new MemberFormat?[Count(names)];
+		foreach (var member in Entries)
+		{
+			if (member.Type is null)
+			{
+				continue;
+			}
+
+			var at = member.Index >= 0 ? member.Index : Find(names, member.Name, member.NameIndex);
+			if (at >= 0)
+			{
+				columns[at] ??= member;
 			}
 		}
 
@@ -332,11 +384,6 @@ internal sealed class MemberFormats
 			return;
 		}
 
-		if (format is null && culture is null && excel is null)
-		{
-			return;
-		}
-
 		CultureInfo? info = null;
 		if (culture is not null)
 		{
@@ -351,10 +398,10 @@ internal sealed class MemberFormats
 			}
 		}
 
-		// A collection is written from its index to its end index, each column with the member's attributes.
+		// A collection is written from its index to its end index, each column with the member's attributes and no type.
 		if (memberType != typeof(string) && typeof(IEnumerable).IsAssignableFrom(memberType))
 		{
-			if (column is { Index: >= 0 } && column.EndIndex >= column.Index)
+			if ((format is not null || culture is not null || excel is not null) && column is { Index: >= 0 } && column.EndIndex >= column.Index)
 			{
 				for (var i = column.Index; i <= column.EndIndex; i++)
 				{
@@ -365,7 +412,108 @@ internal sealed class MemberFormats
 			return;
 		}
 
-		members.Members.Add(new MemberFormat(prefix + (column?.Name ?? name), column?.NameIndex ?? 0, column?.Index ?? -1, format?.Format, info, excel));
+		// The assembly's converter for the type writes a member without a converter, format, culture or boolean values of its own.
+		var booleans = Find<CsvBooleanValuesAttribute>();
+		if (format is null && culture is null && booleans is null && IsConverted(recordType.Assembly, memberType, underlying))
+		{
+			if (excel is not null)
+			{
+				members.Members.Add(new MemberFormat(prefix + (column?.Name ?? name), column?.NameIndex ?? 0, column?.Index ?? -1, null, null, excel));
+			}
+
+			return;
+		}
+
+		string[]? values = null;
+		if (underlying.IsEnum)
+		{
+			values = EnumNames.GetOrAdd(underlying, NamesOf);
+		}
+		else if (underlying == typeof(bool) && booleans is { TrueValues.Count: > 0, FalseValues.Count: > 0 })
+		{
+			// The first of each, trimmed as the generator trims them.
+			values = [booleans.TrueValues[0].Trim(' ', '\t'), booleans.FalseValues[0].Trim(' ', '\t')];
+		}
+
+		members.Members.Add(new MemberFormat(prefix + (column?.Name ?? name), column?.NameIndex ?? 0, column?.Index ?? -1, format?.Format, info, excel, memberType, values));
+	}
+
+	/// <summary>
+	/// Whether one of an assembly's <see cref="CsvConverterAttribute"/>s converts a type, or its underlying type: its
+	/// converter implements <see cref="ICsvConverter{T}"/> for it, as the generator finds the assembly's converters.
+	/// </summary>
+	/// <param name="assembly">The record type's assembly.</param>
+	/// <param name="memberType">The member's type.</param>
+	/// <param name="underlying">The underlying type of a <see cref="Nullable{T}"/>, or the type itself.</param>
+	/// <returns>Whether it does.</returns>
+	private static bool IsConverted(Assembly assembly, Type memberType, Type underlying)
+	{
+		var converted = AssemblyConverted.GetOrAdd(assembly, ConvertedTypes);
+
+		return converted.Count > 0 && (converted.Contains(memberType) || converted.Contains(underlying));
+	}
+
+	/// <summary>The types the converters of an assembly's <see cref="CsvConverterAttribute"/>s convert.</summary>
+	/// <param name="assembly">The assembly.</param>
+	/// <returns>The types.</returns>
+	[UnconditionalSuppressMessage("Trimming", "IL2075", Justification =
+		"A converter is created and called by the generated mappers and record writers, through ICsvConverter<T>, so its interfaces are kept.")]
+	private static HashSet<Type> ConvertedTypes(Assembly assembly)
+	{
+		var types = new HashSet<Type>();
+		foreach (var attribute in assembly.GetCustomAttributes(typeof(CsvConverterAttribute), false))
+		{
+			if (((CsvConverterAttribute)attribute).ConverterType is not { } converter)
+			{
+				continue;
+			}
+
+			foreach (var face in converter.GetInterfaces())
+			{
+				if (face.IsGenericType && face.GetGenericTypeDefinition() == typeof(ICsvConverter<>))
+				{
+					types.Add(face.GetGenericArguments()[0]);
+				}
+			}
+		}
+
+		return types;
+	}
+
+	/// <summary>
+	/// The texts the record writer writes for an enum's members: each value's first member, by its first
+	/// <see cref="CsvEnumNameAttribute"/> name or else its own, in declaration order, each text once; none for a
+	/// <see cref="FlagsAttribute"/> enum, whose values combine.
+	/// </summary>
+	/// <param name="type">The enum type.</param>
+	/// <returns>The texts, or <see langword="null"/> for a flags enum.</returns>
+	[UnconditionalSuppressMessage("Trimming", "IL2070", Justification =
+		"An enum member's fields are kept by the generated mapper, which reads it through Parse<TEnum>, whose type parameter keeps its public fields.")]
+	private static string[]? NamesOf(Type type)
+	{
+		if (type.IsDefined(typeof(FlagsAttribute), false))
+		{
+			return null;
+		}
+
+		var values = new HashSet<object>();
+		var texts = new List<string>();
+		foreach (var field in type.GetFields(BindingFlags.Public | BindingFlags.Static))
+		{
+			if (field.GetRawConstantValue() is not { } value || !values.Add(value))
+			{
+				continue;
+			}
+
+			var names = field.GetCustomAttributes(typeof(CsvEnumNameAttribute), false).FirstOrDefault() is CsvEnumNameAttribute { Names.Count: > 0 } attribute ? attribute.Names : null;
+			var text = names?[0] ?? field.Name;
+			if (!texts.Contains(text, StringComparer.Ordinal))
+			{
+				texts.Add(text);
+			}
+		}
+
+		return [.. texts];
 	}
 
 	/// <summary>

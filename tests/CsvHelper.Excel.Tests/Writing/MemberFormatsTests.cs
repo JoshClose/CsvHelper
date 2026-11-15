@@ -430,12 +430,17 @@ public class MemberFormatsTests
 	{
 		// A mapped type's attributes are on its map; other types have no record writer of their own.
 		Assert.Null(MemberFormats.For<MappedFormats>());
-		Assert.Null(MemberFormats.For<TypedRecord>());
 		Assert.Null(MemberFormats.For<object>());
 		Assert.Null(MemberFormats.For<string>());
 		Assert.Null(MemberFormats.For<System.Dynamic.ExpandoObject>());
 		// The record writer of a type with formats still writes the mapped type's.
 		Assert.Equal("2024", Fields(new MappedFormats { When = When })[0]);
+		// A record type without formats has its members' types, for Validate, and no formats.
+		var typed = MemberFormats.For<TypedRecord>()!;
+		Assert.False(typed.HasFormats);
+		Assert.False(typed.HasExcelColumns);
+		Assert.True(typed.HasTypes);
+		Assert.Empty(Entries<TypedRecord>());
 	}
 
 	[Fact]
@@ -527,11 +532,11 @@ public class MemberFormatsTests
 		return found;
 	}
 
-	/// <summary>The names of a type's members with formats, in order.</summary>
+	/// <summary>The names of a type's members with formats, cultures or Excel options, sorted.</summary>
 	/// <typeparam name="T">The record type.</typeparam>
 	/// <returns>The names, sorted.</returns>
 	private static List<string> Entries<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(MemberFormats.Members)] T>() =>
-		[.. MemberFormats.For<T>()!.Entries.Select(e => e.Name).OrderBy(n => n, StringComparer.Ordinal)];
+		[.. MemberFormats.For<T>()!.Entries.Where(e => e.Format is not null || e.Culture is not null || e.Excel is not null).Select(e => e.Name).OrderBy(n => n, StringComparer.Ordinal)];
 
 	/// <summary>The fields of a record as its record writer writes them in CSV.</summary>
 	/// <typeparam name="T">The record type.</typeparam>

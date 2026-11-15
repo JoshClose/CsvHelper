@@ -24,16 +24,21 @@ internal sealed class ColumnStyle
 	/// <summary>Creates a column's style, adding its cell formats to the workbook's.</summary>
 	/// <param name="options">The column's options, which have a format or wrap.</param>
 	/// <param name="styles">The workbook's cell formats.</param>
-	public ColumnStyle(ExcelColumnOptions options, StyleRegistry styles)
+	/// <param name="typeFormat">
+	/// The format of the column's member's type (<see cref="ExcelSheetOptions.Validate"/>), which the column's default style
+	/// has without a format of its own, but its cells don't take; or <see langword="null"/>.
+	/// </param>
+	public ColumnStyle(ExcelColumnOptions options, StyleRegistry styles, string? typeFormat = null)
 	{
 		this.styles = styles;
 		code = options.Format;
 		numberFormatId = code is not null ? styles.NumberFormatId(code) : -1;
 		Wrap = options.Wrap;
-		Default = styles.IndexOf(new CellXf(Math.Max(numberFormatId, 0), CellFont.Regular, Wrap));
+		var defaultId = numberFormatId >= 0 ? numberFormatId : typeFormat is not null ? styles.NumberFormatId(typeFormat) : 0;
+		Default = styles.IndexOf(new CellXf(defaultId, CellFont.Regular, Wrap));
 	}
 
-	/// <summary>The column's default style: its format, or General, and its wrap.</summary>
+	/// <summary>The column's default style: its format, else its type's, else General; and its wrap.</summary>
 	public int Default { get; }
 
 	/// <summary>Whether the column has a format, which takes the place of its cells' own.</summary>

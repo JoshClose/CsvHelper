@@ -70,6 +70,16 @@ namespace CsvHelper.Excel;
 /// rows, after the title's.
 /// </para>
 /// <para>
+/// Each column's validation (<see cref="ColumnValidation"/>) is resolved with its options: its
+/// <see cref="ExcelColumnOptions.List"/>'s dropdown, else, with <see cref="ExcelSheetOptions.Validate"/>, its member's
+/// type's (<see cref="TypeValidation"/>), and its <see cref="ExcelColumnOptions.Prompt"/>, titled by its header name. The
+/// validations are written after the merged ranges, from the row below the header (the first record's, without one) to
+/// Excel's last; a list too long to go in its validation is in the workbook's lists sheet (<see cref="ValidationLists"/>).
+/// With <see cref="ExcelSheetOptions.Validate"/>, a typed column's default style is its type's format unless it has its
+/// own, which the cells written don't take, and a date's, time's or duration's column is as wide as its widest value in
+/// its format at least.
+/// </para>
+/// <para>
 /// A <see cref="Uri"/> field below the header is a text cell of its text, as for CSV, with a link to it in the
 /// <c>Hyperlink</c> cell style when <see cref="ExcelWriterOptions.Links"/> takes it, up to Excel's 65,530 links a sheet
 /// (<see cref="SheetLinks"/>). The links are written after the merged ranges, and their relationships after the table's,
@@ -109,7 +119,7 @@ internal sealed class SheetSink : CsvCellSink
 		"<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\">"u8);
 
 	/// <summary>Excel's default page margins, which it writes on every sheet, after the rows and the merged cells.</summary>
-	private static readonly byte[] PageMargins = "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"u8.ToArray();
+	internal static readonly byte[] PageMargins = "<pageMargins left=\"0.7\" right=\"0.7\" top=\"0.75\" bottom=\"0.75\" header=\"0.3\" footer=\"0.3\"/>"u8.ToArray();
 
 	/// <summary>The letters of each column, made as they are first needed.</summary>
 	private static readonly byte[]?[] ColumnLetters = new byte[CellReference.MaxColumns][];
@@ -159,6 +169,14 @@ internal sealed class SheetSink : CsvCellSink
 	// Each column's options and the style they give its cells, once known; null when no column has any.
 	private ExcelColumnOptions?[]? columnOptions;
 	private ColumnStyle?[]? columnStyles;
+	// Each column's default style (col style), 0 for none; null when no column has one.
+	private int[]? columnDefaults;
+	// The columns' validations, in column order, once known; null for none. And, with Validate, each column's type's
+	// format (the default style of a column without a format of its own), and the pixels its dates' widest text needs (0
+	// for none); null when no column has one.
+	private List<(int Column, ColumnValidation Validation)>? validations;
+	private string?[]? typeFormats;
+	private double[]? minimumPixels;
 	// The font of the current row's cells: the title's in its row, bold in the header's (BoldHeader), else regular. And
 	// whether a cell's style is more than its own number format: in those rows, and in a sheet whose columns have styles.
 	private CellFont rowFont;
@@ -268,13 +286,13 @@ internal sealed class SheetSink : CsvCellSink
 		boldHeaderWidths = settings.BoldHeader || (settings.HasHeader && settings.Table?.Style is not null);
 		filterButtons = settings.HasHeader && (settings.AutoFilter || settings.Table is { FilterButtons: true });
 		repeatsHeader = csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
-		headerSaysStyle = csv.HasHeader && settings.HasColumns;
+		headerSaysStyle = csv.HasHeader && (settings.HasColumns || settings.ValidatesMembers);
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
 		firstTableName = this.tableName = csv.HasHeader ? tableName : null;
 		if (csv.HasHeader)
 		{
-			if (members is not null || settings.HasColumns || this.tableName is not null)
+			if (members is not null || settings.HasColumns || settings.ValidatesMembers || this.tableName is not null)
 			{
 				this.members = members;
 				header = [];
@@ -287,6 +305,7 @@ internal sealed class SheetSink : CsvCellSink
 				columnFormats = members.Columns(headerNames, csv.FormatProvider);
 			}
 
+			SetValidations(columns, null);
 			SetColumns(columns);
 		}
 
@@ -1090,12 +1109,36 @@ internal sealed class SheetSink : CsvCellSink
 	private void UpdateMeasuring() =>
 		measuring = !widthsKnown && (fits ? row >= firstRow && row <= lastHeldRow : row == firstDataRow);
 
-	/// <summary>Works out the columns' widths from the cells measured, once the held records are: they can be written now.</summary>
+	/// <summary>
+	/// Works out the columns' widths from the cells measured, once the held records are: they can be written now. With
+	/// <see cref="ExcelSheetOptions.Validate"/>, a date's, time's or duration's column is as wide as its format's widest
+	/// value at least, as a typed cell of it would make it, since a template has no records to measure.
+	/// </summary>
 	private void KnowWidths()
 	{
 		widthsKnown = true;
 		measuring = false;
 		columnWidths = measured.Widths(fits, ColumnWidths.FromCharacters(Settings.MaxAutoFitWidth), merges);
+		if (minimumPixels is not { } minimums)
+		{
+			return;
+		}
+
+		if (columnWidths is null || columnWidths.Length < minimums.Length)
+		{
+			var grown = new double[minimums.Length];
+			columnWidths?.CopyTo(grown, 0);
+			columnWidths = grown;
+		}
+
+		for (var at = 0; at < minimums.Length; at++)
+		{
+			if (minimums[at] > 0)
+			{
+				var width = fits ? ColumnWidths.Fit(minimums[at]) : ColumnWidths.OfPixels(minimums[at]);
+				columnWidths[at] = Math.Min(Math.Max(columnWidths[at], width), ColumnWidths.Widest);
+			}
+		}
 	}
 
 	/// <summary>Writes a number cell of a serial, in a cell format, and measures it.</summary>
@@ -1212,7 +1255,7 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>Writes a text's <c>t</c> element, with <c>xml:space="preserve"</c> when Excel would trim it otherwise.</summary>
 	/// <param name="target">The buffer.</param>
 	/// <param name="text">The text, valid UTF-8.</param>
-	private static void AppendElement(XmlOutput target, ReadOnlySpan<byte> text)
+	internal static void AppendElement(XmlOutput target, ReadOnlySpan<byte> text)
 	{
 		target.Append(XmlOutput.NeedsPreserve(text) ? "<t xml:space=\"preserve\">"u8 : "<t>"u8);
 		target.AppendText(text);
@@ -1309,13 +1352,14 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// Ends the header record: checks the columns' options by the header's names and, with a table, the ranges merged before
-	/// it; writes a table's header cells, named as Excel names a table's columns (<see cref="TableWriter.ColumnNames"/>);
-	/// and resolves the columns' options and formats.
+	/// it; resolves the columns' formats and validations; writes a table's header cells, named as Excel names a table's
+	/// columns (<see cref="TableWriter.ColumnNames"/>); and resolves the columns' styles.
 	/// </summary>
 	/// <param name="names">The header's names.</param>
 	/// <exception cref="InvalidOperationException">
-	/// <see cref="ExcelSheetOptions.Columns"/> names a column the header doesn't have, or a range merged before the header
-	/// is in the table's columns at or below it; the header record is discarded.
+	/// <see cref="ExcelSheetOptions.Columns"/> names a column the header doesn't have, a range merged before the header is
+	/// in the table's columns at or below it, or a column's list is one more than the lists sheet holds; the header record
+	/// is discarded.
 	/// </exception>
 	private void EndHeader(List<string> names)
 	{
@@ -1333,6 +1377,13 @@ internal sealed class SheetSink : CsvCellSink
 					}
 				}
 			}
+
+			if (members is not null)
+			{
+				columnFormats = members.Columns(names, csv.FormatProvider);
+			}
+
+			SetValidations(columns, names);
 		}
 		catch
 		{
@@ -1351,13 +1402,52 @@ internal sealed class SheetSink : CsvCellSink
 			}
 		}
 
-		if (members is not null)
-		{
-			columnFormats = members.Columns(names, csv.FormatProvider);
-		}
-
 		SetColumns(columns);
 		header = null;
+	}
+
+	/// <summary>
+	/// Resolves the columns' validations (<see cref="ColumnValidation"/>): each column's list or, with
+	/// <see cref="ExcelSheetOptions.Validate"/>, its member's type's validation, and its prompt, titled by its header name;
+	/// and, with <see cref="ExcelSheetOptions.Validate"/>, each column's type's format, its default style unless it has its
+	/// own, and the pixels a date's, time's or duration's widest text needs in the column's format, unless it has its own
+	/// width.
+	/// </summary>
+	/// <param name="columns">Each column's options, or <see langword="null"/> for none.</param>
+	/// <param name="names">The header's names, or <see langword="null"/> without a header.</param>
+	/// <exception cref="InvalidOperationException">A column's list is one more than the lists sheet holds.</exception>
+	private void SetValidations(ExcelColumnOptions?[]? columns, IReadOnlyList<string>? names)
+	{
+		var types = names is null ? null : Settings.MembersFor(names);
+		var count = Math.Max(columns?.Length ?? 0, types?.Length ?? 0);
+		List<(int Column, ColumnValidation Validation)>? found = null;
+		typeFormats = null;
+		minimumPixels = null;
+		for (var at = 0; at < count; at++)
+		{
+			var column = columns is not null && at < columns.Length ? columns[at] : null;
+			var type = types is not null && at < types.Length && types[at] is { } member ? TypeValidation.Of(member, FormatOf(at), options.DateTimeOffsets) : null;
+			var name = names is not null && at < names.Count ? names[at] : null;
+			if (ColumnValidation.Create(type, column, name, workbook.Lists) is { } validation)
+			{
+				(found ??= []).Add((at, validation));
+			}
+
+			if (type?.Format is { } code)
+			{
+				// Not (typeFormats ??= …)[at], which .NET 8's trim analyzer can't follow.
+				typeFormats ??= new string?[count];
+				typeFormats[at] = code;
+			}
+
+			if (type is not null && !double.IsNaN(type.Widest) && column?.Width is null)
+			{
+				minimumPixels ??= new double[count];
+				minimumPixels[at] = new NumberFormatWidth(column?.Format ?? type.Format ?? "General").NumberPixels(type.Widest);
+			}
+		}
+
+		validations = found;
 	}
 
 	/// <summary>Whether a range has a cell in the table's columns, at or below its header.</summary>
@@ -1409,22 +1499,35 @@ internal sealed class SheetSink : CsvCellSink
 		merges.Add(range);
 	}
 
-	/// <summary>Takes the columns' options, and makes the styles of those with a format or wrap.</summary>
+	/// <summary>
+	/// Takes the columns' options, and makes the styles of those with a format or wrap, and each column's default style:
+	/// its style's, or its type's format (<see cref="SetValidations"/>).
+	/// </summary>
 	/// <param name="columns">Each column's options, or <see langword="null"/> for none.</param>
 	private void SetColumns(ExcelColumnOptions?[]? columns)
 	{
 		columnOptions = columns;
-		if (columns is null)
+		var count = Math.Max(columns?.Length ?? 0, typeFormats?.Length ?? 0);
+		for (var i = 0; i < count; i++)
 		{
-			return;
-		}
-
-		for (var i = 0; i < columns.Length; i++)
-		{
-			if (ColumnStyle.Styles(columns[i]))
+			var column = columns is not null && i < columns.Length ? columns[i] : null;
+			var format = typeFormats is not null && i < typeFormats.Length ? typeFormats[i] : null;
+			var style = 0;
+			if (ColumnStyle.Styles(column))
 			{
-				columnStyles ??= new ColumnStyle?[columns.Length];
-				columnStyles[i] = new ColumnStyle(columns[i]!, styles);
+				columnStyles ??= new ColumnStyle?[columns!.Length];
+				columnStyles[i] = new ColumnStyle(column!, styles, format);
+				style = columnStyles[i]!.Default;
+			}
+			else if (format is not null)
+			{
+				style = styles.IndexOf(format);
+			}
+
+			if (style != 0)
+			{
+				columnDefaults ??= new int[count];
+				columnDefaults[i] = style;
 			}
 		}
 
@@ -1523,7 +1626,7 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="xml">The buffer.</param>
 	private void AppendColumns(XmlOutput xml)
 	{
-		var count = Math.Max(columnOptions?.Length ?? 0, columnWidths?.Length ?? 0);
+		var count = Math.Max(Math.Max(columnOptions?.Length ?? 0, columnWidths?.Length ?? 0), columnDefaults?.Length ?? 0);
 		var any = false;
 		for (var at = 0; at < count; at++)
 		{
@@ -1545,7 +1648,7 @@ internal sealed class SheetSink : CsvCellSink
 				bestFit = false;
 			}
 
-			var style = columnStyles is { } styled && at < styled.Length ? styled[at]?.Default ?? 0 : 0;
+			var style = columnDefaults is { } defaults && at < defaults.Length ? defaults[at] : 0;
 			var hidden = column?.Hidden == true;
 			if (!custom && style == 0 && !hidden)
 			{
@@ -1590,8 +1693,8 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>
 	/// Writes the XML after the sheet's rows into the buffer, in the schema's order, which Excel keeps to: the end of
 	/// <c>sheetData</c>; the filter over the header's columns, from the header down to the last row (and the workbook's
-	/// hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the links; the page
-	/// margins; <c>ignoredErrors</c> over the used range when a text cell starts like a number; the table's part; and the
+	/// hidden <c>_xlnm._FilterDatabase</c> name for it); the title's merge and the ranges merged; the columns'
+	/// validations; the links; the page margins; <c>ignoredErrors</c> over the used range when a text cell starts like a number; the table's part; and the
 	/// worksheet's end. The sheet's relationships (its table's, <c>rId1</c>, then its links') and its table's part are
 	/// kept to write once its entry is closed.
 	/// </summary>
@@ -1631,6 +1734,20 @@ internal sealed class SheetSink : CsvCellSink
 			}
 
 			output.Append("</mergeCells>"u8);
+		}
+
+		if (validations is not null)
+		{
+			// After the merged cells, as the schema orders them; each sheet of NewSheet has its own, from the same row.
+			output.Append("<dataValidations count=\""u8);
+			output.AppendNumber(validations.Count);
+			output.Append("\">"u8);
+			foreach (var (at, validation) in validations)
+			{
+				validation.Write(output, at, firstDataRow);
+			}
+
+			output.Append("</dataValidations>"u8);
 		}
 
 		var sheetLinks = links is { Count: > 0 } ? links : null;

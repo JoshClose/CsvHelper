@@ -98,6 +98,18 @@ internal sealed class SheetSettings
 	/// <summary>The widest auto-fit makes a column, in characters.</summary>
 	public double MaxAutoFitWidth => Sheet.MaxAutoFitWidth;
 
+	/// <summary>
+	/// Whether the sheet validates its columns by their members' types (<see cref="ExcelSheetOptions.Validate"/>): with a
+	/// header, whose names say which member each column is, and a record type whose members have types. Without them, its
+	/// columns' lists and prompts are its only validations (decision 18).
+	/// </summary>
+	public bool ValidatesMembers => Sheet.Validate && HasHeader && members is { HasTypes: true };
+
+	/// <summary>Each column's member with a type, for the header's names, when the sheet validates its members' types.</summary>
+	/// <param name="names">The header's names, in column order.</param>
+	/// <returns>Each column's member, or <see langword="null"/> for none; <see langword="null"/> when the sheet doesn't validate by type.</returns>
+	public MemberFormat?[]? MembersFor(IReadOnlyList<string> names) => ValidatesMembers ? members!.Typed(names) : null;
+
 	/// <summary>Resolves and checks a sheet's settings when it is added.</summary>
 	/// <param name="options">The options given when it was added, or <see langword="null"/>.</param>
 	/// <param name="recordType">The record type of a sheet of <see cref="ExcelWorkbookWriter.AddSheet{T}(string, ExcelSheetOptions)"/>, or <see langword="null"/>.</param>

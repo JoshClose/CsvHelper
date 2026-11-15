@@ -53,6 +53,8 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	private int tables;
 	// The sheets' filters, for the workbook's _xlnm._FilterDatabase names: each sheet's place in tab order, from 0, and range.
 	private readonly List<(int Sheet, ExcelRange Range)> filters = [];
+	// The dropdown lists of the lists sheet, once a sheet has one.
+	private ValidationLists? lists;
 	// The sheet being written, and its writer.
 	private SheetSink? openSheet;
 	private CsvWriter? openWriter;
@@ -73,7 +75,8 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 	/// <summary>
 	/// The names of the sheets added so far, in tab order, the one being written included, with those that
-	/// <see cref="ExcelRowLimit.NewSheet"/> added.
+	/// <see cref="ExcelRowLimit.NewSheet"/> added; not the very hidden lists sheet of long dropdown lists
+	/// (<see cref="ExcelColumnOptions.List"/>), which disposing the writer adds after them.
 	/// </summary>
 	public IReadOnlyList<string> SheetNames => sheetNames;
 
@@ -85,6 +88,12 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 	/// <summary>The sink of the sheet being written, or <see langword="null"/>, for tests of what a sheet was added with.</summary>
 	internal SheetSink? OpenSheet => openSheet;
+
+	/// <summary>
+	/// The workbook's dropdown lists that don't go in their validations, which the lists sheet holds, written when the
+	/// workbook ends, after its other sheets (<see cref="ValidationLists"/>).
+	/// </summary>
+	internal ValidationLists Lists => lists ??= new ValidationLists(tableNames);
 
 	/// <summary>
 	/// Creates (or overwrites) a workbook file, which other processes can read while it is written. Disposing the writer
@@ -629,6 +638,19 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		}
 	}
 
+	/// <summary>The lists sheet's name: <c>Lists</c>, or the first of <c>Lists2</c>, <c>Lists3</c>, … that no sheet has, as Excel takes names.</summary>
+	/// <returns>The name.</returns>
+	private string ListsSheetName()
+	{
+		var name = ValidationLists.SheetStem;
+		for (var number = 2; namesByKey.ContainsKey(Excel.SheetNames.Key(name)); number++)
+		{
+			name = ValidationLists.SheetStem + number.ToString(CultureInfo.InvariantCulture);
+		}
+
+		return name;
+	}
+
 	/// <summary>Checks the version of CsvHelper and the options, before a writer is created.</summary>
 	/// <param name="options">The options, or <see langword="null"/> for the default.</param>
 	/// <returns>The options to use.</returns>
@@ -757,7 +779,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 
 		if (tableNames.Existing(name) is { } existing)
 		{
-			var message = $"{settings.Origin}: the workbook already has the table \"{existing}\", which Excel takes \"{name}\" to be: a workbook's tables have names unique ignoring case. Leave the table's name out for one made from the sheet's.";
+			var message = lists is not null && lists.IsList(existing)
+				? $"{settings.Origin}: the workbook already has the name \"{existing}\", of a dropdown list in its lists sheet, which Excel takes \"{name}\" to be: a workbook's tables and names are unique ignoring case. Give the table another name."
+				: $"{settings.Origin}: the workbook already has the table \"{existing}\", which Excel takes \"{name}\" to be: a workbook's tables have names unique ignoring case. Leave the table's name out for one made from the sheet's.";
 
 			throw settings.Given ? new ArgumentException(message, "options") : new InvalidOperationException(message);
 		}
@@ -832,7 +856,15 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null, null, Options.Csv).CompleteAsync(async).ConfigureAwait(false);
 			}
 
-			await PackageParts.WriteAsync(package, sheetNames, strings, styles, filters, tables, async, CancellationToken.None).ConfigureAwait(false);
+			// The lists sheet comes last, after the sheets added, under a name none of them has.
+			string? listsSheet = null;
+			if (lists is { Count: > 0 })
+			{
+				listsSheet = ListsSheetName();
+				await lists.WriteSheetAsync(package, PackageParts.SheetPart(sheetNames.Count + 1), async, CancellationToken.None).ConfigureAwait(false);
+			}
+
+			await PackageParts.WriteAsync(package, sheetNames, strings, styles, filters, tables, listsSheet is null ? null : (listsSheet, lists!), async, CancellationToken.None).ConfigureAwait(false);
 		}
 		catch
 		{
