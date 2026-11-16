@@ -12,11 +12,13 @@ namespace CsvHelper;
 // the same buffer and index the scanner fills (see CsvReader.Scan.cs), each with a CsvCellKind, so everything that reads
 // the index works unchanged. What differs is behind typedCells, which is false for CSV and is tested only off the hot
 // paths: in ParseSpan, TryParseSpan and MakeString, in GetChars, the ParseExact overloads and header capture, and per
-// batch in Fill and the parallel batches. The conversions of typed cells are CsvCells'.
+// batch in Fill and the parallel batches. The conversions of typed cells are CsvCells'. A source can also give a field a
+// style, whose text its CsvCellOptions.Formatter renders whenever the field's text is read (CsvHelper.Excel's displayed
+// text); styles are kept only from a source's first, so other sources and CSV never look at one.
 public sealed partial class CsvReader
 {
-	// The fields (typedCells, recordSource, recordBatch, kinds, rowLines) are declared at the end of CsvReader.cs, after
-	// every field of the CSV paths: see there.
+	// The fields (typedCells, recordSource, recordBatch, kinds, rowLines, styles, styledText) are declared at the end of
+	// CsvReader.cs, after every field of the CSV paths: see there.
 
 	/// <summary>
 	/// Creates a reader over the records of <paramref name="source"/>, which it owns: disposing the reader disposes the
@@ -127,6 +129,65 @@ public sealed partial class CsvReader
 	private CsvCellKind CellKind(int column) => (uint)column < (uint)fieldCount ? kinds![fieldBase + column] : CsvCellKind.Text;
 
 	/// <summary>
+	/// The style of field <paramref name="column"/> of the current record (<see cref="RecordBatch.CommitField(int, CsvCellKind, int)"/>):
+	/// <see cref="NoStyle"/> for a field without one, past the record's end, and for the header (-1), and when the source
+	/// gives none.
+	/// </summary>
+	/// <param name="column">The 0-based index of the field.</param>
+	/// <returns>The style of the field, or <see cref="NoStyle"/>.</returns>
+	private int CellStyle(int column) => styles is { } s && (uint)column < (uint)fieldCount ? s[fieldBase + column] : NoStyle;
+
+	/// <summary>
+	/// The text of field <paramref name="column"/> of the current record in its style, as UTF-8: written into
+	/// <paramref name="buffer"/>, or, when it is longer, into a buffer the reader keeps.
+	/// </summary>
+	/// <param name="utf8">The field's stored value.</param>
+	/// <param name="column">The index of the field in the current record.</param>
+	/// <param name="buffer">Room for the text.</param>
+	/// <param name="text">The text, valid until the next call or read, or until <paramref name="buffer"/> changes.</param>
+	/// <returns>
+	/// Whether the field has a style whose text the source's formatter gives; <see langword="false"/> when it has none, or
+	/// its text is what it would be without one.
+	/// </returns>
+	/// <exception cref="InvalidOperationException">The formatter needed more room than it asked for.</exception>
+	private bool TryStyledText(ReadOnlySpan<byte> utf8, int column, Span<byte> buffer, out ReadOnlySpan<byte> text)
+	{
+		text = default;
+		var style = CellStyle(column);
+		if (style < 0 || recordSource!.CellOptions.Formatter is not { } formatter)
+		{
+			return false;
+		}
+
+		var kind = CellKind(column);
+		if (formatter.TryFormat(utf8, kind, style, buffer, out var length))
+		{
+			text = buffer.Slice(0, length);
+
+			return true;
+		}
+
+		if (length < 0)
+		{
+			return false;
+		}
+
+		if (styledText is null || styledText.Length < length)
+		{
+			styledText = new byte[Math.Max(length, styledText is null ? 0 : styledText.Length * 2)];
+		}
+
+		if (!formatter.TryFormat(utf8, kind, style, styledText, out length))
+		{
+			throw CsvCellFormatter.MoreRoom();
+		}
+
+		text = styledText.AsSpan(0, length);
+
+		return true;
+	}
+
+	/// <summary>
 	/// Parses a field of a record source as <typeparamref name="T"/>. A text or empty field parses as
 	/// <see cref="ParseSpan{T}(ReadOnlySpan{byte}, int, IFormatProvider)"/> parses CSV text. A typed field converts as
 	/// <see cref="CsvCells"/> says (serial dates for date targets, rounding for decimal and integer targets, error cells
@@ -211,7 +272,8 @@ public sealed partial class CsvReader
 	/// The text of a field of a record source when it is not the field's bytes, for <see cref="MakeString(ReadOnlySpan{byte}, int)"/>:
 	/// ISO 8601 for a date, <c>[h]:mm:ss</c> for a duration, <c>TRUE</c> or <c>FALSE</c> for a boolean (see
 	/// <see cref="CsvCells.Text"/>). The <see cref="RecordBatch"/> flags those fields, so that <see cref="GetString(int)"/>
-	/// comes here too. Numbers, text and error cells read as their bytes.
+	/// comes here too. Numbers, text and error cells read as their bytes. A field with a style has its text in that style,
+	/// from the source's <see cref="CsvCellOptions.Formatter"/>, unless the formatter says it is the field's own text.
 	/// </summary>
 	/// <param name="utf8">The UTF-8 text of the field.</param>
 	/// <param name="column">The index of the field in the current record, for its kind (<see cref="CellKind(int)"/>).</param>
@@ -227,7 +289,22 @@ public sealed partial class CsvReader
 			throw CsvCells.ErrorRead(utf8, hideValues, Locate(column));
 		}
 
-		return CsvCells.Text(utf8, kind, options);
+		return StyledString(utf8, column) ?? CsvCells.Text(utf8, kind, options);
+	}
+
+	/// <summary>
+	/// The text of field <paramref name="column"/> of the current record in its style, as a string
+	/// (<see cref="CsvCellFormatter.Format"/>).
+	/// </summary>
+	/// <param name="utf8">The field's stored value.</param>
+	/// <param name="column">The index of the field in the current record.</param>
+	/// <returns>The text, or <see langword="null"/> when the field has no style, or its text is what it would be without one.</returns>
+	/// <exception cref="InvalidOperationException">The formatter needed more room than it asked for.</exception>
+	private string? StyledString(ReadOnlySpan<byte> utf8, int column)
+	{
+		var style = CellStyle(column);
+
+		return style >= 0 && recordSource!.CellOptions.Formatter is { } formatter ? formatter.Format(utf8, CellKind(column), style) : null;
 	}
 
 	/// <summary>
@@ -242,7 +319,7 @@ public sealed partial class CsvReader
 	{
 		var utf8 = GetSpan(column);
 
-		return CsvCells.Text(utf8, CellKind(column), recordSource!.CellOptions) ?? MakeString(utf8, -1);
+		return StyledString(utf8, column) ?? CsvCells.Text(utf8, CellKind(column), recordSource!.CellOptions) ?? MakeString(utf8, -1);
 	}
 
 	/// <summary>
@@ -251,7 +328,9 @@ public sealed partial class CsvReader
 	/// (<see cref="GetSpan(int)"/>), and so is a record source's text, number, error and empty cells'. A date, duration or
 	/// boolean cell's text (<see cref="CsvCells.TryText"/>) is written into <paramref name="buffer"/>, and so is a number
 	/// cell's rounded to the source's <see cref="CsvCellOptions.SignificantDigits"/> when <paramref name="roundNumbers"/> is
-	/// set and it has more (<see cref="CsvCells.TryRound"/>).
+	/// set and it has more (<see cref="CsvCells.TryRound"/>). A field with a style has its text in that style, from the
+	/// source's <see cref="CsvCellOptions.Formatter"/>: written into <paramref name="buffer"/>, or into a buffer the reader
+	/// keeps when it is longer.
 	/// </summary>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="buffer">Room for a typed cell's text, of at least <see cref="CsvCells.MaxTextLength"/> bytes.</param>
@@ -295,6 +374,16 @@ public sealed partial class CsvReader
 	{
 		var kind = CellKind(column);
 		var options = recordSource!.CellOptions;
+		if (kind == CsvCellKind.Error && options.ThrowOnErrorCells)
+		{
+			throw CsvCells.ErrorRead(utf8, hideValues, Locate(column));
+		}
+
+		if (TryStyledText(utf8, column, buffer, out var styled))
+		{
+			return styled;
+		}
+
 		switch (kind)
 		{
 			case CsvCellKind.Number:
@@ -304,8 +393,6 @@ public sealed partial class CsvReader
 				}
 
 				return utf8;
-			case CsvCellKind.Error when options.ThrowOnErrorCells:
-				throw CsvCells.ErrorRead(utf8, hideValues, Locate(column));
 			default:
 				return CsvCells.TryText(utf8, kind, options, buffer, out var length) ? buffer.Slice(0, length) : utf8;
 		}
@@ -338,6 +425,21 @@ public sealed partial class CsvReader
 	private bool CellEquals(int index, ReadOnlySpan<byte> utf8)
 	{
 		var field = GetSpan(index);
+		if (CellStyle(index) >= 0)
+		{
+			// Styled text can be any UTF-8: compared as bytes.
+			Span<byte> room = stackalloc byte[CsvCellFormatter.StackLength];
+			if (CellKind(index) == CsvCellKind.Error && recordSource!.CellOptions.ThrowOnErrorCells)
+			{
+				throw CsvCells.ErrorRead(field, hideValues, Locate(index));
+			}
+
+			if (TryStyledText(field, index, room, out var styled))
+			{
+				return styled.SequenceEqual(utf8);
+			}
+		}
+
 		if (CellString(field, index) is not { } text)
 		{
 			return field.SequenceEqual(utf8);
@@ -433,9 +535,21 @@ public sealed partial class CsvReader
 			CommitField(utf8.Length, kind);
 		}
 
+		/// <summary>Adds a field to the current record, with a style that its text is rendered in (see <see cref="CommitField(int, CsvCellKind, int)"/>).</summary>
+		/// <param name="utf8">The value of the field, as UTF-8 (not validated), copied into the reader's buffer.</param>
+		/// <param name="kind">What the field holds.</param>
+		/// <param name="style">The style of the field, from 0 to <see cref="CsvCellFormatter.MaxStyle"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="style"/> is negative or more than <see cref="CsvCellFormatter.MaxStyle"/>.</exception>
+		public void AddField(ReadOnlySpan<byte> utf8, CsvCellKind kind, int style)
+		{
+			utf8.CopyTo(GetFieldSpan(utf8.Length));
+			CommitField(utf8.Length, kind, style);
+		}
+
 		/// <summary>
 		/// Gets room in the reader's buffer for the next field, for a source that decodes a value straight into it, which
-		/// <see cref="CommitField"/> then adds. The span is valid until the next call of the batch.
+		/// <see cref="CommitField(int, CsvCellKind)"/> or <see cref="CommitField(int, CsvCellKind, int)"/> then adds. The
+		/// span is valid until the next call of the batch.
 		/// </summary>
 		/// <param name="sizeHint">The number of bytes the value can take at most.</param>
 		/// <returns>At least <paramref name="sizeHint"/> bytes.</returns>
@@ -476,12 +590,51 @@ public sealed partial class CsvReader
 
 			var end = r.dataEnd + length;
 			r.buffer[end] = r.sepByte;
-			// The kind goes with the field's first entry, the flag on the entry after it.
+			// The kind goes with the field's first entry, the flag on the entry after it; and, when the reader keeps styles,
+			// none (CommitField with a style sets it after).
 			r.kinds![r.endsCount - 1] = kind;
+			if (r.styles is { } styles)
+			{
+				styles[r.endsCount - 1] = NoStyle;
+			}
+
 			var flagged = r.trim || kind.HasText();
 			r.ends[r.endsCount++] = (end + 1) | (flagged ? int.MinValue : 0);
 			r.dataEnd = end + 1;
 			recordFields++;
+		}
+
+		/// <summary>
+		/// Adds the field that the source wrote at the start of <see cref="GetFieldSpan(int)"/> to the current record, with
+		/// a style: the reader asks the source's <see cref="CsvCellOptions.Formatter"/> for the field's text in it whenever
+		/// it reads the field's text, and flags the field for <see cref="GetString(int)"/>'s slow path. Typed reads convert
+		/// the field by its kind, as without a style. The reader keeps styles from the first one a source gives.
+		/// </summary>
+		/// <param name="length">The number of bytes of the value.</param>
+		/// <param name="kind">What the field holds.</param>
+		/// <param name="style">The style of the field, from 0 to <see cref="CsvCellFormatter.MaxStyle"/>, which the source's formatter knows.</param>
+		/// <exception cref="ArgumentOutOfRangeException">
+		/// <paramref name="length"/> is negative or more than the span had room for; or <paramref name="style"/> is negative
+		/// or more than <see cref="CsvCellFormatter.MaxStyle"/>.
+		/// </exception>
+		public void CommitField(int length, CsvCellKind kind, int style)
+		{
+			if ((uint)style > CsvCellFormatter.MaxStyle)
+			{
+				throw new ArgumentOutOfRangeException(nameof(style), style, $"A style must be from 0 to {CsvCellFormatter.MaxStyle}.");
+			}
+
+			if (reader.styles is null)
+			{
+				StartStyles();
+			}
+
+			// The field as one without a style (whose path stays as it was, for sources without styles), then its style, at
+			// its first entry, and the flag, on the entry after it.
+			CommitField(length, kind);
+			var r = reader;
+			r.styles![r.endsCount - 2] = style;
+			r.ends[r.endsCount - 1] |= int.MinValue;
 		}
 
 		/// <summary>Ends the current record. A record without fields gets one empty field, as an empty line of CSV has.</summary>
@@ -558,6 +711,26 @@ public sealed partial class CsvReader
 			old.AsSpan(0, count).CopyTo(kinds);
 			ArrayPool<CsvCellKind>.Shared.Return(old);
 			r.kinds = kinds;
+			if (r.styles is { } oldStyles)
+			{
+				// As long as the kinds, which bound the fields written before the index grows again.
+				var styles = ArrayPool<int>.Shared.Rent(kinds.Length);
+				oldStyles.AsSpan(0, count).CopyTo(styles);
+				ArrayPool<int>.Shared.Return(oldStyles);
+				r.styles = styles;
+			}
+		}
+
+		/// <summary>
+		/// Starts keeping styles, at the first field a source gives one: an array at least as long as the kinds (which bound
+		/// the fields written before the index grows), where the fields already in the index have none.
+		/// </summary>
+		private void StartStyles()
+		{
+			var r = reader;
+			var styles = ArrayPool<int>.Shared.Rent(r.kinds!.Length);
+			styles.AsSpan(0, r.endsCount).Fill(NoStyle);
+			r.styles = styles;
 		}
 
 		private void GrowRows()

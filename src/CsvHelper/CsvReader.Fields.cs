@@ -210,7 +210,7 @@ public sealed partial class CsvReader
 	/// <paramref name="utf8"/>, compared ordinally and without making a string. For CSV, that text is the field's bytes
 	/// (<see cref="GetSpan(int)"/>). A reader of a spreadsheet gives some cells text of their own: a date cell's is
 	/// ISO 8601 (<c>2024-01-15</c>) and a boolean cell's <c>TRUE</c> or <c>FALSE</c>, where its bytes are a serial number
-	/// and <c>1</c> or <c>0</c>.
+	/// and <c>1</c> or <c>0</c>; and, reading the text a spreadsheet shows, a cell's text in its number format.
 	/// </summary>
 	/// <param name="index">The 0-based index of the field.</param>
 	/// <param name="utf8">The text to compare with, as UTF-8.</param>

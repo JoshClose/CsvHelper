@@ -178,6 +178,14 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 	private CsvCellKind[]? kinds;
 	// The line of each record of the index, as the source numbers them (rowLines[r] for rowEnds[r]).
 	private long[]? rowLines;
+	// The style of each field of a source that gives styles, as kinds has its kind (NoStyle for none); null until the
+	// source gives its first, so that sources without styles, and CSV, never look at one.
+	private int[]? styles;
+	// Room for a styled field's text that is longer than the room GetTextUtf8's caller gave, or FieldEquals' stack.
+	private byte[]? styledText;
+
+	/// <summary>The style of a field that has none (<see cref="RecordBatch.CommitField(int, CsvCellKind, int)"/>).</summary>
+	internal const int NoStyle = -1;
 
 	private enum Step { Rows, NeedData, End }
 
@@ -1099,6 +1107,12 @@ public sealed partial class CsvReader : IDisposable, IAsyncDisposable
 		{
 			ArrayPool<long>.Shared.Return(rowLines);
 			rowLines = [];
+		}
+
+		if (styles is not null)
+		{
+			ArrayPool<int>.Shared.Return(styles);
+			styles = null;
 		}
 
 		if (chars is not null) ArrayPool<char>.Shared.Return(chars);

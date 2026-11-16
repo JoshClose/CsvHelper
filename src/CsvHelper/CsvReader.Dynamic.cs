@@ -74,11 +74,24 @@ public sealed partial class CsvReader
 		return new CsvDynamicRecord(schema, bytes, offsets, first, count);
 	}
 
-	/// <summary>Copies the cell kinds of the fields of the current record into <paramref name="offsets"/>, one entry each.</summary>
+	/// <summary>
+	/// Copies the cell kinds of the fields of the current record into <paramref name="offsets"/>, one entry each: the kind
+	/// in the low 8 bits, and above them the style plus one (0 for none; see <see cref="CsvDynamicRecord"/>).
+	/// </summary>
 	/// <param name="offsets">The offsets of a dynamic record.</param>
 	/// <param name="at">Where the kind of the first field goes: after the record's offsets.</param>
 	private void CopyKinds(int[] offsets, int at)
 	{
+		if (styles is { } s)
+		{
+			for (var k = 0; k < fieldCount; k++)
+			{
+				offsets[at + k] = (int)kinds![fieldBase + k] | ((s[fieldBase + k] + 1) << 8);
+			}
+
+			return;
+		}
+
 		for (var k = 0; k < fieldCount; k++)
 		{
 			offsets[at + k] = (int)kinds![fieldBase + k];

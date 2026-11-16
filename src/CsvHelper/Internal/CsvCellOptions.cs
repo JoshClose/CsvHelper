@@ -44,4 +44,11 @@ internal sealed record CsvCellOptions
 	/// (<c>#N/A</c>) for strings and failing for other targets.
 	/// </summary>
 	public bool ThrowOnErrorCells { get; init; }
+
+	/// <summary>
+	/// Gives the text of the fields the source writes with a style (<see cref="CsvReader.RecordBatch.CommitField(int, CsvCellKind, int)"/>);
+	/// <see langword="null"/> when the source gives none. It changes text alone: typed reads convert as without it.
+	/// Compared by reference.
+	/// </summary>
+	public CsvCellFormatter? Formatter { get; init; }
 }

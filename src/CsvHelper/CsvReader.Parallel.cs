@@ -227,6 +227,16 @@ public sealed partial class CsvReader
 			kinds = pendingKinds;
 		}
 
+		if (styles is not null)
+		{
+			// So do their styles, in arrays of ints like the index's, as long as the kinds: the index grows before a field
+			// past the kinds' length is written.
+			var pendingStyles = run.TakeIndex(kinds!.Length);
+			Array.Copy(styles, pending, pendingStyles, 0, pendingCount);
+			batch.Styles = styles;
+			styles = pendingStyles;
+		}
+
 		if (sourceKind == SourceKind.Memory)
 		{
 			// Every batch reads the same input array in place: only the index moves.
@@ -290,6 +300,7 @@ public sealed partial class CsvReader
 		if (typedCells)
 		{
 			kinds = batch.Kinds;
+			styles = batch.Styles.Length > 0 ? batch.Styles : null;
 		}
 
 		discarded = batch.Discarded;
@@ -325,6 +336,7 @@ public sealed partial class CsvReader
 		if (typedCells)
 		{
 			kinds = [];
+			styles = null;
 		}
 
 		fieldCount = 0;
@@ -365,6 +377,12 @@ public sealed partial class CsvReader
 		/// reader); empty for CSV, and once the batch is processed.
 		/// </summary>
 		public CsvCellKind[] Kinds = [];
+
+		/// <summary>
+		/// For a record source that gives styles, the style of each field, at the indexes of <see cref="Ends"/> (see
+		/// <c>styles</c> in the reader); empty otherwise, and once the batch is processed.
+		/// </summary>
+		public int[] Styles = [];
 
 		/// <summary>
 		/// The field base and the field count of each record, two entries per record; empty once the batch is
@@ -529,12 +547,19 @@ public sealed partial class CsvReader
 					freeKinds.Push(batch.Kinds);
 				}
 
+				// Styles are arrays of ints, as the index is: they go back with the indexes.
+				if (batch.Styles.Length > 0)
+				{
+					freeIndexes.Push(batch.Styles);
+				}
+
 				if (batch.Records.Length > 0) freeRecords.Push(batch.Records);
 			}
 
 			batch.Buffer = [];
 			batch.Ends = [];
 			batch.Kinds = [];
+			batch.Styles = [];
 			batch.Records = [];
 			batch.OwnsBuffer = false;
 		}

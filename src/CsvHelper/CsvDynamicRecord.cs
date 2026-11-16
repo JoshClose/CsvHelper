@@ -44,7 +44,8 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	private readonly byte[] data;
 	// Field k is data[offsets[first + k] .. offsets[first + k + 1] - 1), masked with int.MaxValue: as in the reader's
 	// index, the high bit of entry k + 1 says that field k is quoted, and it is unquoted when it is read.
-	// For a record of a record source (schema.CellOptions), the CsvCellKind of field k follows them, at offsets[first + count + 1 + k].
+	// For a record of a record source (schema.CellOptions), the CsvCellKind of field k follows them, at offsets[first + count + 1 + k]:
+	// the kind in the low 8 bits, and above them the field's style plus one (0 for none), which CsvCellOptions.Formatter renders.
 	private readonly int[] offsets;
 	private readonly int first;
 	private readonly int count;
@@ -341,7 +342,12 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 	/// <summary>The cell kind of field <paramref name="index"/> of a record of a record source (<see cref="CsvDynamicSchema.CellOptions"/>).</summary>
 	/// <param name="index">The 0-based index of a field of the record.</param>
 	/// <returns>The kind of the field.</returns>
-	private CsvCellKind CellKind(int index) => (CsvCellKind)offsets[first + count + 1 + index];
+	private CsvCellKind CellKind(int index) => (CsvCellKind)(offsets[first + count + 1 + index] & 0xFF);
+
+	/// <summary>The style of field <paramref name="index"/> of a record of a record source, or <see cref="CsvReader.NoStyle"/>.</summary>
+	/// <param name="index">The 0-based index of a field of the record.</param>
+	/// <returns>The style of the field.</returns>
+	private int CellStyle(int index) => (int)((uint)offsets[first + count + 1 + index] >> 8) - 1;
 
 	/// <summary>
 	/// The value of field <paramref name="index"/> of a record of a record source: <see langword="null"/> for one of the
@@ -361,6 +367,11 @@ public sealed class CsvDynamicRecord : IDynamicMetaObjectProvider, IReadOnlyDict
 			if (kind == CsvCellKind.Error && options.ThrowOnErrorCells)
 			{
 				throw CsvCells.ErrorRead(field, schema.HideValues, null);
+			}
+
+			if (CellStyle(index) is >= 0 and var style && options.Formatter?.Format(field, kind, style) is { } styled)
+			{
+				return styled;
 			}
 
 			if (CsvCells.Text(field, kind, options) is { } text)
