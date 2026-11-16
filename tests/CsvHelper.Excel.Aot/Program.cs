@@ -62,12 +62,13 @@ internal static class Program
 		}
 
 		Convert(problems, orders);
+		Template(problems);
 		foreach (var problem in problems)
 		{
 			Console.Error.WriteLine(problem);
 		}
 
-		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, and converted them from CSV and back." : $"{problems.Count} problems.");
+		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, and wrote a template and imported a sheet of it." : $"{problems.Count} problems.");
 
 		return problems.Count == 0 ? 0 : 1;
 	}
@@ -123,6 +124,49 @@ internal static class Program
 		if (typedBack != expected)
 		{
 			problems.Add($"The sheet of Order came back as {typedBack}, not {expected}");
+		}
+	}
+
+	/// <summary>
+	/// Phase 7's templates and import, as NativeAOT runs them: a template of an enum, a <see cref="bool"/> and a date,
+	/// protected with a password, whose hash runs SHA-512; and the import of a sheet of tickets with three cells at fault.
+	/// </summary>
+	/// <param name="problems">Takes what is wrong.</param>
+	private static void Template(List<string> problems)
+	{
+		using (var stream = new MemoryStream())
+		{
+			ExcelTemplate.Create<Ticket>(stream, new ExcelTemplateOptions { Sheet = new ExcelSheetOptions { Password = "secret" } });
+			var sheet = Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
+			Expect(problems, sheet, "<sheetProtection algorithmName=\"SHA-512\" hashValue=\"", "the template's password's hash");
+			Expect(problems, sheet, "<formula1>\"Open,On hold,Closed\"</formula1>", "the status's dropdown, by its names as written");
+			Expect(problems, sheet, "<formula1>\"TRUE,FALSE\"</formula1>", "the urgency's dropdown");
+			Expect(problems, sheet, "<dataValidation type=\"date\"", "the due date's validation");
+		}
+
+		// A sheet users filled in: a row that reads, a row of three cells at fault, and a row that reads.
+		using var filled = new MemoryStream();
+		using (var workbook = ExcelWorkbookWriter.Create(filled, leaveOpen: true))
+		{
+			using var sheet = workbook.AddSheet("Ticket");
+			foreach (var row in new[] { new[] { "Status", "Urgent", "Due" }, ["On hold", "TRUE", "2024-01-15"], ["Pending", "maybe", "soon"], ["Closed", "FALSE", "2024-02-01"] })
+			{
+				foreach (var field in row)
+				{
+					sheet.WriteField(field);
+				}
+
+				sheet.EndRecord();
+			}
+		}
+
+		filled.Position = 0;
+		var result = ExcelReader.Import<Ticket>(filled);
+		var records = string.Join(" / ", result.Records.Select(t => $"{t.Status} {t.Urgent} {t.Due:yyyy-MM-dd}"));
+		var errors = string.Join(" / ", result.Errors.Select(e => $"{e.Location} {e.Member} {e.Value}"));
+		if (records != "OnHold True 2024-01-15 / Closed False 2024-02-01" || errors != "Ticket!A3 Ticket.Status Pending / Ticket!B3 Ticket.Urgent maybe / Ticket!C3 Ticket.Due soon" || !result.Complete)
+		{
+			problems.Add($"The import read {records}, with the errors {errors}, complete {result.Complete}.");
 		}
 	}
 
@@ -225,4 +269,32 @@ public sealed partial class Order
 	/// <summary>A note, in a hidden column.</summary>
 	[ExcelColumn(Hidden = true)]
 	public string? Note { get; set; }
+}
+
+/// <summary>A ticket's state, written by its other name when it has one.</summary>
+public enum TicketState
+{
+	/// <summary>Open.</summary>
+	Open,
+
+	/// <summary>On hold.</summary>
+	[CsvEnumName("On hold")]
+	OnHold,
+
+	/// <summary>Closed.</summary>
+	Closed,
+}
+
+/// <summary>A ticket of a template: an enum's dropdown, a <see cref="bool"/>'s, and a date's validation.</summary>
+[CsvRecord]
+public sealed partial class Ticket
+{
+	/// <summary>Its state.</summary>
+	public TicketState Status { get; set; }
+
+	/// <summary>Whether it is urgent.</summary>
+	public bool Urgent { get; set; }
+
+	/// <summary>When it is due.</summary>
+	public DateTime Due { get; set; }
 }

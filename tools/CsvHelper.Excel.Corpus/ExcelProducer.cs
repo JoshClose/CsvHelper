@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -302,13 +303,16 @@ internal static class ExcelProducer
 
 	/// <summary>
 	/// Starts Excel, runs <paramref name="work"/>, and quits Excel whatever happens. Excel stays running while any of its
-	/// objects is referenced, so every object the work used is released (collected) before Excel quits.
+	/// objects is referenced, so every object the work used is released (collected) before Excel quits; and since Excel
+	/// still stays running after some runs (the <c>written</c> command's, at every commit tried), the process this run
+	/// started, found by its window, is stopped when it hasn't exited a few seconds after. No other Excel is touched.
 	/// </summary>
 	/// <param name="work">What to do with Excel.</param>
 	internal static void Run(Action<dynamic> work)
 	{
 		var type = Type.GetTypeFromProgID("Excel.Application") ?? throw new InvalidOperationException("Excel is not installed.");
 		dynamic excel = Activator.CreateInstance(type) ?? throw new InvalidOperationException("Excel didn't start.");
+		var process = ProcessOf(excel);
 		try
 		{
 			RunWork(excel, work);
@@ -319,8 +323,47 @@ internal static class ExcelProducer
 			excel.Quit();
 			Marshal.FinalReleaseComObject(excel);
 			Collect();
+			Stop(process);
 		}
 	}
+
+	/// <summary>The process of the Excel this tool started, by its main window, or <see langword="null"/> when it can't be found.</summary>
+	/// <param name="excel">Excel.</param>
+	/// <returns>The process.</returns>
+	private static Process? ProcessOf(dynamic excel)
+	{
+		int window = excel.Hwnd;
+		GetWindowThreadProcessId(new IntPtr(window), out var id);
+
+		return id == 0 ? null : Process.GetProcessById((int)id);
+	}
+
+	/// <summary>Waits a few seconds for the Excel this tool started to exit, and stops it when it hasn't.</summary>
+	/// <param name="process">Its process, or <see langword="null"/>.</param>
+	private static void Stop(Process? process)
+	{
+		if (process is null)
+		{
+			return;
+		}
+
+		using (process)
+		{
+			if (!process.WaitForExit(10_000))
+			{
+				process.Kill();
+				process.WaitForExit();
+				Console.WriteLine($"  stopped Excel (process {process.Id}), which hadn't exited after quitting");
+			}
+		}
+	}
+
+	/// <summary>The thread and process that made a window.</summary>
+	/// <param name="window">The window.</param>
+	/// <param name="processId">The process's id; 0 when the window isn't found.</param>
+	/// <returns>The thread's id.</returns>
+	[DllImport("user32.dll")]
+	private static extern uint GetWindowThreadProcessId(IntPtr window, out uint processId);
 
 	/// <summary>Runs the work in a frame of its own, so that its objects are unreferenced once it returns.</summary>
 	/// <param name="excel">Excel.</param>

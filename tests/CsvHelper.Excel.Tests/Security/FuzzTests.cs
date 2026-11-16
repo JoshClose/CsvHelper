@@ -71,7 +71,9 @@ public partial class FuzzRecord
 /// for error cells, and several significant digits. Two seeds in three also read an area of each sheet, or one of the
 /// workbook's own tables, defined names or a block of a sheet named with it, with a header row given or found among the
 /// area's rows, skipping hidden rows and columns and filling merged cells. A seed reads its fields as strings, as typed
-/// values (where <c>TryParse</c> and <c>Parse</c> must agree), or as typed records. Each input must finish within five
+/// values (where <c>TryParse</c> and <c>Parse</c> must agree), or as typed records, which it then imports too (Phase 7's
+/// step 8), from the workbook's bytes and from a reader, each import's errors a cell's or a header row's and no more than
+/// its <c>maxErrors</c>. Each input must finish within five
 /// seconds, and either read or throw <see cref="InvalidDataException"/>, <see cref="CsvFormatException"/> or
 /// <see cref="NotSupportedException"/>; a field may only fail to parse, with <see cref="FormatException"/> or
 /// <see cref="OverflowException"/>, and an error cell fail to read when error cells fail every read. What a seed reads
@@ -271,6 +273,10 @@ public class FuzzTests(ITestOutputHelper output)
 
 					options = await WithHeaderAsync(workbook, sheet, options, firstRow, settings, choices);
 					await TallyAsync(events, settings, options, ReadAreaAsync(workbook, sheet, options, settings));
+					if (settings.Mode == ReadMode.Records)
+					{
+						await ImportAsync(zip, workbook, sheet, options, settings, events);
+					}
 				}
 				catch (Exception e) when (IsExpected(e))
 				{
@@ -592,6 +598,63 @@ public class FuzzTests(ITestOutputHelper output)
 			if (error.Exception is not CsvFormatException { InnerException: FormatException or OverflowException })
 			{
 				throw new InvalidOperationException($"Record {error.RowNumber} ({error.Location}) failed with {error.Exception.InnerException?.GetType().FullName ?? "nothing inside"}: {error.Exception}");
+			}
+		}
+	}
+
+	/// <summary>
+	/// Imports a sheet's records (Phase 7's step 8): from the workbook's bytes, as <see cref="ExcelReader.Import{T}(Stream, ExcelReaderOptions?, int)"/>
+	/// opens them, header rows the options name or search for among them, and from a reader of the workbook already open.
+	/// Each fails only as the reader does, with an expected exception, and each of its errors is a cell's that doesn't parse
+	/// (<see cref="FormatException"/>, <see cref="OverflowException"/>) or a header row's not found
+	/// (<see cref="CsvFormatException"/>, <see cref="KeyNotFoundException"/>).
+	/// </summary>
+	/// <param name="zip">The workbook's bytes.</param>
+	/// <param name="workbook">The workbook, open.</param>
+	/// <param name="sheet">The sheet.</param>
+	/// <param name="options">The options the sheet is read with.</param>
+	/// <param name="settings">How to read it.</param>
+	/// <param name="events">Takes how each import ended, for the run's tally.</param>
+	/// <returns>A task that completes when both imports end.</returns>
+	/// <exception cref="InvalidOperationException">An error has another cause.</exception>
+	private static async Task ImportAsync(byte[] zip, ExcelWorkbook workbook, ExcelSheet sheet, ExcelReaderOptions options, Settings settings, List<string> events)
+	{
+		var named = options with { Sheet = sheet.Name };
+		var fromBytes = settings.Async
+			? await ExcelReader.ImportAsync<FuzzRecord>(new MemoryStream(zip), named, 100)
+			: ExcelReader.Import<FuzzRecord>(new MemoryStream(zip), named, 100);
+		CheckImport(sheet, fromBytes);
+		events.Add("Import: " + Outcome(fromBytes));
+		using var reader = await OpenAsync(workbook, sheet, options, settings.Async);
+		var fromReader = settings.Async ? await ExcelReader.ImportAsync<FuzzRecord>(reader, 100) : ExcelReader.Import<FuzzRecord>(reader, 100);
+		CheckImport(sheet, fromReader);
+	}
+
+	/// <summary>How an import ended, for the run's tally.</summary>
+	/// <param name="result">The import.</param>
+	/// <returns>Its outcome.</returns>
+	private static string Outcome(ExcelImportResult<FuzzRecord> result) =>
+		result.Errors.Count == 0 ? "every record read"
+		: result.Errors.Any(e => e.Exception is KeyNotFoundException or CsvFormatException) ? "a header row not found"
+		: result.Complete ? "cells at fault"
+		: "stopped at 100 errors";
+
+	/// <summary>Checks an import's errors' causes, and that it stops at its most errors.</summary>
+	/// <param name="sheet">The sheet.</param>
+	/// <param name="result">The import.</param>
+	/// <exception cref="InvalidOperationException">An error has another cause, or the errors pass their most.</exception>
+	private static void CheckImport(ExcelSheet sheet, ExcelImportResult<FuzzRecord> result)
+	{
+		if (result.Errors.Count > 100 || (result.Errors.Count == 100) == result.Complete)
+		{
+			throw new InvalidOperationException($"The import of {sheet.Name} has {result.Errors.Count} errors, complete {result.Complete}.");
+		}
+
+		foreach (var error in result.Errors)
+		{
+			if (error.Exception is not (FormatException or OverflowException or KeyNotFoundException))
+			{
+				throw new InvalidOperationException($"The import of {sheet.Name}: {error} ({error.Exception.GetType().FullName})", error.Exception);
 			}
 		}
 	}

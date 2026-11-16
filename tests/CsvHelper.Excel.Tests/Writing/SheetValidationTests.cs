@@ -186,7 +186,7 @@ public class SheetValidationTests
 
 		var expected = new Dictionary<string, string>
 		{
-			["Color"] = "list \"Red,Green,Blue\" title=Color prompt=Pick a color._x000A_One only. | General",
+			["Color"] = "list \"Red,Green,Blue\" title=Color prompt=Pick a color.\nOne only. | General",
 			["Size"] = "list _CsvHelperList1 | General",
 			["Note"] = "any title=Note prompt=Anything. | General",
 		};

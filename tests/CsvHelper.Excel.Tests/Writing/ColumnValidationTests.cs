@@ -557,6 +557,18 @@ public class ColumnValidationTests
 		Assert.Equal(new string('n', 31), Create(new ExcelColumnOptions { Prompt = "p" }, name).Title);
 		Assert.Equal(new string('n', 32), Create(new ExcelColumnOptions { Prompt = "p" }, new string('n', 40)).Title);
 		Assert.Equal("Status", Create(new ExcelColumnOptions { Prompt = "p" }, "Status").Title);
+
+		// Cut to 32 characters as written (Phase 7's step 8), as the schema limits it: a control character's escape counts 7,
+		// and a line break's reference one.
+		var controls = new string('a', 20) + "\u0001\u0002" + new string('b', 10);
+		Assert.Equal(new string('a', 20) + "\u0001", Create(new ExcelColumnOptions { Prompt = "p" }, controls).Title);
+		Assert.Equal(27, ColumnValidation.WrittenLength(new string('a', 20) + "\u0001"));
+		var lines = new string('a', 20) + "\r\n\t" + new string('b', 20);
+		Assert.Equal(lines.Substring(0, 32), Create(new ExcelColumnOptions { Prompt = "p" }, lines).Title);
+		Assert.Equal(
+			new[] { 1, 7, 7, 13, 19, 6, 20 },
+			new[] { "\n", "\u0001", "\uFFFF", "_x0041_", "_x0041\u0001", "_x0041", "_x0041_\u0001" }.Select(ColumnValidation.WrittenLength));
+
 		// No title without a prompt, a header or a header's name.
 		Assert.Null(Create(new ExcelColumnOptions { List = ["a"] }, "Status").Title);
 		Assert.Null(Create(new ExcelColumnOptions { Prompt = "p" }, null).Title);
@@ -587,10 +599,14 @@ public class ColumnValidationTests
 		Assert.Equal(
 			"<dataValidation type=\"textLength\" operator=\"equal\" allowBlank=\"1\" showInputMessage=\"1\" showErrorMessage=\"1\" promptTitle=\"Grade\" prompt=\"A to F.\" sqref=\"A3:A1048576\"><formula1>1</formula1></dataValidation>",
 			Xml(ColumnValidation.Create(grade, new ExcelColumnOptions { Prompt = "A to F." }, "Grade", lists)!, 0, 3));
-		// A prompt alone; its line breaks, tabs and quotes escaped as Excel reads them in an attribute, and _x0041_ kept.
+		// A prompt alone; its line breaks and tabs as character references, as Excel writes them, its quotes as entities, a
+		// control character as an escape, and _x0041_ kept.
 		Assert.Equal(
-			"<dataValidation allowBlank=\"1\" showInputMessage=\"1\" showErrorMessage=\"1\" promptTitle=\"&lt;Notes&gt;\" prompt=\"One_x000A_&quot;two&quot;_x0009__x005F_x0041_ &amp;\" sqref=\"XFD1:XFD1048576\"/>",
-			Xml(ColumnValidation.Create(null, new ExcelColumnOptions { Prompt = "One\n\"two\"\t_x0041_ &" }, "<Notes>", lists)!, 16383, 1));
+			"<dataValidation allowBlank=\"1\" showInputMessage=\"1\" showErrorMessage=\"1\" promptTitle=\"&lt;Notes&gt;\" prompt=\"One&#10;&quot;two&quot;&#9;_x005F_x0041_ &amp;&#13;&#10;_x0001_\" sqref=\"XFD1:XFD1048576\"/>",
+			Xml(ColumnValidation.Create(null, new ExcelColumnOptions { Prompt = "One\n\"two\"\t_x0041_ &\r\n\u0001" }, "<Notes>", lists)!, 16383, 1));
+
+		// An _ before a line break isn't escaped: the reference isn't an escape, so _x0041 can't become one.
+		Assert.Contains(" prompt=\"_x0041&#10;b\"", Xml(ColumnValidation.Create(null, new ExcelColumnOptions { Prompt = "_x0041\nb" }, "N", lists)!, 0, 2));
 		// A list inline, in element text: its line breaks as they are, its escapes' form escaped; and one by name.
 		Assert.Equal(
 			"<dataValidation type=\"list\" allowBlank=\"1\" showInputMessage=\"1\" showErrorMessage=\"1\" sqref=\"B2:B1048576\"><formula1>\"a\nb,_x005F_x0041_,&lt;c&gt;\"</formula1></dataValidation>",

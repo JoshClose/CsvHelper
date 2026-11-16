@@ -63,8 +63,9 @@ public sealed record ExcelColumnOptions
 
 	/// <summary>
 	/// Help that Excel shows when a cell of the column below the header is selected, with the column's header name as its
-	/// title: 1 to 255 characters, the most Excel opens, line breaks kept; on any sheet. <see langword="null"/>, the
-	/// default, for none.
+	/// title, cut to 32 characters: 1 to 255 characters, the most Excel opens, line breaks and tabs kept; on any sheet. A
+	/// control character other than a tab or a line break is written as an escape of 7 (<c>_x0001_</c>), which counts 7 of
+	/// the 255, and so does an <c>_</c> before text like an escape. <see langword="null"/>, the default, for none.
 	/// </summary>
 	public string? Prompt { get; init; }
 
@@ -101,6 +102,11 @@ public sealed record ExcelColumnOptions
 		if (Prompt is { } prompt && prompt.Length is 0 or > MaxPromptLength)
 		{
 			return $"has a prompt of {prompt.Length.ToString(CultureInfo.InvariantCulture)} characters, and Excel opens prompts of 1 to {MaxPromptLength.ToString(CultureInfo.InvariantCulture)}: use null for none.";
+		}
+
+		if (Prompt is { } escaped && ColumnValidation.WrittenLength(escaped) is var written && written > MaxPromptLength)
+		{
+			return $"has a prompt of {escaped.Length.ToString(CultureInfo.InvariantCulture)} characters, written as {written.ToString(CultureInfo.InvariantCulture)} since a control character is written as an escape of 7 (_x0001_), and Excel opens prompts of 1 to {MaxPromptLength.ToString(CultureInfo.InvariantCulture)} as written.";
 		}
 
 		if (Width is { } width && !(width is >= 0 and <= MaxWidth))

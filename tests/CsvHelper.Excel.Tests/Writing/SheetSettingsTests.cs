@@ -361,6 +361,7 @@ public class SheetSettingsTests
 		{ Column(new ExcelColumnOptions { List = [new string('v', 256)] }), "has a value of 256 characters in its list" },
 		{ Column(new ExcelColumnOptions { Prompt = "" }), "The column \"Amount\" has a prompt of 0 characters, and Excel opens prompts of 1 to 255: use null for none." },
 		{ Column(new ExcelColumnOptions { Prompt = new string('p', 256) }), "has a prompt of 256 characters" },
+		{ Column(new ExcelColumnOptions { Prompt = new string('p', 250) + "\u0001" }), "The column \"Amount\" has a prompt of 251 characters, written as 257 since a control character is written as an escape of 7 (_x0001_), and Excel opens prompts of 1 to 255 as written." },
 	};
 
 	[Theory]

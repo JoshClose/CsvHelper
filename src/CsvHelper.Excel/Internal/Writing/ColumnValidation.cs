@@ -252,8 +252,11 @@ internal sealed record TypeValidation(ValidationKind Kind, double Minimum, doubl
 /// Texts are written as cells' are (<see cref="XmlOutput.AppendText"/>): Excel decodes <c>_xHHHH_</c> in a prompt, its
 /// title and an inline list (checked on 2026-11-15: <c>_x0041_</c> is <c>A</c>, <c>_x005F_x0041_</c> is
 /// <c>_x0041_</c>), and line breaks, tabs and control characters written as escapes are themselves, in a prompt and in an
-/// inline list, which then matches them typed. Lengths are in UTF-16 code units, as Excel counts them (checked: a prompt of
-/// 128 surrogate pairs is repaired away, and a list of 128 is a long one).
+/// inline list, which then matches them typed. A prompt's and a title's tab, LF and CR are written as character references
+/// (<c>&amp;#10;</c>), as Excel writes them, which XML reads back as one character (<see cref="AppendAttribute"/>), and
+/// their lengths as written are the schema's limits, 32 and 255, an escape of a control character counting 7
+/// (<see cref="WrittenLength"/>). Lengths are in UTF-16 code units, as Excel counts them (checked: a prompt of 128
+/// surrogate pairs is repaired away, and a list of 128 is a long one).
 /// </para>
 /// </remarks>
 internal sealed class ColumnValidation
@@ -344,7 +347,7 @@ internal sealed class ColumnValidation
 			}
 		}
 
-		var title = prompt is not null && !string.IsNullOrEmpty(header) ? Cut(header!, MaxTitleLength) : null;
+		var title = prompt is not null && !string.IsNullOrEmpty(header) ? TitleOf(header!) : null;
 
 		return new ColumnValidation(kind, type?.Minimum ?? 0, type?.Maximum ?? 0, values, listName, prompt, title);
 	}
@@ -399,14 +402,14 @@ internal sealed class ColumnValidation
 		if (title is not null)
 		{
 			xml.Append(" promptTitle=\""u8);
-			xml.AppendText(title, attribute: true);
+			AppendAttribute(xml, title);
 			xml.Append((byte)'"');
 		}
 
 		if (prompt is not null)
 		{
 			xml.Append(" prompt=\""u8);
-			xml.AppendText(prompt, attribute: true);
+			AppendAttribute(xml, prompt);
 			xml.Append((byte)'"');
 		}
 
@@ -481,6 +484,88 @@ internal sealed class ColumnValidation
 		}
 
 		return builder.Append('"').ToString();
+	}
+
+	/// <summary>
+	/// Appends a prompt's or a title's text as an attribute's value: its tab, LF and CR as character references
+	/// (<c>&amp;#9;</c>, <c>&amp;#10;</c>, <c>&amp;#13;</c>), as Excel writes them, which XML reads back as themselves and
+	/// counts as one character each; the rest as a cell's text is written (<see cref="XmlOutput.AppendText"/>), each part
+	/// between them on its own, so that an <c>_</c> before one is escaped as an escape before it would be.
+	/// </summary>
+	/// <param name="xml">The buffer.</param>
+	/// <param name="text">The text, as valid UTF-8.</param>
+	public static void AppendAttribute(XmlOutput xml, ReadOnlySpan<byte> text)
+	{
+		while (true)
+		{
+			var i = text.IndexOfAny((byte)'\t', (byte)'\n', (byte)'\r');
+			if (i < 0)
+			{
+				xml.AppendText(text, attribute: true);
+
+				return;
+			}
+
+			xml.AppendText(text.Slice(0, i), attribute: true);
+			xml.Append(text[i] switch
+			{
+				(byte)'\t' => "&#9;"u8,
+				(byte)'\n' => "&#10;"u8,
+				_ => "&#13;"u8,
+			});
+			text = text.Slice(i + 1);
+		}
+	}
+
+	/// <summary>
+	/// The length of a prompt's or a title's text as written (<see cref="AppendAttribute"/>) and read back by XML, in UTF-16
+	/// code units: the length the schema limits, and the validator checks. A control character but tab, LF and CR, and
+	/// U+FFFE and U+FFFF, written as an escape (<c>_x0001_</c>), count 7, and so does an <c>_</c> escaped (<c>_x005F_</c>);
+	/// a lone surrogate, written as U+FFFD, counts 1.
+	/// </summary>
+	/// <param name="text">The text.</param>
+	/// <returns>Its length as written.</returns>
+	public static int WrittenLength(string text)
+	{
+		using var xml = new XmlOutput(text.Length * 3 + 16);
+		AppendAttribute(xml, Encoding.UTF8.GetBytes(text));
+		var written = Encoding.UTF8.GetString(xml.Written.ToArray());
+
+		// Each entity and reference is one character as XML reads it.
+		return written.Length - (4 * Count(written, "&amp;")) - (3 * Count(written, "&lt;")) - (3 * Count(written, "&gt;")) - (5 * Count(written, "&quot;"))
+			- (3 * Count(written, "&#9;")) - (4 * Count(written, "&#10;")) - (4 * Count(written, "&#13;"));
+	}
+
+	/// <summary>The times a text holds another, apart.</summary>
+	/// <param name="text">The text.</param>
+	/// <param name="part">The other.</param>
+	/// <returns>The count.</returns>
+	private static int Count(string text, string part)
+	{
+		var count = 0;
+		for (var i = text.IndexOf(part, StringComparison.Ordinal); i >= 0; i = text.IndexOf(part, i + part.Length, StringComparison.Ordinal))
+		{
+			count++;
+		}
+
+		return count;
+	}
+
+	/// <summary>
+	/// A prompt's title: the header's name cut to <see cref="MaxTitleLength"/> characters between characters, and shorter
+	/// while its written length is longer (<see cref="WrittenLength"/>), as a name with a control character's escape is.
+	/// </summary>
+	/// <param name="header">The header's name, not empty.</param>
+	/// <returns>The title.</returns>
+	private static string TitleOf(string header)
+	{
+		var title = Cut(header, MaxTitleLength);
+		while (title.Length > 1 && WrittenLength(title) > MaxTitleLength)
+		{
+			title = Cut(title, title.Length - 1);
+		}
+
+		return title;
 	}
 
 	/// <summary>A text's first characters, not between a surrogate pair's halves.</summary>
