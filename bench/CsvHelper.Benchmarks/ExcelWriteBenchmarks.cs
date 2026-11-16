@@ -112,6 +112,18 @@ public abstract class ExcelWriteBenchmarkBase
 	/// <summary>A sheet at the defaults, with the header and the rows in a table, in the table's default style.</summary>
 	protected static readonly ExcelSheetOptions InTable = new() { Table = new ExcelTableOptions() };
 
+	/// <summary>
+	/// A sheet at the defaults that validates its columns by their members' types, with the types' formats as the columns'
+	/// default styles.
+	/// </summary>
+	protected static readonly ExcelSheetOptions Validated = new() { Validate = true };
+
+	/// <summary>
+	/// A sheet at the defaults that is protected: the header locked, and each cell below it in its columns in its style's
+	/// unlocked form.
+	/// </summary>
+	protected static readonly ExcelSheetOptions Protected = new() { Protect = true };
+
 	/// <summary>The stream the last benchmark wrote to.</summary>
 	private CountingStream? last;
 
@@ -171,8 +183,10 @@ public abstract class ExcelWriteBenchmarkBase
 /// <para>
 /// CsvHelper.Excel's sheet settings: its defaults (a bold, frozen header and auto-fit over 100 rows) in the methods above;
 /// Phase 4's look, without them (<see cref="CsvHelper_WritePlain"/>); a presentation (a title, a filter and auto-fit over
-/// 1,000 rows besides); and a table. And its links: each row with a 26th column, the package's NuGet page as a
-/// <see cref="Uri"/>, written as links (the first 65,530, as a sheet holds no more) and, for what they cost, as text.
+/// 1,000 rows besides); a table; and a protected sheet (<see cref="CsvHelper_WriteProtected"/>), each cell below the
+/// header unlocked. Validation isn't here: the sheet has no members' types, and no lists or prompts, so it would write
+/// nothing more. And its links: each row with a 26th column, the package's NuGet page as a <see cref="Uri"/>, written as
+/// links (the first 65,530, as a sheet holds no more) and, for what they cost, as text.
 /// </para>
 /// <para>
 /// The MB/s column is of the same data as CSV, and <see cref="Csv_Write"/> writes that CSV with CsvHelper, as a
@@ -290,6 +304,12 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 	[Benchmark]
 	[BenchmarkCategory("Write")]
 	public long CsvHelper_WriteTable() => WriteWorkbook(new ExcelWriterOptions { Sheets = InTable });
+
+	/// <summary>CsvHelper.Excel with the sheet protected: the header locked, and the cells below it in its columns unlocked.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteProtected() => WriteWorkbook(new ExcelWriterOptions { Sheets = Protected });
 
 	/// <summary>
 	/// CsvHelper.Excel with a column of links after the rows' fields, each the package's NuGet page: the first 65,530 are
@@ -471,7 +491,9 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 /// shared strings, and with inline strings at <see cref="CompressionLevel.Optimal"/>. Its sheet settings: its defaults (a
 /// bold, frozen header and auto-fit over 100 rows) in those; Phase 4's look, without them
 /// (<see cref="CsvHelper_WritePlain"/>); a presentation (a title, a filter, auto-fit over 1,000 rows, and the numbers in
-/// formats besides); and a table.
+/// formats besides); a table; a sheet that validates its columns by their members' types
+/// (<see cref="CsvHelper_WriteValidated"/>); and a protected sheet (<see cref="CsvHelper_WriteProtected"/>), each cell
+/// below the header unlocked.
 /// </para>
 /// <para>
 /// SpreadCheetah 1.28.0 (the baseline), LargeXlsx 2.0.2 and MiniExcel 1.46.0 write each member as the cell of its type,
@@ -606,6 +628,21 @@ public class ExcelOrdersWrite : ExcelWriteBenchmarkBase
 	[Benchmark]
 	[BenchmarkCategory("Write")]
 	public long CsvHelper_WriteTable() => WriteWorkbook(Utc with { Sheets = InTable });
+
+	/// <summary>
+	/// CsvHelper.Excel with each column validated by its member's type, and the types' formats as the columns' default
+	/// styles.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteValidated() => WriteWorkbook(Utc with { Sheets = Validated });
+
+	/// <summary>CsvHelper.Excel with the sheet protected: the header locked, and the cells below it in its columns unlocked.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteProtected() => WriteWorkbook(Utc with { Sheets = Protected });
 
 	/// <summary>LargeXlsx: a row of typed cells per order, <c>Sku</c> as a double, as it has no <see cref="long"/> cell.</summary>
 	/// <returns>The bytes written.</returns>

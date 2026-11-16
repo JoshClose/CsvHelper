@@ -182,11 +182,23 @@ public static class QuickRunner
 	{
 		List<PackageAsset> list => $"{list.Count} records, content hash {ContentHash(list):X16}",
 		List<OrderRecord> list => $"{list.Count} orders, content hash {OrderHash(list):X16}",
+		CsvHelper.Excel.ExcelImportResult<OrderRecord> import => Describe(import.Records, import.Errors.Select(e => e.Row).Distinct().Count()),
+		SkippedOrders skipped => Describe(skipped.Records, skipped.Skipped),
 		List<object> list => $"{list.Count} dynamic records, content hash {DynamicHash(list):X16}",
 		double d => d.ToString("R"),
 		null => "null",
 		_ => result.ToString() ?? "",
 	};
+
+	/// <summary>
+	/// Describes orders read with records at fault left out, as the import's and <c>GetRecords</c>' skipping give them, so
+	/// that the two agree when they read the same orders and leave out the same rows.
+	/// </summary>
+	/// <param name="records">The orders that read.</param>
+	/// <param name="rowsAtFault">The rows left out.</param>
+	/// <returns>The description.</returns>
+	private static string Describe(IReadOnlyList<OrderRecord> records, int rowsAtFault) =>
+		$"{records.Count} orders, content hash {OrderHash(records):X16}{(rowsAtFault > 0 ? $", {rowsAtFault} rows at fault" : "")}";
 
 	/// <summary>A hash of the values of dynamic records, in column order, whichever object holds them.</summary>
 	private static ulong DynamicHash(List<object> records)
@@ -239,7 +251,7 @@ public static class QuickRunner
 	/// </summary>
 	/// <param name="list">The orders.</param>
 	/// <returns>The hash.</returns>
-	private static ulong OrderHash(List<OrderRecord> list)
+	private static ulong OrderHash(IReadOnlyList<OrderRecord> list)
 	{
 		var h = 14695981039346656037UL;
 		foreach (var order in list)

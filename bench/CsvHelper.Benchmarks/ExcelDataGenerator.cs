@@ -137,6 +137,57 @@ public static class ExcelDataGenerator
 			$"orders-{rows}-",
 			stream => ExcelTypedWorkbook.Write(stream, ExcelOrders.SheetName, ExcelOrders.Rows(ExcelOrders.Generate(rows)), ExcelOrders.Formats, CompressionLevel.Optimal));
 
+	/// <summary>
+	/// Returns the orders as a workbook with one cell in a hundred at fault, from the cache or written into it: in each
+	/// hundred cells below the header, counted row by row, one of a typed member's (not <c>Customer</c>'s, <c>Status</c>'s
+	/// or <c>Notes</c>'), chosen at random, is the text <c>n/a</c>, which its member's type doesn't read.
+	/// </summary>
+	/// <param name="rows">The number of orders.</param>
+	/// <returns>The workbook's bytes.</returns>
+	public static byte[] OrdersWithErrors(int rows) =>
+		Cached(
+			$"orders-errors-{rows}-",
+			stream => ExcelTypedWorkbook.Write(stream, ExcelOrders.SheetName, WithErrors(ExcelOrders.Rows(ExcelOrders.Generate(rows))), ExcelOrders.Formats, CompressionLevel.Optimal));
+
+	/// <summary>
+	/// Puts the text <c>n/a</c> in one typed cell of each hundred cells below the header, counted row by row, chosen at
+	/// random with a fixed seed.
+	/// </summary>
+	/// <param name="rows">The sheet's rows, the header first, as <see cref="ExcelOrders.Rows"/> gives them.</param>
+	/// <returns>The same rows, changed.</returns>
+	public static List<object?[]> WithErrors(List<object?[]> rows)
+	{
+		// The string members take any text; every other member's type reads n/a as an error, CustomerId's Guid among them.
+		string[] text = ["Customer", "Status", "Notes"];
+		var isTyped = ExcelOrders.Header.Select(name => !text.Contains(name)).ToArray();
+
+		var columns = ExcelOrders.Header.Length;
+		var cells = (long)(rows.Count - 1) * columns;
+		var typed = new List<long>(100);
+		var random = new Random(7);
+		for (var start = 0L; start < cells; start += 100)
+		{
+			typed.Clear();
+			for (var cell = start; cell < Math.Min(start + 100, cells); cell++)
+			{
+				if (isTyped[(int)(cell % columns)])
+				{
+					typed.Add(cell);
+				}
+			}
+
+			if (typed.Count == 0)
+			{
+				continue;
+			}
+
+			var faulty = typed[random.Next(typed.Count)];
+			rows[1 + (int)(faulty / columns)][(int)(faulty % columns)] = "n/a";
+		}
+
+		return rows;
+	}
+
 	/// <summary>Returns a workbook from the cache, or writes it and caches it.</summary>
 	/// <param name="prefix">The start of the cached file's name: the data, the row count and the variant.</param>
 	/// <param name="write">Writes the workbook.</param>
