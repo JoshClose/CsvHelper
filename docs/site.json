@@ -156,7 +156,7 @@
 			{
 				"icon": "file-excel",
 				"title": "Excel",
-				"text": "CsvHelper.Excel reads and writes .xlsx workbooks with the same records: a sheet reads as a CsvReader and writes as a CsvWriter, with typed cells and constant memory, and converts to and from CSV.",
+				"text": "CsvHelper.Excel reads and writes .xlsx workbooks with the same records: a sheet reads as a CsvReader and writes as a CsvWriter, with typed cells and constant memory; it converts to and from CSV, and writes import templates.",
 				"link": "excel"
 			},
 			{

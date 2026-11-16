@@ -23,8 +23,8 @@ and .NET Standard 2.0 and 2.1 (see [Target frameworks](#target-frameworks)):
   query uses, joins with Entity Framework Core and other providers by sending them only the keys it needs, and
   writes query results as CSV.
 - **Excel**: the CsvHelper.Excel package reads and writes Excel workbooks (`.xlsx`) with the same records: a sheet
-  reads as a `CsvReader` and writes as a `CsvWriter`, with typed cells and constant memory, and workbooks convert to
-  CSV and back.
+  reads as a `CsvReader` and writes as a `CsvWriter`, with typed cells and constant memory; workbooks convert to CSV
+  and back; and import templates check what users type, and their uploads import with every cell at fault named.
 
 Benchmarks against [Sep](https://github.com/nietras/Sep) and [Sylvan.Data.Csv](https://github.com/MarkPflug/Sylvan)
 are in [`bench/`](bench/CsvHelper.Benchmarks); results are in [Benchmarks](#benchmarks) below.
@@ -395,6 +395,9 @@ using var workbook = ExcelWorkbookWriter.ToFile("report.xlsx");
 workbook.WriteSheet("Orders", orders);                             // a bold, frozen header; columns fit their text
 
 ExcelConvert.ToCsv("orders.xlsx", "orders.csv");                   // and ExcelConvert.ToExcel back
+
+ExcelTemplate.Create<Order>("orders-template.xlsx");               // a dropdown or a check per column, the header locked
+var upload = ExcelReader.Import<Order>("upload.xlsx");             // the records, and every cell at fault: Orders!C14
 ```
 
 <!-- /docs:exclude -->

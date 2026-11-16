@@ -9,7 +9,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<RootNamespace>CsvHelper.Excel</RootNamespace>
 		<AssemblyName>CsvHelper.Excel</AssemblyName>
-		<Description>Excel workbooks (.xlsx) for CsvHelper: streaming reads and writes of typed cells with CsvHelper's record mapping, in constant memory and without an Excel library.</Description>
+		<Description>Excel workbooks (.xlsx) for CsvHelper: streaming reads and writes of typed cells with CsvHelper's record mapping, in constant memory and without an Excel library; conversion to and from CSV; and import templates, whose uploads import with every cell at fault named.</Description>
 	</PropertyGroup>
 
 	<PropertyGroup>
