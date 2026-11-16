@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +23,20 @@ namespace CsvHelper.Excel;
 /// </remarks>
 internal static class HeaderSearch
 {
+	/// <summary>
+	/// The row that each exception of a header row not found names, for the import (<see cref="NotFoundOf"/>): kept beside
+	/// the exception rather than in its <see cref="Exception.Data"/>, which .NET Framework lets hold serializable values only.
+	/// </summary>
+	private static readonly ConditionalWeakTable<Exception, NotFound> NotFounds = new();
+
+	/// <summary>
+	/// The row that an exception of <see cref="RunAsync"/> names when it found no header row: the row given, the closest row
+	/// tried, or none.
+	/// </summary>
+	/// <param name="exception">An exception that opening a reader threw.</param>
+	/// <returns>The row, or <see langword="null"/> when the exception isn't one of a header row not found.</returns>
+	public static NotFound? NotFoundOf(Exception exception) => NotFounds.TryGetValue(exception, out var notFound) ? notFound : null;
+
 	/// <summary>The rows a search's scanner reads: the row given, or the area's first rows that a search tries.</summary>
 	/// <param name="headerRow">The header row asked for.</param>
 	/// <param name="area">The area read: a range's, a defined name's, or the whole sheet's.</param>
@@ -54,8 +69,13 @@ internal static class HeaderSearch
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
 	/// <returns>A task whose result is the reader's area, and the header to hold.</returns>
-	/// <exception cref="KeyNotFoundException">No row tried has the columns a search wants.</exception>
-	/// <exception cref="CsvFormatException">The row given has no value, or the sheet's content can't be read.</exception>
+	/// <exception cref="KeyNotFoundException">
+	/// No row tried has the columns a search wants; <see cref="NotFoundOf"/> gives the closest row, or none when no row tried
+	/// has a value.
+	/// </exception>
+	/// <exception cref="CsvFormatException">
+	/// The row given has no value, which <see cref="NotFoundOf"/> gives; or the sheet's content can't be read.
+	/// </exception>
 	/// <exception cref="InvalidOperationException">The search's record type has no mapper.</exception>
 	public static async ValueTask<(SheetLayout Layout, HeldRecord Header)> RunAsync(
 		SheetScanner search, ExcelHeaderRow headerRow, SheetLayout area, ExcelReaderOptions options, bool date1904, bool async, CancellationToken cancellationToken)
@@ -65,6 +85,7 @@ internal static class HeaderSearch
 		var target = new RowCapture(row);
 		long closest = 0;
 		IReadOnlyList<string>? closestLacks = null;
+		CapturedRow? closestRow = null;
 		var more = true;
 		while (more)
 		{
@@ -91,6 +112,7 @@ internal static class HeaderSearch
 			{
 				closest = row.Line;
 				closestLacks = lacks;
+				closestRow = row.Copy();
 			}
 		}
 
@@ -99,11 +121,11 @@ internal static class HeaderSearch
 		{
 			var where = location.Row(headerRow.Row);
 
-			throw new CsvFormatException($"The header row, {where}, has no value.", 0, 0)
+			throw Mark(new CsvFormatException($"The header row, {where}, has no value.", 0, 0)
 			{
 				LineNumber = headerRow.Row,
 				Location = where,
-			};
+			}, new NotFound(where, headerRow.Row, null, options.Csv, cellOptions));
 		}
 
 		var rows = $"{location.QuotedName}!{Describe(SearchArea(headerRow, area))}";
@@ -111,17 +133,31 @@ internal static class HeaderSearch
 		{
 			// No row has a value. A probe of an empty header tells whether any column is wanted, and throws for a record
 			// type without a mapper, as a row's probe would have.
+			var none = new NotFound(null, 0, null, options.Csv, cellOptions);
 			if (Lacks(headerRow, null, options.Csv, cellOptions).Count == 0)
 			{
-				throw new KeyNotFoundException($"No row of {rows} has a value.");
+				throw Mark(new KeyNotFoundException($"No row of {rows} has a value."), none);
 			}
 
-			throw new KeyNotFoundException($"No row of {rows} has {headerRow.Wants}: none of them has a value.");
+			throw Mark(new KeyNotFoundException($"No row of {rows} has {headerRow.Wants}: none of them has a value."), none);
 		}
 
-		var closestRow = closest.ToString(CultureInfo.InvariantCulture);
+		var number = closest.ToString(CultureInfo.InvariantCulture);
 
-		throw new KeyNotFoundException($"No row of {rows} has {headerRow.Wants}. The closest, row {closestRow}, lacks {string.Join(", ", closestLacks)}.");
+		throw Mark(
+			new KeyNotFoundException($"No row of {rows} has {headerRow.Wants}. The closest, row {number}, lacks {string.Join(", ", closestLacks)}."),
+			new NotFound(location.Row(closest), closest, closestRow, options.Csv, cellOptions));
+	}
+
+	/// <summary>Keeps the row that an exception of a header row not found names, for <see cref="NotFoundOf"/>.</summary>
+	/// <param name="exception">The exception.</param>
+	/// <param name="notFound">The row.</param>
+	/// <returns>The exception, to throw.</returns>
+	private static Exception Mark(Exception exception, NotFound notFound)
+	{
+		NotFounds.Add(exception, notFound);
+
+		return exception;
 	}
 
 	/// <summary>A block of a layout's rows and columns in Excel's form, such as <c>B5:F200</c>, <c>1:20</c> or <c>B:F</c>.</summary>
@@ -189,7 +225,7 @@ internal static class HeaderSearch
 	}
 
 	/// <summary>The one record a search's fill writes: its fields' values and kinds, and its row.</summary>
-	private sealed class CapturedRow
+	internal sealed class CapturedRow
 	{
 		private byte[] bytes = new byte[256];
 		private int length;
@@ -222,6 +258,20 @@ internal static class HeaderSearch
 				return false;
 			}
 		}
+
+		/// <summary>A copy of the record, which the next fill doesn't change.</summary>
+		/// <returns>The copy.</returns>
+		public CapturedRow Copy() => new()
+		{
+			bytes = bytes.AsSpan(0, length).ToArray(),
+			length = length,
+			starts = starts.AsSpan(0, FieldCount).ToArray(),
+			lengths = lengths.AsSpan(0, FieldCount).ToArray(),
+			kinds = kinds.AsSpan(0, FieldCount).ToArray(),
+			FieldCount = FieldCount,
+			Line = Line,
+			Ended = Ended,
+		};
 
 		/// <summary>Forgets the record, for the next fill.</summary>
 		public void Clear()
@@ -286,6 +336,44 @@ internal static class HeaderSearch
 			Line = row;
 			Ended = true;
 		}
+	}
+
+	/// <summary>
+	/// The row that a header row not found names: the row given, which has no value, the closest row a search tried, or none,
+	/// when no row tried has a value; and which columns of a record type it lacks, as a search's probe reader finds them.
+	/// </summary>
+	internal sealed class NotFound
+	{
+		private readonly CapturedRow? row;
+		private readonly CsvReaderOptions csv;
+		private readonly CsvCellOptions cellOptions;
+
+		/// <summary>Creates the row's description.</summary>
+		/// <param name="location">The row's place, such as <c>Orders!2:2</c>, or <see langword="null"/> for none.</param>
+		/// <param name="line">The row's number, or 0 for none.</param>
+		/// <param name="row">The row's fields, or <see langword="null"/> for a row without a value.</param>
+		/// <param name="csv">The reader's options.</param>
+		/// <param name="cellOptions">How the row's typed cells convert.</param>
+		public NotFound(string? location, long line, CapturedRow? row, CsvReaderOptions csv, CsvCellOptions cellOptions)
+		{
+			Location = location;
+			Line = line;
+			this.row = row;
+			this.csv = csv;
+			this.cellOptions = cellOptions;
+		}
+
+		/// <summary>The row's place, such as <c>Orders!2:2</c>; <see langword="null"/> when no row tried has a value.</summary>
+		public string? Location { get; }
+
+		/// <summary>The row's number; 0 when no row tried has a value.</summary>
+		public long Line { get; }
+
+		/// <summary>The columns that the row lacks, as the header of a reader of <paramref name="wants"/>'s.</summary>
+		/// <param name="wants">What is wanted of the row, such as <see cref="ExcelHeaderRow.Find{T}(int)"/>'s columns.</param>
+		/// <returns>The columns lacking, as the record mapper names them (<c>Order.Price ('Price')</c>).</returns>
+		/// <exception cref="InvalidOperationException">The record type has no mapper.</exception>
+		public IReadOnlyList<string> Lacks(ExcelHeaderRow wants) => HeaderSearch.Lacks(wants, row, csv, cellOptions);
 	}
 
 	/// <summary>The <see cref="IRecordTarget"/> of a search: full once a record is ended, so that each fill writes one.</summary>

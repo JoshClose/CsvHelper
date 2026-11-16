@@ -143,7 +143,7 @@ public sealed record ExcelSheetOptions
 	/// <summary>
 	/// The password that unprotecting the sheet asks for, 1 to 255 characters, the most Excel takes; stored as Excel stores
 	/// it, as a SHA-512 hash with a random salt. Only with <see cref="Protect"/>. <see langword="null"/>, the default, for
-	/// none, when Excel unprotects the sheet without asking. The options' <see cref="ToString"/> doesn't show it.
+	/// none, when Excel unprotects the sheet without asking. The options' <c>ToString()</c> doesn't show it.
 	/// </summary>
 	public string? Password { get; init; }
 
@@ -220,7 +220,7 @@ public sealed record ExcelSheetOptions
 	}
 
 	/// <summary>
-	/// Writes the options' settings for <see cref="ToString"/>, as a record writes them, but a password's text: whether
+	/// Writes the options' settings for <c>ToString()</c>, as a record writes them, but a password's text: whether
 	/// there is one, so that logs of the options don't hold it.
 	/// </summary>
 	/// <param name="builder">The text so far.</param>
