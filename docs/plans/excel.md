@@ -1,6 +1,6 @@
 # CsvHelper.Excel plan
 
-Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11. Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11, and step 8 (benchmarks) 2026-11-12. Step 9 ("As built") was written, approved and committed 2026-11-12, with the gate re-checked. Phase 5 is complete, its gate met; see "As built" under Phase 5, which opens with a summary. The branch was pushed that day, and CI's run 43342222558 passed every step (Phase 5's "Left open"). Phase 6's detailed design was written 2026-11-12, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (core hooks) was built, approved, with every recommendation, and committed that day, with its gate met, and step 2 (`.xlsx` → CSV) was built that day, and approved, with every recommendation, and committed 2026-11-13. Step 3 (CSV → `.xlsx`) was built 2026-11-13, and approved, with every recommendation, and committed 2026-11-14. Step 4 (corpus and oracles) was built 2026-11-14, and approved, with every recommendation, and committed that day. GridCraft as an oracle followed (see step 4's "On approval"): its design was written that day, after asking GridCraft 0.18.0 about every cell Excel answered about, which found it reading 338 otherwise than Excel; the user chose to treat it as another product, like LibreOffice, its differences listed; and it was built, approved, with every recommendation, and committed that day. Step 5 (security, fuzzing and AOT) was built that day, and approved, with every recommendation, and committed that day. The branch was pushed through step 5 that day, and CI's run 43641418718 failed one test, `AllocatesTheSameForAnyNumberOfRows`, on an allocation the runtime makes once, at a moment the JIT's tiering sets; the two allocation tests with a 4 KB budget now keep the smaller of two passes, approved, with every recommendation, and committed that day (see "CI's run on step 5" under Phase 6's "As built"). Step 6 (benchmarks) was built that day, and approved, with every recommendation, and committed that day. Step 7 (the guide and publishing) was built that day, and approved, with every recommendation, and committed that day, and the branch pushed: CI's run 43657267012 passed every step. Step 8 ("As built") was written, approved and committed that day, with the gate re-checked. Phase 6 is complete, its gate met; see "As built" under Phase 6, which opens with a summary. v1.0's phases 0 to 6 are complete; the release isn't tagged. Before the release, at the approval of step 8: inference takes a double's own text of 16 or 17 digits as a number, and core's `CsvWriter.ToFile` checks its options before it creates its file; built, approved, with every recommendation, and committed that day, and the branch pushed (see "Before the release" under Phase 6's "As built"). CI's run 43662883270 of that push failed one test, on the dates the tests' own zips gave their entries; the tests' packages now have a fixed date, approved, with every recommendation, and committed that day (see "CI's run before the release"). The fix was pushed 2026-11-15, with Phase 7's design and its step 1, and CI's run 43684454479 passed every step. Phase 7's detailed design was written that day, after checks of Excel, LibreOffice and GridCraft, and approved that day, with every recommendation accepted; it makes the phase L. Its step 1 (core's `FindFailingMembers`) was built that day, and approved, with every recommendation, and committed 2026-11-15, and step 2 (settings) was built that day, and approved, with every recommendation, and committed. Step 3 (validations and lists) was built that day, and approved, with every recommendation, and committed that day. Steps 2 and 3 were pushed that day, and CI's run 43731595637 passed every step. Step 4 (protection) was built that day, and approved, with every recommendation, and committed that day, and pushed with the allocation tests' change: CI's run 43744189066 passed every step. Step 5 (`ExcelTemplate`) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43764538929 passed every step. Step 6 (the import) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43781857772 passed every step. Step 7 (corpus and oracles) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43791214098 passed every step. Step 8 (security, fuzzing and AOT) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43798825435 passed every step. Step 9 (benchmarks) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43809890132 passed every step. Step 10 (the guide) was built that day, and approved, with every recommendation, and committed 2026-11-16, and pushed: CI's run 43817437001 passed every step. Step 11 ("As built") was written, approved and committed that day, with the gate re-checked. Phase 7 is complete, its gate met; see "As built" under Phase 7, which opens with a summary.
+Status: approved 2026-11-01. Phase 0 (core hooks) was implemented 2026-11-01, and its writer sink was reworked 2026-11-02 to meet the benchmark gate; see "As built" under Phase 0. Phase 1's detailed design was approved 2026-11-02, with every recommendation accepted. Its steps 1 (skeleton and packaging), 2 (XML layer), 3 (package), 4 (shared strings), 5 (sheet scanner), 6 (record source and public API), 7 (corpus and oracles) and 8 (security and fuzzing) were built 2026-11-02, and 9 (benchmarks) and 10 ("As built") 2026-11-03. Phase 1 is complete, its gate met; see "As built" under Phase 1, which opens with a summary. Phase 2's detailed design was approved 2026-11-03, with every recommendation accepted. Its steps 1 to 8 were built 2026-11-03, and 9 (benchmarks, with the deferred core gate) and 10 ("As built") 2026-11-04. Phase 2 is complete, its gate met; see "As built" under Phase 2, which opens with a summary. Phase 3's detailed design was approved 2026-11-04, with every recommendation accepted. Its steps 1 (ranges and metadata), 2 (areas) and 3 (hidden rows and columns) were built and committed 2026-11-04, step 4 (merged cells) built that day and committed 2026-11-05, steps 5 (header row), 6 (corpus and oracles) and 7 (security and fuzzing) built and committed 2026-11-05, and step 8 (benchmarks) built 2026-11-05 and committed 2026-11-06. Step 9 ("As built") was written and committed 2026-11-06, with the gate re-checked. Phase 3 is complete. Every gate item is met but the default path's "every A/B method within 1%", which isn't plainly met: shared Rows has one clean pair, at +1.2%, which the review accepted as within the noise. The user called the phase complete with that item as it stands, rather than after measuring it again, and the measurement moved to Phase 9's list. See "As built" under Phase 3, which opens with a summary. Phase 4's detailed design was written 2026-11-06, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its steps 1 (package and text) and 2 (typed cells) were built and approved that day, and committed together; step 3 (formulas and limits) was built that day, and approved and committed 2026-11-07; step 4 (formats) was built, approved and committed 2026-11-07, with dates' and times' formats only: `[CsvFormat]` doesn't apply to numbers, and the user left numbers' formats out of Phase 4, as recommended. Step 5 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-07, step 6 (security and fuzzing) too, and step 7 (benchmarks) was built, run, approved and committed that day. Step 8 ("As built") was written, approved and committed 2026-11-07. Phase 4 is complete, its gate met; see "As built" under Phase 4, which opens with a summary. Core's UTF-8 date-literal workaround, Phase 5's first item, decided 2026-11-07, was built that day, and gated, approved and committed 2026-11-08. Phase 5's detailed design was written 2026-11-08, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (settings) was built that day, and approved and committed 2026-11-09, and steps 2 (styles and the header) and 3 (auto-fit) were built, approved, with every recommendation, and committed 2026-11-09. Step 4 (filters, merges and tables) was built, approved, with every recommendation, and committed 2026-11-10. Step 5 (links) was built, approved, with every recommendation, and committed that day. Step 6 (corpus and oracles) was built, approved, with every recommendation, and committed 2026-11-11. Step 7 (security, fuzzing and AOT) was built, approved, with every recommendation, and committed 2026-11-11, and step 8 (benchmarks) 2026-11-12. Step 9 ("As built") was written, approved and committed 2026-11-12, with the gate re-checked. Phase 5 is complete, its gate met; see "As built" under Phase 5, which opens with a summary. The branch was pushed that day, and CI's run 43342222558 passed every step (Phase 5's "Left open"). Phase 6's detailed design was written 2026-11-12, after checks of Excel and LibreOffice, and approved that day, with every recommendation accepted. Its step 1 (core hooks) was built, approved, with every recommendation, and committed that day, with its gate met, and step 2 (`.xlsx` → CSV) was built that day, and approved, with every recommendation, and committed 2026-11-13. Step 3 (CSV → `.xlsx`) was built 2026-11-13, and approved, with every recommendation, and committed 2026-11-14. Step 4 (corpus and oracles) was built 2026-11-14, and approved, with every recommendation, and committed that day. GridCraft as an oracle followed (see step 4's "On approval"): its design was written that day, after asking GridCraft 0.18.0 about every cell Excel answered about, which found it reading 338 otherwise than Excel; the user chose to treat it as another product, like LibreOffice, its differences listed; and it was built, approved, with every recommendation, and committed that day. Step 5 (security, fuzzing and AOT) was built that day, and approved, with every recommendation, and committed that day. The branch was pushed through step 5 that day, and CI's run 43641418718 failed one test, `AllocatesTheSameForAnyNumberOfRows`, on an allocation the runtime makes once, at a moment the JIT's tiering sets; the two allocation tests with a 4 KB budget now keep the smaller of two passes, approved, with every recommendation, and committed that day (see "CI's run on step 5" under Phase 6's "As built"). Step 6 (benchmarks) was built that day, and approved, with every recommendation, and committed that day. Step 7 (the guide and publishing) was built that day, and approved, with every recommendation, and committed that day, and the branch pushed: CI's run 43657267012 passed every step. Step 8 ("As built") was written, approved and committed that day, with the gate re-checked. Phase 6 is complete, its gate met; see "As built" under Phase 6, which opens with a summary. v1.0's phases 0 to 6 are complete; the release isn't tagged. Before the release, at the approval of step 8: inference takes a double's own text of 16 or 17 digits as a number, and core's `CsvWriter.ToFile` checks its options before it creates its file; built, approved, with every recommendation, and committed that day, and the branch pushed (see "Before the release" under Phase 6's "As built"). CI's run 43662883270 of that push failed one test, on the dates the tests' own zips gave their entries; the tests' packages now have a fixed date, approved, with every recommendation, and committed that day (see "CI's run before the release"). The fix was pushed 2026-11-15, with Phase 7's design and its step 1, and CI's run 43684454479 passed every step. Phase 7's detailed design was written that day, after checks of Excel, LibreOffice and GridCraft, and approved that day, with every recommendation accepted; it makes the phase L. Its step 1 (core's `FindFailingMembers`) was built that day, and approved, with every recommendation, and committed 2026-11-15, and step 2 (settings) was built that day, and approved, with every recommendation, and committed. Step 3 (validations and lists) was built that day, and approved, with every recommendation, and committed that day. Steps 2 and 3 were pushed that day, and CI's run 43731595637 passed every step. Step 4 (protection) was built that day, and approved, with every recommendation, and committed that day, and pushed with the allocation tests' change: CI's run 43744189066 passed every step. Step 5 (`ExcelTemplate`) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43764538929 passed every step. Step 6 (the import) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43781857772 passed every step. Step 7 (corpus and oracles) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43791214098 passed every step. Step 8 (security, fuzzing and AOT) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43798825435 passed every step. Step 9 (benchmarks) was built that day, and approved, with every recommendation, and committed that day, and pushed: CI's run 43809890132 passed every step. Step 10 (the guide) was built that day, and approved, with every recommendation, and committed 2026-11-16, and pushed: CI's run 43817437001 passed every step. Step 11 ("As built") was written, approved and committed that day, with the gate re-checked, and pushed: CI's run 43872332044 passed every step. Phase 7 is complete, its gate met; see "As built" under Phase 7, which opens with a summary. Phase 8's detailed design was written that day, after checks of Excel, LibreOffice and GridCraft, and approved that day, with every recommendation accepted.
 
 CsvHelper.Excel is a first-party package for reading and writing `.xlsx` with CsvHelper's mapping: fast, typed, streaming tabular I/O. It is not a workbook object model. Charts, pivot tables and editing existing workbooks stay ClosedXML/EPPlus territory.
 
@@ -64,7 +64,7 @@ using (var sheet = output.AddSheet("Raw", new ExcelSheetOptions { AutoFilter = t
   - `ErrorCells`: Text (default; the error's text, and typed targets fail), Null (an empty cell) or Error (every read of the cell fails, and `GetRecords` routes it to `OnRecordError`; a header cell still names its column, since step 8 of Phase 2).
   - `SignificantDigits`: significant digits for `decimal` and integer targets (default 15; null reads the stored text exactly).
   - `Formulas`: CachedValue (default) or FormulaText (`=` and the formula, with shared formulas moved to each cell).
-  - `Text`: Raw (default) or Formatted (Phase 8).
+  - `Text`: an `ExcelText`, `Raw` (default) or `Formatted` (Phase 8): the text Excel shows, as in a column wide enough, for every read of text, while typed reads keep the values.
   - `MaxUncompressedSize`, `MaxPartSize`: zip-bomb limits. Phase 1's "Public API" says what each bounds.
   - `Csv`: a composed `CsvReaderOptions` for `FormatProvider`, header matching, `OnRecordError`, null values, trimming and the rest. CSV-only settings (separator, quoting, comments) are ignored.
 - **`ExcelWorkbookWriter`**: `ToFile(path)` and `Create(stream)` (Phase 4's name for the sketch's `ToStream`). `WriteSheet(name, records)` writes a whole sheet. `AddSheet(name)` and `AddSheet<T>(name)` return a `CsvWriter` for manual or mixed writing, the second with `T`'s formats. From Phase 5 each takes an optional `ExcelSheetOptions`, and a sheet's `CsvWriter` takes `MergeCells("A1:C3")`. Phase 4's and Phase 5's "Public API" have the exact signatures.
@@ -7179,7 +7179,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 7: import templates (L)
 
-Status: the detailed design below was written on 2026-11-14, after the Excel, LibreOffice and GridCraft checks under "Checked on 2026-11-14", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. The design makes the phase L rather than M: an import that names every cell at fault needs a method that core's generator writes (decision 8), and the corpus gains templates that Excel fills in. Step 1 (core's `FindFailingMembers`) was built that day, its gate met: the generated mappers' `Read` compiles to the same code on both sides; and approved, with every recommendation, and committed 2026-11-15, and pushed, CI's run 43684454479 passing every step. Step 2 (settings) was built that day: the options and attributes, and their checks; and approved, with every recommendation, and committed that day. Step 3 (validations and lists) was built that day: the columns' validations from their members' types, their lists and prompts, the very hidden lists sheet and its names, and the types' formats as the columns' default styles, with the dates' widths; and approved, with every recommendation, and committed that day, and pushed with step 2, CI's run 43731595637 passing every step. Step 4 (protection) was built that day: the unlocked styles, the protection's element and the password's hash; and approved, with every recommendation, and committed that day, and pushed, CI's run 43744189066 passing every step. Step 5 (`ExcelTemplate`) was built that day: templates from paths and streams, validated and protected whatever look they take, their short columns Excel's default width; and approved, with every recommendation, and committed that day, and pushed, CI's run 43764538929 passing every step. Step 6 (the import) was built that day: `ExcelReader.Import<T>` from paths, streams and readers, every cell at fault by its place, column, member and text, and reading stopped at `maxErrors`; and approved, with every recommendation, and committed that day, and pushed, CI's run 43781857772 passing every step. Step 7 (corpus and oracles) was built that day: the written set's templates, Excel's answers about their validations, locks and protection, and the copies Excel filled in, imported as the set says, but where listed; and approved, with every recommendation, and committed that day, and pushed, CI's run 43791214098 passing every step. Step 8 (security, fuzzing and AOT) was built that day: lists and prompts of random text, which Excel opens as they are; the import over the reader fuzzers' workbooks and a million bad cells; prompts' and titles' line breaks as references, and their lengths as written; and the NativeAOT app's template and import; and approved, with every recommendation, and committed that day, and pushed, CI's run 43798825435 passing every step. Step 9 (benchmarks) was built that day: the writer's defaults within 1% of Phase 6's end; `Validate` costing nothing measurable and `Protect` 8–11%, the bytes of each cell's unlocked style; the import as fast as `GetRecords`, and over cells at fault as fast as `GetRecords` skipping their records, with 15% less allocated; and a template in 22 μs, or 24 ms with a password; and approved, with every recommendation, and committed that day, and pushed, CI's run 43809890132 passing every step. Step 10 (the guide) was built that day: templates, validations, lists, prompts, protection and the import in the Excel guide, its samples compiled and run, and the site built strictly; and approved, with every recommendation, and committed 2026-11-16, and pushed, CI's run 43817437001 passing every step. Step 11 ("As built") was written, approved and committed that day, with every gate item re-checked and met. Phase 7 is complete; see the summary that opens "As built".
+Status: the detailed design below was written on 2026-11-14, after the Excel, LibreOffice and GridCraft checks under "Checked on 2026-11-14", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. The design makes the phase L rather than M: an import that names every cell at fault needs a method that core's generator writes (decision 8), and the corpus gains templates that Excel fills in. Step 1 (core's `FindFailingMembers`) was built that day, its gate met: the generated mappers' `Read` compiles to the same code on both sides; and approved, with every recommendation, and committed 2026-11-15, and pushed, CI's run 43684454479 passing every step. Step 2 (settings) was built that day: the options and attributes, and their checks; and approved, with every recommendation, and committed that day. Step 3 (validations and lists) was built that day: the columns' validations from their members' types, their lists and prompts, the very hidden lists sheet and its names, and the types' formats as the columns' default styles, with the dates' widths; and approved, with every recommendation, and committed that day, and pushed with step 2, CI's run 43731595637 passing every step. Step 4 (protection) was built that day: the unlocked styles, the protection's element and the password's hash; and approved, with every recommendation, and committed that day, and pushed, CI's run 43744189066 passing every step. Step 5 (`ExcelTemplate`) was built that day: templates from paths and streams, validated and protected whatever look they take, their short columns Excel's default width; and approved, with every recommendation, and committed that day, and pushed, CI's run 43764538929 passing every step. Step 6 (the import) was built that day: `ExcelReader.Import<T>` from paths, streams and readers, every cell at fault by its place, column, member and text, and reading stopped at `maxErrors`; and approved, with every recommendation, and committed that day, and pushed, CI's run 43781857772 passing every step. Step 7 (corpus and oracles) was built that day: the written set's templates, Excel's answers about their validations, locks and protection, and the copies Excel filled in, imported as the set says, but where listed; and approved, with every recommendation, and committed that day, and pushed, CI's run 43791214098 passing every step. Step 8 (security, fuzzing and AOT) was built that day: lists and prompts of random text, which Excel opens as they are; the import over the reader fuzzers' workbooks and a million bad cells; prompts' and titles' line breaks as references, and their lengths as written; and the NativeAOT app's template and import; and approved, with every recommendation, and committed that day, and pushed, CI's run 43798825435 passing every step. Step 9 (benchmarks) was built that day: the writer's defaults within 1% of Phase 6's end; `Validate` costing nothing measurable and `Protect` 8–11%, the bytes of each cell's unlocked style; the import as fast as `GetRecords`, and over cells at fault as fast as `GetRecords` skipping their records, with 15% less allocated; and a template in 22 μs, or 24 ms with a password; and approved, with every recommendation, and committed that day, and pushed, CI's run 43809890132 passing every step. Step 10 (the guide) was built that day: templates, validations, lists, prompts, protection and the import in the Excel guide, its samples compiled and run, and the site built strictly; and approved, with every recommendation, and committed 2026-11-16, and pushed, CI's run 43817437001 passing every step. Step 11 ("As built") was written, approved and committed that day, with every gate item re-checked and met, and pushed, CI's run 43872332044 passing every step. Phase 7 is complete; see the summary that opens "As built".
 
 Scope, as planned:
 
@@ -8048,6 +8048,10 @@ Filled in step by step; the code is the reference.
 
 ### Phase 8: displayed text (L)
 
+Status: the detailed design below was written on 2026-11-16, after the Excel, LibreOffice and GridCraft checks under "Checked on 2026-11-16", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It keeps the phase L: the renderer is most of it, and core gains a style per field (decision 2), so that only text follows a cell's format and typed reads keep its value.
+
+Scope, as planned:
+
 - **Number-format renderer:**
   - Format sections and conditions (`[>100]`).
   - Digit placeholders `0`, `#`, `?`; thousands separators and scaling; percent, exponent, fractions.
@@ -8060,6 +8064,309 @@ Filled in step by step; the code is the reference.
   - Formatted output in `.xlsx` → CSV conversion, which comes through core's `GetTextUtf8` (Phase 6) once it follows `Text = Formatted`.
 - **Test oracle:** where Excel is installed, COM automation exports `Range.Text` for a corpus of values and formats. This feature is where scope creeps most, and real Excel output keeps it honest.
 - **From Phase 5:** auto-fit's `NumberFormatWidth` estimates a formatted number's width, erring wide, from the digits, grouping, decimals, percent, exponent and literals of the section for its sign. That is part of what the renderer does exactly, and the renderer replaces it.
+
+#### Public API
+
+```csharp
+public enum ExcelText
+{
+	Raw,		// Phase 2's text: numbers as stored, dates in ISO 8601, durations as [h]:mm:ss, TRUE and FALSE
+	Formatted,	// the text Excel shows in the cell's number format, as in a column wide enough
+}
+
+public sealed record ExcelReaderOptions
+{
+	// Phases 1 to 7's, and:
+	public ExcelText Text { get; init; } = ExcelText.Raw;
+}
+```
+
+Nothing else is public (decisions 14 and 15). `ExcelToCsvOptions.Excel` is an `ExcelReaderOptions`, so a conversion with `Text = Formatted` writes the shown text; `ExcelImportError.Value` follows it too. A value other than `Raw` and `Formatted` throws `ArgumentException` when the reader opens, as `ErrorCells` does: "ExcelReaderOptions.Text must be Raw or Formatted."
+
+**What `Formatted` changes** (decision 1): a cell's text, wherever the reader gives text, and nothing else.
+
+- `GetString`, `GetField(int)`, `GetField<string>`, `GetChars`, mappers' string members, dynamic records' text and `CsvDataReader.GetString`.
+- Header names, and `ExcelHeaderRow.Find` matching them (decision 11).
+- `ExcelConvert.ToCsv`'s fields, written as text (decision 12), and `ExcelImportError.Value`.
+- Typed reads keep the value: a `decimal` member of a cell shown `$1,234.50` reads 1234.5, and a `DateTime` member of one shown `Jan-24` the serial's date and time, as under `Raw`. `SignificantDigits`, `ErrorCells` and `Formulas` work as before.
+
+**What each cell shows:**
+
+- **A number, date, time or duration:** its value in the cell's number format: the style's custom code, else the built-in format of its id.
+- **A boolean:** `TRUE` or `FALSE`, through the format's text section when it has one (`"t:"@` shows `t:TRUE`; `;;;` nothing).
+- **Text:** through the text section when the format has one (`"Note: "@` shows `Note: abc`, `@@` `abcabc`, `;;;` nothing); else as stored.
+- **An error:** as `ErrorCells` says. Excel shows errors whatever the format, `;;;` included.
+- **An empty cell, or empty text:** empty (decision 13).
+- **A formula under `FormulaText`:** the formula, unformatted.
+- **A value Excel can't show in its format** (it fills the cell with `#` at any width), **or a code the renderer can't read:** `Raw`'s text (decision 5). Excel can't show a negative date or time in the 1900 date system, a date past 9999-12-31, elapsed time with other tokens past the last date or negative, a value no condition takes, or a fraction too large (below).
+
+**The rules,** as Excel showed them (see "Checked on 2026-11-16"):
+
+- **Width:** as in a column wide enough, as Excel's own CSV export writes cells (decision 3). General shows at most 11 characters besides a minus sign.
+- **Rounding:** a number is taken to 15 significant digits, then rounded half away from zero to the places shown. 2.675 shows `2.68` in `0.00` (its double is 2.67499…), 0.125 `0.13`, and 123456789012345678 shows `123456789012346000` in `0`.
+- **Sections:** positive, negative, zero and text, as MS-OI29500 has them. With one number section, a negative number shows a minus sign first, even before literals (`"x"` shows `-x`; `"Total: "General` shows `-Total: 0.5`), unless it rounds to zero (`-0.004` shows `0.00`); a code without digits doesn't round. In the second section, a negative number shows none (`0;(0)` shows `(1)`). A stored `-0` is zero. An empty section shows nothing. A code of one section with `@` shows numbers in General.
+- **Conditions** (`[>100]0;0.00`): the first section whose condition takes the value. A section after one condition takes the rest, and a third after two conditions the rest after both. With two conditions and no third section, a value neither takes can't be shown. A one-section code with a condition is followed by General (`[>5]0` is `[>5]0;General`). A negative number shows a minus sign unless:
+  - its section's own condition takes only negative numbers (`[<0]`, `[<-100]`, `[<=-1]`, `[=-5]`); or
+  - its section follows one condition that is `<`, `<=` or `<>` anything, or `>` or `>=` a number not above 0.
+  - So `[<-100]0;0` shows −50 as `50`, `[>100]0;0.00` as `-50.00`, and `[=0]"zero";General` as `-50`. The grid of six operators and five operands is in "Checked".
+- **Digit placeholders:** `0` a digit or 0, `#` a digit or nothing, `?` a digit or a space (U+0020). Integer placeholders take the digits from the right, the leftmost the rest; fraction placeholders the rounded digits. `#.##` shows 0 as `.`.
+- **Grouping and scaling:** a `,` between integer placeholders groups by three, wherever it stands (`0,0` is `#,#00`); each `,` right after the last placeholder divides by 1,000 (`0.0,,"M"`). `?,???` groups spaces too.
+- **Percent:** each `%`, wherever it stands, multiplies by 100 (`%0` shows `%123457`, `0%%` multiplies by 10,000).
+- **Exponents:** `E+` and `E-` (in upper case; MS-OI29500) after placeholders, the exponent a multiple of the integer placeholders (`##0.0E+0` shows `123.5E+15`), with at least as many digits as its zeros; `E-` shows no `+`.
+- **Fractions** (decision 10): `/` between placeholders, the denominator a number (`# ?/8`, numerator rounded half away from zero) or placeholders. With placeholders, the fraction is the last continued-fraction convergent of the fractional part whose denominator has their digits, computed in doubles: 0.1 shows `0` in `# ?/?`, 0.3 `2/7`, and π `3 1/7`; in `# ??/??` π is still 1/7 (`3  1/7 `, padded) and 0.37 is 10/27. A fraction rounding to a whole number adds to it. A zero fraction after a whole number shows as its placeholders show zero: `?` a space, `#` nothing, `0` `0/1`; so `# ?/8` shows 0.01 as `0` and four spaces. Without a whole number the fraction is improper (`?/?` shows 12345.678 as `37037/3`). It can't be shown when a numerator passes 32,767 over a fixed denominator, or, without a whole number, somewhere between 2,000,000,001 and 4,294,967,295 (likely 2,147,483,647; step 3 finds it).
+- **Literals:** quoted text, `\x`, and `$ - + / ( ) : ! ^ & ' ~ { } < > =` and the space as themselves; `_x` one space (U+0020), whatever `x` is; `*x` nothing (decision 4); colors (`[Red]`, `[Color10]`) nothing.
+- **General:** decimals while they show as many significant digits as scientific notation would, else scientific (`0.00001`, `9.87654E-05`, `1.23457E+11`); at most 11 characters besides the sign; 5E-324 shows `0`. These are `NumberFormatWidth.General`'s rules, which Phase 5 checked against Excel.
+- **Dates and times:**
+  - `y` and `yy` are two digits of the year, three or more four; `e` and `ee` four (MS-OI29500); `b`, `bb` two and `bbbb` four of the Buddhist year (decision 18); `g` nothing (decision 8).
+  - `m` and `mm` are the month, or the minute right after an hour or before a second; `mmm`, `mmmm` and `mmmmm` the month's name, abbreviated, whole and its first letter.
+  - `d` and `dd` the day, `ddd`/`aaa` and `dddd`/`aaaa` the weekday's name.
+  - `h`, `hh`, `s`, `ss`, and `.0` to `.000` after seconds.
+  - `AM/PM` in any case shows the culture's designators (`am/pm` shows `AM`), and `A/P` and `a/p` their letters as written. `h:mm AM` has no designator: `A` and a month.
+  - A value is rounded to the precision it shows before its parts are taken: 45306.99999999 is `2024-01-16` in `yyyy-mm-dd`, and 0.999999 `12:00 AM` in `h:mm AM/PM` but `11:59:59.9 PM` with tenths.
+  - In the 1900 date system, serial 0 is `1900-01-00`, 60 is `1900-02-29`, and the days before 1900-03-01 fall a weekday early (serial 1 is a Sunday), as Phase 2 reads them.
+  - In the 1904 system a negative serial shows a minus sign and its absolute value's date and time: −1 is `-1904-01-02`, −0.5 `-12:00:00` in `h:mm:ss` (decision 19).
+- **Elapsed time:** `[h]`, `[m]` and `[s]`, of any number of letters, zero-padded to them (`[hhh]:mm` shows `006:00`), are the whole hours, minutes or seconds. Alone among literals they show any serial, a negative one with a minus sign (`[h]` shows −0.5 as `-12`, and 2958466 as `71003184`). Beside other tokens they stop at the last date and can't show a negative. After a date part they are the time of day in their unit (Phase 5's finding).
+- **Locale codes** (decisions 7 to 9): `[$-407]`'s language names the months and days and gives AM and PM (`Januar`, `Mo`; Japanese `1月`, `月曜日`, `午前`). `[$€-407]` shows `€`; `[$USD]` shows `USD`. The language never changes separators or the date pattern: `[$-407]#,##0.00` shows `1,234,567.89` and `[$-407]dd/mm/yyyy` `15/01/2024` in en-US.
+  - Months are named in the nominative (`15 Январь 2024` for Russian).
+  - The calendar and numeral system in a code's upper bytes (`[$-1060409]` Hijri, `[$-2010401]` Arabic-Indic digits, `[$-D07041E]` Thai digits and the Buddhist year), and `[DBNum1]` to `[DBNum3]`, aren't rendered: Gregorian dates and Western digits (decision 8).
+  - `[$-F800]` is the culture's long date and `[$-F400]` its long time, whatever else the code holds: `[$-F800]yyyy` and `[$-F800]0.00` show `Saturday, January 6, 2024`. Phase 2's classification of the code, which reads `[$-F800]0.00` as a number, stays for typed reads. `[$-x-sysdate]` and `[$-x-systime]` are the same codes; `[$-en-US]` is `[$-409]`.
+- **Built-in ids** (decision 7), which a style names without defining:
+  - 0 to 22 and 37 to 49 are Excel en-US's (`m/d/yyyy`, `$#,##0_);($#,##0)`, `mm:ss.0` for 47).
+  - 23 to 26, and 82 to 163, are General.
+  - 27 to 36 and 50 to 58 are en-US's too: dates `m/d/yyyy`, times `h:mm:ss`. 59 to 62 are 1 to 4, 63 to 66 are 5 to 8, 67 and 68 are 9 and 10, 69 and 70 are 12 and 13, 71 and 72 are 14, 73 to 75 are 15 to 17, 76 to 78 are 20 to 22, and 79 to 81 are 45 to 47.
+  - Ids 14 and 22 take the culture's short date (22 with `H:mm` after it), and 5 to 8, 41 to 44 and 63 to 66 its currency: its symbol, where the symbol stands, and its negative form.
+
+**The culture** (decisions 6 and 7): `Csv.FormatProvider`.
+
+- The invariant culture, the default, is Excel en-US exactly: its built-in table, `.` and `,`, English names, `AM` and `PM`, `$`, and `dddd, mmmm d, yyyy` and `h:mm:ss AM/PM` for the system formats. .NET's invariant culture would give `MM/dd/yyyy`, `dddd, dd MMMM yyyy`, 24-hour times and `¤`.
+- Another culture gives:
+  - every number format's decimal and group separators (`#,##0.00` shows `1.234,57` in de-DE, as LibreOffice and Excel's own setting do);
+  - month and day names and AM and PM where no locale code names a language (an empty designator, as NLS has for de-DE, is `AM` or `PM`);
+  - the short date, long date and long time of ids 14 and 22 and the system formats, and the currency of the currency ids.
+- `/` and `:` in a code show as written (decision 7).
+
+#### Checked on 2026-11-16
+
+Excel 365 (16.0 build 20527) through COM, on this machine's en-US settings (Excel's `International` and separators are en-US's). LibreOffice 26.8.2.2 in en-US, de-DE, fr-FR and ja-JP, each through a profile whose locale is set. GridCraft 0.18.0. The probes, scripts and answers are in `Csv\_bench\results\phase8\design`:
+
+- `make_probes.py` writes 16 workbooks (`probes`), a sheet each, since a workbook holds 200 to 250 custom formats (MS-OI29500 says 206). They have 5,204 cells:
+  - 337 codes, of which Excel refuses five (`check_codes.ps1`): `0.00e+00`, `0:00`, `0.00 General`, `[Color0]` and `[Color57]`;
+  - the built-in ids 0 to 81, 100 and 163, which the styles don't define;
+  - each over the numbers, text, booleans and errors its question needs.
+- `make_probes2.py` writes 820 more (`probes2`): a grid of conditions, fractions' limits and the system formats.
+- `excel_probe.ps1` reads each cell's `Range.Text` (column C 100 characters wide; 40 and 12 for the fills; Excel's default width for `narrow`), `Value2`, `NumberFormat`, `NumberFormatLocal` and, for colors, `DisplayFormat.Font.Color`. It saves each sheet as Excel's CSV UTF-8 (`excel.jsonl`, `excel2.jsonl`, `excel-csv`, `excel-csv2`). The scripts started their own Excel and quit it.
+- `lo_probe.py` converts each workbook to CSV, its cells as shown, in the four locales (`lo.jsonl`, `lo2.jsonl`). `gridcraft_probe.py` asks GridCraft's `cell.get` (`gridcraft.jsonl`, `gridcraft2.jsonl`).
+- `report.py` joins the answers (`report.txt`, `table.tsv`, and the follow-ups' `report2.txt`, `table2.tsv`). `by_code.py` and `builtins.py` print them a code to a line, and `counts.py` counts each product's differences (`counts.txt`).
+- `cultures\cultures.cs` prints .NET 10's culture data for 16 cultures, with ICU and with NLS (`icu.txt`, `nls.txt`).
+
+What Excel showed:
+
+- **General:** at most 11 characters besides the minus sign: `0.333333333`, `-0.666666667`, `12345678901`, `1.23457E+11`, `99999999999.5` as `1E+11`. Decimals while they keep as many significant digits as scientific notation (`0.00001`, `0.000012345`, `0.0000001`), else scientific (`9.87654E-05`, `1.23457E-10`, `1E+15`). `0.30000000000000004` shows `0.3`, 5E-324 `0`, 1.7976931348623157E+308 `1.7977E+308`. `"Total: "General` shows −0.5 as `-Total: 0.5`.
+- **Rounding:** 15 significant digits, then half away from zero. 2.675, 1.005, 0.285 and 8.345 (each just below its half as a double) show `2.68`, `1.01`, `0.29` and `8.35`; 0.5, 1.5 and 2.5 show `1`, `2` and `3`, and −0.5 `-1`; `0%` shows 0.005 as `1%`; `0.0E+00` shows 9.95 as `1.0E+01`.
+- **Negative zero:** −0.004 shows `0.00` and −0.005 `-0.01`; `0.0,,"M"` shows −1234.5678 as `0.0M`. In two sections, `0.00;(0.00)` shows −0.001 as `(0.00)`. A stored `-0` takes the zero section (`zero` in `0;-0;"zero"`) and `[<0]`'s second section. −1E-20 takes the negative section.
+- **Fractions:** the convergents, not the closest fraction. 0.1 shows `0` and four spaces in `# ?/?` (LibreOffice and GridCraft `1/9`). 0.3 shows `2/7`, which is a convergent of 0.3's double in doubles. In `# ??/??`, π shows 1/7 (the others 14/99) and 0.37 10/27 (27/73). 0.999 shows `1` in `# ?/?` and `998/999` in `# ???/???`. A fixed denominator rounds half away from zero (0.25 is `1/2` in `# ?/2`; LibreOffice `0`). Too large to show: `0/4` at 8192 (32,768/4) but not 8191.75; `?/16` at 2048; `?/?` at 2147483647.5 but not 1000000000.5. With a whole number, any size shows.
+- **Elapsed time:** `[h]:mm:ss` shows 1000.5 as `24012:00:00`, 0.999999999 as `24:00:00` and half a second as `0:00:01`. A negative value, or one past 2958465.99999, is `#`. `[h]`, `[m]` and `[s]` alone show −0.5 as `-12`, `-720` and `-43200`, and 1E+10 as `240000000000`. `[h]:mm;-[h]:mm` can't show −0.5 either (GridCraft and LibreOffice show `-12:00`). `h:mm:ss` rounds 0.041666665666 up to `1:00:00`, where LibreOffice truncates to `0:59:59`.
+- **Dates:**
+  - Serial 0 is `1900-01-00` (a Saturday), 60 `1900-02-29`, 61 `1900-03-01` (a Thursday). LibreOffice reads serials below 61 a day early (`1899-12-30`).
+  - 2958465.99999 is `9999-12-31 23:59:59`; 2958465.999999999 rounds past the last date and is `#`, and so is −1.
+  - `yyy` is `yyyy`, `y` `yy`, `b` `bb`; `e` is the year, `bbbb` 2567 for 2024, `g` and `ggg` nothing, `aaa` and `aaaa` the day's name.
+- **1904 date system:** −1 shows `-1904-01-02`, −1462 `-1908-01-02`, −0.5 `-12:00:00` in `h:mm:ss`, `-24:00:00` in `[h]:mm:ss` and `-Saturday` in `dddd`; −1E-09 shows `-1904-01-01`. LibreOffice shows real dates before 1904 (`1903-12-31`); GridCraft `#`.
+- **AM/PM:** `AM/PM`, `am/pm` and `Am/Pm` show `AM` and `PM`; `A/P` shows `A` and `P`, `a/p` `a` and `p`. 0 is `12:00 AM` and 0.5 `12:00 PM`. With `[$-411]`, `[$-804]` and `[$-412]` they are `午前`, `上午` and `오전`; with `[$-407]` and `[$-40C]` `AM` and `PM`. LibreOffice's de-DE says `vorm.` and `nachm.`.
+- **Locale codes:**
+  - `[$-407]` names `Januar`, `Montag`, `Jan`, `Mo`; `[$-40C]` `janvier`, `janv.`, `lun.`; `[$-410]` `gennaio`; `[$-411]` `1月`, `月曜日`, `aaa` `月`, and `ggge"年"` `令和6年`; `[$-412]` `월요일`, `1월`; `[$-804]` `星期一`, `一月`; `[$-419]` `Январь`, also after a day; `[$-415]` `styczeń`; `[$-405]` `leden`; `[$-41E]` `มกราคม`.
+  - The language changes no separator: `[$-407]#,##0.00` is `1,234,567.89`, `[$-407]dd/mm/yyyy` `15/01/2024`.
+  - `[$€-407]`, `[$£-809]`, `[$CHF-807]` and `[$USD]` show their text. `[$₹-4009] #,##,##0.00` reads as `###,##0.00`: no Indian grouping.
+  - `[$-1060409]` shows the Hijri date (`5/7/1445`), `[$-2010401]` Arabic-Indic digits, `[$-D07041E]` Thai digits and the Buddhist year (`๑๕ มกราคม ๒๕๖๗`). `[DBNum1][$-804]0` shows digits as numerals (`一二三四五六八`) and `[DBNum1][$-804]General` with units (`一千二百三十四.五六七八`); `[DBNum1]General` alone shows Western digits.
+  - `[$-F800]` shows the long date and `[$-F400]` the long time whatever else is in the code: `[$-F800]yyyy`, `[$-F800]General` and `[$-F800]0.00` show `Saturday, January 6, 2024`, its `dd` not padded; `[$-F400]yyyy-mm-dd` shows `1:01:01 AM`. GridCraft uses the code's own tokens; LibreOffice its locale's long date (`Samstag, 6. Januar 2024`).
+- **Built-in ids:** as the rules above list them. Excel reports 23 to 26 and 100 and 163 as `General`, 27 to 36 and 50 to 58 as `m/d/yyyy` or `h:mm:ss`, 59 to 81 as en-US's numbers, dates and times, and 47 as `mm:ss.0`. GridCraft shows 27 to 36 and 50 to 81 as General. LibreOffice's de-DE shows 14 as `12.08.1896`, 5 as `-1.235 €` and 3 as `-1.235`; its ja-JP shows East Asian formats for 27 to 36 (`令和6年01月15日`).
+- **`_` and `*`:** `_x` is one space, whatever `x` is (`_W`, `_年`); LibreOffice gives `W`'s width in spaces. `Range.Text` repeats a `*` fill to the column's width: `* #,##0` shows 1234 as 76 spaces and `1,234` at width 40, and `*-0` as 55 dashes and `1234`. Excel's CSV export drops the fill: `1,234`, `1234`, and ` 1,234 ` for the accounting format; GridCraft writes the fill once.
+- **Sections and conditions:**
+  - `;0` reads as `;0;`. `0;;` shows negatives and zero as nothing, `;;;` everything but errors. `0;@` takes numbers in its first section, with a minus sign. `General;General;General;@` shows −50 as `50`.
+  - The conditions' minus signs are as the rules above say. The grid: `[op c]0;0` for each of `<`, `<=`, `>`, `>=`, `=` and `<>` with c of −10, −1, 0, 1 and 10, the one-section forms, and twelve three-section codes, over −20, −5, −1, −0.5, 0, 0.5, 5 and 20. The rule fits all 341 negative values of the 85 conditional codes of both rounds (`sign_rule.py`). GridCraft drops the conditions' minus signs; LibreOffice drops them in a second section and before literals.
+- **Text, booleans and errors:** text and booleans take a text section (`"a"@"b"` shows `aTRUEb`, `@@` `TRUETRUE`), and only a text section; empty text through `"a"@"b"` shows `ab`. Errors show as they are in every code, `;;;` included. Number codes show text and booleans as they are (`TRUE` in `0.00`; LibreOffice shows `1.00`).
+- **Colors:** text without them; `DisplayFormat.Font.Color` shows the color only on numbers in the colored section.
+- **Width:** at Excel's default width, `Range.Text` shortens General (`1234567.891` is `1234568`, `123456789012` `1.23E+11`) and shows other codes as `########`. Excel's CSV export writes the wide text whatever the width.
+- **Excel's CSV export** is `Range.Text` at a wide column in all but 215 of the 6,024 cells: the dropped fills (128), the narrow column (9), Buddhist years written as Gregorian ones (66), and Hijri and Thai written as Gregorian and English (12). Where Excel can't show a value, the export writes 255 `#` (`Range.Text` 99 at width 100, GridCraft 8).
+- **LibreOffice** differs from `Range.Text` in 2,106 of the 6,024 cells. Its General shows up to 15 digits, fractions take the closest, serials below 61 fall a day early, times are truncated, and its own locale data names AM and PM and Russian months (genitive `января`). In de-DE, fr-FR and ja-JP it localizes separators, ids 14 to 22 and the currency ids as .NET's data has them, and shows a custom code's `/` as the locale's date separator (`m/d/yyyy` as `1.15.2024` in de-DE).
+- **GridCraft** differs in 1,140 cells, and in how many `#` in 263 more. It differs in:
+  - General: scientific notation for small numbers; a negative's minus counted in its 11 characters;
+  - the closest fractions, and the conditions' minus signs;
+  - ids 27 to 36 and 50 to 81 as General, and a fill written once;
+  - locale codes' names and AM/PM in English;
+  - no eras, Buddhist years, `aaa`, `[DBNum]`, numeral systems or system formats;
+  - 1904's negatives as `#`.
+- **.NET's culture data** (`cultures.cs`, .NET 10.0.13):
+  - With ICU, as .NET 5 and later use it on Windows, every probed locale's names and AM and PM match Excel's, Russian's months excepted: ICU writes `январь`, Excel `Январь`. Its de-DE and fr-FR designators are `AM` and `PM`, as Excel shows them.
+  - NLS (.NET Framework, or .NET with `UseNls`) writes `Январь`. But it has empty designators for de-DE, fr-FR and sv-SE, and Japanese and Korean month abbreviations of digits alone (`1`).
+  - The invariant culture's short date is `MM/dd/yyyy`, its long date `dddd, dd MMMM yyyy`, its long time `HH:mm:ss` and its currency `¤`: not Excel en-US's.
+- **Documentation:**
+  - MS-OI29500 on numFmts: three sections are positive, negative and zero; `&` shows; `%` applies to any number; `/` is a fraction's only between placeholders; only upper-case `E+` and `E-` are exponents; `e` and `ee` are `yyyy` outside Japanese and Chinese (Taiwan); Office loads at most 206 custom formats.
+  - ECMA-376's table of built-in ids leaves the currency ids to the locale, and Excel's Format Cells marks its short date and system formats as following Windows' regional settings.
+  - A Microsoft Q&A answer has a custom `mm/dd/yyyy` forcing `/` where Windows' short date uses `-`.
+  - Only en-US Excel was checked: changing Windows' regional settings would change the user's own Excel.
+
+#### Internal design
+
+**New files**, in `Internal/Display/`:
+
+- `FormatCode.cs`: a code compiled once. It holds its sections, each with its condition and color, and its tokens: digits, literals, date and time parts, elapsed time, AM/PM, text. It also holds each section's placeholder counts, scaling, percent, exponent and fraction, and its locale code (language, currency text, system format). It is built from `NumberFormatWidth`'s parser, which goes. A code it can't read compiles to "can't show" (decision 5).
+- `NumberText.cs`: a number in a section, into UTF-8: General, placeholders, grouping, scaling, percent, exponent, fractions, literals, `_`, `*`, the sections' and conditions' choice and signs, and the text section.
+- `DateText.cs`: dates, times, elapsed time and AM/PM, rounded to their shown precision, in both date systems, with the culture's or the locale code's names.
+- `Digits.cs`: a double's 15 significant digits and their rounding to the places shown, with no allocation on any target (net47 and netstandard2.0 have no `double.TryFormat`).
+- `DisplayCulture.cs`: what a provider gives: separators, names, designators, the short date, long date and long time as codes, and the currency. The invariant culture is Excel en-US. A locale code's language comes through `CultureInfo.GetCultureInfo(int)`, cached, and is English where the runtime has no data (invariant globalization, as the NativeAOT app runs).
+- `BuiltInFormats.cs`: ids 0 to 163 as Excel en-US shows them, and the ids that follow the culture.
+- `CellFormatter.cs`: core's `CsvCellFormatter` for a workbook and a culture. It caches each style's compiled code, and renders a field's shown text from its stored text, kind and style.
+- Public: `ExcelText.cs`.
+
+**Changed:**
+
+- `StyleTable`: each style's code, custom or built-in, for `CellFormatter`.
+- `SheetScanner`: under `Formatted`, a field's style goes with its kind when the style can change its text: every number, and a boolean or text in a code with a text section. `HeaderSearch`'s held row and `MergedFill`'s copies keep it.
+- `ExcelReaderOptions` (`Text` and its check), and `ExcelWorkbook` and `ExcelReader`, which give the source's cell options the formatter.
+- `SheetToCsv`: under `Formatted`, a typed cell's text is written as text (decision 12).
+- Writing: `AutoFit`, `SheetSink`, `ColumnStyle` and `DateFormat` measure the renderer's text (decision 16). `NumberFormatWidth.cs` goes; its General moves to `NumberText`. Codes the renderer leaves out (`[DBNum]`, eras) keep Phase 5's wide estimate.
+
+**The paths:**
+
+- `Raw` doesn't change: no style is kept, no field is flagged that wasn't, and core's text paths check one reference more.
+- **`Formatted`:**
+  - The scanner writes each field's style, and core flags those fields for `GetString`'s slow path. Core's text paths ask the formatter, which renders into a stack buffer, or a pooled one for long text. Typed reads don't look at the style.
+  - Rendering happens when text is asked for, and allocates only the string asked for: `GetTextUtf8`, and so the conversion, allocates nothing.
+
+#### Core changes
+
+1. **`CsvCellFormatter`,** internal and abstract: `bool TryFormat(ReadOnlySpan<byte> value, CsvCellKind kind, int style, Span<byte> destination, out int length)`, and `CsvCellOptions.Formatter`, null by default.
+2. **A style per field:**
+   - `RecordBatch.AddField(utf8, kind, style)` and `CommitField(length, kind, style)` keep the style in an `int[]` beside the kinds, allocated when a source first gives one, and flag the field. The array is declared last, as Phase 0's field layout says.
+   - The parallel path's batches carry the styles, and a dynamic record keeps each field's style with its kind, in the same `int`.
+3. **The text paths:** `CellString`, `CellChars`, `CellHeader`, `CellText` (`GetTextUtf8`) and `CsvDynamicRecord`'s text ask the formatter for a field with a style, before `CsvCells`' own text.
+4. CSV and `Raw` read no style, since no source writes one.
+
+**The gate:** Phase 0's, for what the change can reach:
+
+- core's and the generator's suites pass on every target;
+- `git diff` over `src/CsvHelper` shows the formatter, the batches' styles and the text paths;
+- `PackageAssetsRead`, `FormattedDatesRead` and NCsvPerf stay within 1%, and CsvHelper.Excel's read defaults too.
+
+**Considered and avoided:**
+
+- The shown text written into the buffer in place of the value: typed members would parse `$1,234.50` (decision 1's alternative).
+- The style in the kind's byte: it has room for 7 bits, and a workbook can have 64,000 styles.
+- The source keeping styles by field position: the parallel path holds several batches at once, and dynamic records outlive them.
+
+#### Testing
+
+- **Unit:**
+  - `FormatCodeTests`: sections, conditions, tokens, locale codes, built-in ids, and codes it can't read.
+  - `NumberTextTests` and `DateTextTests`: Excel's answers inline, from this design's probes and Phase 5's `NumberFormatWidthTests`, which they replace.
+  - `DigitsTests`: doubles at the 15th digit's halves, alike on net48 and net10.
+  - `DisplayCultureTests`: invariant as Excel en-US; de-DE, fr-FR, ja-JP and ru-RU on ICU and NLS; the fallback without culture data.
+  - `BuiltInFormatsTests`.
+- **The display set:**
+  - The corpus tool's new `display` command writes this design's probe workbooks into `Files/display`, a sheet each. It asks Excel for each cell's `Range.Text` at a wide column and its CSV export, committed as `Files/excel-display.json`.
+  - `DisplayAnswersTests` renders every cell. Where a `*` fill or the width differs, it compares with the export's text, else with `Range.Text` (decision 17).
+  - A `#` answer is checked as "can't show": `Raw`'s text (decision 5).
+  - The differences are listed, each with its decision: `[DBNum]`, numeral systems, calendars and eras.
+- **Excel's answers already committed:**
+  - `excel-formats.json`'s 180 codes, over a date and a duration;
+  - the corpus answers' text (`typed.xlsx`, `typed-1904.xlsx` and the rest);
+  - the written set's formatted cells, about 2,000;
+  - all read through `Text = Formatted`.
+- **Excel's own CSV export as the conversion's oracle:** the corpus tool saves Excel's CSV UTF-8 of each corpus and written sheet. `ToCsv` with `Formatted` writes the same fields, but where Phase 6 lists differences (the used range, quoting, the byte-order mark) and for decision 18's Buddhist years.
+- **The reader:**
+  - every path of "What `Formatted` changes": header search, merged fill, hidden columns, `ParallelEnumerate`, dynamic records, `CsvDataReader`, the import's `Value`, error cells under each `ErrorCells`, and `FormulaText`;
+  - sync and async, on net10.0, net8.0 and net48;
+  - `Raw` byte for byte as before, in every existing suite.
+- **LibreOffice,** in CI, through profiles of its own: in de-DE, fr-FR and ja-JP, ids 3, 4, 14 and 22, the currency ids and separators, as the reader in that culture renders them. It isn't a general oracle (decision 17).
+- **GridCraft:** the display set, its differences listed by cause, as Phase 6 lists them. It runs where it is installed.
+- **Security and fuzzing:**
+  - Random codes over random values (Phase 5's code fuzzer's codes): the renderer never throws and allocates nothing, and its text is bounded by the code and the value.
+  - Fills and `_` with surrogate pairs; locale codes of unknown LCIDs; codes of 255 characters; text sections over text of 32,767 characters; codes Excel refuses, which a file can still hold.
+  - On demand, Excel judges fuzzed codes' text through the corpus tool, as Phase 5's fuzzed codes.
+- **Allocation:** `ToCsv` with `Formatted` allocates the same for any number of rows (Phase 6's test).
+- **AOT:** the NativeAOT app, which runs with invariant globalization, reads a sheet `Formatted` with a locale code (English names) and converts it.
+- **Mutation check,** as each step has one.
+
+#### Benchmark
+
+- **Gates:**
+  - core's (above);
+  - CsvHelper.Excel's read defaults (`ExcelPackageAssetsRead`, `ExcelOrdersRead` and the conversions to CSV) within 1% of Phase 7's end;
+  - the writer's defaults (`ExcelPackageAssetsWrite`, `ExcelOrdersWrite`, auto-fit over 100 rows) within 1%, since auto-fit's measuring changes.
+- **What `Formatted` costs:** the orders and the package assets read as strings and converted with `ToCsv`, `Raw` against `Formatted`, with allocation; and the renderer per cell in General, `#,##0.00`, `yyyy-mm-dd hh:mm:ss`, `# ?/?` and a conditional code.
+- One BenchmarkDotNet run, recorded in "As built".
+
+#### Decisions
+
+1. **What `Formatted` changes.** Recommended: text alone, wherever the reader gives text; typed reads keep the value, so a `decimal` member of a cell shown `$1,234.50` reads 1234.5. Alternative: every field becomes its shown text, as if reading Excel's CSV export; typed members then parse it in the reader's culture, and `$1,234.50` and `Jan-24` fail.
+2. **Core's hook.** Recommended: a style per field beside its kind, and a formatter in the cell options, asked when text is read. Alternative: the source renders every cell as it fills, and writes the text after the value; no formatter in core, but every cell is rendered, read or not.
+3. **The width.** Recommended: as in a column wide enough, as Excel's own CSV export writes cells: no `#` for want of room, General at 11 characters. Alternative: the column's own width from `<cols>`, General shortened and `####` where the text doesn't fit, as `Range.Text` shows it; it needs each font's widths.
+4. **`*` fills.** Recommended: nothing, as Excel's CSV export writes them; `Range.Text` repeats them to the column's width. Alternative: the fill character once, as GridCraft writes it.
+5. **Values Excel can't show, and codes the renderer can't read.** Recommended: `Raw`'s text (an ISO date, a duration, the stored number), which keeps the value. Excel's `#` says only that it can't. Alternative: `########`, as GridCraft writes it; Excel's export writes 255 `#`.
+6. **The culture.** Recommended: `Csv.FormatProvider`, the culture the reader already parses with; the invariant culture, its default, is Excel en-US, the language of the codes and of Excel's answers. Alternatives: a provider of its own (`ExcelReaderOptions.TextProvider`); the invariant culture's own data (`MM/dd/yyyy`, `¤`).
+7. **What follows the culture.** Recommended: decimal and group separators, names and AM/PM where no locale code names a language, ids 14 and 22, the system formats and the currency ids; `/` and `:` as written, as the Q&A answer has them, and the rest of the built-in table en-US's. Alternatives: the date and time separators too, as LibreOffice does; or only the built-in ids, the plan's words, with en-US separators always.
+8. **What locale codes render.** Recommended: their language's names and AM/PM, and their currency text; calendars, numeral systems, `[DBNum]` and eras aren't rendered (Gregorian dates, Western digits; `g` nothing, `e` the year), and are listed. Alternative: .NET's Hijri, Thai Buddhist and Japanese calendars, numeral systems and East Asian numerals.
+9. **Where names come from.** Recommended: the runtime's culture data, ICU on .NET and NLS on .NET Framework, which match Excel for every probed locale but Russian's month names on ICU; differences are listed per runtime. Alternative: Excel's own names for common locales, in a table in the package.
+10. **Fractions.** Recommended: Excel's continued-fraction convergents, computed in doubles as Excel does (0.1 is `0` in `# ?/?`). Alternative: the closest fraction, as LibreOffice and GridCraft give it.
+11. **Header names.** Recommended: they follow `Text`, so that a header Excel shows as `Q1` (`"Q"0`) is named `Q1`, and `Find` matches what users see. Alternative: header names stay `Raw`, whatever the formats.
+12. **The conversion.** Recommended: under `Formatted`, a typed cell's shown text is written as text, so that the CSV writer's injection protection, when on, checks it: a code can show a number as `=…`. Alternative: written with its kind's type, as under `Raw`.
+13. **Empty text.** Recommended: empty, as the reader reads it now, though Excel puts empty text through a text section (`"text: "@` shows `text: `). Alternative: a kind of its own for empty text, to render it.
+14. **The option.** Recommended: `ExcelText Text` (`Raw`, `Formatted`), as the API sketch has it and as `ErrorCells` and `Formulas` are enums. Alternative: `bool FormattedText`.
+15. **The renderer stays internal.** Recommended: internal, so that its API is decided after it has been used. Alternative: a public `ExcelNumberFormat.Format(double, string code, IFormatProvider?)`.
+16. **Auto-fit.** Recommended: each held cell's width is the renderer's text, in en-US with the widest separators; a date's or time's is its format's widest text over a leap year's days at 11:59:59 and 23:59:59, measured once a format, so that later dates fit; and `NumberFormatWidth` goes. Alternative: the renderer for numbers, and `NumberFormatWidth`'s widest forms kept for dates and times.
+17. **Oracles.** Recommended: Excel's `Range.Text` at a wide column, and its CSV export where a fill or the width differs, both recorded; GridCraft over the display set, its differences listed; and LibreOffice only for the culture's built-ins and separators, since its own rules differ in 2,106 of 6,024 cells. Alternative: LibreOffice over the whole display set, its differences listed as GridCraft's.
+18. **Buddhist years.** Recommended: `b`, `bb` and `bbbb` show the Buddhist year (2567 for 2024), as `Range.Text` does. Alternative: the Gregorian year, as Excel's CSV export writes it.
+19. **The 1904 system's negatives.** Recommended: a minus sign and the absolute value's date and time, as Excel shows them (`-1904-01-02`). Alternative: `Raw`'s text, as for the 1900 system's negatives.
+
+#### Risks
+
+- **Other locales are unchecked in Excel:** Excel was checked in en-US only. The culture's built-ins, separators and names follow ECMA-376, MS-OI29500, a Microsoft answer, .NET's data and LibreOffice. `/` and `:` (decision 7) are the likeliest to differ, and the guide says what follows the culture.
+- **Runtimes' data differ:** ICU and NLS name some months, designators and patterns differently, so net48 and net10 can render a locale code differently. Tests pin the probed locales on each runtime, and the guide names the differences.
+- **Invariant globalization** (containers, NativeAOT): locale codes and cultures have no data there, and render English. That never throws.
+- **Scope:** `[DBNum]`, eras, calendars and numeral systems are left out (decision 8). The display set lists each, so a later phase can add them against Excel's answers.
+- **Floating point:** the fractions and the 15 digits must match Excel's double arithmetic bit for bit. Tests run the same cases on net48 and net10.
+- **The hot path:** core's text paths gain a check, and the batch an array. Phase 0's gate and the read gate measure it.
+- **Auto-fit:** exact widths can be narrower than Phase 5's estimates, which erred wide. The written set's AutoFit answers and the presentation fuzzer check that no typed cell shows `#`.
+- **`Formatted` costs** a render for each text read of a number. The benchmark records it; `Raw` stays the default.
+
+#### Order of work
+
+1. **Core (S):** the formatter, the batches' styles and the text paths, with their tests and Phase 0's gate.
+2. **Codes and digits (M):** `FormatCode`, `Digits`, `BuiltInFormats` and `DisplayCulture`.
+3. **Numbers (L):** `NumberText`: General, placeholders, grouping, scaling, percent, exponents, fractions, literals, `_`, `*`, sections, conditions and text sections.
+4. **Dates and times (M):** `DateText`: tokens, rounding, elapsed time, AM/PM, names, locale codes, system formats, both date systems.
+5. **The option (M):** `ExcelText` and `Text`; the scanner's styles, header search and merged fill; `CellFormatter`; the conversion's text and the import.
+6. **Auto-fit (M):** the renderer in place of `NumberFormatWidth`, with Excel's AutoFit answers checked again.
+7. **Corpus and oracles (M):** the display set, Excel's answers and CSV exports, the answers already committed, GridCraft, and LibreOffice's cultures.
+8. **Security, fuzzing and AOT (S).**
+9. **Benchmarks (S).**
+10. **The guide (S):** "Displayed text" in the Excel guide's "Reading": `Raw` and `Formatted`, the culture, what isn't rendered (decision 8), fills and `#`. Also `Formatted` in "Workbooks to CSV", and `Text` in the options table.
+11. **"As built" (S).**
+
+#### Gate
+
+- `Text = Formatted` works through every path that gives text, the conversion and the import among them, on net10.0, net8.0 and net48, sync and async.
+- The renderer gives Excel's text for every cell of the display set and of Excel's committed answers, but for the listed differences, each with its decision.
+- `ToCsv` with `Formatted` writes the fields Excel's own CSV export writes, but for Phase 6's listed differences and decision 18.
+- GridCraft's differences are listed; LibreOffice's cultures match the reader's for the built-ins and separators.
+- `Raw` is unchanged: every existing test passes.
+- The core change passes its gate, and the read and write defaults stay within 1%.
+- Auto-fit's widths still match Excel's AutoFit answers as closely as Phase 5's did, and the written set shows no typed cell as `#`.
+- The security and fuzz tests pass; the renderer allocates nothing per cell.
+- The benchmark's numbers are recorded.
+- The NativeAOT publish has no warnings, and the app reads and converts formatted text.
+- The site builds with the guide's section.
+- CI passes.
+
+#### Changes elsewhere
+
+Applied at approval, 2026-11-16:
+
+- **Status** (top of the plan): Phase 8's design approved.
+- **API sketch:** `Text`: an `ExcelText`, `Raw` (default) or `Formatted`: the text Excel shows, as in a column wide enough, for every read of text, while typed reads keep the values.
+- **Defaults:** cells read as `Raw` text; `Formatted` renders as in a column wide enough, without fills, in the reader's `FormatProvider`, the invariant culture as Excel en-US.
+- **Testing** (the plan's): the content sets gain `display` (Phase 8), and Excel's answers gain its shown text and its own CSV export of each sheet.
+- **Risks** (the plan's): "Renderer scope creep in Phase 8" gains what was kept out: `[DBNum]`, eras, calendars and numeral systems.
 
 ### Phase 9: performance (L)
 
@@ -8157,8 +8464,8 @@ Testing runs through every phase.
   - `tools/CsvHelper.Excel.Corpus` makes them from one definition of the content. It drives Excel through COM, LibreOffice and Python by command line, and the .NET producers directly.
   - It runs on demand; the tests only read the committed files.
   - Phase 1's "Testing" has the files, the producer versions and how each is made.
-  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas), `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names) and `written` (Phase 4: workbooks CsvHelper.Excel writes; Phase 5 adds ten in its look; Phase 7 adds templates, and copies of them that Excel filled in).
-- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand. From Phase 3 the answers also hold each workbook's tables and defined names, and each sheet's hidden rows and columns and merged ranges. From Phase 4 they cover the written workbooks too, pinned to each workbook's SHA-256, with Excel's text of each formatted cell as the oracle of the format translation. From Phase 5 they also hold each written sheet's look (panes, filters, tables, merged ranges, links, hidden columns, sized rows) and the widths of Excel's own AutoFit.
+  - Content sets: `basic` (Phase 1), `typed` (Phase 2: dates, numbers, formulas), `messy` (Phase 3: title rows, merged cells, hidden rows and columns, filters, tables and defined names) and `written` (Phase 4: workbooks CsvHelper.Excel writes; Phase 5 adds ten in its look; Phase 7 adds templates, and copies of them that Excel filled in) and `display` (Phase 8: values in number formats and built-in ids, Excel's text of each the oracle of the renderer).
+- **Excel's answers** (from Phase 2): the corpus tool asks Excel through COM how it classifies number formats and what each corpus cell holds (value, type, formula, text), and commits the answers as JSON files. CI's tests compare with them; Excel itself only runs on demand. From Phase 3 the answers also hold each workbook's tables and defined names, and each sheet's hidden rows and columns and merged ranges. From Phase 4 they cover the written workbooks too, pinned to each workbook's SHA-256, with Excel's text of each formatted cell as the oracle of the format translation. From Phase 5 they also hold each written sheet's look (panes, filters, tables, merged ranges, links, hidden columns, sized rows) and the widths of Excel's own AutoFit. From Phase 8 they hold the `display` set's shown text (`Range.Text` at a wide column) and Excel's own CSV export of each sheet.
 - **Oracles** (test-only dependencies):
   - The Open XML SDK (DocumentFormat.OpenXml 3.5.1), for raw cell structure and, from Phase 4, `OpenXmlValidator`.
   - ClosedXML 0.105.1 and ExcelDataReader 3.9.0.
@@ -8182,7 +8489,7 @@ Testing runs through every phase.
 - **Merged-cell fill** needs a second inflate pass. Phase 3's benchmark measured it: +34% on a sheet without ranges, and +44% on the report (step 8). Phase 9 can make it cheaper.
 - **Shared-strings memory** on huge workbooks.
 - **Zip edge cases:** Zip64 for sheets over 4 GB, non-seekable streams, and `ZipArchive`'s synchronous central directory on older targets. Before .NET 10, closing an entry and the package writes synchronously, so a stream that forbids synchronous I/O throws (Phase 4); Phase 9's own zip writer removes it.
-- **Renderer scope creep** in Phase 8.
+- **Renderer scope creep** in Phase 8. Kept out: `[DBNum]`, eras, calendars and numeral systems (Phase 8's decision 8).
 
 ## Out of scope
 
@@ -8206,6 +8513,7 @@ Chosen during planning, and still open to change:
 - Error cells read as their text (Phase 2).
 - Formulas read their cached values (Phase 2).
 - Date cells' text is ISO 8601, from the value (Phase 2).
+- Cells read as `Raw` text; `Formatted` renders as in a column wide enough, without fills, in the reader's `FormatProvider`, the invariant culture as Excel en-US (Phase 8).
 - `DateTimeOffset` is written as ISO 8601 text.
 - Row and column limits throw.
 - Strings are written inline.
