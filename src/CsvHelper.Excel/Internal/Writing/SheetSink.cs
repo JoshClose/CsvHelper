@@ -300,7 +300,11 @@ internal sealed class SheetSink : CsvCellSink
 		filterButtons = settings.HasHeader && (settings.AutoFilter || settings.Table is { FilterButtons: true });
 		repeatsHeader = csv.HasHeader && options.RowLimit == ExcelRowLimit.NewSheet;
 		headerSaysStyle = csv.HasHeader && (settings.HasColumns || settings.ValidatesMembers || settings.Protect);
-		protection = settings.Protect ? SheetProtection.ForSheet(settings.Password, settings.AutoFilter) : null;
+		protection = !settings.Protect
+			? null
+			: workbook.ProtectionSalt is { } salt && settings.Password is not null
+				? SheetProtection.ForSheet(settings.Password, salt, settings.AutoFilter)
+				: SheetProtection.ForSheet(settings.Password, settings.AutoFilter);
 		Location = new SheetLocation(name);
 		item = strings is null ? null : new XmlOutput(256);
 		firstTableName = this.tableName = csv.HasHeader ? tableName : null;

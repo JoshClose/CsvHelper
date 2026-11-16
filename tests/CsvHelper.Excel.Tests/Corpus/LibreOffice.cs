@@ -29,6 +29,10 @@ internal static class LibreOffice
 	/// <summary>The written set's other workbooks, converted to <c>.xlsx</c>.</summary>
 	private static readonly Lazy<string> WrittenXlsx = new(() => Convert(Written.Workbooks.Where(w => !CanExport(w)).Select(w => (w.Name, Written.Write(w))), XlsxFilter));
 
+	/// <summary>Excel's filled copies of the written set's templates (<c>excel-written/filled/</c>), saved again by LibreOffice as <c>.xlsx</c>.</summary>
+	private static readonly Lazy<string> FilledXlsx = new(() => Convert(
+		Directory.EnumerateFiles(CorpusFiles.PathOf("excel-written/filled"), "*.xlsx").Select(p => (Path.GetFileName(p), File.ReadAllBytes(p))), XlsxFilter));
+
 	/// <summary>Every workbook of the written set, converted to <c>.xlsx</c>, for what LibreOffice keeps of its look.</summary>
 	private static readonly Lazy<string> WrittenLooks = new(() => Convert(Written.Workbooks.Select(w => (w.Name, Written.Write(w))), XlsxFilter));
 
@@ -58,6 +62,11 @@ internal static class LibreOffice
 	/// <param name="workbook">The workbook of the written set.</param>
 	/// <returns>The file LibreOffice saved.</returns>
 	public static string WrittenLook(WrittenWorkbook workbook) => Path.Combine(WrittenLooks.Value, workbook.Name);
+
+	/// <summary>Excel's filled copy of a template of the written set, as LibreOffice saves it again in <c>.xlsx</c>.</summary>
+	/// <param name="name">The workbook's name, such as <c>template.xlsx</c>.</param>
+	/// <returns>The file LibreOffice saved.</returns>
+	public static string FilledAsXlsx(string name) => Path.Combine(FilledXlsx.Value, name);
 
 	/// <summary>Whether LibreOffice can export every sheet of a written workbook as a CSV file named after it.</summary>
 	/// <param name="workbook">The workbook.</param>

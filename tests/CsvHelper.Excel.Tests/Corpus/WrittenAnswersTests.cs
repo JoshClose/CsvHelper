@@ -96,6 +96,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 	private static readonly (string File, string Cell, string Reason)[] ClosedXmlDifferences =
 	[
 		("tables.xlsx", "Renamed!table Renamed", "ClosedXML doesn't decode _x000A_ in a table's column name, which a line feed in an attribute is written as (step 4); Excel does"),
+		.. TitleMergesInFormattedColumns().Select(c => (c.File, c.Cell, "ClosedXML reads a protected sheet's title's merged cells, which aren't written, in their columns' styles, where Excel reads them in the title's row style (Phase 7's step 4)")),
 	];
 
 	/// <summary>Where LibreOffice keeps the look otherwise than Excel shows it, and why.</summary>
@@ -134,6 +135,36 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		("converted-options.xlsx", "Options!C3", LibreOffice1900),
 	];
 
+	/// <summary>
+	/// The merged cells of each protected sheet's title, but its first, in columns whose default style has a format: a
+	/// column's own, or its member's type's on a sheet that validates its members.
+	/// </summary>
+	/// <returns>Each cell's workbook and reference, such as <c>Orders!B1</c>.</returns>
+	private static IEnumerable<(string File, string Cell)> TitleMergesInFormattedColumns()
+	{
+		foreach (var workbook in Written.Workbooks)
+		{
+			foreach (var sheet in workbook.Sheets)
+			{
+				var settings = WrittenOracle.Settings(workbook, sheet);
+				if (settings.Title is null || !settings.Protect)
+				{
+					continue;
+				}
+
+				var columns = WrittenOracle.ColumnOptions(workbook, sheet);
+				for (var c = 1; c < sheet.Columns.Count; c++)
+				{
+					var member = sheet.Columns[c].Member;
+					if (columns[c]?.Format is not null || (settings.Validate && member is not null && WrittenOracle.TypeFormat(member, workbook.Options) is not null))
+					{
+						yield return (workbook.Name, $"{SheetLocation.Quote(sheet.Name)}!{CellReference.ColumnName(c)}1");
+					}
+				}
+			}
+		}
+	}
+
 	/// <summary>The workbooks of the set on this target.</summary>
 	public static TheoryData<string> Workbooks
 	{
@@ -155,7 +186,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 #if NET
 		string[] other = [];
 #else
-		string[] other = ["types-net.xlsx", "cultures.xlsx"];
+		string[] other = ["types-net.xlsx", "cultures.xlsx", "template-types-net.xlsx"];
 #endif
 		Assert.Equal(Written.Workbooks.Select(w => w.Name).Concat(other).OrderBy(n => n, StringComparer.Ordinal), WrittenAnswers.Files);
 
@@ -266,7 +297,10 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		}
 
 		// Each column auto-fit sized is as wide as Excel's own AutoFit makes it, so that its cells show whole, and at most
-		// a tenth and half a character wider: auto-fit's widths are about 5% wider at 144 DPI (step 3).
+		// a tenth and half a character wider: auto-fit's widths are about 5% wider at 144 DPI (step 3). A template's column
+		// may be wider, never narrower: Excel's default width at least (Phase 7's step 5); and on a sheet that validates its
+		// members, a date's, time's or duration's column as wide as its widest value (Phase 7's step 3), which neither a header
+		// alone nor the values written need.
 		var parts = WrittenOracle.Parts(Written.Write(workbook));
 		var differences = new List<string>();
 		var (fitted, narrower) = (0, 0);
@@ -278,7 +312,11 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 				var (ours, excel) = (sheet.Widths[column], sheet.AutoFit[column]);
 				fitted++;
 				narrower += excel < ours ? 1 : 0;
-				if (excel is null || ours < excel || ours > excel * 1.1 + 0.5)
+				var written = workbook.Sheets.FirstOrDefault(s => s.Names.Contains(sheet.Name));
+				var member = written is not null && column < written.Columns.Count ? written.Columns[column].Member : null;
+				var mayBeWider = (written is { IsTemplate: true } && ours == WrittenOracle.ExcelWidth(ColumnWidths.Default, answers.Dpi))
+					|| (written is not null && WrittenOracle.Settings(workbook, written).Validate && member is not null && IsDateOrTime(member.PropertyType));
+				if (excel is null || ours < excel || (!mayBeWider && ours > excel * 1.1 + 0.5))
 				{
 					differences.Add($"{SheetLocation.Quote(sheet.Name)}!{CellReference.ColumnName(column)}: auto-fit {ours}, Excel's AutoFit {excel}");
 				}
@@ -288,6 +326,20 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		// Excel's AutoFit ran: it narrows most columns a little, so that answers that copied the widths written can't pass.
 		Assert.True(fitted == 0 || narrower * 2 > fitted, $"{name}: Excel's AutoFit is narrower than auto-fit in {narrower} of {fitted} columns.");
 		AssertListed(name, differences, AutoFitDifferences);
+	}
+
+	/// <summary>Whether a type's column is a date's, a time's or a duration's, whose width is its widest value's.</summary>
+	/// <param name="type">The member's type.</param>
+	/// <returns>Whether it is.</returns>
+	private static bool IsDateOrTime(Type type)
+	{
+		type = Nullable.GetUnderlyingType(type) ?? type;
+
+		return type == typeof(DateTime) || type == typeof(TimeSpan)
+#if NET
+			|| type == typeof(DateOnly) || type == typeof(TimeOnly)
+#endif
+			;
 	}
 
 	[Theory]
@@ -308,8 +360,8 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 			CompareLooks(sheet, look.Entries(), excel.Look.Entries(), "Excel", differences);
 		}
 
-		// The filters' hidden names, as Excel writes them; Excel's own (_xlfn.) aside.
-		var names = WrittenOracle.FilterNames(expected).ToDictionary(n => n.Name, n => $"{n.RefersTo}{(n.Visible ? "" : " hidden")}");
+		// The filters' and the lists' hidden names, as Excel writes them; Excel's own (_xlfn.) aside.
+		var names = WrittenOracle.FilterNames(expected).Concat(WrittenOracle.ListNames(workbook)).ToDictionary(n => n.Name, n => $"{n.RefersTo}{(n.Visible ? "" : " hidden")}");
 		var excelNames = answers.Names.Where(n => !n.Name.StartsWith("_xlfn.", StringComparison.Ordinal)).ToDictionary(n => n.Name, n => $"{n.RefersTo}{(n.Visible ? "" : " hidden")}");
 		CompareLooks("names", names, excelNames, "Excel", differences);
 		AssertListed(name, differences, LookDifferences);

@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CsvHelper.Excel.Corpus;
@@ -22,7 +23,9 @@ namespace CsvHelper.Excel.Corpus;
 /// culture and in others, formulas, escaped and long text, shared strings, <see cref="ExcelRowLimit.NewSheet"/>, and sheet
 /// names Excel accepts, in Phase 4's look; and Phase 5's presentation: the default look, titles, frozen panes, columns'
 /// formats, widths, wrap and hidden columns, auto-fit, filters, tables, merged cells and links, each sheet's look given by
-/// <see cref="WrittenLook"/>. Nothing in them depends on the machine: no time zone, no current culture, no clock.
+/// <see cref="WrittenLook"/>; and Phase 7's templates (<c>WrittenTemplates.cs</c>), each with the texts that the tool types
+/// into a copy of it in Excel. Nothing in them depends on the machine: no time zone, no current culture, no clock, and a
+/// password's salt is fixed (<see cref="WrittenWorkbook.Salt"/>).
 /// </para>
 /// <para>
 /// A workbook's bytes depend on the target only through deflate, which differs between runtimes, so a workbook is pinned by
@@ -32,7 +35,7 @@ namespace CsvHelper.Excel.Corpus;
 /// .NET Framework has neither.
 /// </para>
 /// </remarks>
-internal static class Written
+internal static partial class Written
 {
 	/// <summary>The values of the formatted columns: a morning, an evening and a late night, with seconds and milliseconds.</summary>
 	private static readonly DateTime[] Samples = [new(2024, 1, 15, 10, 30, 5, 123), new(2024, 3, 9, 22, 5, 9, 7), new(2024, 9, 25, 23, 58, 58, 888)];
@@ -120,6 +123,10 @@ internal static class Written
 		("empty", "", null),
 	];
 
+	/// <summary><see cref="ExcelWorkbookWriter"/>'s internal salt of protected sheets' passwords, which the set fixes.</summary>
+	private static readonly PropertyInfo ProtectionSalt = typeof(ExcelWorkbookWriter).GetProperty("ProtectionSalt", BindingFlags.Instance | BindingFlags.NonPublic)
+		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal ProtectionSalt.");
+
 	/// <summary><see cref="ExcelWorkbookWriter"/>'s internal row limit, which a test sets to start new sheets after a few rows.</summary>
 	private static readonly PropertyInfo MaxRows = typeof(ExcelWorkbookWriter).GetProperty("MaxRows", BindingFlags.Instance | BindingFlags.NonPublic)
 		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal MaxRows.");
@@ -155,6 +162,13 @@ internal static class Written
 		ConvertedText(),
 		ConvertedGerman(),
 		ConvertedOptions(),
+		Template(),
+		TemplateTypes(),
+#if NET
+		TemplateTypesNet(),
+#endif
+		TemplateLists(),
+		TemplatePrefilled(),
 	];
 
 	/// <summary>Writes a workbook synchronously, into memory.</summary>
@@ -257,7 +271,10 @@ internal static class Written
 		return Hash(Encoding.UTF8.GetBytes(text.ToString()));
 	}
 
-	/// <summary>Sets a workbook's row limit for the test of <see cref="ExcelRowLimit.NewSheet"/>, before its first sheet.</summary>
+	/// <summary>
+	/// Sets a workbook's row limit for the test of <see cref="ExcelRowLimit.NewSheet"/>, and its passwords' salt, before its
+	/// first sheet.
+	/// </summary>
 	/// <param name="writer">The writer.</param>
 	/// <param name="workbook">The workbook.</param>
 	private static void Prepare(ExcelWorkbookWriter writer, WrittenWorkbook workbook)
@@ -265,6 +282,11 @@ internal static class Written
 		if (workbook.MaxRows is { } rows)
 		{
 			MaxRows.SetValue(writer, rows);
+		}
+
+		if (workbook.Salt is { } salt)
+		{
+			ProtectionSalt.SetValue(writer, salt);
 		}
 	}
 
@@ -1148,6 +1170,12 @@ internal sealed class WrittenWorkbook
 	/// <summary>The cultures other than the invariant one that its columns' formats and numbers read, by name.</summary>
 	public IReadOnlyList<string> Cultures { get; }
 
+	/// <summary>
+	/// The salt of its protected sheets' passwords, or <see langword="null"/> for none: fixed, so that a workbook with a
+	/// password writes the same bytes each time.
+	/// </summary>
+	public byte[]? Salt { get; init; }
+
 	/// <inheritdoc/>
 	public override string ToString() => Name;
 }
@@ -1158,6 +1186,14 @@ internal sealed class WrittenWorkbook
 /// </summary>
 internal sealed class WrittenSheet
 {
+	/// <summary>The workbook writer's internal <c>WriteTemplate&lt;T&gt;(string, ExcelSheetOptions)</c>, which <see cref="ExcelTemplate"/> writes with.</summary>
+	private static readonly MethodInfo WriteTemplate = typeof(ExcelWorkbookWriter).GetMethod("WriteTemplate", BindingFlags.Instance | BindingFlags.NonPublic)
+		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal WriteTemplate.");
+
+	/// <summary>The workbook writer's internal <c>WriteTemplateAsync&lt;T&gt;(string, ExcelSheetOptions, CancellationToken)</c>.</summary>
+	private static readonly MethodInfo WriteTemplateAsync = typeof(ExcelWorkbookWriter).GetMethod("WriteTemplateAsync", BindingFlags.Instance | BindingFlags.NonPublic)
+		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal WriteTemplateAsync.");
+
 	/// <summary>Creates a sheet.</summary>
 	/// <param name="name">The name it is added with.</param>
 	/// <param name="names">The sheets it becomes, in tab order: itself, and those <see cref="ExcelRowLimit.NewSheet"/> adds.</param>
@@ -1212,6 +1248,21 @@ internal sealed class WrittenSheet
 	public CsvReaderOptions? CsvOptions { get; private init; }
 
 	/// <summary>
+	/// The texts the corpus tool types into a copy of the sheet in Excel, each probe with what the import reads of it; empty
+	/// for a sheet the tool doesn't fill.
+	/// </summary>
+	public IReadOnlyList<WrittenEntry> Fill { get; private init; } = [];
+
+	/// <summary>
+	/// Imports a filled copy of the sheet as its record type (<see cref="ExcelReader.Import{T}(Stream, ExcelReaderOptions?, int)"/>),
+	/// or <see langword="null"/> for a sheet without one.
+	/// </summary>
+	public Func<Stream, ExcelReaderOptions, WrittenImport>? Import { get; private init; }
+
+	/// <summary>Whether it is a template's sheet (<see cref="ExcelTemplate"/>): its record type's header alone, validated and protected.</summary>
+	public bool IsTemplate { get; private init; }
+
+	/// <summary>
 	/// A sheet of records, written by <typeparamref name="T"/>'s record writer with its header: a column per public property,
 	/// in declaration order, with its <see cref="CsvFormatAttribute"/>, <see cref="CsvCultureAttribute"/> and
 	/// <see cref="ExcelColumnAttribute"/>. Without merged ranges it is written by <see cref="ExcelWorkbookWriter.WriteSheet"/>;
@@ -1223,13 +1274,14 @@ internal sealed class WrittenSheet
 	/// <param name="records">The records.</param>
 	/// <param name="names">The sheets it becomes, or <see langword="null"/> for itself alone.</param>
 	/// <param name="look">Its look, or <see langword="null"/> for none: the workbook's <see cref="ExcelWriterOptions.Sheets"/>, or <typeparamref name="T"/>'s attribute.</param>
+	/// <param name="fill">The texts the corpus tool types into a copy of it, or <see langword="null"/> for none.</param>
 	/// <returns>The sheet.</returns>
-	public static WrittenSheet Records<T>(string name, IReadOnlyList<T> records, IReadOnlyList<string>? names = null, WrittenLook? look = null)
+	public static WrittenSheet Records<T>(string name, IReadOnlyList<T> records, IReadOnlyList<string>? names = null, WrittenLook? look = null, IReadOnlyList<WrittenEntry>? fill = null)
 	{
 		var given = look ?? WrittenLook.None;
 		var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
 		var columns = properties
-			.Select(p => new WrittenColumn(p.Name, p.GetCustomAttribute<CsvFormatAttribute>()?.Format, p.GetCustomAttribute<CsvCultureAttribute>()?.Name, p.GetCustomAttribute<ExcelColumnAttribute>()))
+			.Select(p => new WrittenColumn(p.Name, p.GetCustomAttribute<CsvFormatAttribute>()?.Format, p.GetCustomAttribute<CsvCultureAttribute>()?.Name, p.GetCustomAttribute<ExcelColumnAttribute>(), p))
 			.ToList();
 		var rows = new List<IReadOnlyList<object?>> { properties.Select(p => (object?)p.Name).ToList() };
 		rows.AddRange(records.Select(r => properties.Select(p => p.GetValue(r)).ToList()));
@@ -1271,8 +1323,54 @@ internal sealed class WrittenSheet
 			}
 		}
 
-		return new WrittenSheet(name, names, columns, rows, given, typeof(T).GetCustomAttribute<ExcelSheetAttribute>(), Write, WriteAsync);
+		return new WrittenSheet(name, names, columns, rows, given, typeof(T).GetCustomAttribute<ExcelSheetAttribute>(), Write, WriteAsync)
+		{
+			Fill = fill ?? [],
+			Import = fill is null ? null : ImportAs<T>(),
+		};
 	}
+
+	/// <summary>
+	/// A template's sheet: <typeparamref name="T"/>'s header alone, written as <see cref="ExcelTemplate.Create{T}(Stream, ExcelTemplateOptions?)"/>
+	/// writes it, by the workbook writer's internal <c>WriteTemplate</c>, in a look validated and protected, its short columns
+	/// Excel's default width; with the texts the corpus tool types into a copy of it.
+	/// </summary>
+	/// <typeparam name="T">The record type, of public properties.</typeparam>
+	/// <param name="name">The sheet's name.</param>
+	/// <param name="look">Its look, which the template validates and protects.</param>
+	/// <param name="fill">The texts the corpus tool types into a copy of it.</param>
+	/// <returns>The sheet.</returns>
+	public static WrittenSheet Template<T>(string name, ExcelSheetOptions look, IReadOnlyList<WrittenEntry> fill)
+	{
+		var options = look with { Validate = true, Protect = true };
+		var properties = typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.Public);
+		var columns = properties
+			.Select(p => new WrittenColumn(p.Name, p.GetCustomAttribute<CsvFormatAttribute>()?.Format, p.GetCustomAttribute<CsvCultureAttribute>()?.Name, p.GetCustomAttribute<ExcelColumnAttribute>(), p))
+			.ToList();
+		var rows = new List<IReadOnlyList<object?>> { properties.Select(p => (object?)p.Name).ToList() };
+		var write = WriteTemplate.MakeGenericMethod(typeof(T));
+		var writeAsync = WriteTemplateAsync.MakeGenericMethod(typeof(T));
+
+		return new WrittenSheet(
+			name, null, columns, rows, new WrittenLook { Options = options }, typeof(T).GetCustomAttribute<ExcelSheetAttribute>(),
+			workbook => write.Invoke(workbook, [name, options]),
+			workbook => ((ValueTask)writeAsync.Invoke(workbook, [name, options, CancellationToken.None])!).AsTask())
+		{
+			Fill = fill,
+			Import = ImportAs<T>(),
+			IsTemplate = true,
+		};
+	}
+
+	/// <summary>Imports a filled copy of a sheet as <typeparamref name="T"/>.</summary>
+	/// <typeparam name="T">The record type.</typeparam>
+	/// <returns>The import.</returns>
+	private static Func<Stream, ExcelReaderOptions, WrittenImport> ImportAs<T>() => (stream, options) =>
+	{
+		var result = ExcelReader.Import<T>(stream, options);
+
+		return new WrittenImport([.. result.Records.Cast<object>()], result.Errors, result.Complete);
+	};
 
 	/// <summary>
 	/// A sheet written field by field: <see cref="CsvWriter.WriteField(object)"/> for each value, and
@@ -1394,7 +1492,8 @@ internal sealed class WrittenSheet
 /// <param name="format">Its member's format, or <see langword="null"/>.</param>
 /// <param name="culture">Its member's culture's name (empty for the invariant culture), or <see langword="null"/> for the writer's.</param>
 /// <param name="excel">Its member's <see cref="ExcelColumnAttribute"/>, or <see langword="null"/>.</param>
-internal sealed class WrittenColumn(string name, string? format, string? culture, ExcelColumnAttribute? excel = null)
+/// <param name="member">Its record type's member, or <see langword="null"/> for a column written by hand.</param>
+internal sealed class WrittenColumn(string name, string? format, string? culture, ExcelColumnAttribute? excel = null, PropertyInfo? member = null)
 {
 	/// <summary>Its header's name.</summary>
 	public string Name => name;
@@ -1407,6 +1506,9 @@ internal sealed class WrittenColumn(string name, string? format, string? culture
 
 	/// <summary>Its member's <see cref="ExcelColumnAttribute"/>, or <see langword="null"/>.</summary>
 	public ExcelColumnAttribute? Excel => excel;
+
+	/// <summary>Its record type's member, or <see langword="null"/> for a column written by hand.</summary>
+	public PropertyInfo? Member => member;
 }
 
 /// <summary>

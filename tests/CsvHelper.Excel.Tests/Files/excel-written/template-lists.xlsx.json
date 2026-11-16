@@ -1,0 +1,912 @@
+{
+  "file": "template-lists.xlsx",
+  "description": "a template of lists of each form: inline, matching in case, a quote counted once, repeats listed once; in the very hidden lists sheet, matching ignoring case, those with commas, spaces at either end, or of more than 255 characters; prompts, a title cut to 32 characters, a line break, and a prompt alone; filled in Excel",
+  "sha256": "912b46e33a023ade0283ac2de96576cf6b4fe30342da263e3659f2cd954c507f",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [
+    {
+      "name": "_CsvHelperList1",
+      "refersTo": "=Lists2!$A$1:$A$2",
+      "sheet": "Lists2",
+      "range": "A1:A2",
+      "visible": false
+    },
+    {
+      "name": "_CsvHelperList2",
+      "refersTo": "=Lists2!$B$1:$B$2",
+      "sheet": "Lists2",
+      "range": "B1:B2",
+      "visible": false
+    },
+    {
+      "name": "_CsvHelperList3",
+      "refersTo": "=Lists2!$C$1:$C$30",
+      "sheet": "Lists2",
+      "range": "C1:C30",
+      "visible": false
+    }
+  ],
+  "sheets": [
+    {
+      "name": "Lists",
+      "used": "A1:H1",
+      "widths": [
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.82,
+        34.91,
+        8.55
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Color",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": "Quote",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Region",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D1",
+          "value2": "Padded",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E1",
+          "value2": "Many",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F1",
+          "value2": "Repeated",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G1",
+          "value2": "TheCustomersPreferredDeliveryRegion",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H1",
+          "value2": "Notes",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 1,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true
+        },
+        {
+          "cell": "B1",
+          "bold": true
+        },
+        {
+          "cell": "C1",
+          "bold": true
+        },
+        {
+          "cell": "D1",
+          "bold": true
+        },
+        {
+          "cell": "E1",
+          "bold": true
+        },
+        {
+          "cell": "F1",
+          "bold": true
+        },
+        {
+          "cell": "G1",
+          "bold": true
+        },
+        {
+          "cell": "H1",
+          "bold": true
+        },
+        {
+          "cell": "A2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "B2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "C2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "D2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "E2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "F2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "G2",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "H2",
+          "numberFormat": "@"
+        }
+      ],
+      "protection": {
+        "objects": true,
+        "scenarios": true,
+        "selection": 0,
+        "formatCells": false,
+        "formatColumns": true,
+        "formatRows": true,
+        "insertColumns": false,
+        "insertRows": false,
+        "insertLinks": false,
+        "deleteColumns": false,
+        "deleteRows": false,
+        "sort": false,
+        "filter": false,
+        "pivotTables": false
+      },
+      "validations": [
+        {
+          "cell": "A2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Red,Green,Blue",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "B2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "a\"b,c",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "C2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "=_CsvHelperList1",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "D2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "=_CsvHelperList2",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "E2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "=_CsvHelperList3",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "F2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "x,y",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "G2",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Near,Far",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": "TheCustomersPreferredDeliveryReg",
+          "inputMessage": "Where we deliver.\nPick one.",
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "H2",
+          "type": 0,
+          "operator": 1,
+          "formula1": "",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": "Notes",
+          "inputMessage": "Anything you like.",
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "A1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Red,Green,Blue",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "B1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "a\"b,c",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "C1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "=_CsvHelperList1",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "D1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "=_CsvHelperList2",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "E1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "=_CsvHelperList3",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "F1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "x,y",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "G1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Near,Far",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": "TheCustomersPreferredDeliveryReg",
+          "inputMessage": "Where we deliver.\nPick one.",
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "H1048576",
+          "type": 0,
+          "operator": 1,
+          "formula1": "",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": "Notes",
+          "inputMessage": "Anything you like.",
+          "errorTitle": null,
+          "errorMessage": null
+        }
+      ],
+      "unlocked": [
+        "A2",
+        "B2",
+        "C2",
+        "D2",
+        "E2",
+        "F2",
+        "G2",
+        "H2",
+        "A1048576",
+        "B1048576",
+        "C1048576",
+        "D1048576",
+        "E1048576",
+        "F1048576",
+        "G1048576",
+        "H1048576"
+      ],
+      "autoFit": [
+        4.64,
+        5.45,
+        5.82,
+        6.55,
+        4.91,
+        8.18,
+        33.18,
+        5.09
+      ],
+      "unprotect": {
+        "wrong": true
+      }
+    },
+    {
+      "name": "Lists2",
+      "visible": 2,
+      "used": "A1:C30",
+      "widths": [
+        8.09,
+        8.09,
+        8.09
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "North, East",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B1",
+          "value2": " padded ",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C1",
+          "value2": "Region01",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "South, West",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "plain",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "Region02",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C3",
+          "value2": "Region03",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C4",
+          "value2": "Region04",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C5",
+          "value2": "Region05",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C6",
+          "value2": "Region06",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C7",
+          "value2": "Region07",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C8",
+          "value2": "Region08",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C9",
+          "value2": "Region09",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C10",
+          "value2": "Region10",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C11",
+          "value2": "Region11",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C12",
+          "value2": "Region12",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C13",
+          "value2": "Region13",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C14",
+          "value2": "Region14",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C15",
+          "value2": "Region15",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C16",
+          "value2": "Region16",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C17",
+          "value2": "Region17",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C18",
+          "value2": "Region18",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C19",
+          "value2": "Region19",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C20",
+          "value2": "Region20",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C21",
+          "value2": "Region21",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C22",
+          "value2": "Region22",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C23",
+          "value2": "Region23",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C24",
+          "value2": "Region24",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C25",
+          "value2": "Region25",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C26",
+          "value2": "Region26",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C27",
+          "value2": "Region27",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C28",
+          "value2": "Region28",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C29",
+          "value2": "Region29",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C30",
+          "value2": "Region30",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": null,
+      "filter": null,
+      "tables": [],
+      "merged": [],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [],
+      "looks": [],
+      "protection": {
+        "objects": true,
+        "scenarios": true,
+        "selection": 0,
+        "formatCells": false,
+        "formatColumns": false,
+        "formatRows": false,
+        "insertColumns": false,
+        "insertRows": false,
+        "insertLinks": false,
+        "deleteColumns": false,
+        "deleteRows": false,
+        "sort": false,
+        "filter": false,
+        "pivotTables": false
+      },
+      "validations": [],
+      "unlocked": [],
+      "autoFit": [
+        null,
+        null,
+        null
+      ],
+      "unprotect": {
+        "wrong": true
+      }
+    }
+  ],
+  "filled": [
+    {
+      "sheet": "Lists",
+      "cell": "A2",
+      "entered": "Red",
+      "value2": "Red",
+      "type": "text",
+      "text": "Red",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "A3",
+      "entered": "red",
+      "value2": "red",
+      "type": "text",
+      "text": "red",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "A4",
+      "entered": "Purple",
+      "value2": "Purple",
+      "type": "text",
+      "text": "Purple",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "B6",
+      "entered": "a\"b",
+      "value2": "a\"b",
+      "type": "text",
+      "text": "a\"b",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "B7",
+      "entered": "a",
+      "value2": "a",
+      "type": "text",
+      "text": "a",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "C9",
+      "entered": "North, East",
+      "value2": "North, East",
+      "type": "text",
+      "text": "North, East",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "C10",
+      "entered": "north, east",
+      "value2": "north, east",
+      "type": "text",
+      "text": "north, east",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "C11",
+      "entered": "East",
+      "value2": "East",
+      "type": "text",
+      "text": "East",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "D13",
+      "entered": " padded ",
+      "value2": " padded ",
+      "type": "text",
+      "text": " padded ",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "D14",
+      "entered": "padded",
+      "value2": "padded",
+      "type": "text",
+      "text": "padded",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "E16",
+      "entered": "Region07",
+      "value2": "Region07",
+      "type": "text",
+      "text": "Region07",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "E17",
+      "entered": "region07",
+      "value2": "region07",
+      "type": "text",
+      "text": "region07",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "E18",
+      "entered": "Region31",
+      "value2": "Region31",
+      "type": "text",
+      "text": "Region31",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "F20",
+      "entered": "y",
+      "value2": "y",
+      "type": "text",
+      "text": "y",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "F21",
+      "entered": "z",
+      "value2": "z",
+      "type": "text",
+      "text": "z",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "G23",
+      "entered": "Far",
+      "value2": "Far",
+      "type": "text",
+      "text": "Far",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Lists",
+      "cell": "G24",
+      "entered": "Mars",
+      "value2": "Mars",
+      "type": "text",
+      "text": "Mars",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Lists",
+      "cell": "H26",
+      "entered": "anything",
+      "value2": "anything",
+      "type": "text",
+      "text": "anything",
+      "numberFormat": "@",
+      "valid": true
+    }
+  ],
+  "goodRefused": []
+}

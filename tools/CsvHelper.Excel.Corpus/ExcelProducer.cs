@@ -719,7 +719,7 @@ internal static class ExcelProducer
 	/// <param name="path">Where it goes in the corpus.</param>
 	/// <param name="format">The file format.</param>
 	/// <param name="password">The password to open it, or <see langword="null"/>.</param>
-	private static void SaveAs(dynamic workbook, string path, int format, string? password)
+	internal static void SaveAs(dynamic workbook, string path, int format, string? password)
 	{
 		var publicFolder = Environment.GetEnvironmentVariable("PUBLIC") ?? throw new InvalidOperationException("%PUBLIC% is not set.");
 		var staging = Directory.CreateDirectory(Path.Combine(publicFolder, "CsvHelper.Excel.Corpus")).FullName;
@@ -739,7 +739,7 @@ internal static class ExcelProducer
 	}
 
 	/// <summary>Copies the files saved in the public folder to the corpus, once Excel has closed them.</summary>
-	private static void CopyPending()
+	internal static void CopyPending()
 	{
 		foreach (var (staged, path) in Pending)
 		{

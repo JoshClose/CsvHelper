@@ -56,6 +56,7 @@
 	     Files/excel-written. -->
 	<ItemGroup>
 		<Compile Include="..\..\tools\CsvHelper.Excel.Corpus\Written.cs" Link="Corpus\WrittenSet.cs" />
+		<Compile Include="..\..\tools\CsvHelper.Excel.Corpus\WrittenTemplates.cs" Link="Corpus\WrittenTemplates.cs" />
 	</ItemGroup>
 
 	<!-- The benchmarks' workbook writers of text and of the report, and NCsvPerf's data, for the tests that check the writers

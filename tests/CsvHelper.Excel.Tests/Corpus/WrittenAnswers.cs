@@ -32,7 +32,57 @@ internal sealed class WrittenAnswerSheet(
 
 	/// <summary>Each column's <c>ColumnWidth</c> at Excel's own AutoFit, from A; <see langword="null"/> for a hidden column.</summary>
 	public IReadOnlyList<double?> AutoFit => autoFit;
+
+	/// <summary>Its <c>Visible</c>: -1 visible, 0 hidden, 2 very hidden.</summary>
+	public int Visible { get; init; } = -1;
+
+	/// <summary>
+	/// What its protection allows, by Excel's names (<c>formatColumns</c>, <c>sort</c>, …) and <c>selection</c>, its
+	/// <c>EnableSelection</c>; <see langword="null"/> when it isn't protected.
+	/// </summary>
+	public IReadOnlyDictionary<string, string>? Protection { get; init; }
+
+	/// <summary>Whether a wrong password unprotects it, and whether the set's does, after a wrong one is refused; <see langword="null"/> when not asked.</summary>
+	public (bool Wrong, bool? Password)? Unprotect { get; init; }
+
+	/// <summary>
+	/// Each cell's validation, by reference, from row 1 to the row below the used range and in row 1,048,576, from column A
+	/// to the one after the used range's last; <see langword="null"/> for a workbook without templates, whose sheets weren't asked.
+	/// </summary>
+	public IReadOnlyDictionary<string, ExcelValidation>? Validations { get; init; }
+
+	/// <summary>The cells of the same rows and columns as <see cref="Validations"/> that aren't locked.</summary>
+	public IReadOnlyList<string> Unlocked { get; init; } = [];
 }
+
+/// <summary>A cell's validation as Excel reads it through COM.</summary>
+/// <param name="Type">Its <c>xlDVType</c>: 0 any value (a prompt alone), 1 whole numbers, 2 decimals, 3 a list, 4 dates, 5 times, 6 a text's length.</param>
+/// <param name="Operator">Its <c>xlFormatConditionOperator</c> (1 between, 3 equal), or <see langword="null"/> when Excel gives none.</param>
+/// <param name="Formula1">Its first formula, or <see langword="null"/>.</param>
+/// <param name="Formula2">Its second formula, or <see langword="null"/>.</param>
+/// <param name="AlertStyle">Its <c>xlDVAlertStyle</c>: 1 Stop.</param>
+/// <param name="IgnoreBlank">Whether a blank cell is valid.</param>
+/// <param name="InCellDropdown">Whether a list shows its dropdown.</param>
+/// <param name="ShowInput">Whether its prompt shows.</param>
+/// <param name="ShowError">Whether a value it refuses is refused.</param>
+/// <param name="InputTitle">Its prompt's title, or <see langword="null"/>.</param>
+/// <param name="InputMessage">Its prompt, or <see langword="null"/>.</param>
+/// <param name="ErrorTitle">Its error's title, or <see langword="null"/> for Excel's own.</param>
+/// <param name="ErrorMessage">Its error's message, or <see langword="null"/> for Excel's own.</param>
+internal sealed record ExcelValidation(
+	int Type, int? Operator, string? Formula1, string? Formula2, int AlertStyle, bool IgnoreBlank, bool InCellDropdown, bool ShowInput, bool ShowError,
+	string? InputTitle, string? InputMessage, string? ErrorTitle, string? ErrorMessage);
+
+/// <summary>A probe text Excel typed into a template's copy (<c>WrittenEntry</c>), and what it made of it.</summary>
+/// <param name="Sheet">The sheet.</param>
+/// <param name="Cell">The cell.</param>
+/// <param name="Entered">The text typed.</param>
+/// <param name="Value2">The cell's <c>Value2</c> after, as text.</param>
+/// <param name="Type">Its type: <c>number</c>, <c>boolean</c>, <c>text</c> or <c>empty</c>.</param>
+/// <param name="Text">The text Excel shows.</param>
+/// <param name="NumberFormat">The cell's number format.</param>
+/// <param name="Valid">Whether the cell's validation takes it.</param>
+internal sealed record FilledEntry(string Sheet, string Cell, string Entered, string Value2, string Type, string Text, string NumberFormat, bool Valid);
 
 /// <summary>A table as Excel reads it.</summary>
 /// <param name="Name">Its name.</param>
@@ -217,6 +267,17 @@ internal sealed class WrittenAnswers
 	/// <summary>Its worksheets, in tab order.</summary>
 	public IReadOnlyList<WrittenAnswerSheet> Sheets { get; }
 
+	/// <summary>The probe texts Excel typed into a copy of a template, and what it made of each; empty for a workbook the set doesn't fill.</summary>
+	public IReadOnlyList<FilledEntry> Filled { get; private init; } = [];
+
+	/// <summary>The cells whose good text a template's validation refused, which there should be none of.</summary>
+	public IReadOnlyList<string> GoodRefused { get; private init; } = [];
+
+	/// <summary>The file of Excel's filled copy of a workbook (<c>excel-written/filled/</c>), saved as Excel saves it.</summary>
+	/// <param name="name">The workbook's name, such as <c>template.xlsx</c>.</param>
+	/// <returns>The file's path.</returns>
+	public static string FilledPath(string name) => CorpusFiles.PathOf("excel-written/filled/" + name);
+
 	/// <summary>The answers' files, by the workbook's name.</summary>
 	public static IReadOnlyList<string> Files { get; } =
 		[.. Directory.EnumerateFiles(CorpusFiles.PathOf("excel-written"), "*.json").Select(p => Path.GetFileNameWithoutExtension(p)).OrderBy(n => n, StringComparer.Ordinal)];
@@ -256,13 +317,48 @@ internal sealed class WrittenAnswers
 
 			var autoFit = sheet.Element("autoFit")!.Elements("item").Select(e => Text(e) is { } w ? double.Parse(w, CultureInfo.InvariantCulture) : (double?)null).ToList();
 			var used = Text(sheet, "used")!;
-			sheets.Add(new WrittenAnswerSheet(Text(sheet, "name")!, widths, cells, Look(sheet), autoFit, Reference(used.Substring(used.IndexOf(':') + 1))));
+			sheets.Add(new WrittenAnswerSheet(Text(sheet, "name")!, widths, cells, Look(sheet), autoFit, Reference(used.Substring(used.IndexOf(':') + 1)))
+			{
+				Visible = Text(sheet, "visible") is { } visible ? int.Parse(visible, CultureInfo.InvariantCulture) : -1,
+				Protection = sheet.Element("protection")?.Elements().ToDictionary(e => e.Name.LocalName, e => e.Value),
+				Unprotect = sheet.Element("unprotect") is { } unprotect ? (Text(unprotect, "wrong") == "true", Text(unprotect, "password") is { } p ? p == "true" : null) : null,
+				Validations = sheet.Element("validations")?.Elements("item").ToDictionary(v => Text(v, "cell")!, v => new ExcelValidation(
+					int.Parse(Text(v, "type")!, CultureInfo.InvariantCulture), Text(v, "operator") is { } op ? int.Parse(op, CultureInfo.InvariantCulture) : null,
+					Text(v, "formula1"), Text(v, "formula2"), int.Parse(Text(v, "alertStyle")!, CultureInfo.InvariantCulture), Text(v, "ignoreBlank") == "true",
+					Text(v, "inCellDropdown") == "true", Text(v, "showInput") == "true", Text(v, "showError") == "true", Text(v, "inputTitle"), Text(v, "inputMessage"),
+					Text(v, "errorTitle"), Text(v, "errorMessage"))),
+				Unlocked = sheet.Element("unlocked")?.Elements("item").Select(e => e.Value).ToList() ?? [],
+			});
 		}
 
 		var repaired = root.Element("repaired")?.Elements("item").Select(e => e.Value).ToList() ?? [];
 
-		return new WrittenAnswers(sha256, cultures, cultureData, dpi, os, false, repaired, names, sheets);
+		return new WrittenAnswers(sha256, cultures, cultureData, dpi, os, false, repaired, names, sheets)
+		{
+			Filled =
+			[
+				.. root.Element("filled")?.Elements("item").Select(f => new FilledEntry(
+					Text(f, "sheet")!, Text(f, "cell")!, Text(f, "entered")!, Text(f, "value2") ?? "", Text(f, "type")!, Text(f, "text") ?? "", Text(f, "numberFormat")!,
+					Text(f, "valid") == "true")) ?? [],
+			],
+			GoodRefused = root.Element("goodRefused")?.Elements("item").Select(e => e.Value).ToList() ?? [],
+		};
 	}
+
+	/// <summary>A cell reference's row and 0-based column.</summary>
+	/// <param name="reference">The reference, such as <c>B12</c>.</param>
+	/// <returns>The row and column.</returns>
+	public static (long Row, int Column) Position(string reference) => Reference(reference);
+
+	/// <summary>A cell reference's row.</summary>
+	/// <param name="reference">The reference, such as <c>B12</c>.</param>
+	/// <returns>The row.</returns>
+	public static long Row(string reference) => Reference(reference).Row;
+
+	/// <summary>A cell reference's 0-based column.</summary>
+	/// <param name="reference">The reference, such as <c>B12</c>.</param>
+	/// <returns>The column.</returns>
+	public static int Column(string reference) => Reference(reference).Column;
 
 	/// <summary>A cell reference's row and 0-based column.</summary>
 	/// <param name="reference">The reference, such as <c>B12</c>.</param>

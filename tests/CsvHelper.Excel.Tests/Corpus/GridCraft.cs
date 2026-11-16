@@ -226,11 +226,32 @@ internal static class GridCraft
 		return (counts[0], counts[1]);
 	}
 
+	/// <summary>
+	/// Fills a copy of a workbook's first sheet as a user types into it: for each text, asks its cell's validation whether
+	/// it takes it (<c>data.validate</c>), then enters it (<c>cell.set</c>), and saves the copy as GridCraft saves it.
+	/// </summary>
+	/// <param name="path">The workbook's file.</param>
+	/// <param name="entries">The cells and the texts typed into them, in order.</param>
+	/// <param name="output">The file the copy is saved as.</param>
+	/// <returns>Whether each text's cell's validation took it.</returns>
+	public static List<bool> Fill(string path, IReadOnlyList<(string Cell, string Text)> entries, string output)
+	{
+		var commands = entries.SelectMany(e => new[]
+		{
+			$"data.validate={{\"cell\": \"{e.Cell}\", \"input\": {Json(e.Text)}}}",
+			$"cell.set={{\"cell\": \"{e.Cell}\", \"input\": {Json(e.Text)}}}",
+		});
+		var results = RunScript(path, commands, output);
+
+		return [.. Enumerable.Range(0, entries.Count).Select(i => Property(Property(results[2 * i], "result")!, "ok")?.Value == "true")];
+	}
+
 	/// <summary>Runs commands on a workbook from a script, a line each, and gives each command's line of JSON out.</summary>
 	/// <param name="path">The workbook's file.</param>
 	/// <param name="commands">The commands, each <c>id={json}</c>.</param>
+	/// <param name="output">A file to save the workbook as after, or <see langword="null"/> for none.</param>
 	/// <returns>Each command's output, as XML.</returns>
-	private static List<XElement> RunScript(string path, IEnumerable<string> commands)
+	private static List<XElement> RunScript(string path, IEnumerable<string> commands, string? output = null)
 	{
 		var lines = commands.ToList();
 		if (lines.Count == 0)
@@ -242,10 +263,11 @@ internal static class GridCraft
 		try
 		{
 			File.WriteAllText(script, string.Join("\n", lines) + "\n", new UTF8Encoding(false));
-			var output = Run("run", "--in", path, "--script", script).Split('\n').Where(l => l.Trim().Length > 0).Select(Parse).ToList();
-			Assert.True(output.Count == lines.Count, $"{Version} answered {output.Count} of {lines.Count} commands on {path}.");
+			string[] arguments = output is null ? ["run", "--in", path, "--script", script] : ["run", "--in", path, "--script", script, "--out", output];
+			var answers = Run(arguments).Split('\n').Where(l => l.Trim().Length > 0).Select(Parse).ToList();
+			Assert.True(answers.Count == lines.Count, $"{Version} answered {answers.Count} of {lines.Count} commands on {path}.");
 
-			return output;
+			return answers;
 		}
 		finally
 		{

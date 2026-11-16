@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Reflection;
 using System.Text;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Spreadsheet;
@@ -105,6 +106,12 @@ internal static class WrittenOracle
 		("dddd", "fr-FR"),
 	];
 
+	/// <summary>
+	/// The Excel codes of the set's date members' <see cref="CsvFormatAttribute"/> formats, as Phase 4's translation gives them
+	/// (its "Formats"): a separator that isn't Excel's own quoted.
+	/// </summary>
+	private static readonly Dictionary<string, string> TranslatedDates = new(StringComparer.Ordinal) { ["dd.MM.yyyy"] = "dd\".\"mm\".\"yyyy" };
+
 	/// <summary>The built-in number formats the writer uses by id.</summary>
 	internal static readonly Dictionary<uint, string> BuiltIn = new()
 	{
@@ -173,7 +180,136 @@ internal static class WrittenOracle
 			}
 		}
 
+		if (ListsSheet(workbook) is { } lists)
+		{
+			var cells = new Dictionary<(long, int), ExpectedCell>();
+			for (var c = 0; c < lists.Lists.Count; c++)
+			{
+				for (var r = 0; r < lists.Lists[c].Count; r++)
+				{
+					cells[(r + 1, c)] = Text(lists.Lists[c][r], $"{new SheetLocation(lists.Name).Cell(c, r + 1)} a list's value");
+				}
+			}
+
+			result.Add((lists.Name, cells));
+		}
+
 		return result;
+	}
+
+	/// <summary>
+	/// The workbook's lists sheet, as the plan's "Lists" says, or <see langword="null"/> when it has none: each distinct list
+	/// of its sheets' columns that doesn't go inline (<see cref="Inline"/>), in the order of the sheets and their columns, each
+	/// value once, a column of text cells; the sheet named <c>Lists</c>, or the first of <c>Lists2</c>, <c>Lists3</c>, … that
+	/// no sheet has, ignoring case.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <returns>The sheet's name and its lists, or <see langword="null"/>.</returns>
+	public static (string Name, List<IReadOnlyList<string>> Lists)? ListsSheet(WrittenWorkbook workbook)
+	{
+		var lists = new List<IReadOnlyList<string>>();
+		foreach (var sheet in workbook.Sheets)
+		{
+			foreach (var column in ColumnOptions(workbook, sheet))
+			{
+				if (column?.List is { } values && values.Distinct(StringComparer.Ordinal).ToList() is var distinct && !Inline(distinct) && !lists.Any(l => l.SequenceEqual(distinct)))
+				{
+					lists.Add(distinct);
+				}
+			}
+		}
+
+		if (lists.Count == 0)
+		{
+			return null;
+		}
+
+		var taken = workbook.Sheets.SelectMany(s => s.Names).ToHashSet(StringComparer.OrdinalIgnoreCase);
+		var name = "Lists";
+		for (var n = 2; taken.Contains(name); n++)
+		{
+			name = "Lists" + n.ToString(CultureInfo.InvariantCulture);
+		}
+
+		return (name, lists);
+	}
+
+	/// <summary>
+	/// Whether a list goes inline, as the plan says: its values, joined by commas, of at most 255 characters, as Excel holds
+	/// them (a quote counted once), and none with a comma or white space at either end.
+	/// </summary>
+	/// <param name="values">The list's values, each once.</param>
+	/// <returns>Whether it goes inline.</returns>
+	public static bool Inline(IReadOnlyList<string> values) =>
+		string.Join(",", values).Length <= 255 && values.All(v => !v.Contains(',') && (v.Length == 0 || (!char.IsWhiteSpace(v[0]) && !char.IsWhiteSpace(v[v.Length - 1]))));
+
+	/// <summary>
+	/// The hidden names of a workbook's lists in its lists sheet (<see cref="ListsSheet"/>): <c>_CsvHelperList1</c> and on,
+	/// each over its list's column, as Excel writes the reference.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <returns>The names.</returns>
+	public static List<WrittenName> ListNames(WrittenWorkbook workbook) =>
+		ListsSheet(workbook) is { } lists
+			? [.. lists.Lists.Select((l, i) => new WrittenName(
+				$"_CsvHelperList{i + 1}", $"={SheetLocation.Quote(lists.Name)}!${CellReference.ColumnName(i)}$1:${CellReference.ColumnName(i)}${l.Count}", false))]
+			: [];
+
+	/// <summary>
+	/// The format of a typed column's default style on a sheet that validates its members, as the design's table says:
+	/// Text for text, enums and a <see cref="bool"/> of its own values, a date's and a time's own formats, a duration's
+	/// <c>[h]:mm:ss</c>, an offset's by <see cref="ExcelWriterOptions.DateTimeOffsets"/>, a date's translated
+	/// <see cref="CsvFormatAttribute"/>, and General (<see langword="null"/>) for numbers, booleans and a member a converter
+	/// writes.
+	/// </summary>
+	/// <param name="member">The column's member.</param>
+	/// <param name="options">The workbook's options.</param>
+	/// <returns>The format's code, or <see langword="null"/> for General.</returns>
+	public static string? TypeFormat(PropertyInfo member, ExcelWriterOptions options)
+	{
+		var type = Nullable.GetUnderlyingType(member.PropertyType) ?? member.PropertyType;
+		var format = member.GetCustomAttribute<CsvFormatAttribute>()?.Format;
+		if (member.GetCustomAttribute<CsvConverterAttribute>() is not null)
+		{
+			return null;
+		}
+
+		if (type == typeof(bool))
+		{
+			return member.GetCustomAttribute<CsvBooleanValuesAttribute>() is null ? null : "@";
+		}
+
+		if (type == typeof(DateTime))
+		{
+			return format is null or "O" or "o" ? "yyyy-mm-dd hh:mm:ss" : TranslatedDates[format];
+		}
+
+		if (type == typeof(DateTimeOffset))
+		{
+			return options.DateTimeOffsets == ExcelDateTimeOffsets.Text ? "@" : "yyyy-mm-dd hh:mm:ss";
+		}
+
+		if (type == typeof(TimeSpan))
+		{
+			return "[h]:mm:ss";
+		}
+
+#if NET
+		if (type == typeof(DateOnly))
+		{
+			return "yyyy-mm-dd";
+		}
+
+		if (type == typeof(TimeOnly))
+		{
+			return "hh:mm:ss";
+		}
+#endif
+
+		return type == typeof(sbyte) || type == typeof(byte) || type == typeof(short) || type == typeof(ushort) || type == typeof(int) || type == typeof(uint)
+			|| type == typeof(long) || type == typeof(ulong) || type == typeof(float) || type == typeof(double) || type == typeof(decimal)
+			? null
+			: "@";
 	}
 
 	/// <summary>
@@ -220,6 +356,8 @@ internal static class WrittenOracle
 				Table = attribute.Table ? new ExcelTableOptions { Name = attribute.TableName, Style = attribute.TableStyle } : null,
 				AutoFit = attribute.AutoFit,
 				MaxAutoFitWidth = attribute.MaxAutoFitWidth,
+				Validate = attribute.Validate,
+				Protect = attribute.Protect,
 			};
 		}
 
@@ -242,7 +380,7 @@ internal static class WrittenOracle
 			.. sheet.Columns.Select(c => given is not null && given.TryGetValue(c.Name, out var options)
 				? options
 				: c.Excel is { } attribute
-					? new ExcelColumnOptions { Width = attribute.Width == 0 ? null : attribute.Width, Format = attribute.Format, Wrap = attribute.Wrap, Hidden = attribute.Hidden }
+					? new ExcelColumnOptions { Width = attribute.Width == 0 ? null : attribute.Width, Format = attribute.Format, Wrap = attribute.Wrap, Hidden = attribute.Hidden, List = attribute.List, Prompt = attribute.Prompt }
 					: null),
 		];
 	}
@@ -344,6 +482,9 @@ internal static class WrittenOracle
 				return Float(double.Parse(Shortest(number), CultureInfo.InvariantCulture), number.ToString(CultureInfo.InvariantCulture), source);
 			case sbyte or byte or short or ushort or int or uint or long or ulong or decimal:
 				return Integer((IFormattable)value, provider, options, source);
+			case Enum member when member.GetType().GetField(member.ToString())?.GetCustomAttribute<CsvEnumNameAttribute>() is { Names.Count: > 0 } named:
+				// An enum's value is written by its first other name.
+				return Text(named.Names[0], source);
 			case Uri uri:
 				// The URI as given, whether a link or not; the written set's URIs written by hand are the same as their text.
 				return Text(uri.OriginalString, source);
@@ -426,10 +567,13 @@ internal static class WrittenOracle
 					{
 						var column = c < columns.Length ? columns[c] : null;
 						var reference = CellReference.ColumnName(c) + row.ToString(CultureInfo.InvariantCulture);
-						string[] parts = !written.ContainsKey((row, c))
-							? [column is { Wrap: true } ? "wrap" : "", column?.Format is { } code ? "format " + ExcelCode(code) : ""]
-							: row == 1 && settings.Title is not null
-								? ["bold", "size 14"]
+						var typeFormat = settings.Validate && workbook.Options.Csv.HasHeader && c < sheet.Columns.Count && sheet.Columns[c].Member is { } member && row > header ? TypeFormat(member, workbook.Options) : null;
+						// On a protected sheet, the title's row has the title's style, which its merged cells, not written, take (Phase 7's step 4).
+						var titleRow = row == 1 && settings.Title is not null && (written.ContainsKey((row, c)) || (settings.Protect && c < count));
+						string[] parts = titleRow
+							? ["bold", "size 14"]
+							: !written.ContainsKey((row, c))
+							? [column is { Wrap: true } ? "wrap" : "", (column?.Format ?? typeFormat) is { } code ? "format " + ExcelCode(code) : ""]
 								: row == header
 									? [settings.BoldHeader && settings.Table?.Style is null ? "bold" : ""]
 									: [links.Any(l => l.Cell == reference) ? "Hyperlink" : "", column is { Wrap: true } ? "wrap" : ""];
@@ -460,6 +604,12 @@ internal static class WrittenOracle
 					Cells = looks,
 				}));
 			}
+		}
+
+		// The lists sheet has no look: its cells are inline strings, in no style.
+		if (ListsSheet(workbook) is { } lists)
+		{
+			result.Add((lists.Name, new SheetLook()));
 		}
 
 		return result;

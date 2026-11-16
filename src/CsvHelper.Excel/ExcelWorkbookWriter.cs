@@ -86,6 +86,12 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// </summary>
 	internal int MaxRows { get; set; } = CellReference.MaxRow;
 
+	/// <summary>
+	/// The salt of the protected sheets' passwords, or <see langword="null"/>, the default, for a random one each sheet: set
+	/// by the corpus's written set before adding a sheet, so that a protected template's bytes repeat. 16 bytes, as Excel's.
+	/// </summary>
+	internal byte[]? ProtectionSalt { get; set; }
+
 	/// <summary>The sink of the sheet being written, or <see langword="null"/>, for tests of what a sheet was added with.</summary>
 	internal SheetSink? OpenSheet => openSheet;
 

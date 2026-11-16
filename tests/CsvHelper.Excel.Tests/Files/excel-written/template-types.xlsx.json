@@ -1,0 +1,1716 @@
+{
+  "file": "template-types.xlsx",
+  "description": "a template of every type of the design's table that every target has, booleans' values, flags, offsets as text, a translated [CsvFormat] and a column's own format, under a title, protected with a password (its salt fixed); filled in Excel with a text each column takes and one it refuses",
+  "sha256": "294bd5d446b6c16eefcacded9ce2371142be0cd4c1306f17d8b61ad2f9d35d1c",
+  "dpi": 144,
+  "os": "Microsoft Windows 10.0.26300",
+  "names": [],
+  "sheets": [
+    {
+      "name": "Types",
+      "used": "A1:Y2",
+      "widths": [
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        18.09,
+        14.18,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        8.55,
+        9.91,
+        8.55
+      ],
+      "cells": [
+        {
+          "cell": "A1",
+          "value2": "Every type",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "A2",
+          "value2": "Paid",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "B2",
+          "value2": "Shipped",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "C2",
+          "value2": "Status",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "D2",
+          "value2": "Access",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "E2",
+          "value2": "SByte",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "F2",
+          "value2": "Byte",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "G2",
+          "value2": "Short",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "H2",
+          "value2": "UShort",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "I2",
+          "value2": "Int",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "J2",
+          "value2": "UInt",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "K2",
+          "value2": "Long",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "L2",
+          "value2": "ULong",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "M2",
+          "value2": "Float",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "N2",
+          "value2": "Double",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "O2",
+          "value2": "Decimal",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "P2",
+          "value2": "When",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "Q2",
+          "value2": "Took",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "R2",
+          "value2": "Stamp",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "S2",
+          "value2": "Grade",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "T2",
+          "value2": "Name",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "U2",
+          "value2": "Key",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "V2",
+          "value2": "Site",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "W2",
+          "value2": "Maybe",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "X2",
+          "value2": "Dotted",
+          "type": "text",
+          "numberFormat": "General"
+        },
+        {
+          "cell": "Y2",
+          "value2": "Priced",
+          "type": "text",
+          "numberFormat": "General"
+        }
+      ],
+      "freeze": {
+        "rows": 2,
+        "columns": 0
+      },
+      "filter": null,
+      "tables": [],
+      "merged": [
+        "A1:Y1"
+      ],
+      "links": [],
+      "hiddenColumns": [],
+      "standardHeight": 14.5,
+      "heights": [
+        {
+          "row": 1,
+          "height": 18.5
+        }
+      ],
+      "looks": [
+        {
+          "cell": "A1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "B1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "C1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "D1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "E1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "F1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "G1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "H1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "I1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "J1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "K1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "L1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "M1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "N1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "O1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "P1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "Q1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "R1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "S1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "T1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "U1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "V1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "W1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "X1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "Y1",
+          "bold": true,
+          "size": 14
+        },
+        {
+          "cell": "A2",
+          "bold": true
+        },
+        {
+          "cell": "B2",
+          "bold": true
+        },
+        {
+          "cell": "C2",
+          "bold": true
+        },
+        {
+          "cell": "D2",
+          "bold": true
+        },
+        {
+          "cell": "E2",
+          "bold": true
+        },
+        {
+          "cell": "F2",
+          "bold": true
+        },
+        {
+          "cell": "G2",
+          "bold": true
+        },
+        {
+          "cell": "H2",
+          "bold": true
+        },
+        {
+          "cell": "I2",
+          "bold": true
+        },
+        {
+          "cell": "J2",
+          "bold": true
+        },
+        {
+          "cell": "K2",
+          "bold": true
+        },
+        {
+          "cell": "L2",
+          "bold": true
+        },
+        {
+          "cell": "M2",
+          "bold": true
+        },
+        {
+          "cell": "N2",
+          "bold": true
+        },
+        {
+          "cell": "O2",
+          "bold": true
+        },
+        {
+          "cell": "P2",
+          "bold": true
+        },
+        {
+          "cell": "Q2",
+          "bold": true
+        },
+        {
+          "cell": "R2",
+          "bold": true
+        },
+        {
+          "cell": "S2",
+          "bold": true
+        },
+        {
+          "cell": "T2",
+          "bold": true
+        },
+        {
+          "cell": "U2",
+          "bold": true
+        },
+        {
+          "cell": "V2",
+          "bold": true
+        },
+        {
+          "cell": "W2",
+          "bold": true
+        },
+        {
+          "cell": "X2",
+          "bold": true
+        },
+        {
+          "cell": "Y2",
+          "bold": true
+        },
+        {
+          "cell": "B3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "C3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "D3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "P3",
+          "numberFormat": "yyyy-mm-dd hh:mm:ss"
+        },
+        {
+          "cell": "Q3",
+          "numberFormat": "[h]:mm:ss"
+        },
+        {
+          "cell": "R3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "S3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "T3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "U3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "V3",
+          "numberFormat": "@"
+        },
+        {
+          "cell": "X3",
+          "numberFormat": "dd\".\"mm\".\"yyyy"
+        },
+        {
+          "cell": "Y3",
+          "numberFormat": "#,##0.00"
+        }
+      ],
+      "protection": {
+        "objects": true,
+        "scenarios": true,
+        "selection": 0,
+        "formatCells": false,
+        "formatColumns": true,
+        "formatRows": true,
+        "insertColumns": false,
+        "insertRows": false,
+        "insertLinks": false,
+        "deleteColumns": false,
+        "deleteRows": false,
+        "sort": false,
+        "filter": false,
+        "pivotTables": false
+      },
+      "validations": [
+        {
+          "cell": "A3",
+          "type": 3,
+          "operator": 1,
+          "formula1": "TRUE,FALSE",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "B3",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Yes,No",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "C3",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Open,On hold,Closed",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "E3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-128",
+          "formula2": "127",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "F3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "255",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "G3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-32768",
+          "formula2": "32767",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "H3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "65535",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "I3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-2147483648",
+          "formula2": "2147483647",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "J3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "4294967295",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "K3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-999999999999999",
+          "formula2": "999999999999999",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "L3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "999999999999999",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "M3",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-3.40282346638529E+38",
+          "formula2": "3.40282346638529E+38",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "N3",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-9.99999999999999E+307",
+          "formula2": "9.99999999999999E+307",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "O3",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-7.92281625142643E+28",
+          "formula2": "7.92281625142643E+28",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "P3",
+          "type": 4,
+          "operator": 1,
+          "formula1": "1/1/1900",
+          "formula2": "12/31/9999  12:00:00 AM",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "Q3",
+          "type": 5,
+          "operator": 1,
+          "formula1": "12:00:00 AM",
+          "formula2": "12/31/9999  12:00:00 AM",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "S3",
+          "type": 6,
+          "operator": 3,
+          "formula1": "1",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "W3",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-2147483648",
+          "formula2": "2147483647",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "X3",
+          "type": 4,
+          "operator": 1,
+          "formula1": "1/1/1900",
+          "formula2": "12/31/9999  12:00:00 AM",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "Y3",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-7.92281625142643E+28",
+          "formula2": "7.92281625142643E+28",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "A1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "TRUE,FALSE",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "B1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Yes,No",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "C1048576",
+          "type": 3,
+          "operator": 1,
+          "formula1": "Open,On hold,Closed",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "E1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-128",
+          "formula2": "127",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "F1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "255",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "G1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-32768",
+          "formula2": "32767",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "H1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "65535",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "I1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-2147483648",
+          "formula2": "2147483647",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "J1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "4294967295",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "K1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-999999999999999",
+          "formula2": "999999999999999",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "L1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "0",
+          "formula2": "999999999999999",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "M1048576",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-3.40282346638529E+38",
+          "formula2": "3.40282346638529E+38",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "N1048576",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-9.99999999999999E+307",
+          "formula2": "9.99999999999999E+307",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "O1048576",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-7.92281625142643E+28",
+          "formula2": "7.92281625142643E+28",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "P1048576",
+          "type": 4,
+          "operator": 1,
+          "formula1": "1/1/1900",
+          "formula2": "12/31/9999  12:00:00 AM",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "Q1048576",
+          "type": 5,
+          "operator": 1,
+          "formula1": "12:00:00 AM",
+          "formula2": "12/31/9999  12:00:00 AM",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "S1048576",
+          "type": 6,
+          "operator": 3,
+          "formula1": "1",
+          "formula2": "",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "W1048576",
+          "type": 1,
+          "operator": 1,
+          "formula1": "-2147483648",
+          "formula2": "2147483647",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "X1048576",
+          "type": 4,
+          "operator": 1,
+          "formula1": "1/1/1900",
+          "formula2": "12/31/9999  12:00:00 AM",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        },
+        {
+          "cell": "Y1048576",
+          "type": 2,
+          "operator": 1,
+          "formula1": "-7.92281625142643E+28",
+          "formula2": "7.92281625142643E+28",
+          "alertStyle": 1,
+          "ignoreBlank": true,
+          "inCellDropdown": true,
+          "showInput": true,
+          "showError": true,
+          "inputTitle": null,
+          "inputMessage": null,
+          "errorTitle": null,
+          "errorMessage": null
+        }
+      ],
+      "unlocked": [
+        "A3",
+        "B3",
+        "C3",
+        "D3",
+        "E3",
+        "F3",
+        "G3",
+        "H3",
+        "I3",
+        "J3",
+        "K3",
+        "L3",
+        "M3",
+        "N3",
+        "O3",
+        "P3",
+        "Q3",
+        "R3",
+        "S3",
+        "T3",
+        "U3",
+        "V3",
+        "W3",
+        "X3",
+        "Y3",
+        "A1048576",
+        "B1048576",
+        "C1048576",
+        "D1048576",
+        "E1048576",
+        "F1048576",
+        "G1048576",
+        "H1048576",
+        "I1048576",
+        "J1048576",
+        "K1048576",
+        "L1048576",
+        "M1048576",
+        "N1048576",
+        "O1048576",
+        "P1048576",
+        "Q1048576",
+        "R1048576",
+        "S1048576",
+        "T1048576",
+        "U1048576",
+        "V1048576",
+        "W1048576",
+        "X1048576",
+        "Y1048576"
+      ],
+      "autoFit": [
+        3.82,
+        6.91,
+        5.45,
+        5.64,
+        4.82,
+        3.91,
+        4.73,
+        6,
+        2.55,
+        3.82,
+        4.09,
+        5.36,
+        4.36,
+        6.18,
+        6.82,
+        5.18,
+        4.36,
+        5.55,
+        5.27,
+        5.09,
+        3.18,
+        3.27,
+        5.91,
+        6.09,
+        5.36
+      ],
+      "unprotect": {
+        "wrong": false,
+        "password": true
+      }
+    }
+  ],
+  "filled": [
+    {
+      "sheet": "Types",
+      "cell": "A3",
+      "entered": "FALSE",
+      "value2": false,
+      "type": "boolean",
+      "text": "FALSE",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "A4",
+      "entered": "maybe",
+      "value2": "maybe",
+      "type": "text",
+      "text": "maybe",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "B6",
+      "entered": "Yes",
+      "value2": "Yes",
+      "type": "text",
+      "text": "Yes",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "B7",
+      "entered": "maybe",
+      "value2": "maybe",
+      "type": "text",
+      "text": "maybe",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "C9",
+      "entered": "On hold",
+      "value2": "On hold",
+      "type": "text",
+      "text": "On hold",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "C10",
+      "entered": "Shut",
+      "value2": "Shut",
+      "type": "text",
+      "text": "Shut",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "D12",
+      "entered": "Read, Write",
+      "value2": "Read, Write",
+      "type": "text",
+      "text": "Read, Write",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "D13",
+      "entered": "Nope",
+      "value2": "Nope",
+      "type": "text",
+      "text": "Nope",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "E15",
+      "entered": "-128",
+      "value2": -128,
+      "type": "number",
+      "text": "-128",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "E16",
+      "entered": "128",
+      "value2": 128,
+      "type": "number",
+      "text": "128",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "F18",
+      "entered": "255",
+      "value2": 255,
+      "type": "number",
+      "text": "255",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "F19",
+      "entered": "-1",
+      "value2": -1,
+      "type": "number",
+      "text": "-1",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "G21",
+      "entered": "-32768",
+      "value2": -32768,
+      "type": "number",
+      "text": "-32768",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "G22",
+      "entered": "32768",
+      "value2": 32768,
+      "type": "number",
+      "text": "32768",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "H24",
+      "entered": "65535",
+      "value2": 65535,
+      "type": "number",
+      "text": "65535",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "H25",
+      "entered": "65536",
+      "value2": 65536,
+      "type": "number",
+      "text": "65536",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "I27",
+      "entered": "2147483647",
+      "value2": 2147483647,
+      "type": "number",
+      "text": "2.15E+09",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "I28",
+      "entered": "1.5",
+      "value2": 1.5,
+      "type": "number",
+      "text": "1.5",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "J30",
+      "entered": "4294967295",
+      "value2": 4294967295,
+      "type": "number",
+      "text": "4.29E+09",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "J31",
+      "entered": "-1",
+      "value2": -1,
+      "type": "number",
+      "text": "-1",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "K33",
+      "entered": "-999999999999999",
+      "value2": -999999999999999,
+      "type": "number",
+      "text": "-1E+15",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "K34",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "L36",
+      "entered": "999999999999999",
+      "value2": 999999999999999,
+      "type": "number",
+      "text": "1E+15",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "L37",
+      "entered": "-1",
+      "value2": -1,
+      "type": "number",
+      "text": "-1",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "M39",
+      "entered": "1.5",
+      "value2": 1.5,
+      "type": "number",
+      "text": "1.5",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "M40",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "N42",
+      "entered": "-1.5E+300",
+      "value2": -1.5E+300,
+      "type": "number",
+      "text": "########",
+      "numberFormat": "0.00E+00",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "N43",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "O45",
+      "entered": "79228162514264",
+      "value2": 79228162514264,
+      "type": "number",
+      "text": "7.92E+13",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "O46",
+      "entered": "8E+28",
+      "value2": 8E+28,
+      "type": "number",
+      "text": "8.00E+28",
+      "numberFormat": "0.00E+00",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "P48",
+      "entered": "1/15/2024 10:30",
+      "value2": 45306.4375,
+      "type": "number",
+      "text": "2024-01-15 10:30:00",
+      "numberFormat": "yyyy-mm-dd hh:mm:ss",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "P49",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "yyyy-mm-dd hh:mm:ss",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "Q51",
+      "entered": "36:00:00",
+      "value2": 1.5,
+      "type": "number",
+      "text": "36:00:00",
+      "numberFormat": "[h]:mm:ss",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "Q52",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "[h]:mm:ss",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "R54",
+      "entered": "2024-01-15T10:30:00+01:00",
+      "value2": "2024-01-15T10:30:00+01:00",
+      "type": "text",
+      "text": "2024-01-15T10:30:00+01:00",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "R55",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "S57",
+      "entered": "a",
+      "value2": "a",
+      "type": "text",
+      "text": "a",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "S58",
+      "entered": "ab",
+      "value2": "ab",
+      "type": "text",
+      "text": "ab",
+      "numberFormat": "@",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "T60",
+      "entered": "anything at all",
+      "value2": "anything at all",
+      "type": "text",
+      "text": "anything at all",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "U62",
+      "entered": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+      "value2": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+      "type": "text",
+      "text": "6f9619ff-8b86-d011-b42d-00c04fc964ff",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "U63",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "V65",
+      "entered": "https://example.com/",
+      "value2": "https://example.com/",
+      "type": "text",
+      "text": "https://example.com/",
+      "numberFormat": "@",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "W67",
+      "entered": "7",
+      "value2": 7,
+      "type": "number",
+      "text": "7",
+      "numberFormat": "General",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "W68",
+      "entered": "x",
+      "value2": "x",
+      "type": "text",
+      "text": "x",
+      "numberFormat": "General",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "X70",
+      "entered": "2024-01-15",
+      "value2": 45306,
+      "type": "number",
+      "text": "15.01.2024",
+      "numberFormat": "dd\".\"mm\".\"yyyy",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "X71",
+      "entered": "15.01.2024",
+      "value2": "15.01.2024",
+      "type": "text",
+      "text": "15.01.2024",
+      "numberFormat": "dd\".\"mm\".\"yyyy",
+      "valid": false
+    },
+    {
+      "sheet": "Types",
+      "cell": "Y73",
+      "entered": "1234.5",
+      "value2": 1234.5,
+      "type": "number",
+      "text": "1,234.50",
+      "numberFormat": "#,##0.00",
+      "valid": true
+    },
+    {
+      "sheet": "Types",
+      "cell": "Y74",
+      "entered": "abc",
+      "value2": "abc",
+      "type": "text",
+      "text": "abc",
+      "numberFormat": "#,##0.00",
+      "valid": false
+    }
+  ],
+  "goodRefused": []
+}
