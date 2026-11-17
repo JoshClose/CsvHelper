@@ -59,6 +59,18 @@ public partial class FormatCodeTests
 	[InlineData("0.00 General")]
 	[InlineData("0 General")]
 	[InlineData("General.")]
+	[InlineData("0E+")]
+	[InlineData("0.0E+")]
+	[InlineData("0.00E-")]
+	[InlineData("0E+\" x\"")]
+	[InlineData("0E+;0")]
+	[InlineData("0;0;[=0]\"z\"")]
+	[InlineData("0;0;[>5]\"z\"")]
+	[InlineData("[>100]0;0.00;[=0]\"z\"")]
+	[InlineData("0;[<0]@")]
+	[InlineData("?/32769")]
+	[InlineData("# ?/50000")]
+	[InlineData("# ?/100000000")]
 	public void CantReadCodesExcelRefuses(string code)
 	{
 		var compiled = FormatCode.Compile(code);
@@ -82,6 +94,11 @@ public partial class FormatCodeTests
 	[InlineData("0.0,,\"M\"", "0I . 0D 'M'")]
 	[InlineData("#,", "#I")]
 	[InlineData("0 ,", "0I ' ,'")]
+	[InlineData("0,.0", "0I . 0D")]
+	[InlineData("#,##0,.00", "#I #I #I 0I . 0D 0D")]
+	[InlineData("0.0,0", "0I . 0D 0D")]
+	[InlineData("0.0%,", "0I . 0D '%,'")]
+	[InlineData(",##0", "',' #I #I 0I")]
 	[InlineData("0%", "0I '%'")]
 	[InlineData("%0", "'%' 0I")]
 	[InlineData("##0.0E+0", "#I #I 0I . 0D E+ 0E")]
@@ -95,12 +112,12 @@ public partial class FormatCodeTests
 	[InlineData("0\\x", "0I 'x'")]
 	[InlineData("0!x", "0I '!x'")]
 	[InlineData("000-00-0000", "0I 0I 0I '-' 0I 0I '-' 0I 0I 0I 0I")]
-	[InlineData("# ?/?", "#I ' ' ?N '/' ?V")]
-	[InlineData("# ??/16", "#I ' ' ?N ?N '/16'")]
-	[InlineData("# ?/10", "#I ' ' ?N '/10'")]
-	[InlineData("0/ 8", "0N '/ 8'")]
-	[InlineData("?/?\" in\"", "?N '/' ?V ' in'")]
-	[InlineData("#,### ?/?", "#I #I #I #I ' ' ?N '/' ?V")]
+	[InlineData("# ?/?", "#I ' ' ?N / ?V")]
+	[InlineData("# ??/16", "#I ' ' ?N ?N / =16")]
+	[InlineData("# ?/10", "#I ' ' ?N / =10")]
+	[InlineData("0/ 8", "0N / ' ' =8")]
+	[InlineData("?/?\" in\"", "?N / ?V ' in'")]
+	[InlineData("#,### ?/?", "#I #I #I #I ' ' ?N / ?V")]
 	[InlineData("0\\/0", "0I '/' 0I")]
 	[InlineData("yyyy-mm-dd hh:mm:ss.000", "yyyy '-' MM '-' dd ' ' hh ':' mm ':' ss '.' 000")]
 	[InlineData("m/d/yyyy h:mm", "M '/' d '/' yyyy ' ' h ':' mm")]
@@ -199,6 +216,24 @@ public partial class FormatCodeTests
 		section = First("#,### ?/?");
 		Assert.True(section.Grouping);
 		Assert.Equal(4, section.IntegerPlaceholders);
+
+		// The parts' placeholders, and where the fraction lies among the tokens: "a", the whole number, " x ", the
+		// numerator, the bar, the denominator, " in".
+		section = First("\"a\"#,##0\" x \"?#/0?\" in\"");
+		Assert.Equal("###0", section.IntegerKinds);
+		Assert.Equal("?#", section.NumeratorKinds);
+		Assert.Equal("0?", section.DenominatorKinds);
+		Assert.Equal(5, section.WholeEnd);
+		Assert.Equal(6, section.NumeratorStart);
+		Assert.Equal(11, section.FractionEnd);
+		Assert.Equal(12, section.Tokens.Length);
+
+		section = First("?/16\" in\"");
+		Assert.Equal(0, section.WholeEnd);
+		Assert.Equal(0, section.NumeratorStart);
+		Assert.Equal(3, section.FractionEnd);
+		Assert.Equal("", section.DenominatorKinds);
+		Assert.Equal(32768, First("?/32768").Denominator);
 
 		Assert.Equal(FormatSectionKind.Number, First("0/").Kind);
 		Assert.Equal(FormatSectionKind.Number, First("/0").Kind);
@@ -446,6 +481,8 @@ public partial class FormatCodeTests
 				}),
 				FormatTokenKind.Point => ".",
 				FormatTokenKind.Exponent => "E" + token.Placeholder,
+				FormatTokenKind.Bar => "/",
+				FormatTokenKind.FixedDenominator => "=" + text,
 				FormatTokenKind.At => "@",
 				FormatTokenKind.General => "General",
 				FormatTokenKind.Year => new string('y', token.Count),

@@ -29,14 +29,27 @@ namespace CsvHelper.Excel;
 /// wouldn't open as written (a quote or bracket left open, <c>\</c>, <c>_</c> or <c>*</c> at its end, more than four
 /// sections, a bracket that is no color, condition, locale, elapsed time or <c>DBNum</c>), and the forms Excel refused,
 /// where the renderer would have to guess what they show: an exponent in lower case (<c>0.00e+00</c>), <c>:</c> in a
-/// number (<c>0:00</c>), <c>General</c> with digit placeholders, <c>.</c> or <c>@</c> (<c>0.00 General</c>), and colors
-/// past <c>Color1</c> to <c>Color56</c>.
+/// number (<c>0:00</c>), <c>General</c> with digit placeholders, <c>.</c> or <c>@</c> (<c>0.00 General</c>), colors
+/// past <c>Color1</c> to <c>Color56</c>, a condition in the third or the text section (<c>0;0;[=0]"z"</c>), and an
+/// exponent without placeholders after it (<c>0E+</c>). A
+/// fraction's denominator over 32,768 (<c>?/50000</c>) can't be read either: Excel takes it, and shows fractions that
+/// aren't the value (0.5 as <c>1/5</c>; step 3's probes).
+/// </para>
+/// <para>
+/// A comma right before the point scales, as one after the last placeholder does (Excel writes <c>0,.0</c> as
+/// <c>0.0,</c>), and one among the decimal placeholders does nothing (<c>0.0,0</c> is <c>0.00</c>).
 /// </para>
 /// </remarks>
 internal sealed class FormatCode
 {
 	/// <summary>The most sections a code has: positive, negative, zero and text.</summary>
 	public const int MaxSections = 4;
+
+	/// <summary>The largest fixed denominator Excel shows fractions over as they are (step 3's probes: 32,769 and above aren't).</summary>
+	public const int MaxDenominator = 32768;
+
+	/// <summary>How many sections can have a condition: the first two (Excel refuses one in the third).</summary>
+	private const int ConditionalSections = 2;
 
 	/// <summary>The colors Excel knows by name.</summary>
 	private static readonly string[] ColorNames = ["black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"];
@@ -98,9 +111,18 @@ internal sealed class FormatCode
 			return new FormatCode(code, [], null, [], false);
 		}
 
-		// The fourth section is text's, and so is a last section with @.
+		// The fourth section is text's, and so is a last section with @. Excel refuses a condition past the second section,
+		// and in the text section.
 		var count = raw.Count;
 		var textIndex = count == MaxSections || raw[count - 1].Ats > 0 ? count - 1 : -1;
+		for (var i = 0; i < count; i++)
+		{
+			if (raw[i].Condition != ConditionOperator.None && (i >= ConditionalSections || i == textIndex))
+			{
+				return new FormatCode(code, [], null, [], false);
+			}
+		}
+
 		var pool = new List<byte>();
 		var numbers = new List<FormatSection>(count);
 		FormatSection? text = null;
@@ -131,10 +153,10 @@ internal sealed class FormatCode
 		return new FormatCode(code, [.. numbers], text, [.. pool], true);
 	}
 
-	/// <summary>A literal token's text, or <c>A/P</c>'s two letters.</summary>
+	/// <summary>A literal token's text, <c>A/P</c>'s two letters, or a fixed denominator's digits.</summary>
 	/// <param name="token">The token.</param>
 	/// <returns>Its UTF-8.</returns>
-	public ReadOnlySpan<byte> Literal(in FormatToken token) => literals.AsSpan(token.Start, token.Length);
+	public ReadOnlySpan<byte> Literal(FormatToken token) => literals.AsSpan(token.Start, token.Length);
 
 	/// <summary>Reads a code into its sections' raw tokens and brackets.</summary>
 	/// <param name="code">The code.</param>
@@ -286,18 +308,55 @@ internal sealed class FormatCode
 				if (FinishFraction(tokens, section))
 				{
 					section.Kind = FormatSectionKind.Fraction;
+					if (section.Denominator > MaxDenominator)
+					{
+						return null;
+					}
 				}
 				else
 				{
 					FinishNumber(tokens, section);
+					if (section.HasExponent && section.ExponentPlaceholders == 0)
+					{
+						// Excel refuses an exponent without placeholders after it (0E+, 0.0E+; step 3's probes).
+						return null;
+					}
 				}
 
 				break;
 		}
 
 		section.Tokens = Pool(tokens, pool);
+		if (section.Kind == FormatSectionKind.Fraction)
+		{
+			Locate(section);
+		}
 
 		return section;
+	}
+
+	/// <summary>Finds where a fraction's parts are among its compiled tokens: after its whole number, its numerator's start, and after its denominator.</summary>
+	/// <param name="section">The fraction.</param>
+	private static void Locate(FormatSection section)
+	{
+		var tokens = section.Tokens;
+		section.NumeratorStart = -1;
+		for (var i = 0; i < tokens.Length; i++)
+		{
+			var token = tokens[i];
+			if (token.Role == PlaceholderRole.Integer)
+			{
+				section.WholeEnd = i + 1;
+			}
+			else if (token.Role == PlaceholderRole.Numerator && section.NumeratorStart < 0)
+			{
+				section.NumeratorStart = i;
+			}
+			else if (token.Role == PlaceholderRole.Denominator || token.Kind == FormatTokenKind.FixedDenominator)
+			{
+				section.FractionEnd = i + 1;
+			}
+		}
 	}
 
 	/// <summary>
@@ -361,8 +420,12 @@ internal sealed class FormatCode
 			tokens[pointAt] = new Raw(FormatTokenKind.Point);
 		}
 
-		// Commas between integer placeholders group the digits; those right after the last placeholder of the mantissa
-		// divide by 1,000 each; others show as themselves. Grouping and scaling commas show nothing.
+		// Commas between integer placeholders group the digits; those right after the last placeholder of the mantissa, or
+		// right before the point after the last integer placeholder, divide by 1,000 each; those among the decimal
+		// placeholders do nothing; others show as themselves. Grouping and scaling commas, and those that do nothing, show
+		// nothing. Each is judged on the tokens as read, then removed.
+		var lastDecimal = mantissaEnd > 0 ? tokens.FindLastIndex(mantissaEnd - 1, mantissaEnd, t => t.Role == PlaceholderRole.Decimal) : -1;
+		var removed = new List<int>();
 		for (var i = mantissaEnd - 1; i >= 0; i--)
 		{
 			if (!(tokens[i].Bare && tokens[i].Char == ','))
@@ -373,13 +436,25 @@ internal sealed class FormatCode
 			if (i > firstInteger && i < lastInteger)
 			{
 				section.Grouping = true;
-				tokens.RemoveAt(i);
+				removed.Add(i);
 			}
-			else if (lastMantissa >= 0 && i > lastMantissa && OnlyCommasBetween(tokens, lastMantissa + 1, i))
+			else if ((lastMantissa >= 0 && i > lastMantissa && OnlyCommasBetween(tokens, lastMantissa + 1, i)) ||
+				(pointAt >= 0 && lastInteger >= 0 && i > lastInteger && i < pointAt && OnlyCommasBetween(tokens, lastInteger + 1, i) &&
+				OnlyCommasBetween(tokens, i + 1, pointAt)))
 			{
 				section.Scale++;
-				tokens.RemoveAt(i);
+				removed.Add(i);
 			}
+			else if (pointAt >= 0 && i > pointAt && i < lastDecimal)
+			{
+				removed.Add(i);
+			}
+		}
+
+		// Descending, so that each removal leaves the positions still to remove where they were.
+		foreach (var i in removed)
+		{
+			tokens.RemoveAt(i);
 		}
 	}
 
@@ -404,7 +479,8 @@ internal sealed class FormatCode
 	/// <summary>
 	/// A fraction: a <c>/</c> outside quotes after a placeholder, before its denominator (placeholders, or a number, after
 	/// any spaces). The placeholders right before the <c>/</c> are the numerator's, those before them the whole number's,
-	/// grouped by a comma between them; a number's digits show as themselves.
+	/// grouped by a comma between them; the <c>/</c> is a token of its own, and so are a number's digits, which show as
+	/// themselves, so that the renderer finds the fraction's end.
 	/// </summary>
 	/// <param name="tokens">The tokens, changed in place.</param>
 	/// <param name="section">The section's facts.</param>
@@ -444,10 +520,12 @@ internal sealed class FormatCode
 			numerator--;
 		}
 
-		// A number's digits: 1 to 9 outside quotes, then any of them or 0 placeholders, which show as themselves.
+		// A number's digits: 1 to 9 outside quotes, then any of them or 0 placeholders, which show as themselves, as one
+		// token. One past MaxDenominator makes the code unreadable, so reading stops well past it.
 		if (tokens[denominator].Kind != FormatTokenKind.Digit)
 		{
 			var value = 0;
+			var digits = new StringBuilder();
 			for (var i = denominator; i < tokens.Count; i++)
 			{
 				var token = tokens[i];
@@ -458,15 +536,20 @@ internal sealed class FormatCode
 				}
 
 				value = (value * 10) + digit;
-				tokens[i] = Raw.Shown(((char)('0' + digit)).ToString());
+				digits.Append((char)('0' + digit));
 			}
 
+			tokens.RemoveRange(denominator + 1, digits.Length - 1);
+			tokens[denominator] = new Raw(FormatTokenKind.FixedDenominator) { Text = digits.ToString() };
 			section.Denominator = value;
 		}
 
+		tokens[bar] = new Raw(FormatTokenKind.Bar);
 		var firstWhole = -1;
 		var lastWhole = -1;
 		var kinds = new StringBuilder();
+		var numeratorKinds = new StringBuilder();
+		var denominatorKinds = new StringBuilder();
 		for (var i = 0; i < tokens.Count; i++)
 		{
 			var token = tokens[i];
@@ -493,15 +576,19 @@ internal sealed class FormatCode
 			{
 				tokens[i] = token with { Role = PlaceholderRole.Numerator };
 				section.NumeratorPlaceholders++;
+				numeratorKinds.Append(token.Char);
 			}
 			else
 			{
 				tokens[i] = token with { Role = PlaceholderRole.Denominator };
 				section.DenominatorPlaceholders++;
+				denominatorKinds.Append(token.Char);
 			}
 		}
 
 		section.IntegerKinds = kinds.ToString();
+		section.NumeratorKinds = numeratorKinds.ToString();
+		section.DenominatorKinds = denominatorKinds.ToString();
 		for (var i = lastWhole - 1; i > firstWhole; i--)
 		{
 			if (tokens[i].Bare && tokens[i].Char == ',')
@@ -669,7 +756,7 @@ internal sealed class FormatCode
 
 			AddLiteral(compiled, text, pool);
 			var start = pool.Count;
-			if (token.Kind == FormatTokenKind.ShortAmPm)
+			if (token.Kind is FormatTokenKind.ShortAmPm or FormatTokenKind.FixedDenominator)
 			{
 				pool.AddRange(Encoding.UTF8.GetBytes(token.Text!));
 			}
@@ -711,7 +798,7 @@ internal sealed class FormatCode
 	/// <param name="Kind">What it is.</param>
 	private record struct Raw(FormatTokenKind Kind)
 	{
-		/// <summary>A literal's text, or <c>A/P</c>'s letters.</summary>
+		/// <summary>A literal's text, <c>A/P</c>'s letters, or a fixed denominator's digits.</summary>
 		public string? Text { get; set; }
 
 		/// <summary>A placeholder's character, an exponent's sign, or the character of a literal read outside quotes.</summary>

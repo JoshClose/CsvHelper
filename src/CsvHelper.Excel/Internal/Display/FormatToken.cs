@@ -15,6 +15,12 @@ internal enum FormatTokenKind : byte
 	/// <summary>An exponent, <c>E+</c> or <c>E-</c> (<see cref="FormatToken.Placeholder"/> is its sign).</summary>
 	Exponent,
 
+	/// <summary>A fraction's <c>/</c>, between its numerator and its denominator.</summary>
+	Bar,
+
+	/// <summary>A fraction's denominator when it is a number (<c># ?/8</c>): its digits as written (<see cref="FormatCode.Literal"/>).</summary>
+	FixedDenominator,
+
 	/// <summary>The text, <c>@</c>.</summary>
 	At,
 
@@ -94,7 +100,7 @@ internal enum PlaceholderRole : byte
 
 /// <summary>A token of a compiled format code.</summary>
 /// <param name="kind">What it is.</param>
-/// <param name="start">Where its text starts in the code's literal text, for a literal or <c>A/P</c>.</param>
+/// <param name="start">Where its text starts in the code's literal text, for a literal, <c>A/P</c> or a fixed denominator.</param>
 /// <param name="length">How many bytes its text has.</param>
 /// <param name="count">A date or time token's letters, or the digits of fractions of a second.</param>
 /// <param name="placeholder">A digit placeholder's character, or an exponent's sign.</param>
@@ -105,7 +111,7 @@ internal readonly struct FormatToken(FormatTokenKind kind, int start = 0, int le
 	/// <summary>What it is.</summary>
 	public FormatTokenKind Kind { get; } = kind;
 
-	/// <summary>Where its text starts in the code's literal text, for a literal or <c>A/P</c>.</summary>
+	/// <summary>Where its text starts in the code's literal text, for a literal, <c>A/P</c> or a fixed denominator.</summary>
 	public int Start { get; } = start;
 
 	/// <summary>How many bytes its text has.</summary>

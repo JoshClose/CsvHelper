@@ -25,7 +25,7 @@ public class NumberFormatWidthTests
 	private const double Rounding = 0.5;
 
 	/// <summary>Each number, and its text and width in General: <c>value 'text'@points</c>.</summary>
-	private const string General = """
+	internal const string General = """
 		0	'0'@10
 		1	'1'@10
 		-1	'-1'@13.5
@@ -128,7 +128,7 @@ public class NumberFormatWidthTests
 		""";
 
 	/// <summary>Each code, and the text and width of each of <see cref="Values"/> in it: <c>code 'text'@points ...</c>.</summary>
-	private const string Codes = """
+	internal const string Codes = """
 		0	'0'@10 '1'@10 '-1'@13.5 '1'@10 '1235'@26.5 '-1235'@30 '1234568'@43 '0'@10 '123456789012345'@87.5 '0'@10 '0'@10 '1000'@26.5 '0'@10 '100000000000000000000'@121.5 '-100000000000000000000'@125
 		0.00	'0.00'@24 '1.00'@24 '-1.00'@27.5 '0.50'@24 '1234.57'@40.5 '-1234.57'@44 '1234567.89'@57 '0.00'@24 '123456789012345.00'@102 '0.00'@24 '0.00'@24 '1000.00'@40.5 '0.13'@24 '100000000000000000000.00'@135.5 '-100000000000000000000.00'@139.5
 		#,##0	'0'@10 '1'@10 '-1'@13.5 '1'@10 '1,235'@29 '-1,235'@32.5 '1,234,568'@48 '0'@10 '123,456,789,012,345'@98 '0'@10 '0'@10 '1,000'@29 '0'@10 '100,000,000,000,000,000,000'@136.5 '-100,000,000,000,000,000,000'@140.5
@@ -227,7 +227,7 @@ public class NumberFormatWidthTests
 		""";
 
 	/// <summary>The values of each line of <see cref="Codes"/>, in order.</summary>
-	private static readonly double[] Values = [0, 1, -1, 0.5, 1234.5678, -1234.5678, 1234567.891, -0.001, 123456789012345, 1E-07, 0.0001234, 999.995, 0.125, 1E+20, -1E+20];
+	internal static readonly double[] Values = [0, 1, -1, 0.5, 1234.5678, -1234.5678, 1234567.891, -0.001, 123456789012345, 1E-07, 0.0001234, 999.995, 0.125, 1E+20, -1E+20];
 
 	/// <summary>The durations of each line of <see cref="Elapsed"/>, in days, in order.</summary>
 	private static readonly double[] Durations = [0.5, 1.25, 10.75, 100.0001, 0.000694444444444444, 4166.66666666667];
@@ -566,7 +566,7 @@ public class NumberFormatWidthTests
 	/// <summary>A table's lines: each line's key, before its first tab, and its entries.</summary>
 	/// <param name="table">The table.</param>
 	/// <returns>The lines.</returns>
-	private static IEnumerable<(string Key, string Entries)> Lines(string table) =>
+	internal static IEnumerable<(string Key, string Entries)> Lines(string table) =>
 		table.Split('\n').Select(l => l.Trim('\r', '\t')).Where(l => l.Length > 0).Select(l => (l.Substring(0, l.IndexOf('\t')), l.Substring(l.IndexOf('\t') + 1)));
 
 	/// <summary>A table's keys.</summary>
@@ -586,6 +586,6 @@ public class NumberFormatWidthTests
 	/// <summary>Reads <c>'text'@points</c> entries.</summary>
 	/// <param name="entries">The entries.</param>
 	/// <returns>The texts and widths.</returns>
-	private static List<(string Text, double Points)> Parse(string entries) =>
+	internal static List<(string Text, double Points)> Parse(string entries) =>
 		[.. Regex.Matches(entries, "'([^']*)'@([0-9.]+)").Cast<Match>().Select(m => (m.Groups[1].Value, double.Parse(m.Groups[2].Value, CultureInfo.InvariantCulture)))];
 }

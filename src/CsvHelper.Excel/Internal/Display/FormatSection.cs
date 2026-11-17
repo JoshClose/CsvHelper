@@ -105,10 +105,10 @@ internal sealed class FormatSection
 	/// <summary>Whether a number groups its integer digits by three: a <c>,</c> between integer placeholders.</summary>
 	public bool Grouping { get; internal set; }
 
-	/// <summary>How many times a number is divided by 1,000: a <c>,</c> right after its last placeholder, each.</summary>
+	/// <summary>How many times a number is divided by 1,000: a <c>,</c> right after its last placeholder, or right before its point, each.</summary>
 	public int Scale { get; internal set; }
 
-	/// <summary>How many <c>%</c> it has, each of which multiplies a number by 100.</summary>
+	/// <summary>How many <c>%</c> it has, each of which multiplies a number by 100, unless it has an exponent.</summary>
 	public int Percents { get; internal set; }
 
 	/// <summary>Whether a number has an exponent.</summary>
@@ -128,6 +128,24 @@ internal sealed class FormatSection
 
 	/// <summary>A fraction's denominator when it is a number (<c># ?/8</c>), else 0.</summary>
 	public int Denominator { get; internal set; }
+
+	/// <summary>A fraction's numerator's placeholders' characters, in order: <c># ?#/??</c> has <c>?#</c>.</summary>
+	public string NumeratorKinds { get; internal set; } = "";
+
+	/// <summary>A fraction's denominator's placeholders' characters, in order: empty for a number.</summary>
+	public string DenominatorKinds { get; internal set; } = "";
+
+	/// <summary>
+	/// The position of the first token after a fraction's whole number's last placeholder: 0 without a whole number. The
+	/// tokens from there to <see cref="FractionEnd"/> are the fraction, which a zero fraction after a whole number blanks.
+	/// </summary>
+	public int WholeEnd { get; internal set; }
+
+	/// <summary>The position of a fraction's numerator's first placeholder: the literals from <see cref="WholeEnd"/> to it are between the whole number and the fraction.</summary>
+	public int NumeratorStart { get; internal set; }
+
+	/// <summary>The position of the first token after a fraction's denominator.</summary>
+	public int FractionEnd { get; internal set; }
 
 	/// <summary>Whether a time shows 12 hours, with <c>AM/PM</c> or <c>A/P</c>.</summary>
 	public bool TwelveHour { get; internal set; }
