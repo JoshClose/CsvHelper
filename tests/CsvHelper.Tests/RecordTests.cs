@@ -68,6 +68,45 @@ public partial class Derived : Entity
 	public string Label { get; set; } = "";
 }
 
+/// <summary>A record whose properties a derived record overrides to add attributes (#2418).</summary>
+[CsvRecord]
+public partial class Contact
+{
+	[CsvColumn("Their name")]
+	public virtual string? Name { get; set; }
+
+	[CsvColumn("How old they are")]
+	public virtual int Age { get; set; }
+
+	[CsvColumn("The city where they live")]
+	public virtual string? City { get; set; }
+}
+
+/// <summary>Keeps the column names of <see cref="Contact"/> on the properties it overrides.</summary>
+[CsvRecord]
+public partial class Staffer : Contact
+{
+	public override string? Name { get; set; }
+
+	[CsvDefault(0)]
+	public override int Age { get; set; }
+
+	[CsvColumn("Their position")]
+	public virtual string? Position { get; set; }
+}
+
+/// <summary>Overrides properties of <see cref="Contact"/> in another order than it declares them.</summary>
+[CsvRecord]
+public partial class Volunteer : Contact
+{
+	public string? Team { get; set; }
+
+	public override string? City { get; set; }
+
+	[CsvDefault(0)]
+	public override int Age { get; set; }
+}
+
 [CsvRecord]
 public partial class Values
 {
@@ -274,6 +313,37 @@ public class RecordTests
 		var d = Assert.Single(reader.GetRecords<Derived>());
 
 		Assert.Equal((42L, "k", "l"), (d.Key, d.Kind, d.Label));
+	}
+
+	[Fact]
+	public void OverridesKeepTheAttributesOfTheirBaseProperties()
+	{
+		const string csv = "Their name,How old they are,The city where they live,Their position\nJohn Doe,30,New York,Engineer\nJane Smith,,Los Angeles,Marketing\n";
+		using var reader = CsvReader.FromText(csv);
+		var staff = reader.GetRecords<Staffer>().ToList();
+
+		Assert.Equal([("John Doe", 30, "New York", "Engineer"), ("Jane Smith", 0, "Los Angeles", "Marketing")],
+			staff.Select(s => (s.Name, s.Age, s.City, s.Position)));
+		using var output = new StringWriter();
+		using (var writer = CsvWriter.Create(output))
+		{
+			writer.WriteRecords(staff.Take(1));
+		}
+
+		Assert.Equal("Their name,How old they are,The city where they live,Their position\r\nJohn Doe,30,New York,Engineer\r\n", output.ToString());
+	}
+
+	[Fact]
+	public void OverridesAreWrittenInThePlaceOfTheirBaseProperties()
+	{
+		using var output = new StringWriter();
+		using (var writer = CsvWriter.Create(output))
+		{
+			writer.WriteRecords([new Volunteer { Name = "Ada", Age = 36, City = "London", Team = "Docs" }]);
+		}
+
+		// Volunteer overrides City, then Age: they stay where Contact declares them, before Volunteer's own Team.
+		Assert.Equal("Their name,How old they are,The city where they live,Team\r\nAda,36,London,Docs\r\n", output.ToString());
 	}
 
 	[Fact]

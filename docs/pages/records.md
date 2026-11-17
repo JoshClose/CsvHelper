@@ -355,6 +355,37 @@ public partial class Memo : Audited
 
 The parameters of the constructor are still read, whichever class declares the members they set.
 
+### Overridden properties
+
+An `override` keeps the attributes of the property it overrides, so a derived class can add one without repeating the
+others. An attribute on the override replaces the overridden property's attribute of the same type:
+
+```csharp
+[CsvRecord]
+public partial class Person
+{
+    [CsvColumn("Their name")]
+    public virtual string? Name { get; set; }
+
+    [CsvColumn("How old they are")]
+    public virtual int Age { get; set; }
+}
+
+[CsvRecord]
+public partial class Employee : Person
+{
+    public override string? Name { get; set; }   // column "Their name"
+
+    [CsvDefault(0)]
+    public override int Age { get; set; }        // column "How old they are", 0 when empty
+}
+```
+
+The writer writes an override's column where the overridden property's would be, so `Employee` is written as
+`Their name,How old they are`, like `Person`. An override that declares only a `get` is still read, with the setter it
+inherits. A property hidden with `new` is another member: it has none of the hidden property's attributes, and is
+written among the derived class's own members.
+
 ## Constructors: [CsvConstructor]
 
 The record is created with one constructor:
@@ -1388,7 +1419,8 @@ record that fails halfway, for example in a converter, is discarded, and the rec
 ### Columns
 
 The columns are those the mapper reads, in this order: the constructor parameters, then the other members in
-declaration order, a base type's first.
+declaration order, a base type's first. An [override](#overridden-properties) is written in the place of the property
+it overrides.
 
 - The header has the name the mapper looks for first: the `[CsvColumn]` name, else the member's or constructor
   parameter's name.

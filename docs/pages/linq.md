@@ -259,9 +259,11 @@ await db.Customers.Where(c => c.Active).WriteCsvAsync("active.csv");   // read a
   [`CsvWriter.WriteRecords`](writing.html) writes them.
 - Other types (anonymous types, tuples, records and classes, such as entities) are written from their public
   properties and fields of simple types (numbers, strings, dates, Booleans, enums and other formattable values): the
-  members that the widest public constructor sets first, in its order, then the others, those of base classes first.
+  members that the widest public constructor sets first, in its order, then the others, those of base classes first,
+  with an `override` in the place of the property it overrides.
   References to other objects and collections, such as navigation properties, are left out.
-  `[CsvIgnore]` leaves a member out, and the name of a `[CsvColumn]` names its column.
+  `[CsvIgnore]` leaves a member out, and the name of a `[CsvColumn]` names its column; an `override` has those of the
+  property it overrides.
 - Values are written as `CsvWriter.WriteField(object)` writes them.
 
 `WriteCsv` takes a path, a stream, a text writer or a `CsvWriter`, and the writer options (by default those of the

@@ -45,9 +45,10 @@ internal static class RecordWriters
 /// Writes records of a type that has no generated record writer, such as an anonymous type, a tuple, or an entity of an
 /// ORM, from its public members, found with reflection: the members that a public constructor sets first, in its order
 /// (as anonymous types and positional records declare them), then the others, base types first, in the order they are
-/// declared. Only members of simple types are written (numbers, strings, dates, Booleans, enums, GUIDs, and other
-/// formattable values), so references to other objects, such as an entity's navigation properties, are left out.
-/// <see cref="CsvIgnoreAttribute"/> leaves a member out, and the name of a <see cref="CsvColumnAttribute"/> names its column.
+/// declared, an override in the place of the property it overrides. Only members of simple types are written (numbers,
+/// strings, dates, Booleans, enums, GUIDs, and other formattable values), so references to other objects, such as an
+/// entity's navigation properties, are left out. <see cref="CsvIgnoreAttribute"/> leaves a member out, and the name of a
+/// <see cref="CsvColumnAttribute"/> names its column; an override has those of the property it overrides.
 /// </summary>
 /// <typeparam name="T">The type of the records.</typeparam>
 internal sealed class ReflectionRecordWriter<[DynamicallyAccessedMembers(RecordWriters.Members)] T> : CsvRecordWriter<T>
@@ -121,7 +122,8 @@ internal sealed class ReflectionRecordWriter<[DynamicallyAccessedMembers(RecordW
 		var members = new List<MemberInfo>();
 		members.AddRange(Ordered(type.GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.CanRead && p.GetIndexParameters().Length == 0)));
 		members.AddRange(Ordered(type.GetFields(BindingFlags.Public | BindingFlags.Instance)));
-		members.RemoveAll(m => m.IsDefined(typeof(CsvIgnoreAttribute), true) || !IsSimple(TypeOf(m)));
+		// Attribute.IsDefined, unlike MemberInfo.IsDefined, finds the attribute of the property that an override overrides.
+		members.RemoveAll(m => Attribute.IsDefined(m, typeof(CsvIgnoreAttribute), true) || !IsSimple(TypeOf(m)));
 
 		// The members that the widest public constructor sets come first, in its order, as anonymous types and positional
 		// records declare them.
@@ -151,9 +153,20 @@ internal sealed class ReflectionRecordWriter<[DynamicallyAccessedMembers(RecordW
 		return Expression.Lambda<Action<CsvWriter, T>>(body, writer, record).Compile();
 	}
 
-	/// <summary>Members in the order they are declared, those of base types first.</summary>
-	private static IEnumerable<TMember> Ordered<TMember>(IEnumerable<TMember> members) where TMember : MemberInfo =>
-		members.OrderBy(m => Depth(m.DeclaringType)).ThenBy(m => m.MetadataToken);
+	/// <summary>
+	/// Properties in the order they are declared, those of base types first. An override takes the place of the property it
+	/// overrides, so that overriding a property does not move its column: the order is that of the getters' base definitions,
+	/// which are declared in the order of their properties.
+	/// </summary>
+	private static IEnumerable<PropertyInfo> Ordered(IEnumerable<PropertyInfo> properties) =>
+		properties.Select(p => (Property: p, Place: p.GetMethod!.GetBaseDefinition()))
+			.OrderBy(p => Depth(p.Place.DeclaringType))
+			.ThenBy(p => p.Place.MetadataToken)
+			.Select(p => p.Property);
+
+	/// <summary>Fields in the order they are declared, those of base types first.</summary>
+	private static IEnumerable<FieldInfo> Ordered(IEnumerable<FieldInfo> fields) =>
+		fields.OrderBy(f => Depth(f.DeclaringType)).ThenBy(f => f.MetadataToken);
 
 	private static int Depth(Type? type)
 	{
