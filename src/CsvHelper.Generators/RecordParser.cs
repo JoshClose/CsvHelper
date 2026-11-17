@@ -326,7 +326,7 @@ internal sealed class RecordParser
 			if (member is IPropertySymbol property)
 			{
 				memberType = property.Type;
-				var setter = property.SetMethod;
+				var setter = Setter(property);
 				settable = setter is not null && compilation.IsSymbolAccessibleWithin(setter, host) &&
 						   (attribute is not null || IsVisible(setter.DeclaredAccessibility));
 				initOnly = setter?.IsInitOnly == true;
@@ -1127,9 +1127,10 @@ internal sealed class RecordParser
 			Constant = Find(constantAttribute),
 			Validate = Find(validateAttribute),
 		};
-		// [CsvConverter] allows several attributes for the assembly-level ones; a member takes one.
-		var owner = Attribute(symbol, converterAttribute) is not null ? symbol : fallback;
-		if (owner is not null && converterAttribute is not null && owner.GetAttributes().Count(a => Is(a.AttributeClass, converterAttribute)) > 1)
+		// [CsvConverter] allows several attributes for the assembly-level ones; a member takes one. An override's own replace
+		// those of the property it overrides.
+		var owner = Carrier(symbol, converterAttribute) ?? Carrier(fallback, converterAttribute);
+		if (owner is not null && owner.GetAttributes().Count(a => Is(a.AttributeClass, converterAttribute)) > 1)
 		{
 			Report(Diagnostics.InvalidConverter, AttributeLocation(settings.Converter, owner.Locations.FirstOrDefault()), $"{type.Name}.{memberName}",
 				ConverterName(settings.Converter!), "a member can have only one [CsvConverter]");
@@ -1382,7 +1383,7 @@ internal sealed class RecordParser
 				if (Attribute(member, ignoreAttribute) is not null) continue;
 				var memberType = member switch
 				{
-					IPropertySymbol { IsIndexer: false, SetMethod: not null } property => property.Type,
+					IPropertySymbol { IsIndexer: false } property when Setter(property) is not null => property.Type,
 					IFieldSymbol { IsReadOnly: false, IsConst: false } field => field.Type,
 					_ => null,
 				};
@@ -1808,7 +1809,7 @@ internal sealed class RecordParser
 		switch (member)
 		{
 			case IFieldSymbol when compilation.IsSymbolAccessibleWithin(member, host):
-			case IPropertySymbol { GetMethod: { } getter } when compilation.IsSymbolAccessibleWithin(getter, host):
+			case IPropertySymbol property when Getter(property) is { } getter && compilation.IsSymbolAccessibleWithin(getter, host):
 				return "record." + Escape(member.Name);
 			case IPropertySymbol or IFieldSymbol:
 				writeProblems.Add($"'{display}' has no getter that the writer can use");
@@ -2208,11 +2209,53 @@ internal sealed class RecordParser
 
 	private static bool Is(ISymbol? symbol, ISymbol? other) => other is not null && SymbolEqualityComparer.Default.Equals(symbol, other);
 
-	private static AttributeData? Attribute(ISymbol? symbol, INamedTypeSymbol? attributeType)
+	/// <summary>
+	/// The get accessor of a property; an override that declares only a set accessor has the one of the property it overrides.
+	/// </summary>
+	private static IMethodSymbol? Getter(IPropertySymbol property)
 	{
-		if (symbol is null || attributeType is null) return null;
+		for (IPropertySymbol? p = property; p is not null; p = p.OverriddenProperty)
+		{
+			if (p.GetMethod is { } getter) return getter;
+		}
 
-		return symbol.GetAttributes().FirstOrDefault(a => Is(a.AttributeClass, attributeType));
+		return null;
+	}
+
+	/// <summary>
+	/// The set accessor of a property; an override that declares only a get accessor has the one of the property it overrides.
+	/// </summary>
+	private static IMethodSymbol? Setter(IPropertySymbol property)
+	{
+		for (IPropertySymbol? p = property; p is not null; p = p.OverriddenProperty)
+		{
+			if (p.SetMethod is { } setter) return setter;
+		}
+
+		return null;
+	}
+
+	/// <summary>
+	/// An attribute of a symbol; an overriding property takes it from the property it overrides when it has none of its own,
+	/// as reflection does with <c>inherit: true</c>.
+	/// </summary>
+	private static AttributeData? Attribute(ISymbol? symbol, INamedTypeSymbol? attributeType) =>
+		Carrier(symbol, attributeType)?.GetAttributes().First(a => Is(a.AttributeClass, attributeType));
+
+	/// <summary>
+	/// The declaration whose <paramref name="attributeType"/> applies to a symbol: the symbol itself, or the nearest property
+	/// it overrides that has one; null when none has.
+	/// </summary>
+	private static ISymbol? Carrier(ISymbol? symbol, INamedTypeSymbol? attributeType)
+	{
+		if (attributeType is null) return null;
+		// A property hidden with 'new' is another member, and keeps none of the hidden one's attributes.
+		for (var s = symbol; s is not null; s = (s as IPropertySymbol)?.OverriddenProperty)
+		{
+			if (s.GetAttributes().Any(a => Is(a.AttributeClass, attributeType))) return s;
+		}
+
+		return null;
 	}
 
 	/// <summary>Where an attribute is applied, for diagnostics about it; <paramref name="fallback"/> when it is not in source.</summary>

@@ -355,6 +355,35 @@ public partial class Memo : Audited
 
 The parameters of the constructor are still read, whichever class declares the members they set.
 
+### Overridden properties
+
+An `override` keeps the attributes of the property it overrides, so a derived class can add one without repeating the
+others. An attribute on the override replaces the overridden property's attribute of the same type:
+
+```csharp
+[CsvRecord]
+public partial class Person
+{
+    [CsvColumn("Their name")]
+    public virtual string? Name { get; set; }
+
+    [CsvColumn("How old they are")]
+    public virtual int Age { get; set; }
+}
+
+[CsvRecord]
+public partial class Employee : Person
+{
+    public override string? Name { get; set; }   // column "Their name"
+
+    [CsvDefault(0)]
+    public override int Age { get; set; }        // column "How old they are", 0 when empty
+}
+```
+
+An override that declares only a `get` is still read, with the setter it inherits. A property hidden with `new` is
+another member, and has none of the hidden property's attributes.
+
 ## Constructors: [CsvConstructor]
 
 The record is created with one constructor:

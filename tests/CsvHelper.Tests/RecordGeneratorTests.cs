@@ -516,6 +516,138 @@ public class RecordGeneratorTests
 	}
 
 	[Fact]
+	public void OverridesTakeTheAttributesOfTheirBaseProperties()
+	{
+		const string source = """
+			using CsvHelper;
+
+			public sealed class Hex : ICsvConverter<int>
+			{
+			    public int Read(CsvReader reader, int index) => 0;
+
+			    public void Write(CsvWriter writer, int value) => writer.WriteField(value);
+			}
+
+			public sealed class Octal : ICsvConverter<int>
+			{
+			    public int Read(CsvReader reader, int index) => 0;
+
+			    public void Write(CsvWriter writer, int value) => writer.WriteField(value);
+			}
+
+			public class Person
+			{
+			    [CsvColumn("Their name")]
+			    public virtual string? Name { get; set; }
+			    [CsvColumn("How old they are")]
+			    [CsvDefault(-1)]
+			    public virtual int Age { get; set; }
+			    [CsvColumn("Town")]
+			    public virtual string? City { get; set; }
+			    [CsvConverter(typeof(Hex))]
+			    public virtual int Code { get; set; }
+			    [CsvConverter(typeof(Hex))]
+			    public virtual int Other { get; set; }
+			    [CsvIgnore]
+			    public virtual string? Secret { get; set; }
+			    [CsvColumn("Old")]
+			    public string? Hidden { get; set; }
+			    [CsvColumn("Nickname")]
+			    public virtual string? Nick { get; set; }
+			}
+
+			public class Clerk : Person
+			{
+			    public override int Code { get; set; }
+			}
+
+			[CsvRecord]
+			public partial class Employee : Clerk
+			{
+			    public override string? Name { get; set; }
+			    [CsvDefault(0)]
+			    public override int Age { get; set; }
+			    [CsvColumn("The city where they live")]
+			    public override string? City { get; set; }
+			    public override int Code { get; set; }
+			    [CsvConverter(typeof(Octal))]
+			    public override int Other { get; set; }
+			    public override string? Secret { get; set; }
+			    public new string? Hidden { get; set; }
+			    public override string? Nick { get => base.Nick; }
+			}
+
+			[CsvRecord]
+			[CsvIgnoreBase]
+			public partial class Manager : Person
+			{
+			    public Manager(string? name) => Name = name;
+			    public override string? Name { get; set; }
+			}
+			""";
+		var (generator, compilation, output) = Run(source);
+
+		// Two [CsvConverter]s on Other, one on each property, are not two on one member (CSVH009).
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+		Assert.Contains("column0 = Column(reader, \"Their name\", -1, false, \"Employee.Name\");", output);
+		// An override's own attributes replace those of the same type, and the others still apply.
+		Assert.Contains("column1 = Column(reader, \"How old they are\", -1, false, \"Employee.Age\");", output);
+		Assert.Contains("Age = reader.IsEmpty(column1) ? 0 : reader.Parse<int>(column1),", output);
+		Assert.Contains("column2 = Column(reader, \"The city where they live\", -1, false, \"Employee.City\");", output);
+		// Code has Hex through the override in Clerk; Other has its own Octal.
+		Assert.Contains("private readonly global::Hex converter0 = new global::Hex();", output);
+		Assert.Contains("Code = converter0.Read(reader, column3),", output);
+		Assert.Contains("private readonly global::Octal converter1 = new global::Octal();", output);
+		Assert.Contains("Other = converter1.Read(reader, column4),", output);
+		Assert.DoesNotContain("Secret", output);
+		// A property hidden with 'new' is another member: Hidden has no column name "Old".
+		Assert.Contains("column5 = Column(reader, \"Hidden\", -1, false, \"Employee.Hidden\");", output);
+		// An override with only a getter is set with the setter of the property it overrides.
+		Assert.Contains("record.Nick = reader.GetStringOrNull(column6);", output);
+		var names = output.Split('\n').Select(l => l.Trim()).Where(l => l.StartsWith("WriteColumnName(", StringComparison.Ordinal)).Take(7);
+		Assert.Equal(
+			["WriteColumnName(writer, \"Their name\");", "WriteColumnName(writer, \"How old they are\");",
+			 "WriteColumnName(writer, \"The city where they live\");", "WriteColumnName(writer, \"Code\");",
+			 "WriteColumnName(writer, \"Other\");", "WriteColumnName(writer, \"Hidden\");", "WriteColumnName(writer, \"Nickname\");"],
+			names);
+		// [CsvIgnoreBase] leaves out the base class's members, not what its own overrides take from them, and a constructor
+		// parameter takes the attributes of the override it sets.
+		Assert.Contains("column0 = Column(reader, \"Their name\", -1, false, \"Manager.Name\");", output);
+	}
+
+	[Fact]
+	public void RecordsDerivedFromRecordsCompileWithoutWarnings()
+	{
+		const string source = """
+			using CsvHelper;
+
+			[assembly: CsvRecordProjections]
+
+			[CsvRecord]
+			[CsvOptions(Separator = ';')]
+			public partial class Person
+			{
+			    public string? Name { get; set; }
+			}
+
+			[CsvRecord]
+			[CsvOptions(Separator = '|')]
+			public partial class Employee : Person
+			{
+			    public string? Position { get; set; }
+			}
+			""";
+		var (generator, compilation, output) = Run(source);
+
+		// Employee's CreateCsvMapper and the other generated factories hide Person's (CS0108).
+		Assert.Empty(generator);
+		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
+		Assert.Contains("CreateCsvProjection", output);
+		Assert.Contains("CreateCsvReaderOptions", output);
+	}
+
+	[Fact]
 	public void RecordWritersWriteWhatTheMappersRead()
 	{
 		const string source = """

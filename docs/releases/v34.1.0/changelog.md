@@ -22,6 +22,12 @@ changes files quoted with another character than `"` instead of throwing `NotSup
 Listing the column names of a `CsvDynamicRecord`, as its dictionary `Keys` or as the member names that a `dynamic`
 binder asks for, no longer reads each value as a string.
 
+An `override` of a property now has the attributes of the property it overrides, as in 33, so an override that adds
+`[CsvDefault]` keeps the base property's `[CsvColumn]` name. In 34.0 only the override's own attributes applied, and
+its column was looked up by the property name. An override that declares only a `get` is now read too, with the setter
+it inherits. See [Overridden properties](../../pages/records.md#overridden-properties). A `[CsvRecord]` type derived
+from another one no longer gets CS0108 warnings for the generated methods that hide the base type's.
+
 When a constructor parameter's type can't be read, CSVH002 no longer suggests `[CsvIgnore]`, which doesn't apply to
 parameters. It says which constructor was chosen and suggests marking another one `[CsvConstructor]` or giving the
 parameter a `[CsvConverter]`. See
