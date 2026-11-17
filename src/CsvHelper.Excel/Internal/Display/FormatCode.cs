@@ -51,6 +51,9 @@ internal sealed class FormatCode
 	/// <summary>How many sections can have a condition: the first two (Excel refuses one in the third).</summary>
 	private const int ConditionalSections = 2;
 
+	/// <summary>The most digits of fractions of a second: Excel refuses <c>ss.0000</c>.</summary>
+	private const int MaxSubSecondDigits = 3;
+
 	/// <summary>The colors Excel knows by name.</summary>
 	private static readonly string[] ColorNames = ["black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"];
 
@@ -62,13 +65,15 @@ internal sealed class FormatCode
 	/// <param name="text">The text section, or <see langword="null"/>.</param>
 	/// <param name="literals">The literal text of every section, in UTF-8.</param>
 	/// <param name="readable">Whether the renderer can read it.</param>
-	private FormatCode(string code, FormatSection[] numbers, FormatSection? text, byte[] literals, bool readable)
+	/// <param name="hasDate">Whether a section that can't be read is a date's.</param>
+	private FormatCode(string code, FormatSection[] numbers, FormatSection? text, byte[] literals, bool readable, bool hasDate = false)
 	{
 		Code = code;
 		Numbers = numbers;
 		Text = text;
 		this.literals = literals;
 		IsReadable = readable;
+		HasDate = hasDate;
 		foreach (var section in numbers)
 		{
 			IsConditional |= section.Condition != ConditionOperator.None;
@@ -97,7 +102,10 @@ internal sealed class FormatCode
 	/// <summary>Whether a number section has a condition, which chooses sections by value rather than by sign.</summary>
 	public bool IsConditional { get; }
 
-	/// <summary>Whether a number section shows a date, a time or elapsed time.</summary>
+	/// <summary>
+	/// Whether a number section shows a date, a time or elapsed time; for a code that can't be read, whether the section
+	/// that can't be read has a date or time token (<c>yyyy-mm-dd [h]:mm</c>), whose cells show their raw text.
+	/// </summary>
 	public bool HasDate { get; }
 
 	/// <summary>Compiles a code.</summary>
@@ -131,7 +139,7 @@ internal sealed class FormatCode
 			var section = i == textIndex ? Finish(raw[i], FormatSectionKind.Text, pool) : Finish(raw[i], raw[i].IsDate ? FormatSectionKind.Date : FormatSectionKind.Number, pool);
 			if (section is null)
 			{
-				return new FormatCode(code, [], null, [], false);
+				return new FormatCode(code, [], null, [], false, i != textIndex && raw[i].IsDate);
 			}
 
 			if (i == textIndex)
@@ -148,6 +156,14 @@ internal sealed class FormatCode
 		if (numbers.Count == 1 && numbers[0].Condition != ConditionOperator.None)
 		{
 			numbers.Add(Finish(new RawSection { HasGeneral = true, Tokens = { new Raw(FormatTokenKind.General) } }, FormatSectionKind.Number, pool)!);
+		}
+
+		// A system format counts in the first section alone, and there it is every date section's: Excel reads
+		// [$-F800]dddd;[$-F400]h:mm as [$-F800]dddd;[$-F800]h:mm, and 0;[$-F800]dddd as 0;[$]dddd (step 4's probes).
+		var system = numbers.Count > 0 ? numbers[0].System : SystemFormat.None;
+		for (var i = 1; i < numbers.Count; i++)
+		{
+			numbers[i].System = numbers[i].Kind == FormatSectionKind.Date ? system : SystemFormat.None;
 		}
 
 		return new FormatCode(code, [.. numbers], text, [.. pool], true);
@@ -289,7 +305,10 @@ internal sealed class FormatCode
 		switch (kind)
 		{
 			case FormatSectionKind.Date:
-				FinishDate(tokens, section);
+				if (!FinishDate(tokens, section))
+				{
+					return null;
+				}
 
 				break;
 			case FormatSectionKind.Text:
@@ -602,19 +621,35 @@ internal sealed class FormatCode
 	}
 
 	/// <summary>
-	/// A date or time section: <c>m</c> and <c>mm</c> after an hour or before a second are minutes, the <c>0</c>s after a
-	/// <c>.</c> are fractions of a second, elapsed time after a date part is the time of day in its unit, and anything
-	/// else outside quotes shows as itself (a <c>0</c> as <c>0</c>, <c>#</c> and <c>?</c> as nothing).
+	/// A date or time section, as Excel 365 read the codes of Phase 8's probes (step 4's in <c>Csv\_bench\results\phase8\step4</c>):
+	/// <list type="bullet">
+	/// <item><description>
+	/// <c>m</c> and <c>mm</c> are a minute after an hour, elapsed hours or a second, past literals and date parts
+	/// (<c>h d m</c>, <c>ss m</c>), or right before a second (<c>m:ss</c>, but not <c>m [s]</c>); a second that has a minute
+	/// before it makes none after it (<c>mm ss mm</c> ends in a month), and neither does another minute
+	/// (<c>hh:mm:mm</c>).
+	/// </description></item>
+	/// <item><description>
+	/// The <c>0</c>s after a <c>.</c> are fractions of a second, at most three.
+	/// </description></item>
+	/// <item><description>
+	/// Excel refuses digit placeholders otherwise (<c>yyyy 0</c>, <c>h 0 m</c>), <c>%</c>, an exponent, <c>@</c> and
+	/// elapsed time beside <c>AM/PM</c> (<c>[h]:mm AM/PM</c>), so the section can't be read. Nor can it with
+	/// <c>General</c>, or with elapsed time after a date part (<c>yyyy-mm-dd [h]:mm</c>, <c>m [s]</c>): Excel opens them, but
+	/// shows text no rule found (<c>yyyy General</c> shows the seconds within the minute and a half, <c>[h]</c> there 12 for
+	/// most values whatever their time).
+	/// </description></item>
+	/// </list>
 	/// </summary>
 	/// <param name="tokens">The tokens, changed in place.</param>
 	/// <param name="section">The section's facts.</param>
-	private static void FinishDate(List<Raw> tokens, FormatSection section)
+	/// <returns>Whether the section can be read.</returns>
+	private static bool FinishDate(List<Raw> tokens, FormatSection section)
 	{
 		for (var i = 0; i < tokens.Count; i++)
 		{
 			var token = tokens[i];
-			if (token.Kind == FormatTokenKind.Month && token.Count <= 2 &&
-				(Previous(tokens, i) is FormatTokenKind.Hour or FormatTokenKind.ElapsedHours || Next(tokens, i) is FormatTokenKind.Second or FormatTokenKind.ElapsedSeconds))
+			if (token.Kind == FormatTokenKind.Month && token.Count <= 2 && IsMinute(tokens, i))
 			{
 				tokens[i] = token with { Kind = FormatTokenKind.Minute };
 			}
@@ -631,6 +666,11 @@ internal sealed class FormatCode
 					zeros++;
 				}
 
+				if (zeros > MaxSubSecondDigits)
+				{
+					return false;
+				}
+
 				tokens[i] = Raw.Shown(".");
 				tokens[i + 1] = new Raw(FormatTokenKind.SubSecond) { Count = zeros };
 				tokens.RemoveRange(i + 2, zeros - 1);
@@ -642,14 +682,10 @@ internal sealed class FormatCode
 
 			switch (token.Kind)
 			{
-				case FormatTokenKind.Digit:
-					tokens[i] = Raw.Shown(token.Char == '0' ? "0" : "");
-
-					break;
-				case FormatTokenKind.Exponent or FormatTokenKind.At or FormatTokenKind.General:
-					tokens[i] = Raw.Shown("");
-
-					break;
+				case FormatTokenKind.Digit or FormatTokenKind.Exponent or FormatTokenKind.At or FormatTokenKind.General:
+					return false;
+				case FormatTokenKind.Literal when token.Bare && token.Char == '%':
+					return false;
 				case FormatTokenKind.AmPm or FormatTokenKind.ShortAmPm:
 					section.TwelveHour = true;
 
@@ -661,31 +697,95 @@ internal sealed class FormatCode
 			}
 		}
 
-		// Elapsed time after a date part is the time of day in its unit (yyyy-mm-dd [h]:mm shows the hour of the day).
 		var afterDate = false;
 		var elapsed = 0;
 		var others = 0;
-		for (var i = 0; i < tokens.Count; i++)
+		foreach (var token in tokens)
 		{
-			var kind = tokens[i].Kind;
-			afterDate |= kind is FormatTokenKind.Year or FormatTokenKind.Month or FormatTokenKind.Day or FormatTokenKind.EraYear or
-				FormatTokenKind.BuddhistYear or FormatTokenKind.WeekDay;
-			if (kind is FormatTokenKind.ElapsedHours or FormatTokenKind.ElapsedMinutes or FormatTokenKind.ElapsedSeconds)
+			var kind = token.Kind;
+			if (IsElapsed(kind))
 			{
-				elapsed++;
-				if (afterDate)
+				if (afterDate || section.TwelveHour)
 				{
-					tokens[i] = tokens[i] with { OfDay = true };
+					return false;
 				}
+
+				elapsed++;
 			}
 			else if (kind != FormatTokenKind.Literal)
 			{
 				others++;
 			}
+
+			afterDate |= IsDatePart(kind);
 		}
 
 		section.ElapsedAlone = elapsed == 1 && others == 0;
+
+		return true;
 	}
+
+	/// <summary>Whether a month's <c>m</c> or <c>mm</c> is a minute, by the tokens around it (<see cref="FinishDate"/>).</summary>
+	/// <param name="tokens">The tokens, the minutes before it already found.</param>
+	/// <param name="i">Its position.</param>
+	/// <returns>Whether it is a minute.</returns>
+	private static bool IsMinute(List<Raw> tokens, int i)
+	{
+		var previous = Previous(tokens, i, out var at);
+		if (previous is FormatTokenKind.Hour or FormatTokenKind.ElapsedHours)
+		{
+			return true;
+		}
+
+		if (previous == FormatTokenKind.Second && Previous(tokens, at, out _) != FormatTokenKind.Minute)
+		{
+			return true;
+		}
+
+		for (var j = i + 1; j < tokens.Count; j++)
+		{
+			if (tokens[j].Kind is not (FormatTokenKind.Literal or FormatTokenKind.Digit))
+			{
+				return tokens[j].Kind == FormatTokenKind.Second;
+			}
+		}
+
+		return false;
+	}
+
+	/// <summary>The time token before a position, past literals, placeholders, date parts and designators.</summary>
+	/// <param name="tokens">The tokens.</param>
+	/// <param name="i">The position.</param>
+	/// <param name="at">The token's position, or −1.</param>
+	/// <returns>Its kind, or <see cref="FormatTokenKind.Literal"/> for none.</returns>
+	private static FormatTokenKind Previous(List<Raw> tokens, int i, out int at)
+	{
+		for (var j = i - 1; j >= 0; j--)
+		{
+			var kind = tokens[j].Kind;
+			if (kind is not (FormatTokenKind.Literal or FormatTokenKind.Digit or FormatTokenKind.AmPm or FormatTokenKind.ShortAmPm) && !IsDatePart(kind))
+			{
+				at = j;
+
+				return kind;
+			}
+		}
+
+		at = -1;
+
+		return FormatTokenKind.Literal;
+	}
+
+	/// <summary>Whether a token is a date part: a year, a month as itself, a day, a day of the week, or an era.</summary>
+	/// <param name="kind">The token's kind.</param>
+	/// <returns>Whether it is.</returns>
+	private static bool IsDatePart(FormatTokenKind kind) => kind is FormatTokenKind.Year or FormatTokenKind.Month or FormatTokenKind.Day or FormatTokenKind.WeekDay or
+		FormatTokenKind.EraYear or FormatTokenKind.Era or FormatTokenKind.BuddhistYear;
+
+	/// <summary>Whether a token is elapsed time, <c>[h]</c>, <c>[m]</c> or <c>[s]</c>.</summary>
+	/// <param name="kind">The token's kind.</param>
+	/// <returns>Whether it is.</returns>
+	private static bool IsElapsed(FormatTokenKind kind) => kind is FormatTokenKind.ElapsedHours or FormatTokenKind.ElapsedMinutes or FormatTokenKind.ElapsedSeconds;
 
 	/// <summary>A text section: <c>@</c> and literals; any other token shows as itself, or nothing.</summary>
 	/// <param name="tokens">The tokens, changed in place.</param>
@@ -701,40 +801,6 @@ internal sealed class FormatCode
 
 			tokens[i] = Raw.Shown(token.Kind == FormatTokenKind.Digit && token.Char == '0' ? "0" : "");
 		}
-	}
-
-	/// <summary>The kind of the date or time token before a position, past literals.</summary>
-	/// <param name="tokens">The tokens.</param>
-	/// <param name="i">The position.</param>
-	/// <returns>The kind, or <see cref="FormatTokenKind.Literal"/> for none.</returns>
-	private static FormatTokenKind Previous(List<Raw> tokens, int i)
-	{
-		for (var j = i - 1; j >= 0; j--)
-		{
-			if (tokens[j].Kind is not (FormatTokenKind.Literal or FormatTokenKind.Digit))
-			{
-				return tokens[j].Kind;
-			}
-		}
-
-		return FormatTokenKind.Literal;
-	}
-
-	/// <summary>The kind of the date or time token after a position, past literals.</summary>
-	/// <param name="tokens">The tokens.</param>
-	/// <param name="i">The position.</param>
-	/// <returns>The kind, or <see cref="FormatTokenKind.Literal"/> for none.</returns>
-	private static FormatTokenKind Next(List<Raw> tokens, int i)
-	{
-		for (var j = i + 1; j < tokens.Count; j++)
-		{
-			if (tokens[j].Kind is not (FormatTokenKind.Literal or FormatTokenKind.Digit))
-			{
-				return tokens[j].Kind;
-			}
-		}
-
-		return FormatTokenKind.Literal;
 	}
 
 	/// <summary>Writes a section's tokens' text to the pool, adjacent literals as one and empty ones left out.</summary>
@@ -761,7 +827,7 @@ internal sealed class FormatCode
 				pool.AddRange(Encoding.UTF8.GetBytes(token.Text!));
 			}
 
-			compiled.Add(new FormatToken(token.Kind, start, pool.Count - start, token.Count, token.Char, token.Role, token.OfDay));
+			compiled.Add(new FormatToken(token.Kind, start, pool.Count - start, token.Count, token.Char, token.Role));
 		}
 
 		AddLiteral(compiled, text, pool);
@@ -812,9 +878,6 @@ internal sealed class FormatCode
 
 		/// <summary>What a placeholder does.</summary>
 		public PlaceholderRole Role { get; set; }
-
-		/// <summary>Whether an elapsed time follows a date part.</summary>
-		public bool OfDay { get; set; }
 
 		/// <summary>A literal of text that shows as it is.</summary>
 		/// <param name="text">The text.</param>

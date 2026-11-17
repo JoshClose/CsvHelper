@@ -105,8 +105,7 @@ internal enum PlaceholderRole : byte
 /// <param name="count">A date or time token's letters, or the digits of fractions of a second.</param>
 /// <param name="placeholder">A digit placeholder's character, or an exponent's sign.</param>
 /// <param name="role">What a digit placeholder does.</param>
-/// <param name="ofDay">Whether an elapsed time follows a date part, where it is the time of day in its unit.</param>
-internal readonly struct FormatToken(FormatTokenKind kind, int start = 0, int length = 0, int count = 0, char placeholder = '\0', PlaceholderRole role = PlaceholderRole.None, bool ofDay = false)
+internal readonly struct FormatToken(FormatTokenKind kind, int start = 0, int length = 0, int count = 0, char placeholder = '\0', PlaceholderRole role = PlaceholderRole.None)
 {
 	/// <summary>What it is.</summary>
 	public FormatTokenKind Kind { get; } = kind;
@@ -125,7 +124,4 @@ internal readonly struct FormatToken(FormatTokenKind kind, int start = 0, int le
 
 	/// <summary>What a digit placeholder does.</summary>
 	public PlaceholderRole Role { get; } = role;
-
-	/// <summary>Whether an elapsed time follows a date part, where it is the time of day in its unit (<c>yyyy-mm-dd [h]:mm</c>).</summary>
-	public bool OfDay { get; } = ofDay;
 }

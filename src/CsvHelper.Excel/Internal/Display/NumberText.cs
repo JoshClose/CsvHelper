@@ -4,7 +4,8 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// The text a number shows in a compiled format code, and the text a text or a boolean shows through its text section
-/// (Phase 8's step 3), as Excel 365 shows them in a column wide enough, as UTF-8.
+/// (Phase 8's step 3), as Excel 365 shows them in a column wide enough, as UTF-8. A date, time or elapsed-time section,
+/// and a system format, are <see cref="DateText"/>'s (step 4).
 /// </summary>
 /// <remarks>
 /// <para>
@@ -96,14 +97,15 @@ internal static class NumberText
 	/// <summary>Writes a number's text in a code.</summary>
 	/// <param name="code">The code.</param>
 	/// <param name="value">The number.</param>
-	/// <param name="culture">The culture's separators.</param>
+	/// <param name="culture">The culture's separators, names, long date and long time.</param>
+	/// <param name="date1904">Whether the workbook uses the 1904 date system, for a date or time section.</param>
 	/// <param name="text">An empty text, which receives the number's.</param>
 	/// <returns>
 	/// Whether Excel can show the number in the code: <see langword="false"/> for a code the renderer can't read, a value
-	/// that isn't finite, one no section takes, a fraction too large, text past 255 characters, and, until step 4, a date
-	/// or time section.
+	/// that isn't finite, one no section takes, a fraction too large, a date or time Excel can't show
+	/// (<see cref="DateText.TryWrite"/>), and text past 255 characters.
 	/// </returns>
-	public static bool TryWrite(FormatCode code, double value, DisplayCulture culture, ref ShownText text)
+	public static bool TryWrite(FormatCode code, double value, DisplayCulture culture, bool date1904, ref ShownText text)
 	{
 		if (!code.IsReadable || double.IsNaN(value) || double.IsInfinity(value))
 		{
@@ -134,10 +136,9 @@ internal static class NumberText
 			return false;
 		}
 
-		// Dates, times and the system formats are step 4's.
 		if (section.Kind == FormatSectionKind.Date || section.System != SystemFormat.None)
 		{
-			return false;
+			return DateText.TryWrite(code, section, value, minus, culture, date1904, ref text);
 		}
 
 		var shown = WriteSection(code, section, Math.Abs(value), minus, culture, ref text);

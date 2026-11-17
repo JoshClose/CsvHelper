@@ -6,14 +6,14 @@ namespace CsvHelper.Excel.Tests.Display;
 /// <summary>
 /// Format codes compiled (<see cref="FormatCode"/>): their sections, conditions, tokens and locale codes, the built-in
 /// ids' codes, and the codes the renderer can't read, against what Excel 365 (16.0 build 20527, en-US) showed through COM
-/// on 2026-11-16 (<c>Csv\_bench\results\phase8\design</c>).
+/// on 2026-11-16 and 2026-11-17 (<c>Csv\_bench\results\phase8\design</c>, and <c>step4</c> for dates).
 /// </summary>
 /// <remarks>
 /// A section's tokens are written in a short form: a literal in quotes, a placeholder with its role (<c>I</c> integer,
 /// <c>D</c> decimal, <c>E</c> exponent, <c>N</c> numerator, <c>V</c> denominator, <c>-</c> none), <c>.</c> the point,
 /// <c>E+</c> an exponent, <c>@</c>, <c>General</c>, and date and time parts as letters repeated to their count: <c>y</c>,
 /// <c>M</c> a month, <c>d</c>, <c>a</c> a weekday, <c>h</c>, <c>m</c> a minute, <c>s</c>, <c>0</c> fractions of a second,
-/// <c>[h]</c>, <c>[m]</c> and <c>[s]</c> elapsed time (a <c>~</c> after it of the day), <c>AM/PM</c>, <c>A/P:</c> and its
+/// <c>[h]</c>, <c>[m]</c> and <c>[s]</c> elapsed time, <c>AM/PM</c>, <c>A/P:</c> and its
 /// letters, <c>e</c>, <c>g</c> and <c>b</c>.
 /// </remarks>
 public partial class FormatCodeTests
@@ -68,6 +68,21 @@ public partial class FormatCodeTests
 	[InlineData("0;0;[>5]\"z\"")]
 	[InlineData("[>100]0;0.00;[=0]\"z\"")]
 	[InlineData("0;[<0]@")]
+	[InlineData("ss.0000")]
+	[InlineData("h 0 #")]
+	[InlineData("yyyy 0")]
+	[InlineData("yyyy ?")]
+	[InlineData("yyyy 0.0")]
+	[InlineData("h:mm%")]
+	[InlineData("yyyy E+0")]
+	[InlineData("h:mm@;@")]
+	[InlineData("[h]:mm AM/PM")]
+	[InlineData("d [h] A/P")]
+	[InlineData("yyyy General")]
+	[InlineData("yyyy-mm-dd [h]:mm")]
+	[InlineData("d[ss]")]
+	[InlineData("m [s]")]
+	[InlineData("ggg [m]")]
 	[InlineData("?/32769")]
 	[InlineData("# ?/50000")]
 	[InlineData("# ?/100000000")]
@@ -124,7 +139,22 @@ public partial class FormatCodeTests
 	[InlineData("mm:ss.0", "mm ':' ss '.' 0")]
 	[InlineData("[h]:mm:ss", "[h] ':' mm ':' ss")]
 	[InlineData("[hhh]:mm", "[hhh] ':' mm")]
-	[InlineData("yyyy-mm-dd [h]:mm", "yyyy '-' MM '-' dd ' ' [h]~ ':' mm")]
+	[InlineData("[h] yyyy", "[h] ' ' yyyy")]
+	[InlineData("h d m", "h ' ' d ' ' m")]
+	[InlineData("h mmm m", "h ' ' MMM ' ' m")]
+	[InlineData("h AM/PM m", "h ' ' AM/PM ' ' m")]
+	[InlineData("ss m", "ss ' ' m")]
+	[InlineData("s d m", "s ' ' d ' ' m")]
+	[InlineData("[h] d m", "[h] ' ' d ' ' m")]
+	[InlineData("hh:mm:mm", "hh ':' mm ':' MM")]
+	[InlineData("h:mm d m", "h ':' mm ' ' d ' ' M")]
+	[InlineData("mm ss mm", "mm ' ' ss ' ' MM")]
+	[InlineData("m yyyy s", "M ' ' yyyy ' ' s")]
+	[InlineData("m:s.0", "m ':' s '.' 0")]
+	[InlineData("[s] m", "[s] ' ' M")]
+	[InlineData("[mm] m", "[mm] ' ' M")]
+	[InlineData("h:mm:ss.000.0", "h ':' mm ':' ss '.' 000 '.' 0")]
+	[InlineData("yyyy.00", "yyyy '.' 00")]
 	[InlineData("d \"days\" h:mm", "d ' days ' h ':' mm")]
 	[InlineData("h:mm AM/PM", "h ':' mm ' ' AM/PM")]
 	[InlineData("h:mm a/p", "h ':' mm ' ' A/P:ap")]
@@ -137,8 +167,6 @@ public partial class FormatCodeTests
 	[InlineData("e ee b bb bbbb g ggg", "e ' ' ee ' ' b ' ' bb ' ' bbbb ' ' g ' ' ggg")]
 	[InlineData("B2yyyy", "yyyy")]
 	[InlineData("YYYY-MM-DD", "yyyy '-' MM '-' dd")]
-	[InlineData("ss.0000", "ss '.' 0000")]
-	[InlineData("h 0 #", "h ' 0 '")]
 	[InlineData("\"note: \"@", "'note: ' @")]
 	[InlineData("[Red]0", "0I")]
 	[InlineData("[Color 10]0", "0I")]
@@ -377,6 +405,14 @@ public partial class FormatCodeTests
 		Assert.Equal(SystemFormat.LongDate, First("[$-F800]0.00").System);
 		Assert.Equal(SystemFormat.None, First("[$-409]h").System);
 
+		// A system format counts in the first section alone, and there it is every date section's.
+		var spread = FormatCode.Compile("[$-F800]dddd;[$-F400]h:mm;0");
+		Assert.Equal(SystemFormat.LongDate, spread.Numbers[1].System);
+		Assert.Equal(SystemFormat.None, spread.Numbers[2].System);
+		Assert.Equal(SystemFormat.None, FormatCode.Compile("0;[$-F800]dddd").Numbers[1].System);
+		Assert.Equal(SystemFormat.None, FormatCode.Compile("0;0;[$-F400]h").Numbers[2].System);
+		Assert.True(FormatCode.Compile("0;[$-F800]dddd").HasDate);
+
 		Assert.True(First("[DBNum1][$-804]0").HasDBNum);
 		Assert.True(First("B1yyyy").HasCalendar);
 		Assert.True(First("[Red]0").HasColor);
@@ -493,9 +529,9 @@ public partial class FormatCodeTests
 				FormatTokenKind.Minute => new string('m', token.Count),
 				FormatTokenKind.Second => new string('s', token.Count),
 				FormatTokenKind.SubSecond => new string('0', token.Count),
-				FormatTokenKind.ElapsedHours => "[" + new string('h', token.Count) + "]" + (token.OfDay ? "~" : ""),
-				FormatTokenKind.ElapsedMinutes => "[" + new string('m', token.Count) + "]" + (token.OfDay ? "~" : ""),
-				FormatTokenKind.ElapsedSeconds => "[" + new string('s', token.Count) + "]" + (token.OfDay ? "~" : ""),
+				FormatTokenKind.ElapsedHours => "[" + new string('h', token.Count) + "]",
+				FormatTokenKind.ElapsedMinutes => "[" + new string('m', token.Count) + "]",
+				FormatTokenKind.ElapsedSeconds => "[" + new string('s', token.Count) + "]",
 				FormatTokenKind.AmPm => "AM/PM",
 				FormatTokenKind.ShortAmPm => "A/P:" + text,
 				FormatTokenKind.EraYear => new string('e', token.Count),

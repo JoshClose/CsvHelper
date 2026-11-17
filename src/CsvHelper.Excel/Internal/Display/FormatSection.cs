@@ -84,7 +84,10 @@ internal sealed class FormatSection
 	/// <summary>The names a locale code's language gives, or <see langword="null"/> for the culture's.</summary>
 	public DateNames? Names { get; internal set; }
 
-	/// <summary>The system format a locale code names, which the section shows whatever else it holds.</summary>
+	/// <summary>
+	/// The system format the section shows whatever else it holds: the one its locale code names in the first section, and
+	/// in a later date section the first section's, as Excel reads them.
+	/// </summary>
 	public SystemFormat System { get; internal set; }
 
 	/// <summary>Whether it has <c>General</c>.</summary>
@@ -156,7 +159,7 @@ internal sealed class FormatSection
 	/// <summary>The most digits of fractions of a second it shows.</summary>
 	public int SubSecondDigits { get; internal set; }
 
-	/// <summary>Whether its only date or time token is one elapsed time, which alone shows any serial.</summary>
+	/// <summary>Whether its only date or time token is one elapsed time, which alone shows any serial, a negative one too.</summary>
 	public bool ElapsedAlone { get; internal set; }
 
 	/// <summary>How many <c>@</c> a text section has.</summary>

@@ -7,9 +7,9 @@ namespace CsvHelper.Excel.Tests.Display;
 /// <summary>
 /// The text numbers show in format codes, and text and booleans through text sections (<see cref="NumberText"/>), against
 /// what Excel 365 (16.0 build 20527, en-US) showed through COM on 2026-11-16: every number, text and boolean cell of Phase
-/// 8's design probes and step 3's (<see cref="ExcelAnswers"/>), and Phase 5's answers about General and number codes.
+/// 8's probes whose code shows no date (<see cref="ProbeAnswers"/>), and Phase 5's answers about General and number codes.
 /// </summary>
-public partial class NumberTextTests
+public class NumberTextTests
 {
 	/// <summary>
 	/// The cells whose text differs from Excel's, by their codes, each with its reason and how many cells it covers: what
@@ -23,14 +23,14 @@ public partial class NumberTextTests
 		("a fixed denominator past 32,768 isn't read: Excel shows fractions that aren't the value (?/50000 shows 0.5 as 1/5)", code => !FormatCode.Compile(code).IsReadable, 81),
 	];
 
-	/// <summary>Every number, text and boolean cell of the probes shows Excel's text, but for the listed differences; dates are step 4's.</summary>
+	/// <summary>Every number, text and boolean cell of the probes shows Excel's text, but for the listed differences; codes with dates are <see cref="DateTextTests"/>'.</summary>
 	[Fact]
 	public void ShowsExcelsAnswers()
 	{
 		var failures = new List<string>();
 		var checkedCells = 0;
 		var listed = new int[Differences.Length];
-		foreach (var (id, code, builtIn, kind, value, expected) in ExcelAnswers)
+		foreach (var (id, code, builtIn, kind, value, _, expected) in ProbeAnswers.Cells)
 		{
 			var compiled = FormatCode.Compile(code ?? DisplayCulture.Invariant.BuiltIn(builtIn));
 			if (compiled.HasDate)
@@ -238,7 +238,7 @@ public partial class NumberTextTests
 		Assert.Equal(expected, Render(code, value));
 	}
 
-	/// <summary>Values Excel can't show, codes the renderer can't read, and, until step 4, dates: the cell shows its raw text.</summary>
+	/// <summary>Values Excel can't show, and codes the renderer can't read: the cell shows its raw text.</summary>
 	/// <param name="code">The code.</param>
 	/// <param name="value">The number.</param>
 	[Theory]
@@ -260,8 +260,6 @@ public partial class NumberTextTests
 	[InlineData("?/50000", 0.5)]
 	[InlineData("0;0;[=0]\"z\"", 0)]
 	[InlineData("0.00e+00", 1)]
-	[InlineData("yyyy-mm-dd", 45306)]
-	[InlineData("[$-F800]0.00", 45306)]
 	public void CantShow(string code, double value)
 	{
 		Assert.Null(Render(code, value));
@@ -339,25 +337,25 @@ public partial class NumberTextTests
 		var code = FormatCode.Compile("\"é\"#,##0.00\"" + char.ConvertFromUtf32(0x1F600) + "\"");
 		var room = new byte[64];
 		var full = new ShownText(room);
-		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, ref full));
+		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, false, ref full));
 		Assert.True(full.Fits);
 		Assert.Equal("é1,234,567.89" + char.ConvertFromUtf32(0x1F600), Encoding.UTF8.GetString(full.Written.ToArray()));
 		Assert.Equal(18, full.Length);
 		Assert.Equal(15, full.Chars);
 
 		var small = new ShownText(new byte[4]);
-		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, ref small));
+		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, false, ref small));
 		Assert.False(small.Fits);
 		Assert.Equal(full.Length, small.Length);
 		Assert.Equal(full.Chars, small.Chars);
 
 		var counting = new ShownText(Span<byte>.Empty);
-		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, ref counting));
+		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, false, ref counting));
 		Assert.Equal(full.Length, counting.Length);
 
 		// Room for exactly the text holds it all.
 		var exact = new ShownText(new byte[18]);
-		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, ref exact));
+		Assert.True(NumberText.TryWrite(code, 1234567.891, DisplayCulture.Invariant, false, ref exact));
 		Assert.True(exact.Fits);
 		Assert.Equal(full.Written.ToArray(), exact.Written.ToArray());
 	}
@@ -383,7 +381,7 @@ public partial class NumberTextTests
 			var compiled = FormatCode.Compile(code.ToString());
 			var value = random.Next(4) == 0 ? (random.NextDouble() - 0.5) * Math.Pow(10, random.Next(-20, 20)) : values[random.Next(values.Length)];
 			var text = new ShownText(room);
-			if (!NumberText.TryWrite(compiled, value, DisplayCulture.Invariant, ref text))
+			if (!NumberText.TryWrite(compiled, value, DisplayCulture.Invariant, false, ref text))
 			{
 				continue;
 			}
@@ -392,7 +390,7 @@ public partial class NumberTextTests
 			Assert.True(text.Fits, code.ToString());
 			Assert.InRange(text.Chars, 0, NumberText.MaxChars);
 			var counting = new ShownText(Span<byte>.Empty);
-			Assert.True(NumberText.TryWrite(compiled, value, DisplayCulture.Invariant, ref counting));
+			Assert.True(NumberText.TryWrite(compiled, value, DisplayCulture.Invariant, false, ref counting));
 			Assert.Equal(text.Length, counting.Length);
 		}
 
@@ -425,7 +423,7 @@ public partial class NumberTextTests
 				foreach (var number in numbers)
 				{
 					var shown = new ShownText(room);
-					NumberText.TryWrite(code, number, DisplayCulture.Invariant, ref shown);
+					NumberText.TryWrite(code, number, DisplayCulture.Invariant, false, ref shown);
 				}
 
 				var text = new ShownText(room);
@@ -451,7 +449,7 @@ public partial class NumberTextTests
 	{
 		var room = new byte[1024];
 		var text = new ShownText(room);
-		if (!NumberText.TryWrite(code, value, DisplayCulture.For(provider), ref text))
+		if (!NumberText.TryWrite(code, value, DisplayCulture.For(provider), false, ref text))
 		{
 			return null;
 		}
