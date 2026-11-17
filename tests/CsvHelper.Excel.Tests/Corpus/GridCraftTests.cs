@@ -58,6 +58,8 @@ public class GridCraftTests(ITestOutputHelper output)
 
 	private const string FormulaLineBreaks = "GridCraft drops the line breaks of a formula outside its strings, which Excel keeps";
 
+	private const string ImplicitIntersection = "GridCraft 0.19 puts Excel's implicit intersection operator in some legacy formulas that could give an array (=@FILTER(B2:B3,B2:B3>1E+300), =@(B2:B3 C2:C3), =@NOSUCHFUNC(1)), as Excel's Formula2 does (=@B2:B3 C2:C3); Excel's Formula, which its answers give, has none";
+
 	private const string Overflow = "the producer wrote the largest double with 15 or 16 digits, past it, which Excel reads as #NULL! and GridCraft as no value";
 
 	private const string Subnormal = "Excel reads a subnormal double as 0; GridCraft keeps it";
@@ -125,6 +127,8 @@ public class GridCraftTests(ITestOutputHelper output)
 		.. Typed.SelectMany(f => new[] { "Formulas!G15", "Formulas!G16" }.Select(c => (f, c, ArrayFormulas))),
 		("google/66365.xlsx", "Sheet1!B2", ArrayFormulas),
 		.. Typed.Select(f => (f, "Formulas!C18", FormulaLineBreaks)),
+		.. Typed.Select(f => (f, "Numbers!B43", ImplicitIntersection)),
+		.. new[] { "excel/typed-1904.xlsx", "excel/typed-strict.xlsx", "excel/typed.xlsx", "libreoffice/typed.xlsx" }.Select(f => (f, "Numbers!B45", ImplicitIntersection)),
 		.. new[] { "excel/typed-1904.xlsx", "excel/typed-strict.xlsx", "excel/typed.xlsx", "libreoffice/typed.xlsx", "xlsxwriter/typed.xlsx" }
 			.SelectMany(f => new[] { "Formulas!D21", "Formulas!D22", "Formulas!D23" }.Select(c => (f, c, OwnTable))),
 		.. new[] { "excel/messy.xlsx", "libreoffice/messy.xlsx", "poi/messy.xlsx" }.Select(f => (f, "Tables!B5", OwnTable)),
@@ -165,6 +169,7 @@ public class GridCraftTests(ITestOutputHelper output)
 		("types.xlsx", "Numbers!F15", Subnormal),
 		.. new[] { "Calc!D5", "Calc!D7" }.Select(c => ("formulas.xlsx", c, Escapes)),
 		("formulas.xlsx", "Calc!D6", Escapes + "; and " + FormulaLineBreaks),
+		("formulas.xlsx", "Calc!D14", ImplicitIntersection),
 		.. new[] { "Numbers!B3", "Numbers!I3" }.Select(c => ("cultures.xlsx", c, Widths)),
 		("formats.xlsx", "Early!A3", Widths),
 		.. new[] { "'Orders (2)'!C3", "'Orders (3)'!A3" }.Select(c => ("newsheet-look.xlsx", c, Widths)),

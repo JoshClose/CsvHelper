@@ -136,6 +136,7 @@ ArtCraft's GridCraft, a spreadsheet application that reads workbooks as Excel do
   - no hidden row past the file's last that a default height of 0 hides, nor one of height 0 without `hidden`; no built-in or `_xlfn.` name, and a deleted sheet's range as `=#REF!`; a link to a file as its `file:` URI;
   - and the written set's text at any width, where Excel's answers show `########` or General narrowed to the column.
   - The round trips' workbooks read as the tests expect, every cell.
+- **What GridCraft 0.19.1 changed** (installed 2026-11-16, listed 2026-11-17): the same, and it puts Excel's implicit intersection operator in three legacy formulas that could give an array, `=@(B2:B3 C2:C3)`, `=@FILTER(…)` and `=@NOSUCHFUNC(1)` (14 cells). Excel's `Formula2` has one there too (`=@B2:B3 C2:C3`, without the parentheses), and in `=@NOSUCHNAME` and an `XLOOKUP` without `_xlfn.`, which GridCraft leaves alone; its `Formula`, which its answers give, has none. The lists follow the version installed, so 0.18.0 now fails those 14.
 
 ## The typed workbook
 
