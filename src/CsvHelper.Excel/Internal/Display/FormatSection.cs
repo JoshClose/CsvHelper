@@ -81,6 +81,12 @@ internal sealed class FormatSection
 	/// <summary>Whether it has a locale code (<c>[$-407]</c>, <c>[$€-407]</c>, <c>[$USD]</c>).</summary>
 	public bool HasLocale { get; internal set; }
 
+	/// <summary>
+	/// Whether it has a fill or empty quotes (<c>*-</c>, <c>""</c>), which show nothing, but with which its brackets aren't
+	/// alone: <c>[Red]*-</c> shows nothing where <c>[Red]</c> shows General.
+	/// </summary>
+	public bool HasBlank { get; internal set; }
+
 	/// <summary>The names a locale code's language gives, or <see langword="null"/> for the culture's.</summary>
 	public DateNames? Names { get; internal set; }
 

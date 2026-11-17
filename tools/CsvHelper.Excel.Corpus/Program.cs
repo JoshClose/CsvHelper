@@ -18,6 +18,7 @@ internal static class Program
 		"""
 		Usage: CsvHelper.Excel.Corpus <command> [--files <folder>] [--csv <PackageAssets.csv>] [--java <java.exe or JDK>]
 		       CsvHelper.Excel.Corpus fuzzed <folder>
+		       CsvHelper.Excel.Corpus fuzzed-text <folder>
 
 		Commands:
 		  excel          Excel through COM: excel/ (the basic workbook in each format, and .xlsb, encrypted and .xls; the
@@ -42,6 +43,9 @@ internal static class Program
 		  fuzzed         Excel through COM: opens each workbook the writer's fuzzers saved in a folder (their
 		                 CSVHELPER_EXCEL_FUZZ_SAVE), and reports which Excel repairs or refuses, and the numbers it shows
 		                 as ########, to standard output and the folder's fuzzed.txt; nothing is committed
+		  fuzzed-text    Excel through COM: compares the text Excel shows in each cell of the workbooks the code fuzzer
+		                 saved in a folder with the text CsvHelper.Excel reads under Text = Formatted (Phase 8), and reports
+		                 each difference to standard output and the folder's fuzzed-text.txt; nothing is committed
 		  spec           The basic workbook's content as JSON, to standard output (the typed and messy workbooks' go to
 		                 the Python and Java producers through temporary files)
 		  check          Only the check, which every command ends with, that no file holds personal information
@@ -66,7 +70,7 @@ internal static class Program
 		}
 
 		var command = args.FirstOrDefault() ?? "";
-		if (command == "fuzzed")
+		if (command is "fuzzed" or "fuzzed-text")
 		{
 			// Not the corpus: the fuzzers' workbooks, in a folder of their own, which the privacy check isn't for.
 			if (args.Length != 2 || !Directory.Exists(args[1]))
@@ -76,7 +80,7 @@ internal static class Program
 				return 1;
 			}
 
-			return ExcelFuzzed.Open(args[1]);
+			return command == "fuzzed" ? ExcelFuzzed.Open(args[1]) : ExcelFuzzedText.Judge(args[1]);
 		}
 
 		var root = FindRepository();

@@ -17,8 +17,8 @@ namespace CsvHelper.Excel.Tests.Security;
 /// over numbers, dates, durations, booleans and text, pass the Open XML SDK's validator and read back.
 /// <c>CSVHELPER_EXCEL_FUZZ_CODES</c> sets the number of codes, <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the first seed, and
 /// <c>CSVHELPER_EXCEL_FUZZ_SAVE</c> a folder to save each workbook in, for the corpus tool's <c>fuzzed</c> command to
-/// open in Excel, and <c>CSVHELPER_EXCEL_FUZZ_CODES_PER_WORKBOOK</c> the codes of each (20 by default; 1 tells which code
-/// Excel repairs).
+/// open in Excel and its <c>fuzzed-text</c> command to have Excel judge the text the reader shows (Phase 8), and
+/// <c>CSVHELPER_EXCEL_FUZZ_CODES_PER_WORKBOOK</c> the codes of each (20 by default; 1 tells which code Excel repairs).
 /// </summary>
 /// <param name="output">Shows what the run checked.</param>
 public class FormatCodeFuzzTests(ITestOutputHelper output)
@@ -106,10 +106,10 @@ public class FormatCodeFuzzTests(ITestOutputHelper output)
 		AssertNone(failures, "CSVHELPER_EXCEL_FUZZ_CODES");
 	}
 
-	/// <summary>A random code, from its seed: one to eight pieces, or now and then one piece repeated to around 255 characters.</summary>
+	/// <summary>A random code, from its seed: one to eight pieces, or now and then one piece repeated to around 255 characters. <see cref="DisplayFuzzTests"/> renders them too.</summary>
 	/// <param name="seed">The seed.</param>
 	/// <returns>The code.</returns>
-	private static string Code(int seed)
+	internal static string Code(int seed)
 	{
 		var random = new Random(seed);
 		var code = new StringBuilder();

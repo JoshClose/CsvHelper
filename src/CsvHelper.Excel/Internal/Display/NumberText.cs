@@ -66,6 +66,12 @@ internal static class NumberText
 	/// <summary>The most characters Excel shows a number in, or a text through a text section.</summary>
 	public const int MaxChars = 255;
 
+	/// <summary>
+	/// The most UTF-8 bytes of a text that can show in <see cref="MaxChars"/> characters through a text section: three a
+	/// character, as a character of four bytes is two UTF-16 units.
+	/// </summary>
+	private const int MaxTextBytes = 3 * MaxChars;
+
 	/// <summary>The most characters General shows a number in, besides its sign.</summary>
 	private const int GeneralLength = 11;
 
@@ -186,6 +192,9 @@ internal static class NumberText
 			return true;
 		}
 
+		// It stops once the text passes 255 characters, so that a cell's work is bounded by them and not by the text times
+		// its @s (a code of 255 @s over a text of 32,767 characters; Phase 8's step 8). A text of more than three bytes a
+		// character's worth of them can't fit, and isn't counted.
 		foreach (var token in tokens)
 		{
 			if (token.Kind == FormatTokenKind.Literal)
@@ -194,11 +203,21 @@ internal static class NumberText
 			}
 			else if (token.Kind == FormatTokenKind.At)
 			{
+				if (value.Length > MaxTextBytes)
+				{
+					return false;
+				}
+
 				text.Append(value);
+			}
+
+			if (text.Chars > MaxChars)
+			{
+				return false;
 			}
 		}
 
-		return text.Chars <= MaxChars;
+		return true;
 	}
 
 	/// <summary>Chooses the section a number shows in, and whether it shows a minus sign.</summary>
@@ -307,8 +326,9 @@ internal static class NumberText
 	/// <returns>Whether the number can be shown: a fraction can be too large.</returns>
 	private static bool WriteSection(FormatCode code, FormatSection section, double abs, bool minus, DisplayCulture culture, ref ShownText text)
 	{
-		// Brackets alone: a color, DBNum or a condition shows General ([Red] is [Red]General); a locale alone, or nothing,
-		// shows nothing but the sign.
+		// Brackets alone: a color, DBNum or a condition shows General ([Red] is [Red]General); with a locale, a fill or empty
+		// quotes beside them (Phase 8's step 8: [Green][$-411], [DBNum3]*- and [DBNum3]"" show 1234567.891 as nothing), or
+		// nothing, the section shows nothing but the sign.
 		if (section.Tokens.Length == 0)
 		{
 			if (minus)
@@ -316,7 +336,7 @@ internal static class NumberText
 				text.Append('-');
 			}
 
-			if (section.HasColor || section.HasDBNum || section.Condition != ConditionOperator.None)
+			if ((section.HasColor || section.HasDBNum || section.Condition != ConditionOperator.None) && !section.HasLocale && !section.HasBlank)
 			{
 				WriteGeneral(abs, culture, ref text);
 			}

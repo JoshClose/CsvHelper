@@ -100,20 +100,28 @@ public class DisplayCultureTests
 		Assert.NotEqual("января", Text(names.Months[0]));
 	}
 
-	/// <summary>A locale code's language by its id or its tag; English where the runtime has no data for it.</summary>
+	/// <summary>
+	/// A locale code's language by its id or its tag, a tag by its longest prefix that is a culture the runtime has; none
+	/// where the runtime has no data for it, so that the reader's culture names (Phase 8's step 8).
+	/// </summary>
 	[Fact]
 	public void NamesALocaleCodesLanguage()
 	{
 		Assert.Same(DateNames.English, DateNames.ForLanguage(0x409));
 		Assert.Same(DateNames.English, DateNames.ForLanguage(0x7F));
-		Assert.Same(DateNames.English, DateNames.ForLanguage(0x3FFF));
+		Assert.Null(DateNames.ForLanguage(0x3FFF));
+		Assert.Null(DateNames.ForLanguage(0x400));
 		Assert.Same(DateNames.ForLanguage(0x407), DateNames.ForLanguage(0x407));
-		Assert.Equal("Januar", Text(DateNames.ForLanguage(0x407).Months[0]));
-		Assert.Equal("janvier", Text(DateNames.ForLanguage(0x40C).Months[0]));
-		Assert.Equal("Januar", Text(DateNames.ForTag("de-DE").Months[0]));
+		Assert.Equal("Januar", Text(DateNames.ForLanguage(0x407)!.Months[0]));
+		Assert.Equal("janvier", Text(DateNames.ForLanguage(0x40C)!.Months[0]));
+		Assert.Equal("Januar", Text(DateNames.ForTag("de-DE")!.Months[0]));
 		Assert.Same(DateNames.ForTag("de-DE"), DateNames.ForTag("DE-de"));
-		Assert.Same(DateNames.English, DateNames.ForTag("qq-ZZ"));
-		Assert.Same(DateNames.English, DateNames.ForTag("not a tag"));
+		Assert.Same(DateNames.ForTag("de-DE"), DateNames.ForTag("de-DE-x-foo"));
+		Assert.Same(DateNames.ForTag("de"), DateNames.ForTag("de-ZZ"));
+		Assert.Equal("Januar", Text(DateNames.ForTag("de-ZZ")!.Months[0]));
+		Assert.Null(DateNames.ForTag("qq-ZZ"));
+		Assert.Null(DateNames.ForTag("x-foo"));
+		Assert.Null(DateNames.ForTag("not a tag"));
 	}
 
 	/// <summary>A .NET pattern becomes a code token by token, its separators and other text shown as written.</summary>

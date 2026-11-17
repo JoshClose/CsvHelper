@@ -50,7 +50,6 @@ public partial class FormatCodeTests
 	[InlineData("[Color57]0")]
 	[InlineData("[>abc]0")]
 	[InlineData("[>]0")]
-	[InlineData("[$-123456789]0")]
 	[InlineData("[$-12@]0")]
 	[InlineData("0.00e+00")]
 	[InlineData("#e-0")]
@@ -396,6 +395,15 @@ public partial class FormatCodeTests
 		Assert.Same(DateNames.English, First("[$-D000409]0").Names);
 		Assert.Equal("Januar", Encoding.UTF8.GetString(First("[$-1060407]mmmm").Names!.Months[0]));
 		Assert.Null(First("[$-2000000]0").Names);
+
+		// An id of more than eight hex digits is its low 32 bits, and one the runtime doesn't know names no language, as
+		// Excel reads them (Phase 8's step 8): [$-123456789] is [$-23456789], whose 6789 Excel drops.
+		Assert.True(First("[$-123456789]mmmm").HasLocale);
+		Assert.Null(First("[$-123456789]mmmm").Names);
+		Assert.Equal("Januar", Encoding.UTF8.GetString(First("[$-100000407]mmmm").Names!.Months[0]));
+		Assert.Null(First("[$-1234]mmmm").Names);
+		Assert.Equal("Januar", Encoding.UTF8.GetString(First("[$-de]mmmm").Names!.Months[0]));
+		Assert.Null(First("[$-ABCD]mmmm").Names);
 		Assert.Null(First("mmmm").Names);
 
 		Assert.Equal(SystemFormat.LongDate, First("[$-F800]dddd, mmmm dd, yyyy").System);
@@ -427,8 +435,9 @@ public partial class FormatCodeTests
 		var grin = char.ConvertFromUtf32(0x1F600);
 		Assert.Equal("'é' 0I", Describe(FormatCode.Compile("\"é\"0")));
 		Assert.Equal("'" + grin + "' 0I", Describe(FormatCode.Compile("\\" + grin + "0")));
-		Assert.Equal("' ' 0I", Describe(FormatCode.Compile("_" + grin + "0")));
-		Assert.Equal("0I", Describe(FormatCode.Compile("*" + grin + "0")));
+		// _ and * take one UTF-16 unit, as Excel does (Phase 8's step 8): a pair's low surrogate shows as U+FFFD.
+		Assert.Equal("' " + (char)0xFFFD + "' 0I", Describe(FormatCode.Compile("_" + grin + "0")));
+		Assert.Equal("'" + (char)0xFFFD + "' 0I", Describe(FormatCode.Compile("*" + grin + "0")));
 		Assert.Equal("'" + grin + "' 0I", Describe(FormatCode.Compile(grin + "0")));
 		Assert.Equal("'年' yyyy", Describe(FormatCode.Compile("\"年\"yyyy")));
 	}

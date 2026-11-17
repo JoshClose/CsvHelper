@@ -18,6 +18,27 @@ public class StyleTableTests
 		Assert.Null(styles.FormatCode(165));
 	}
 
+	/// <summary>
+	/// A code's <c>_xHHHH_</c> escapes are decoded, as Excel decodes them (Phase 8's step 8: <c>\_x0001_</c> shows U+0001),
+	/// and as the writer writes a control character and an <c>_</c> that would read as one.
+	/// </summary>
+	/// <param name="async">Whether to load asynchronously.</param>
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task DecodesTheEscapesOfACode(bool async)
+	{
+		var styles = await TestPackage.Workbook("Data")
+			.Replace("xl/styles.xml", "<numFmts count=\"1\"><numFmt numFmtId=\"164\" formatCode=\"yyyy\\-mm\\-dd\"/></numFmts>",
+				"<numFmts count=\"3\"><numFmt numFmtId=\"164\" formatCode=\"*_x0001_\"/><numFmt numFmtId=\"165\" formatCode=\"0_x005F_x0041_\"/>" +
+				"<numFmt numFmtId=\"166\" formatCode=\"0_x\"/></numFmts>")
+			.LoadStylesAsync(async);
+
+		Assert.Equal("*" + (char)1, styles.FormatCode(164));
+		Assert.Equal("0_x0041_", styles.FormatCode(165));
+		Assert.Equal("0_x", styles.FormatCode(166));
+	}
+
 	[Theory]
 	[InlineData(false)]
 	[InlineData(true)]

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -183,7 +184,11 @@ internal sealed class StyleTable
 			}
 			else if (attributes.IsName("formatCode"u8))
 			{
-				code = attributes.DecodeValue();
+				// Excel decodes a code's _xHHHH_ escapes, as a cell's text's and a sheet name's (Phase 8's step 8: _x0001_ is
+				// U+0001), which the writer writes for control characters and for an _ that would read as one.
+				var decoded = new byte[attributes.Value.Length];
+				var length = XmlText.DecodeEscapes(decoded.AsSpan(0, attributes.DecodeValue(decoded)));
+				code = Encoding.UTF8.GetString(decoded, 0, length);
 			}
 		}
 

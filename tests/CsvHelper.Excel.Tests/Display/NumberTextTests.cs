@@ -397,6 +397,50 @@ public class NumberTextTests
 		Assert.True(shown > 5_000, $"{shown} shown");
 	}
 
+	/// <summary>
+	/// Excel's text of the fuzzed codes whose rules Excel's judgement of them found (Phase 8's step 8,
+	/// <c>Csv\_bench\results\phase8\step8\fuzzed</c>): a run of commas that show as themselves shows one, in numbers, dates
+	/// and alone; and brackets beside a locale, a fill or empty quotes show nothing, where brackets alone show General.
+	/// </summary>
+	[Fact]
+	public void ShowsTheFuzzedCodesAsExcelShowedThem()
+	{
+		(string Code, double Value, string Shown)[] cases =
+		[
+			(",,", 1234567.891, ","),
+			(",,", -0.001, "-,"),
+			(",,mmm", 1234567.891, ",Feb"),
+			(",,mmm", 100000, ",Oct"),
+			("[red],,0", 1234567.891, ",1234568"),
+			("[red],,0", -0.001, ",0"),
+			("_x,,0", 45306.437501423614, " ,45306"),
+			("$,~,,;", 1234567.891, "$,~,"),
+			("%,,,,;;", 0.0625, "%,"),
+			("mmmmm,, ,,AM/PM", 1234567.891, "F, ,PM"),
+			("mmmmm,, ,,AM/PM", 0.0625, "J, ,AM"),
+			("[DBNum3],,", 1, ","),
+			("[$-411][GREEN]", 1234567.891, ""),
+			("[$-411][GREEN]", -0.001, "-"),
+			("[Color10][$-409]", 1E+15, ""),
+			("[$-411][DBNum1]", 0.0625, ""),
+			("[DBNum3]\"\"", 1234567.891, ""),
+			("[DBNum3]\"\"", -0.001, "-"),
+			("*-[DBNum3]", 100000, ""),
+			("*" + (char)1, 1234567.891, ""),
+			("\\" + (char)1, 1234567.891, ((char)1).ToString()),
+			("\\" + (char)1, -0.001, "-" + (char)1),
+		];
+		foreach (var (code, value, shown) in cases)
+		{
+			Assert.True(Render(code, value) == shown, $"{code} of {value}: {Render(code, value)}, not {shown}");
+		}
+
+		// Brackets alone still show General.
+		Assert.Equal("1234567.891", Render("[Red]", 1234567.891));
+		Assert.Equal("1E+15", Render("[DBNum3]", 1E+15));
+		Assert.Equal("5", Render("[>0]", 5));
+	}
+
 #if NET10_0_OR_GREATER
 	/// <summary>Rendering allocates nothing: numbers, fractions, exponents, conditions, General and text sections.</summary>
 	[OptimizedFact]

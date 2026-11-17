@@ -16,8 +16,9 @@ namespace CsvHelper.Excel;
 /// The code reads as Excel 365 read it (checked on 2026-11-16 through COM, <c>Csv\_bench\results\phase8\design</c> and
 /// <c>step2</c>, and in Phase 5): quoted text, <c>\x</c> and characters outside quotes that aren't tokens show as
 /// themselves, letters too (<c>h:mm a</c> shows <c>0:00 a</c>, <c>A/P/X</c> <c>A/X</c>); <c>_x</c> is one space and
-/// <c>*x</c> nothing, whatever <c>x</c> is; colors show nothing (<c>[Color 10]</c> is <c>[Color10]</c>); <c>[$-en-US]</c>
-/// is <c>[$-409]</c>, and <c>[$-x-sysdate]</c> and <c>[$-x-systime]</c> are <c>[$-F800]</c> and <c>[$-F400]</c>.
+/// <c>*x</c> nothing, whatever <c>x</c> is, <c>x</c> being one UTF-16 unit; colors show nothing (<c>[Color 10]</c> is
+/// <c>[Color10]</c>); <c>[$-en-US]</c> is <c>[$-409]</c>, and <c>[$-x-sysdate]</c> and <c>[$-x-systime]</c> are
+/// <c>[$-F800]</c> and <c>[$-F400]</c>. A code is read to its first 255 UTF-16 units, as Excel holds it.
 /// </para>
 /// <para>
 /// Sections are positive, negative, zero and text, as MS-OI29500 has them: the fourth is text's, and so is a last section
@@ -44,6 +45,9 @@ internal sealed class FormatCode
 {
 	/// <summary>The most sections a code has: positive, negative, zero and text.</summary>
 	public const int MaxSections = 4;
+
+	/// <summary>The most UTF-16 units of a code that Excel holds: it cuts a longer one to them.</summary>
+	public const int MaxLength = 255;
 
 	/// <summary>The largest fixed denominator Excel shows fractions over as they are (step 3's probes: 32,769 and above aren't).</summary>
 	public const int MaxDenominator = 32768;
@@ -137,6 +141,14 @@ internal sealed class FormatCode
 	/// <returns>The compiled code; one that isn't <see cref="IsReadable"/> when the renderer can't read it.</returns>
 	public static FormatCode Compile(string code, bool measuring)
 	{
+		// Excel holds a code's first 255 UTF-16 units: it cuts a longer one that it opens (Phase 4's checks, and Phase 8's
+		// step 8: 300 zeros show 255; #...#0 of 256 shows 0 as nothing), and refuses or repairs the rest. So the renderer
+		// reads no more, and a cell's work is bounded whatever a file holds.
+		if (code.Length > MaxLength)
+		{
+			code = code.Substring(0, MaxLength);
+		}
+
 		var raw = Read(code, measuring);
 		if (raw is null)
 		{
@@ -230,6 +242,7 @@ internal sealed class FormatCode
 					}
 
 					section.Add(Raw.Shown(code.Substring(i + 1, close - i - 1)));
+					section.HasBlank |= close == i + 1;
 					i = close;
 
 					continue;
@@ -239,7 +252,10 @@ internal sealed class FormatCode
 						return null;
 					}
 
-					var width = CharWidth(code, i + 1);
+					// _ and * take one UTF-16 unit, as Excel does: before a surrogate pair, they take its high surrogate, and its
+					// low one shows as itself, which UTF-8 holds as U+FFFD (_ and an emoji show a space and U+FFFD; Phase 8's
+					// step 8). \ takes the pair, which shows the same either way.
+					var width = c == '\\' ? CharWidth(code, i + 1) : 1;
 					if (c == '\\')
 					{
 						section.Add(Raw.Shown(code.Substring(i + 1, width)));
@@ -247,6 +263,10 @@ internal sealed class FormatCode
 					else if (c == '_')
 					{
 						section.Add(Raw.Shown(measuring ? code.Substring(i + 1, width) : " "));
+					}
+					else
+					{
+						section.HasBlank = true;
 					}
 
 					i += width;
@@ -324,6 +344,7 @@ internal sealed class FormatCode
 			HasDBNum = raw.HasDBNum,
 			HasCalendar = raw.HasCalendar,
 			HasLocale = raw.HasLocale,
+			HasBlank = raw.HasBlank,
 			Names = raw.Names,
 			System = raw.System,
 			HasGeneral = raw.HasGeneral,
@@ -372,6 +393,7 @@ internal sealed class FormatCode
 				break;
 		}
 
+		CollapseCommas(tokens);
 		section.Tokens = Pool(tokens, pool);
 		if (section.Kind == FormatSectionKind.Fraction)
 		{
@@ -501,6 +523,23 @@ internal sealed class FormatCode
 		foreach (var i in removed)
 		{
 			tokens.RemoveAt(i);
+		}
+	}
+
+	/// <summary>
+	/// Leaves one comma of each run of commas outside quotes that show as themselves, as Excel does (Phase 8's step 8: it
+	/// reads <c>,,mmm</c> as <c>,mmm</c>, and <c>[Red],,0</c> shows 1234567.891 as <c>,1234568</c>); those that group or
+	/// scale are gone by then.
+	/// </summary>
+	/// <param name="tokens">The tokens, changed in place.</param>
+	private static void CollapseCommas(List<Raw> tokens)
+	{
+		for (var i = tokens.Count - 1; i > 0; i--)
+		{
+			if (tokens[i].Bare && tokens[i].Char == ',' && tokens[i - 1].Bare && tokens[i - 1].Char == ',')
+			{
+				tokens.RemoveAt(i);
+			}
 		}
 	}
 
@@ -975,6 +1014,9 @@ internal sealed class FormatCode
 		/// <summary>Whether it has a locale code.</summary>
 		public bool HasLocale { get; private set; }
 
+		/// <summary>Whether it has a fill or empty quotes, which show nothing but make its brackets not alone.</summary>
+		public bool HasBlank { get; set; }
+
 		/// <summary>The names a locale code's language gives.</summary>
 		public DateNames? Names { get; private set; }
 
@@ -1131,9 +1173,11 @@ internal sealed class FormatCode
 		}
 
 		/// <summary>
-		/// Reads a currency or locale: <c>$</c>, a symbol, and after a <c>-</c> a locale id of 1 to 8 hex digits, whose low
-		/// 16 bits are the language (<c>F800</c> and <c>F400</c> the system formats; the calendar and numeral system above
-		/// them aren't rendered), or a tag (<c>en-US</c>, <c>x-sysdate</c>, <c>x-systime</c>).
+		/// Reads a currency or locale: <c>$</c>, a symbol, and after a <c>-</c> a locale id of hex digits, whose low 32 bits
+		/// count (Excel reads <c>[$-123456789]</c> as <c>[$-23456789]</c>) and whose low 16 bits are the language
+		/// (<c>F800</c> and <c>F400</c> the system formats; the calendar and numeral system above them aren't rendered), or
+		/// a tag (<c>en-US</c>, <c>x-sysdate</c>, <c>x-systime</c>). Hex letters alone that name a culture the runtime has
+		/// are a tag: Excel reads <c>[$-de]</c> as German (Phase 8's step 8).
 		/// </summary>
 		/// <param name="content">The bracket's content, from its <c>$</c>.</param>
 		/// <returns>Whether the renderer can read it.</returns>
@@ -1153,7 +1197,7 @@ internal sealed class FormatCode
 			}
 
 			var id = content.Substring(dash + 1);
-			if (id.Length <= 8 && uint.TryParse(id, NumberStyles.AllowHexSpecifier, CultureInfo.InvariantCulture, out var locale))
+			if (LocaleId(id) is { } locale && !(IsLetters(id) && DateNames.IsCultureName(id)))
 			{
 				var language = (int)(locale & 0xFFFF);
 				System = language switch
@@ -1258,6 +1302,50 @@ internal sealed class FormatCode
 			foreach (var c in content)
 			{
 				if ((c | 0x20) != (content[0] | 0x20))
+				{
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		/// <summary>A locale code's id as hex digits, of any number: their low 32 bits.</summary>
+		/// <param name="id">The id.</param>
+		/// <returns>The locale id; <see langword="null"/> when the id isn't hex digits.</returns>
+		private static uint? LocaleId(string id)
+		{
+			var locale = 0u;
+			foreach (var c in id)
+			{
+				uint digit;
+				if (c is >= '0' and <= '9')
+				{
+					digit = (uint)(c - '0');
+				}
+				else if ((c | 0x20) is >= 'a' and <= 'f')
+				{
+					digit = (uint)((c | 0x20) - 'a' + 10);
+				}
+				else
+				{
+					return null;
+				}
+
+				locale = (locale << 4) | digit;
+			}
+
+			return locale;
+		}
+
+		/// <summary>Whether an id has letters alone, no digit: hex digits of which might be a language's name (<c>de</c>, <c>fa</c>).</summary>
+		/// <param name="id">The id.</param>
+		/// <returns>Whether it has.</returns>
+		private static bool IsLetters(string id)
+		{
+			foreach (var c in id)
+			{
+				if (c is >= '0' and <= '9')
 				{
 					return false;
 				}

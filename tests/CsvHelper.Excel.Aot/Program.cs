@@ -63,12 +63,13 @@ internal static class Program
 
 		Convert(problems, orders);
 		Template(problems);
+		Shown(problems);
 		foreach (var problem in problems)
 		{
 			Console.Error.WriteLine(problem);
 		}
 
-		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, and wrote a template and imported a sheet of it." : $"{problems.Count} problems.");
+		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, wrote a template and imported a sheet of it, and read and converted a sheet's shown text." : $"{problems.Count} problems.");
 
 		return problems.Count == 0 ? 0 : 1;
 	}
@@ -167,6 +168,68 @@ internal static class Program
 		if (records != "OnHold True 2024-01-15 / Closed False 2024-02-01" || errors != "Ticket!A3 Ticket.Status Pending / Ticket!B3 Ticket.Urgent maybe / Ticket!C3 Ticket.Due soon" || !result.Complete)
 		{
 			problems.Add($"The import read {records}, with the errors {errors}, complete {result.Complete}.");
+		}
+	}
+
+	/// <summary>
+	/// Phase 8's displayed text, as NativeAOT runs it under invariant globalization: a sheet of <see cref="Reading"/>s, read
+	/// with <see cref="ExcelText.Formatted"/>, gives each cell's text as Excel shows it, a locale code's month in English (the
+	/// runtime has no German there), while typed members keep the values and a string member takes the shown text; and
+	/// converts to CSV as shown.
+	/// </summary>
+	/// <param name="problems">Takes what isn't as shown.</param>
+	private static void Shown(List<string> problems)
+	{
+		Reading[] readings = [new() { Taken = new DateTime(2024, 1, 15, 13, 30, 0), Total = 1234.5m, Part = 3.5, Note = "abc" }];
+		using var stream = new MemoryStream();
+		using (var workbook = ExcelWorkbookWriter.Create(stream, leaveOpen: true))
+		{
+			workbook.WriteSheet("Readings", readings);
+		}
+
+		var bytes = stream.ToArray();
+		const string Expected = "Taken|Total|Part|Note / January 15, 2024 1:30 PM|1,234.50|3 1/2|Note: abc";
+		var formatted = new ExcelReaderOptions { Text = ExcelText.Formatted, Csv = new CsvReaderOptions { HasHeader = false } };
+		using (var book = ExcelWorkbook.Open(new MemoryStream(bytes)))
+		{
+			using var reader = book.OpenReader(formatted);
+			var rows = new List<string>();
+			while (reader.Read())
+			{
+				var fields = new string[reader.FieldCount];
+				for (var i = 0; i < fields.Length; i++)
+				{
+					fields[i] = reader.GetString(i);
+				}
+
+				rows.Add(string.Join("|", fields));
+			}
+
+			if (string.Join(" / ", rows) != Expected)
+			{
+				problems.Add($"The shown text read {string.Join(" / ", rows)}, not {Expected}.");
+			}
+		}
+
+		using (var book = ExcelWorkbook.Open(new MemoryStream(bytes)))
+		{
+			using var reader = book.OpenReader(new ExcelReaderOptions { Text = ExcelText.Formatted });
+			var read = reader.GetRecords<Reading>().Single();
+			// Typed members keep the values; a string member takes the shown text.
+			if (read.Taken != readings[0].Taken || read.Total != readings[0].Total || read.Part != readings[0].Part || read.Note != "Note: abc")
+			{
+				problems.Add($"Read as shown text, the values were {read.Taken:O} {read.Total} {read.Part} {read.Note}.");
+			}
+		}
+
+		using var input = new MemoryStream(bytes);
+		using var output = new MemoryStream();
+		ExcelConvert.ToCsv(input, output, new ExcelToCsvOptions { Excel = formatted });
+		var csv = Encoding.UTF8.GetString(output.ToArray());
+		const string ExpectedCsv = "Taken,Total,Part,Note\r\n\"January 15, 2024 1:30 PM\",\"1,234.50\",3 1/2,Note: abc\r\n";
+		if (csv != ExpectedCsv)
+		{
+			problems.Add($"The shown text converted as {csv}, not {ExpectedCsv}");
 		}
 	}
 
@@ -269,6 +332,27 @@ public sealed partial class Order
 	/// <summary>A note, in a hidden column.</summary>
 	[ExcelColumn(Hidden = true)]
 	public string? Note { get; set; }
+}
+
+/// <summary>A reading, its columns in formats whose shown text differs from the values': a German locale code's date, grouping, a fraction and a text section.</summary>
+[CsvRecord]
+public sealed partial class Reading
+{
+	/// <summary>When it was taken, its month named in German where the runtime has German.</summary>
+	[ExcelColumn(Format = "[$-407]mmmm d, yyyy h:mm AM/PM")]
+	public DateTime Taken { get; set; }
+
+	/// <summary>Its total, grouped, with two decimals.</summary>
+	[ExcelColumn(Format = "#,##0.00")]
+	public decimal Total { get; set; }
+
+	/// <summary>A part, as a fraction.</summary>
+	[ExcelColumn(Format = "# ?/?")]
+	public double Part { get; set; }
+
+	/// <summary>A note, after a label.</summary>
+	[ExcelColumn(Format = "\"Note: \"@")]
+	public string Note { get; set; } = "";
 }
 
 /// <summary>A ticket's state, written by its other name when it has one.</summary>

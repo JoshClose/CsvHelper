@@ -4,7 +4,8 @@
 	     whose attributes CsvHelper.Excel reads through reflection over the members T's annotation keeps, and reads it
 	     back; and Phase 6's conversions of the same records as CSV, inferred and through T, to a sheet and back. CI
 	     publishes it with NativeAOT, where a trim or AOT warning is an error, and runs it. It builds as a plain app with
-	     the solution. -->
+	     the solution. Phase 8's displayed text too: a sheet of formats read and converted as Excel shows it, under the
+	     invariant globalization a NativeAOT app runs with. -->
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net10.0</TargetFramework>
@@ -15,13 +16,26 @@
 		<InvariantGlobalization>true</InvariantGlobalization>
 		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 		<!-- NuGet's audit of known vulnerabilities stays a warning: the only package it can name is the SDK's own ILCompiler,
-		     which an SDK not yet patched has (SDK 10.0.402's 10.0.13 had an advisory on 2026-11-11); the app references none. -->
+		     which an SDK not yet patched has; the app references none. For the advisory it named on 2026-11-11, see the
+		     ILCompiler below. -->
 		<WarningsNotAsErrors>NU1901;NU1902;NU1903;NU1904</WarningsNotAsErrors>
 		<IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
 		<ILLinkTreatWarningsAsErrors>true</ILLinkTreatWarningsAsErrors>
 		<!-- Each trim or AOT warning on its own, rather than one for each assembly that has any. -->
 		<TrimmerSingleWarn>false</TrimmerSingleWarn>
 	</PropertyGroup>
+
+	<!-- The NativeAOT compiler and its framework, which the SDK restores at the runtime's version it bundles: SDKs before
+	     10.0.404 bundle 10.0.13 or older, of which NuGet's audit names Microsoft.DotNet.ILCompiler (NU1903, GHSA-p3jp-9v83-76w9,
+	     Brotli's decoder, fixed in 10.0.14), and the solution's build warns. Such an SDK compiles the app with 10.0.14's
+	     compiler and NativeAOT framework, the first patched; a newer SDK keeps its own. -->
+	<Target Name="UsePatchedILCompiler" BeforeTargets="ProcessFrameworkReferences" Condition="$([MSBuild]::VersionLessThan('$(BundledNETCoreAppPackageVersion)', '10.0.14'))">
+		<ItemGroup>
+			<KnownILCompilerPack Condition="'%(KnownILCompilerPack.Identity)' == 'Microsoft.DotNet.ILCompiler' And '%(KnownILCompilerPack.TargetFramework)' == 'net10.0'">
+				<ILCompilerPackVersion>10.0.14</ILCompilerPackVersion>
+			</KnownILCompilerPack>
+		</ItemGroup>
+	</Target>
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\src\CsvHelper.Excel\CsvHelper.Excel.csproj" />
