@@ -2212,7 +2212,19 @@ internal sealed class RecordParser
 	{
 		if (symbol is null || attributeType is null) return null;
 
-		return symbol.GetAttributes().FirstOrDefault(a => Is(a.AttributeClass, attributeType));
+		var attribute = symbol.GetAttributes().FirstOrDefault(a => Is(a.AttributeClass, attributeType));
+		if (attribute is not null || symbol is not IPropertySymbol { OverriddenProperty: { } overridden }) return attribute;
+
+		var usage = attributeType.GetAttributes().FirstOrDefault(a => a.AttributeClass?.ToDisplayString() == "System.AttributeUsageAttribute");
+		if (usage is not null && usage.NamedArguments.Any(a => a.Key == nameof(AttributeUsageAttribute.Inherited) && a.Value.Value is false)) return null;
+
+		for (IPropertySymbol? property = overridden; property is not null; property = property.OverriddenProperty)
+		{
+			attribute = property.GetAttributes().FirstOrDefault(a => Is(a.AttributeClass, attributeType));
+			if (attribute is not null) return attribute;
+		}
+
+		return null;
 	}
 
 	/// <summary>Where an attribute is applied, for diagnostics about it; <paramref name="fallback"/> when it is not in source.</summary>

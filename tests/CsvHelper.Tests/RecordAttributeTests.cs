@@ -100,6 +100,37 @@ public partial class Renamed
 	public int Quantity { get; set; } = -1;
 }
 
+public class StaffMember
+{
+	[CsvColumn("Full name")]
+	public virtual string Name { get; set; } = "";
+
+	[CsvColumn("Years of service")]
+	[CsvDefault(1)]
+	public virtual int Tenure { get; set; }
+
+	[CsvColumn("Position")]
+	public virtual string Role { get; set; } = "";
+
+	[CsvColumn("Team number")]
+	[CsvConverter(typeof(HexConverter))]
+	public virtual int Team { get; set; }
+}
+
+[CsvRecord]
+public partial class StaffMemberOverride : StaffMember
+{
+	public override string Name { get; set; } = "";
+
+	[CsvDefault(5)]
+	public override int Tenure { get; set; }
+
+	[CsvColumn("Job title")]
+	public override string Role { get; set; } = "";
+
+	public override int Team { get; set; }
+}
+
 public enum Status
 {
 	Active,
@@ -575,6 +606,18 @@ public class RecordAttributeTests
 			var e = Assert.Throws<KeyNotFoundException>(() => reader.GetRecords<Renamed>());
 			Assert.Equal("The CSV header has no column for Renamed.Price ('Unit Price' or 'Price' or 'unit_price').", e.Message);
 		}
+	}
+
+	[Fact]
+	public void ReadsMappingAttributesFromOverriddenProperties()
+	{
+		using var reader = CsvReader.FromText("Full name,Years of service,Job title,Team number\nAnn,3,Engineer,10\nBen,,Manager,20\n");
+		var staff = reader.GetRecords<StaffMemberOverride>().ToList();
+
+		Assert.Equal(["Ann", "Ben"], staff.Select(s => s.Name));
+		Assert.Equal([3, 5], staff.Select(s => s.Tenure));
+		Assert.Equal(["Engineer", "Manager"], staff.Select(s => s.Role));
+		Assert.Equal([10, 20], staff.Select(s => s.Team));
 	}
 
 	[Fact]
