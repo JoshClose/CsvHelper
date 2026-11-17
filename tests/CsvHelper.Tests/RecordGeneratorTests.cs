@@ -590,26 +590,29 @@ public class RecordGeneratorTests
 		// Two [CsvConverter]s on Other, one on each property, are not two on one member (CSVH009).
 		Assert.Empty(generator);
 		Assert.Empty(compilation.Where(d => d.Severity >= DiagnosticSeverity.Warning));
-		Assert.Contains("column0 = Column(reader, \"Their name\", -1, false, \"Employee.Name\");", output);
+		// A property hidden with 'new' is another member, Employee's own: Hidden has no column name "Old", and comes first
+		// as the members of the type itself do.
+		Assert.Contains("column0 = Column(reader, \"Hidden\", -1, false, \"Employee.Hidden\");", output);
+		// The overrides come in the places of Person's properties.
+		Assert.Contains("column1 = Column(reader, \"Their name\", -1, false, \"Employee.Name\");", output);
 		// An override's own attributes replace those of the same type, and the others still apply.
-		Assert.Contains("column1 = Column(reader, \"How old they are\", -1, false, \"Employee.Age\");", output);
-		Assert.Contains("Age = reader.IsEmpty(column1) ? 0 : reader.Parse<int>(column1),", output);
-		Assert.Contains("column2 = Column(reader, \"The city where they live\", -1, false, \"Employee.City\");", output);
+		Assert.Contains("column2 = Column(reader, \"How old they are\", -1, false, \"Employee.Age\");", output);
+		Assert.Contains("Age = reader.IsEmpty(column2) ? 0 : reader.Parse<int>(column2),", output);
+		Assert.Contains("column3 = Column(reader, \"The city where they live\", -1, false, \"Employee.City\");", output);
 		// Code has Hex through the override in Clerk; Other has its own Octal.
 		Assert.Contains("private readonly global::Hex converter0 = new global::Hex();", output);
-		Assert.Contains("Code = converter0.Read(reader, column3),", output);
+		Assert.Contains("Code = converter0.Read(reader, column4),", output);
 		Assert.Contains("private readonly global::Octal converter1 = new global::Octal();", output);
-		Assert.Contains("Other = converter1.Read(reader, column4),", output);
+		Assert.Contains("Other = converter1.Read(reader, column5),", output);
 		Assert.DoesNotContain("Secret", output);
-		// A property hidden with 'new' is another member: Hidden has no column name "Old".
-		Assert.Contains("column5 = Column(reader, \"Hidden\", -1, false, \"Employee.Hidden\");", output);
 		// An override with only a getter is set with the setter of the property it overrides.
 		Assert.Contains("record.Nick = reader.GetStringOrNull(column6);", output);
+		// The base type's columns first, the overrides among them, then Hidden.
 		var names = output.Split('\n').Select(l => l.Trim()).Where(l => l.StartsWith("WriteColumnName(", StringComparison.Ordinal)).Take(7);
 		Assert.Equal(
 			["WriteColumnName(writer, \"Their name\");", "WriteColumnName(writer, \"How old they are\");",
 			 "WriteColumnName(writer, \"The city where they live\");", "WriteColumnName(writer, \"Code\");",
-			 "WriteColumnName(writer, \"Other\");", "WriteColumnName(writer, \"Hidden\");", "WriteColumnName(writer, \"Nickname\");"],
+			 "WriteColumnName(writer, \"Other\");", "WriteColumnName(writer, \"Nickname\");", "WriteColumnName(writer, \"Hidden\");"],
 			names);
 		// [CsvIgnoreBase] leaves out the base class's members, not what its own overrides take from them, and a constructor
 		// parameter takes the attributes of the override it sets.

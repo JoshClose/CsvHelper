@@ -95,6 +95,18 @@ public partial class Staffer : Contact
 	public virtual string? Position { get; set; }
 }
 
+/// <summary>Overrides properties of <see cref="Contact"/> in another order than it declares them.</summary>
+[CsvRecord]
+public partial class Volunteer : Contact
+{
+	public string? Team { get; set; }
+
+	public override string? City { get; set; }
+
+	[CsvDefault(0)]
+	public override int Age { get; set; }
+}
+
 [CsvRecord]
 public partial class Values
 {
@@ -318,8 +330,20 @@ public class RecordTests
 			writer.WriteRecords(staff.Take(1));
 		}
 
-		// The base class's members first: City, which Staffer does not override, then Staffer's own, overrides included.
-		Assert.Equal("The city where they live,Their name,How old they are,Their position\r\nNew York,John Doe,30,Engineer\r\n", output.ToString());
+		Assert.Equal("Their name,How old they are,The city where they live,Their position\r\nJohn Doe,30,New York,Engineer\r\n", output.ToString());
+	}
+
+	[Fact]
+	public void OverridesAreWrittenInThePlaceOfTheirBaseProperties()
+	{
+		using var output = new StringWriter();
+		using (var writer = CsvWriter.Create(output))
+		{
+			writer.WriteRecords([new Volunteer { Name = "Ada", Age = 36, City = "London", Team = "Docs" }]);
+		}
+
+		// Volunteer overrides City, then Age: they stay where Contact declares them, before Volunteer's own Team.
+		Assert.Equal("Their name,How old they are,The city where they live,Team\r\nAda,36,London,Docs\r\n", output.ToString());
 	}
 
 	[Fact]

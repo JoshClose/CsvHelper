@@ -31,6 +31,32 @@ public class Entity : Keyed
 	public Status? Status { get; set; }
 }
 
+/// <summary>An entity with virtual members, which <see cref="Revised"/> overrides.</summary>
+public class Draft
+{
+	public int Id { get; set; }
+
+	[CsvColumn("Title Text")]
+	public virtual string Title { get; set; } = "";
+
+	[CsvIgnore]
+	public virtual string Notes { get; set; } = "";
+
+	public virtual int Version { get; set; }
+}
+
+/// <summary>Overrides the members of <see cref="Draft"/> in another order, and adds one.</summary>
+public class Revised : Draft
+{
+	public override int Version { get; set; }
+
+	public override string Notes { get; set; } = "";
+
+	public override string Title { get; set; } = "";
+
+	public string Reviewer { get; set; } = "";
+}
+
 public sealed class NothingToWrite
 {
 	public List<int> Items { get; set; } = [];
@@ -116,6 +142,15 @@ public sealed class WritingTests : IDisposable
 		var entity = new Entity { Key = 7, Name = "E", Full = "Ed Ent", Owner = new Customer("C", "NO", 1), Items = [1], When = new DateTime(2026, 1, 2), Status = Status.Shipped };
 		// Base members first; no Secret, Owner or Items.
 		Assert.Equal("Key,Name,Full Name,When,Status\r\n7,E,Ed Ent,2026-01-02T00:00:00.0000000,Shipped\r\n", Written([entity]));
+	}
+
+	[Fact]
+	public void WritesOverridesAsTheirBaseProperties()
+	{
+		var revised = new Revised { Id = 1, Title = "T", Notes = "n", Version = 2, Reviewer = "R" };
+
+		// In the place of the properties they override, with their [CsvColumn] and [CsvIgnore].
+		Assert.Equal("Id,Title Text,Version,Reviewer\r\n1,T,2,R\r\n", Written([revised]));
 	}
 
 	[Fact]

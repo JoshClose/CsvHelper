@@ -381,8 +381,10 @@ public partial class Employee : Person
 }
 ```
 
-An override that declares only a `get` is still read, with the setter it inherits. A property hidden with `new` is
-another member, and has none of the hidden property's attributes.
+The writer writes an override's column where the overridden property's would be, so `Employee` is written as
+`Their name,How old they are`, like `Person`. An override that declares only a `get` is still read, with the setter it
+inherits. A property hidden with `new` is another member: it has none of the hidden property's attributes, and is
+written among the derived class's own members.
 
 ## Constructors: [CsvConstructor]
 
@@ -1417,7 +1419,8 @@ record that fails halfway, for example in a converter, is discarded, and the rec
 ### Columns
 
 The columns are those the mapper reads, in this order: the constructor parameters, then the other members in
-declaration order, a base type's first.
+declaration order, a base type's first. An [override](#overridden-properties) is written in the place of the property
+it overrides.
 
 - The header has the name the mapper looks for first: the `[CsvColumn]` name, else the member's or constructor
   parameter's name.

@@ -28,6 +28,11 @@ its column was looked up by the property name. An override that declares only a 
 it inherits. See [Overridden properties](../../pages/records.md#overridden-properties). A `[CsvRecord]` type derived
 from another one no longer gets CS0108 warnings for the generated methods that hide the base type's.
 
+**Behavior change:** an override's column is written where the property it overrides is declared. In 34.0 it moved
+after the base class's columns, among the derived class's own, so a class that overrode `Age` of a base class with
+`Name`, `Age` and `City` was written as `Name,City,Age`. This applies to `[CsvRecord]` types and to the other types
+that CsvHelper.Linq's `WriteCsv` writes, where an override of a `[CsvIgnore]` property is now left out too.
+
 When a constructor parameter's type can't be read, CSVH002 no longer suggests `[CsvIgnore]`, which doesn't apply to
 parameters. It says which constructor was chosen and suggests marking another one `[CsvConstructor]` or giving the
 parameter a `[CsvConverter]`. See

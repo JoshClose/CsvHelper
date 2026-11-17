@@ -305,7 +305,7 @@ internal sealed class RecordParser
 		// An instance can be refilled when nothing is set by the constructor or by init accessors.
 		var refillable = type.TypeKind == TypeKind.Class && constructor.Parameters.Length == 0;
 		var setsRequired = setsRequiredMembers is not null && constructor.GetAttributes().Any(a => Is(a.AttributeClass, setsRequiredMembers));
-		foreach (var member in Members())
+		foreach (var (member, place) in Members())
 		{
 			cancellationToken.ThrowIfCancellationRequested();
 			var display = $"{type.Name}.{member.Name}";
@@ -355,7 +355,7 @@ internal sealed class RecordParser
 			// A constant is written as it is, whatever the member holds.
 			var access = settings.Constant is null ? WriteAccess(member, display, member.Name) : null;
 			owner = members.Count;
-			var value = MemberValue(memberType, settings, display, location, access, 1, Depth(member.ContainingType), settings.Optional, out var column);
+			var value = MemberValue(memberType, settings, display, location, access, 1, Depth(place.ContainingType), settings.Optional, out var column);
 			if (value is null)
 			{
 				continue;
@@ -1055,25 +1055,48 @@ internal sealed class RecordParser
 
 	/// <summary>
 	/// The instance properties and fields of the type and its base types (unless [CsvIgnoreBase] leaves them out); members
-	/// hidden or overridden by a derived type come once.
+	/// hidden or overridden by a derived type come once. Each comes with the declaration whose place among the columns it
+	/// takes: an override takes the place of the property it overrides, so that overriding a property, such as to add an
+	/// attribute, does not move its column.
 	/// </summary>
-	private IEnumerable<ISymbol> Members()
+	private IEnumerable<(ISymbol Member, ISymbol Place)> Members()
 	{
-		var seen = new HashSet<string>(StringComparer.Ordinal);
-		foreach (var t in DeclaringTypes(type, host))
+		var types = DeclaringTypes(type, host).ToList();
+		// The most derived declaration of each name is the member that is read.
+		var read = new Dictionary<string, ISymbol>(StringComparer.Ordinal);
+		foreach (var member in types.SelectMany(t => t.GetMembers()).Where(IsInstanceMember))
 		{
-			foreach (var member in t.GetMembers())
-			{
-				if (member.IsStatic || !member.CanBeReferencedByName) continue;
-				if (member is not (IFieldSymbol or IPropertySymbol { IsIndexer: false })) continue;
-				if (!seen.Add(member.Name)) continue;
-				if (!compilation.IsSymbolAccessibleWithin(member, host)) continue;
-				// Non-public members are read only when they ask for it.
-				if (!IsVisible(member.DeclaredAccessibility) && Attribute(SourceOf(member), columnAttribute) is null) continue;
-
-				yield return member;
-			}
+			if (!read.ContainsKey(member.Name)) read.Add(member.Name, member);
 		}
+
+		foreach (var place in types.SelectMany(t => t.GetMembers()).Where(IsInstanceMember))
+		{
+			var member = read[place.Name];
+			if (!Is(PlaceOf(member, types), place)) continue;
+			if (!compilation.IsSymbolAccessibleWithin(member, host)) continue;
+			// Non-public members are read only when they ask for it.
+			if (!IsVisible(member.DeclaredAccessibility) && Attribute(SourceOf(member), columnAttribute) is null) continue;
+
+			yield return (member, place);
+		}
+	}
+
+	private static bool IsInstanceMember(ISymbol member) =>
+		!member.IsStatic && member.CanBeReferencedByName && member is IFieldSymbol or IPropertySymbol { IsIndexer: false };
+
+	/// <summary>
+	/// The declaration whose place among the columns a member takes: for an override, the first property it overrides
+	/// that is declared in one of <paramref name="types"/>; else the member itself (also a property hidden with 'new').
+	/// </summary>
+	private static ISymbol PlaceOf(ISymbol member, List<INamedTypeSymbol> types)
+	{
+		var place = member;
+		for (var p = (member as IPropertySymbol)?.OverriddenProperty; p is not null; p = p.OverriddenProperty)
+		{
+			if (types.Contains(p.ContainingType, SymbolEqualityComparer.Default)) place = p;
+		}
+
+		return place;
 	}
 
 	/// <summary>
