@@ -14,6 +14,12 @@ default, so files separated by spaces or another character can be detected, as `
 When none of them appears, the first is used, a comma by default as before. See
 [Separator detection](../../pages/reading.md#separator-detection).
 
+The new `newLine` parameter of `CsvSeparatorStream` reads files whose records end with other characters than a line
+break, such as `~@^*^@~`, as the reader's `NewLine` did in 33. The stream puts a line break in place of each record end
+and drops a line break right after it. A line break elsewhere throws `CsvFormatException`, unless it is text: in a
+quoted field, or after an escape character. See
+[Records that end with other characters](../../pages/reading.md#records-that-end-with-other-characters).
+
 The new `Quote` writer option changes the quote character of RFC 4180 mode, as the reader's `Quote` does, so files
 that quote with apostrophes can be written as well as read. 34.0 always quoted with `"`. CsvHelper.Linq's `Update` now
 changes files quoted with another character than `"` instead of throwing `NotSupportedException`. See
