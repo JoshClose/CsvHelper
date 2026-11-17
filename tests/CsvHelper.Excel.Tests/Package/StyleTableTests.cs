@@ -130,6 +130,35 @@ public class StyleTableTests
 		Assert.Equal($"The XML of xl/styles.xml can't be read at byte {TestPackage.Declaration.Length}: it has a DOCTYPE, which Office Open XML parts must not have.", e.Message);
 	}
 
+	/// <summary>
+	/// Each cell format's number format has an index among the distinct ones, in the order the cell formats first use
+	/// them: the style a field takes under <see cref="ExcelText.Formatted"/>.
+	/// </summary>
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task IndexesTheDistinctNumberFormats(bool async)
+	{
+		var styles = await TestPackage.Workbook("Data")
+			.Replace("xl/styles.xml", "<xf numFmtId=\"164\" applyNumberFormat=\"1\"/>", "<xf numFmtId=\"164\" applyNumberFormat=\"1\"/><xf numFmtId=\"14\"/><xf/><xf numFmtId=\"7\"/>")
+			.LoadStylesAsync(async);
+
+		// cellXfs: General, 14, 164, 14 again, General (no numFmtId), 7.
+		Assert.Equal(6, styles.Count);
+		Assert.Equal(4, styles.NumberFormatCount);
+		Assert.Equal([0, 1, 2, 1, 0, 3], Enumerable.Range(0, 6).Select(styles.NumberFormatIndex));
+		Assert.Equal([0, 14, 164, 7], Enumerable.Range(0, 4).Select(styles.NumberFormatIdAt));
+
+		// A style past the cell formats has the first one's.
+		Assert.Equal(0, styles.NumberFormatIndex(6));
+		Assert.Equal(0, styles.NumberFormatIndex(-1));
+
+		// Without cell formats, every cell is General.
+		Assert.Equal(1, StyleTable.Empty.NumberFormatCount);
+		Assert.Equal(0, StyleTable.Empty.NumberFormatIndex(5));
+		Assert.Equal(0, StyleTable.Empty.NumberFormatIdAt(0));
+	}
+
 	[Theory]
 	[InlineData(false)]
 	[InlineData(true)]

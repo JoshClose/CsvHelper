@@ -14,7 +14,8 @@ public sealed record ExcelToCsvOptions
 	/// <summary>
 	/// How the sheet is read, as <see cref="ExcelReader"/> reads it: the sheet or area, the header and where it is, hidden
 	/// rows and columns, merged cells, error cells, formulas, and <see cref="ExcelReaderOptions.SignificantDigits"/>, the
-	/// digits a number is written with. <see cref="ExcelReaderOptions.Csv"/>'s <see cref="CsvReaderOptions.HasHeader"/>
+	/// digits a number is written with. Under <see cref="ExcelReaderOptions.Text"/>'s <see cref="ExcelText.Formatted"/>,
+	/// each field is the text Excel shows (<c>$1,234.50</c>), written as text, so that injection protection checks it. <see cref="ExcelReaderOptions.Csv"/>'s <see cref="CsvReaderOptions.HasHeader"/>
 	/// says whether the first record is written as the header, and its <see cref="CsvReaderOptions.SkipEmptyLines"/>,
 	/// <see cref="CsvReaderOptions.TrimWhitespace"/> and <see cref="CsvReaderOptions.ShouldSkipRecord"/> apply.
 	/// </summary>

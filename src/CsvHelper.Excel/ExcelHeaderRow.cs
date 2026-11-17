@@ -20,7 +20,8 @@ namespace CsvHelper.Excel;
 /// <para>
 /// A search tries the rows that have a value, after hidden rows are skipped and merged cells filled when the reader's
 /// options say so, as the reader would read them as its header: a typed cell names its column as its text (a date names
-/// it <c>2024-01-15</c>), and the reader's header matching applies. Rows count by number, whether the file has them or
+/// it <c>2024-01-15</c>, or under <see cref="ExcelText.Formatted"/> the text Excel shows, such as <c>Jan-24</c>), and the
+/// reader's header matching applies. Rows count by number, whether the file has them or
 /// not.
 /// </para>
 /// </remarks>

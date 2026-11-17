@@ -81,6 +81,13 @@ namespace CsvHelper.Excel;
 /// uncompressed size, and each such missing row 1, as empty fields and missing rows do.
 /// </para>
 /// <para>
+/// <b>Styles.</b> Under <see cref="ExcelText.Formatted"/>, a field whose cell's number format can change its text has a
+/// style (<see cref="CellFormatter.StyleOf"/>), which the reader's formatter renders its text in: every number, date, time
+/// and duration, and a text or a boolean whose format has a text section that changes it. A formula read as text, an
+/// error and an empty field have none, and the fills of a merged range and a held header row keep their cells'. Without
+/// a formatter, no field has a style.
+/// </para>
+/// <para>
 /// <b>Fills.</b> A fill writes whole records: it ends after the row that fills the target, or at the end of the rows,
 /// and reads the window as often as it needs to in between. A cell is written only once its value is all in the window:
 /// otherwise the scanner goes back to the cell's start, refills (which keeps the cell, and grows the window for one larger
@@ -173,6 +180,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private bool missingRowsHidden;
 	// The field from which the record being written has fills still to write.
 	private int fillFrom;
+	// The formatter of the cells' styles under ExcelText.Formatted; null under Raw, when no field has a style. Declared
+	// last, so that the fields the reading of every cell uses keep their places.
+	private readonly CellFormatter? formatter;
 
 	/// <summary>Creates the scanner of a worksheet part.</summary>
 	/// <param name="scanner">The part's XML, at its start; the sheet scanner owns it, and disposes it.</param>
@@ -188,13 +198,18 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <param name="skipHiddenRows">Whether the rows Excel hides are no records.</param>
 	/// <param name="skipHiddenColumns">Whether the columns Excel hides are no fields.</param>
 	/// <param name="mergedCells">The sheet's merged ranges, to fill their cells with; <see langword="null"/> to fill none.</param>
+	/// <param name="formatter">
+	/// The formatter of the cells' styles under <see cref="ExcelText.Formatted"/>, which gives the fields whose text their
+	/// format can change a style; <see langword="null"/> under <see cref="ExcelText.Raw"/>.
+	/// </param>
 	/// <exception cref="ArgumentNullException">
-	/// An argument other than <paramref name="budget"/>, <paramref name="layout"/> and <paramref name="mergedCells"/> is <see langword="null"/>.
+	/// An argument other than <paramref name="budget"/>, <paramref name="layout"/>, <paramref name="mergedCells"/> and
+	/// <paramref name="formatter"/> is <see langword="null"/>.
 	/// </exception>
 	public SheetScanner(
 		XmlScanner scanner, string sheetName, SharedStrings strings, StyleTable styles, bool skipEmptyRows, LimitedReadStream? budget,
 		bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue, SheetLayout? layout = null,
-		bool skipHiddenRows = false, bool skipHiddenColumns = false, MergedCells? mergedCells = null)
+		bool skipHiddenRows = false, bool skipHiddenColumns = false, MergedCells? mergedCells = null, CellFormatter? formatter = null)
 	{
 		ArgumentNullException.ThrowIfNull(scanner);
 		ArgumentNullException.ThrowIfNull(strings);
@@ -213,6 +228,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		}
 
 		this.skipHiddenRows = skipHiddenRows;
+		this.formatter = formatter;
 		keepsMissingRows = !skipEmptyRows;
 		if (skipHiddenColumns)
 		{
@@ -1049,12 +1065,20 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			var last = fill.LastField(first);
 			var value = fill.Value(first);
 			var kind = fill.Kind(first);
+			var style = fill.Style(first);
 			var counted = last - first + 1 - (fill.IsOwnCell(first, atRow) ? 1 : 0);
 			Charge((long)Math.Max(value.Length, 1) * counted);
 			AddGap(target, first);
 			for (var field = first; field <= last; field++)
 			{
-				target.AddField(value, kind);
+				if (style < 0)
+				{
+					target.AddField(value, kind);
+				}
+				else
+				{
+					target.AddField(value, kind, style);
+				}
 			}
 
 			fields = last + 1;
@@ -1828,7 +1852,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 				AddGap(target, cellField);
 				ChargeBeyondCell(text.Length, cellStart);
-				target.AddField(text, SheetCellKind.Text);
+				if (formatter is null)
+				{
+					target.AddField(text, SheetCellKind.Text);
+				}
+				else
+				{
+					AddStyled(target, text, SheetCellKind.Text, style);
+				}
 
 				break;
 			}
@@ -1850,7 +1881,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				}
 
 				// Only references can decode to blank text: an empty field, then.
-				target.CommitField(length, length == 0 ? SheetCellKind.Empty : kind);
+				if (formatter is null)
+				{
+					target.CommitField(length, length == 0 ? SheetCellKind.Empty : kind);
+				}
+				else
+				{
+					CommitStyled(target, length, length == 0 ? SheetCellKind.Empty : kind, style);
+				}
 
 				break;
 			}
@@ -1879,7 +1917,15 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				var length = Decode(span);
 
 				// Only references can decode to blank text: an empty field, then, as for numbers.
-				target.CommitField(length, length == 0 ? SheetCellKind.Empty : type == CellType.Error ? SheetCellKind.Error : SheetCellKind.Text);
+				var kind = length == 0 ? SheetCellKind.Empty : type == CellType.Error ? SheetCellKind.Error : SheetCellKind.Text;
+				if (formatter is null)
+				{
+					target.CommitField(length, kind);
+				}
+				else
+				{
+					CommitStyled(target, length, kind, style);
+				}
 
 				break;
 			}
@@ -1902,15 +1948,75 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		// The text is decoded and read, then the serial written over it.
 		var span = target.GetFieldSpan(Math.Max(rawLength, MaxSerialLength));
 		var length = Decode(span);
+		SheetCellKind kind;
 		if (IsoDate.TryParse(span.Slice(0, length), date1904, out var serial) && FloatFormatter.TryFormat(serial, span, out var written))
 		{
-			target.CommitField(written, styles.NumberKind(style));
-
-			return;
+			length = written;
+			kind = styles.NumberKind(style);
+		}
+		else
+		{
+			// Only references can decode to blank text: an empty field, then, as for text.
+			kind = length == 0 ? SheetCellKind.Empty : SheetCellKind.Text;
 		}
 
-		// Only references can decode to blank text: an empty field, then, as for text.
-		target.CommitField(length, length == 0 ? SheetCellKind.Empty : SheetCellKind.Text);
+		if (formatter is null)
+		{
+			target.CommitField(length, kind);
+		}
+		else
+		{
+			CommitStyled(target, length, kind, style);
+		}
+	}
+
+	/// <summary>
+	/// Adds a field under <see cref="ExcelText.Formatted"/>: with a style when its cell's number format can change its text
+	/// (<see cref="CellFormatter.StyleOf"/>), else as without a formatter. Kept out of its callers, so that reading without
+	/// a formatter costs them only the formatter's test.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the field.</param>
+	/// <param name="utf8">The value, as UTF-8.</param>
+	/// <param name="kind">What the field holds.</param>
+	/// <param name="style">The cell's <c>s</c>.</param>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void AddStyled<TTarget>(TTarget target, ReadOnlySpan<byte> utf8, SheetCellKind kind, int style)
+		where TTarget : struct, IRecordTarget
+	{
+		var shown = formatter!.StyleOf(kind, style);
+		if (shown < 0)
+		{
+			target.AddField(utf8, kind);
+		}
+		else
+		{
+			target.AddField(utf8, kind, shown);
+		}
+	}
+
+	/// <summary>
+	/// Commits a field under <see cref="ExcelText.Formatted"/>: with a style when its cell's number format can change its
+	/// text (<see cref="CellFormatter.StyleOf"/>), else as without a formatter. See <see cref="AddStyled"/>.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the field.</param>
+	/// <param name="length">The number of bytes of the value.</param>
+	/// <param name="kind">What the field holds.</param>
+	/// <param name="style">The cell's <c>s</c>.</param>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void CommitStyled<TTarget>(TTarget target, int length, SheetCellKind kind, int style)
+		where TTarget : struct, IRecordTarget
+	{
+		var shown = formatter!.StyleOf(kind, style);
+		if (shown < 0)
+		{
+			target.CommitField(length, kind);
+		}
+		else
+		{
+			target.CommitField(length, kind, shown);
+		}
 	}
 
 	/// <summary>

@@ -203,17 +203,26 @@ public sealed record ExcelReaderOptions
 	/// <summary>What a cell with a formula reads as: its saved value (the default), or the formula's text. See <see cref="ExcelFormulas"/>.</summary>
 	public ExcelFormulas Formulas { get; init; } = ExcelFormulas.CachedValue;
 
+	/// <summary>
+	/// What text a cell reads as: its stored value's (the default), or the text Excel shows in its number format
+	/// (<c>$1,234.50</c>), in <see cref="CsvReaderOptions.FormatProvider"/>. Only text follows it: typed reads keep the
+	/// value. See <see cref="ExcelText"/>.
+	/// </summary>
+	public ExcelText Text { get; init; } = ExcelText.Raw;
+
 	/// <summary>The limits as the package layer takes them; the options must be valid (<see cref="Validate"/>).</summary>
 	internal PartLimits Limits => new(MaxPartSize, MaxUncompressedSize);
 
 	/// <summary>The options of a reader's typed cells; the options must be valid (<see cref="Validate"/>).</summary>
 	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
+	/// <param name="formatter">The formatter of the reader's styled cells under <see cref="ExcelText.Formatted"/>; <see langword="null"/> under <see cref="ExcelText.Raw"/>.</param>
 	/// <returns>The cell options.</returns>
-	internal CsvCellOptions CellOptions(bool date1904) => new()
+	internal CsvCellOptions CellOptions(bool date1904, CellFormatter? formatter) => new()
 	{
 		Date1904 = date1904,
 		SignificantDigits = SignificantDigits,
 		ThrowOnErrorCells = ErrorCells == ExcelErrorCells.Error,
+		Formatter = formatter,
 	};
 
 	/// <summary>
@@ -300,6 +309,11 @@ public sealed record ExcelReaderOptions
 		if (Formulas is not (ExcelFormulas.CachedValue or ExcelFormulas.FormulaText))
 		{
 			throw new ArgumentOutOfRangeException(paramName, Formulas, "ExcelReaderOptions.Formulas is not an ExcelFormulas value.");
+		}
+
+		if (Text is not (ExcelText.Raw or ExcelText.Formatted))
+		{
+			throw new ArgumentOutOfRangeException(paramName, Text, "ExcelReaderOptions.Text is not an ExcelText value.");
 		}
 
 		if (SignificantDigits is < 1 or > 28)

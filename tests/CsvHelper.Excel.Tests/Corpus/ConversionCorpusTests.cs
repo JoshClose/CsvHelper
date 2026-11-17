@@ -69,13 +69,24 @@ public class ConversionCorpusTests
 	// .NET 10 and Release builds only, as ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows.
 #if NET10_0_OR_GREATER
 	[OptimizedFact]
-	public void AllocatesTheSameForAHundredOrdersAsForAThousand()
+	public void AllocatesTheSameForAHundredOrdersAsForAThousand() => AssertAllocatesTheSame(EveryRow);
+
+	/// <summary>
+	/// Under <see cref="ExcelText.Formatted"/> too: each cell's shown text is rendered into the conversion's room, or the
+	/// reader's own buffer, and each format is compiled once, so that no row allocates (Phase 8's step 5).
+	/// </summary>
+	[OptimizedFact]
+	public void AllocatesTheSameForAHundredFormattedOrdersAsForAThousand() => AssertAllocatesTheSame(EveryRow with { Text = ExcelText.Formatted });
+
+	/// <summary>Checks that converting 100 of Excel's orders allocates within 4 KiB of converting 1,000.</summary>
+	/// <param name="options">The reader's options.</param>
+	private static void AssertAllocatesTheSame(ExcelReaderOptions options)
 	{
 		// Excel's own orders: dates, numbers, booleans and shared strings. Opening the workbook allocates the same either way.
 		var path = CorpusFiles.PathOf("excel/orders-1000.xlsx");
 		string last;
 		using (var workbook = ExcelWorkbook.Open(path))
-		using (var reader = workbook.OpenReader(EveryRow))
+		using (var reader = workbook.OpenReader(options))
 		{
 			Assert.True(reader.Read());
 			last = CellReference.ColumnName(reader.FieldCount - 1);
@@ -83,7 +94,7 @@ public class ConversionCorpusTests
 
 		long Allocated(int rows)
 		{
-			using var reader = ExcelReader.FromFile(path, EveryRow with { Range = $"A1:{last}{rows + 1}" });
+			using var reader = ExcelReader.FromFile(path, options with { Range = $"A1:{last}{rows + 1}" });
 			using var writer = CsvWriter.Create(Stream.Null);
 
 			// The first record warms the reader's and the writer's buffers.

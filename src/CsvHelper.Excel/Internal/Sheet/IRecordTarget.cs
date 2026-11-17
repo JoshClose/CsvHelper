@@ -9,7 +9,8 @@ namespace CsvHelper.Excel;
 /// </summary>
 /// <remarks>
 /// The scanner adds the fields of a record in order, then ends it; it never leaves a record unended when a fill returns.
-/// Between <see cref="GetFieldSpan"/> and its <see cref="CommitField"/>, it makes no other call.
+/// Between <see cref="GetFieldSpan"/> and its <see cref="CommitField(int, SheetCellKind)"/> (or the one with a style), it
+/// makes no other call.
 /// </remarks>
 internal interface IRecordTarget
 {
@@ -21,7 +22,19 @@ internal interface IRecordTarget
 	/// <param name="kind">What the field holds.</param>
 	void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind);
 
-	/// <summary>Gets room for the next field's value, for the scanner to decode it into; <see cref="CommitField"/> adds it.</summary>
+	/// <summary>
+	/// Adds a field to the current record, copying its value, with the style its text shows in under
+	/// <see cref="ExcelText.Formatted"/> (<see cref="CellFormatter.StyleOf"/>).
+	/// </summary>
+	/// <param name="utf8">The value, as UTF-8.</param>
+	/// <param name="kind">What the field holds.</param>
+	/// <param name="style">The field's style, from 0 to <see cref="CsvCellFormatter.MaxStyle"/>.</param>
+	void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind, int style);
+
+	/// <summary>
+	/// Gets room for the next field's value, for the scanner to decode it into; <see cref="CommitField(int, SheetCellKind)"/>
+	/// or <see cref="CommitField(int, SheetCellKind, int)"/> adds it.
+	/// </summary>
 	/// <param name="sizeHint">The most bytes the value can take.</param>
 	/// <returns>At least <paramref name="sizeHint"/> bytes, valid until the next call.</returns>
 	Span<byte> GetFieldSpan(int sizeHint);
@@ -30,6 +43,15 @@ internal interface IRecordTarget
 	/// <param name="length">The number of bytes of the value.</param>
 	/// <param name="kind">What the field holds.</param>
 	void CommitField(int length, SheetCellKind kind);
+
+	/// <summary>
+	/// Adds the field whose value the scanner wrote at the start of <see cref="GetFieldSpan"/>'s span, with the style its
+	/// text shows in under <see cref="ExcelText.Formatted"/> (<see cref="CellFormatter.StyleOf"/>).
+	/// </summary>
+	/// <param name="length">The number of bytes of the value.</param>
+	/// <param name="kind">What the field holds.</param>
+	/// <param name="style">The field's style, from 0 to <see cref="CsvCellFormatter.MaxStyle"/>.</param>
+	void CommitField(int length, SheetCellKind kind, int style);
 
 	/// <summary>Ends the current record; a record without fields gets one empty field.</summary>
 	/// <param name="row">The record's row in the sheet, 1-based: its line.</param>
@@ -55,10 +77,16 @@ internal readonly struct RecordBatchTarget : IRecordTarget
 	public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind) => batch.AddField(utf8, kind.ToCsv());
 
 	/// <inheritdoc/>
+	public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind, int style) => batch.AddField(utf8, kind.ToCsv(), style);
+
+	/// <inheritdoc/>
 	public Span<byte> GetFieldSpan(int sizeHint) => batch.GetFieldSpan(sizeHint);
 
 	/// <inheritdoc/>
 	public void CommitField(int length, SheetCellKind kind) => batch.CommitField(length, kind.ToCsv());
+
+	/// <inheritdoc/>
+	public void CommitField(int length, SheetCellKind kind, int style) => batch.CommitField(length, kind.ToCsv(), style);
 
 	/// <inheritdoc/>
 	public void EndRecord(long row) => batch.EndRecord(row);

@@ -266,7 +266,7 @@ internal static class Importer
 	/// Excel shows it, where <see cref="CsvReader.GetString(int)"/> gives the digits Excel stored (<c>1E+29</c> typed is
 	/// stored as <c>9.9999999999999991E+28</c>); a date's ISO 8601 text; a boolean's <c>TRUE</c> or <c>FALSE</c>; and an
 	/// error cell's own text, also when the reader's error cells fail every read (<see cref="ExcelErrorCells.Error"/>).
-	/// For CSV, the field's text.
+	/// Under <see cref="ExcelText.Formatted"/>, the text Excel shows. For CSV, the field's text.
 	/// </summary>
 	/// <param name="reader">The reader, on the record.</param>
 	/// <param name="field">The field, or -1 for none.</param>

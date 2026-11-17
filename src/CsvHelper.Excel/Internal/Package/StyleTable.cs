@@ -21,12 +21,20 @@ namespace CsvHelper.Excel;
 /// for a built-in id, as Excel reads it, else the built-in format of the id. A cell format's <c>applyNumberFormat</c>
 /// is ignored, as Excel ignores it.
 /// </para>
+/// <para>
+/// Each cell format's number format also has an index among the distinct ones the cell formats use
+/// (<see cref="NumberFormatIndex"/>), from 0 to <see cref="NumberFormatCount"/> − 1: the style a field takes under
+/// <see cref="ExcelText.Formatted"/>, so that its <see cref="CellFormatter"/> compiles each code once.
+/// </para>
 /// </remarks>
 internal sealed class StyleTable
 {
 	private readonly int[] numberFormatIds;
 	private readonly Dictionary<int, string> formatCodes;
 	private readonly SheetCellKind[] numberKinds;
+	// By cell format, the index of its number format among the distinct ones; by that index, the number format's id.
+	private readonly int[] numberFormatIndexes;
+	private readonly int[] distinctIds;
 
 	/// <summary>Creates the table.</summary>
 	/// <param name="numberFormatIds">The number format of each cell format, in order.</param>
@@ -36,18 +44,26 @@ internal sealed class StyleTable
 		this.numberFormatIds = numberFormatIds;
 		this.formatCodes = formatCodes;
 		numberKinds = new SheetCellKind[numberFormatIds.Length];
-		var kinds = new Dictionary<int, SheetCellKind>();
+		numberFormatIndexes = new int[numberFormatIds.Length];
+		var kinds = new Dictionary<int, (SheetCellKind Kind, int Index)>();
+		var ids = new List<int>();
 		for (var i = 0; i < numberFormatIds.Length; i++)
 		{
 			var id = numberFormatIds[i];
-			if (!kinds.TryGetValue(id, out var kind))
+			if (!kinds.TryGetValue(id, out var known))
 			{
-				kind = formatCodes.TryGetValue(id, out var code) ? NumberFormats.Classify(code) : NumberFormats.BuiltIn(id);
-				kinds.Add(id, kind);
+				var kind = formatCodes.TryGetValue(id, out var code) ? NumberFormats.Classify(code) : NumberFormats.BuiltIn(id);
+				known = (kind, ids.Count);
+				kinds.Add(id, known);
+				ids.Add(id);
 			}
 
-			numberKinds[i] = kind;
+			numberKinds[i] = known.Kind;
+			numberFormatIndexes[i] = known.Index;
 		}
+
+		// Without cell formats, every cell is General: index 0.
+		distinctIds = ids.Count == 0 ? [0] : [.. ids];
 	}
 
 	/// <summary>The styles of a workbook without a styles part: only General.</summary>
@@ -65,6 +81,19 @@ internal sealed class StyleTable
 	/// <param name="numberFormatId">The number format id.</param>
 	/// <returns>The code, or <see langword="null"/> when the styles part defines no format with that id (a built-in one).</returns>
 	public string? FormatCode(int numberFormatId) => formatCodes.TryGetValue(numberFormatId, out var code) ? code : null;
+
+	/// <summary>The number of distinct number formats the cell formats use: at least 1, General's without cell formats.</summary>
+	public int NumberFormatCount => distinctIds.Length;
+
+	/// <summary>The index of a cell style's number format among the distinct ones (<see cref="NumberFormatIdAt"/>).</summary>
+	/// <param name="style">The cell's <c>s</c>: an index into the cell formats.</param>
+	/// <returns>The index, from 0 to <see cref="NumberFormatCount"/> − 1; 0 without cell formats.</returns>
+	public int NumberFormatIndex(int style) => numberFormatIndexes.Length == 0 ? 0 : numberFormatIndexes[Clamp(style)];
+
+	/// <summary>The id of a distinct number format.</summary>
+	/// <param name="index">Its index, from <see cref="NumberFormatIndex"/>.</param>
+	/// <returns>The number format id.</returns>
+	public int NumberFormatIdAt(int index) => distinctIds[index];
 
 	/// <summary>The kind of a number cell in a style.</summary>
 	/// <param name="style">The cell's <c>s</c>: an index into the cell formats.</param>

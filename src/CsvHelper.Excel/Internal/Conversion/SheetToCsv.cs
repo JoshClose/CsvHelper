@@ -17,6 +17,11 @@ namespace CsvHelper.Excel;
 /// for a number, as they do a <see cref="double"/> field, and <c>-5</c> isn't escaped.
 /// </para>
 /// <para>
+/// A sheet read under <see cref="ExcelText.Formatted"/> has its fields' shown text (<c>$1,234.50</c>, <c>Jan-24</c>), which
+/// is written as text whatever its cell's kind: a number format can show a number as anything, <c>=1+1</c> among them,
+/// so injection protection checks every field, and a negative number shown <c>-5</c> is escaped as text is.
+/// </para>
+/// <para>
 /// A record of one empty field, which is what a reader gives for an empty row when it keeps them, is written as wide as
 /// the first record, with an empty field for each column. Empty rows before the first record with a value are counted
 /// until its width is known, so that they are as wide as it too; when no record has one, each is one empty field, which
@@ -38,6 +43,9 @@ internal static class SheetToCsv
 	/// </summary>
 	private static readonly Type[] Types = [typeof(string), typeof(double), typeof(DateTime), typeof(bool), typeof(string), typeof(string), typeof(TimeSpan)];
 
+	/// <summary>The type each kind of cell is formatted from under <see cref="ExcelText.Formatted"/>: <see cref="string"/>, as each is shown text.</summary>
+	private static readonly Type[] TextTypes = [typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string), typeof(string)];
+
 	/// <summary>
 	/// Writes the reader's header, when its options have <see cref="CsvReaderOptions.HasHeader"/>, then the records it
 	/// reads from where it stands, as <see cref="CsvReader.GetRecords{T}"/> reads them: a record it is on has been read.
@@ -52,6 +60,7 @@ internal static class SheetToCsv
 	{
 		// The width of the first record with a value, and the empty rows before it.
 		var width = -1;
+		var types = sheet.CellFormatter is null ? Types : TextTypes;
 		var pending = 0;
 		if (sheet.Options.HasHeader)
 		{
@@ -104,7 +113,7 @@ internal static class SheetToCsv
 					}
 				}
 
-				WriteFields(sheet, csv);
+				WriteFields(sheet, csv, types);
 			}
 
 			await EndRecordAsync(csv, async, cancellationToken).ConfigureAwait(false);
@@ -120,15 +129,16 @@ internal static class SheetToCsv
 	/// <summary>Writes the fields of the reader's record, each as its text.</summary>
 	/// <param name="sheet">The reader, on a record.</param>
 	/// <param name="csv">The writer.</param>
+	/// <param name="types">The type each kind of cell is written as (<see cref="Types"/>, or <see cref="TextTypes"/> under <see cref="ExcelText.Formatted"/>).</param>
 	/// <exception cref="FormatException">A field is an error cell, and the sheet's error cells fail every read.</exception>
-	private static void WriteFields(CsvReader sheet, CsvWriter csv)
+	private static void WriteFields(CsvReader sheet, CsvWriter csv, Type[] types)
 	{
 		Span<byte> room = stackalloc byte[TextRoom];
 		var count = sheet.FieldCount;
 		for (var i = 0; i < count; i++)
 		{
 			var text = sheet.GetTextUtf8(i, room, roundNumbers: true);
-			csv.WriteField(text, Types[(int)sheet.GetCellKind(i)]);
+			csv.WriteField(text, types[(int)sheet.GetCellKind(i)]);
 		}
 	}
 

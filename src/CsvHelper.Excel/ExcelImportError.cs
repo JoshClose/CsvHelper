@@ -88,8 +88,9 @@ public sealed class ExcelImportError
 	/// The cell's text, as <see cref="ExcelConvert.ToCsv(string, string, ExcelToCsvOptions?)"/> writes it: a number to the
 	/// reader's <see cref="ExcelReaderOptions.SignificantDigits"/>, as Excel shows it (<c>1E+29</c>, where Excel stores
 	/// <c>9.9999999999999991E+28</c>), a date's ISO 8601 text (<c>2024-01-15</c>), a boolean's <c>TRUE</c> or <c>FALSE</c>,
-	/// an error's own text (<c>#N/A</c>), and <c>""</c> for an empty cell; for CSV, the field's text.
-	/// <see langword="null"/> for a record's error and a column the header lacks.
+	/// an error's own text (<c>#N/A</c>), and <c>""</c> for an empty cell; under <see cref="ExcelReaderOptions.Text"/>'s
+	/// <see cref="ExcelText.Formatted"/>, the text Excel shows in the cell's number format (<c>$1,234.50</c>); for CSV,
+	/// the field's text. <see langword="null"/> for a record's error and a column the header lacks.
 	/// </summary>
 	public string? Value { get; }
 

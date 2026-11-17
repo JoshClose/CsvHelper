@@ -16,8 +16,9 @@ namespace CsvHelper.Excel;
 /// its last, and holds the header as its first record.
 /// </summary>
 /// <remarks>
-/// The search's scanner reads the area's columns with the reader's options (hidden columns, merged cells, formulas), so
-/// its fields are the ones the reader's would have; its rows end at the last row tried, so nothing after them is
+/// The search's scanner reads the area's columns with the reader's options (hidden columns, merged cells, formulas, and
+/// under <see cref="ExcelText.Formatted"/> the cells' styles), so its fields are the ones the reader's would have, and a
+/// probe's header names are the text the reader's would be; its rows end at the last row tried, so nothing after them is
 /// inflated. It skips rows without a value, and hidden rows when they are skipped, unless the row is given
 /// (<see cref="ExcelHeaderRow.At"/>), which is read even when hidden.
 /// </remarks>
@@ -66,6 +67,10 @@ internal static class HeaderSearch
 	/// <param name="area">The area read.</param>
 	/// <param name="options">The reader's options, whose <see cref="ExcelReaderOptions.Csv"/> the probe readers read with.</param>
 	/// <param name="date1904">Whether the workbook uses the 1904 date system, for typed cells' texts.</param>
+	/// <param name="formatter">
+	/// The formatter of the cells' styles under <see cref="ExcelText.Formatted"/>, which the probe readers render the header
+	/// names with; <see langword="null"/> under <see cref="ExcelText.Raw"/>.
+	/// </param>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
 	/// <returns>A task whose result is the reader's area, and the header to hold.</returns>
@@ -78,9 +83,10 @@ internal static class HeaderSearch
 	/// </exception>
 	/// <exception cref="InvalidOperationException">The search's record type has no mapper.</exception>
 	public static async ValueTask<(SheetLayout Layout, HeldRecord Header)> RunAsync(
-		SheetScanner search, ExcelHeaderRow headerRow, SheetLayout area, ExcelReaderOptions options, bool date1904, bool async, CancellationToken cancellationToken)
+		SheetScanner search, ExcelHeaderRow headerRow, SheetLayout area, ExcelReaderOptions options, bool date1904, CellFormatter? formatter, bool async,
+		CancellationToken cancellationToken)
 	{
-		var cellOptions = options.CellOptions(date1904);
+		var cellOptions = options.CellOptions(date1904, formatter);
 		var row = new CapturedRow();
 		var target = new RowCapture(row);
 		long closest = 0;
@@ -207,9 +213,14 @@ internal static class HeaderSearch
 		var lastColumn = searched.ColumnOf(lastField);
 		var values = new byte[lastColumn - firstColumn + 1][];
 		var kinds = new SheetCellKind[values.Length];
+		var styles = row.HasStyles ? new int[values.Length] : null;
 		for (var i = 0; i < values.Length; i++)
 		{
 			values[i] = [];
+			if (styles is not null)
+			{
+				styles[i] = -1;
+			}
 		}
 
 		for (var field = firstField; field <= lastField; field++)
@@ -217,14 +228,18 @@ internal static class HeaderSearch
 			var at = searched.ColumnOf(field) - firstColumn;
 			values[at] = row.Value(field).ToArray();
 			kinds[at] = row.Kind(field);
+			if (styles is not null)
+			{
+				styles[at] = row.Style(field);
+			}
 		}
 
 		var layout = new SheetLayout(row.Line + 1, area.LastRow, firstColumn, lastColumn);
 
-		return (layout, HeldRecord.Row(values, kinds, firstColumn, row.Line));
+		return (layout, HeldRecord.Row(values, kinds, styles, firstColumn, row.Line));
 	}
 
-	/// <summary>The one record a search's fill writes: its fields' values and kinds, and its row.</summary>
+	/// <summary>The one record a search's fill writes: its fields' values, kinds and styles, and its row.</summary>
 	internal sealed class CapturedRow
 	{
 		private byte[] bytes = new byte[256];
@@ -232,6 +247,8 @@ internal static class HeaderSearch
 		private int[] starts = new int[16];
 		private int[] lengths = new int[16];
 		private SheetCellKind[] kinds = new SheetCellKind[16];
+		// Each field's style under ExcelText.Formatted, -1 for none.
+		private int[] styles = new int[16];
 
 		/// <summary>The number of fields.</summary>
 		public int FieldCount { get; private set; }
@@ -268,6 +285,7 @@ internal static class HeaderSearch
 			starts = starts.AsSpan(0, FieldCount).ToArray(),
 			lengths = lengths.AsSpan(0, FieldCount).ToArray(),
 			kinds = kinds.AsSpan(0, FieldCount).ToArray(),
+			styles = styles.AsSpan(0, FieldCount).ToArray(),
 			FieldCount = FieldCount,
 			Line = Line,
 			Ended = Ended,
@@ -292,6 +310,28 @@ internal static class HeaderSearch
 		/// <returns>The kind.</returns>
 		public SheetCellKind Kind(int field) => kinds[field];
 
+		/// <summary>A field's style under <see cref="ExcelText.Formatted"/>.</summary>
+		/// <param name="field">The field.</param>
+		/// <returns>The style, or -1 when the field's text is its own.</returns>
+		public int Style(int field) => styles[field];
+
+		/// <summary>Whether a field has a style.</summary>
+		public bool HasStyles
+		{
+			get
+			{
+				for (var i = 0; i < FieldCount; i++)
+				{
+					if (styles[i] >= 0)
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+		}
+
 		/// <summary>Room for the next field's value.</summary>
 		/// <param name="sizeHint">The most bytes the value can take.</param>
 		/// <returns>At least <paramref name="sizeHint"/> bytes.</returns>
@@ -308,18 +348,21 @@ internal static class HeaderSearch
 		/// <summary>Adds the field whose value was written at the start of <see cref="GetSpan"/>'s room.</summary>
 		/// <param name="valueLength">The value's bytes.</param>
 		/// <param name="kind">The value's kind.</param>
-		public void Commit(int valueLength, SheetCellKind kind)
+		/// <param name="style">The style its text shows in under <see cref="ExcelText.Formatted"/>, or -1 when its text is its own.</param>
+		public void Commit(int valueLength, SheetCellKind kind, int style)
 		{
 			if (FieldCount == kinds.Length)
 			{
 				Array.Resize(ref starts, FieldCount * 2);
 				Array.Resize(ref lengths, FieldCount * 2);
 				Array.Resize(ref kinds, FieldCount * 2);
+				Array.Resize(ref styles, FieldCount * 2);
 			}
 
 			starts[FieldCount] = length;
 			lengths[FieldCount] = valueLength;
 			kinds[FieldCount] = kind;
+			styles[FieldCount] = style;
 			FieldCount++;
 			length += valueLength;
 		}
@@ -330,7 +373,7 @@ internal static class HeaderSearch
 		{
 			if (FieldCount == 0)
 			{
-				Commit(0, SheetCellKind.Empty);
+				Commit(0, SheetCellKind.Empty, -1);
 			}
 
 			Line = row;
@@ -389,17 +432,23 @@ internal static class HeaderSearch
 		public bool IsFull => row.Ended;
 
 		/// <inheritdoc/>
-		public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind)
+		public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind) => AddField(utf8, kind, -1);
+
+		/// <inheritdoc/>
+		public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind, int style)
 		{
 			utf8.CopyTo(row.GetSpan(utf8.Length));
-			row.Commit(utf8.Length, kind);
+			row.Commit(utf8.Length, kind, style);
 		}
 
 		/// <inheritdoc/>
 		public Span<byte> GetFieldSpan(int sizeHint) => row.GetSpan(sizeHint);
 
 		/// <inheritdoc/>
-		public void CommitField(int length, SheetCellKind kind) => row.Commit(length, kind);
+		public void CommitField(int length, SheetCellKind kind) => row.Commit(length, kind, -1);
+
+		/// <inheritdoc/>
+		public void CommitField(int length, SheetCellKind kind, int style) => row.Commit(length, kind, style);
 
 		/// <inheritdoc/>
 		public void EndRecord(long row) => this.row.End(row);
@@ -428,7 +477,15 @@ internal static class HeaderSearch
 				written = true;
 				for (var i = 0; i < (row?.FieldCount ?? 0); i++)
 				{
-					batch.AddField(row!.Value(i), row.Kind(i).ToCsv());
+					var style = row!.Style(i);
+					if (style < 0)
+					{
+						batch.AddField(row.Value(i), row.Kind(i).ToCsv());
+					}
+					else
+					{
+						batch.AddField(row.Value(i), row.Kind(i).ToCsv(), style);
+					}
 				}
 
 				batch.EndRecord(row?.Line ?? 0);

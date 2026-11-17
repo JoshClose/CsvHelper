@@ -43,6 +43,8 @@ internal sealed class MergedFill
 	private readonly byte[]?[] values;
 	private readonly int[] lengths;
 	private readonly SheetCellKind[] kinds;
+	// By an open range's first field: the style its value shows in under ExcelText.Formatted, or -1.
+	private readonly int[] styles;
 	// The ranges opened at the current row that start in it, in column order: those whose top-left cell can come.
 	private readonly int[] starting;
 	private int startingCount;
@@ -74,6 +76,7 @@ internal sealed class MergedFill
 		values = new byte[width][];
 		lengths = new int[width];
 		kinds = new SheetCellKind[width];
+		styles = new int[width];
 		starting = new int[width];
 	}
 
@@ -227,6 +230,11 @@ internal sealed class MergedFill
 	/// <returns>The kind.</returns>
 	public SheetCellKind Kind(int first) => kinds[first];
 
+	/// <summary>The style of the value an open range fills with, under <see cref="ExcelText.Formatted"/>: its top-left cell's.</summary>
+	/// <param name="first">The run's first field.</param>
+	/// <returns>The style, or -1 when the value's text is its own.</returns>
+	public int Style(int first) => styles[first];
+
 	/// <summary>
 	/// Whether a run's first field is, in a row, the field of its range's top-left cell itself: the one fill whose bytes
 	/// the cell's XML counted when it was read, as any cell's are.
@@ -272,10 +280,12 @@ internal sealed class MergedFill
 	/// <summary>Keeps the value of the top-left cell being read, written at the start of <see cref="CaptureSpan"/>'s room.</summary>
 	/// <param name="length">The value's bytes.</param>
 	/// <param name="kind">Its kind.</param>
-	public void Commit(int length, SheetCellKind kind)
+	/// <param name="style">The style its text shows in under <see cref="ExcelText.Formatted"/>, or -1 when its text is its own.</param>
+	public void Commit(int length, SheetCellKind kind, int style)
 	{
 		lengths[capturing] = length;
 		kinds[capturing] = kind;
+		styles[capturing] = style;
 		valued.Set(capturing);
 	}
 
@@ -453,17 +463,23 @@ internal readonly struct MergedCapture : IRecordTarget
 	public bool IsFull => false;
 
 	/// <inheritdoc/>
-	public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind)
+	public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind) => AddField(utf8, kind, -1);
+
+	/// <inheritdoc/>
+	public void AddField(ReadOnlySpan<byte> utf8, SheetCellKind kind, int style)
 	{
 		utf8.CopyTo(fill.CaptureSpan(utf8.Length));
-		fill.Commit(utf8.Length, kind);
+		fill.Commit(utf8.Length, kind, style);
 	}
 
 	/// <inheritdoc/>
 	public Span<byte> GetFieldSpan(int sizeHint) => fill.CaptureSpan(sizeHint);
 
 	/// <inheritdoc/>
-	public void CommitField(int length, SheetCellKind kind) => fill.Commit(length, kind);
+	public void CommitField(int length, SheetCellKind kind) => fill.Commit(length, kind, -1);
+
+	/// <inheritdoc/>
+	public void CommitField(int length, SheetCellKind kind, int style) => fill.Commit(length, kind, style);
 
 	/// <inheritdoc/>
 	public void EndRecord(long row)

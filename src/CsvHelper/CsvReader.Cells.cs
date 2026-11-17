@@ -497,6 +497,13 @@ public sealed partial class CsvReader
 	internal string? Locate(int field) => recordSource?.Locate(lineNumber, field);
 
 	/// <summary>
+	/// The formatter of a record source's styled fields (<see cref="CsvCellOptions.Formatter"/>); <see langword="null"/>
+	/// for CSV input and for a source without one. Internal for CsvHelper.Excel's conversion to CSV, which writes a
+	/// formatted sheet's fields as text.
+	/// </summary>
+	internal CsvCellFormatter? CellFormatter => recordSource?.CellOptions.Formatter;
+
+	/// <summary>
 	/// Where a <see cref="CsvRecordSource"/> writes its records: the reader's buffer and index, which this appends whole
 	/// records of decoded fields to, as the CSV scanner would. Each field is followed by one byte (the separator, or LF
 	/// after the last field of a record), so that <see cref="RawRecord"/> reads as the fields with separators between them.

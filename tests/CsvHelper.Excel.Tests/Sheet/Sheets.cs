@@ -35,10 +35,15 @@ public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 /// <param name="skipHiddenRows">Whether hidden rows are no records.</param>
 /// <param name="skipHiddenColumns">Whether hidden columns are no fields.</param>
 /// <param name="fillMergedCells">Whether merged ranges' cells read as their top-left cells: the part is read once first for its ranges.</param>
+/// <param name="formatter">The formatter whose styles fields take under <see cref="ExcelText.Formatted"/>, or <see langword="null"/> for none.</param>
 internal sealed class CellReading(
 	StyleTable? styles = null, bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue,
-	SheetLayout? layout = null, HeldRecord? held = null, bool skipHiddenRows = false, bool skipHiddenColumns = false, bool fillMergedCells = false)
+	SheetLayout? layout = null, HeldRecord? held = null, bool skipHiddenRows = false, bool skipHiddenColumns = false, bool fillMergedCells = false,
+	CellFormatter? formatter = null)
 {
+	/// <summary>The formatter whose styles fields take under <see cref="ExcelText.Formatted"/>, or <see langword="null"/> for none.</summary>
+	public CellFormatter? Formatter => formatter;
+
 	/// <summary>The area read, or <see langword="null"/> for the whole sheet.</summary>
 	public SheetLayout? Layout => layout;
 
@@ -106,7 +111,7 @@ internal sealed class CellReading(
 	/// <param name="rows">Whether hidden rows are no records.</param>
 	/// <returns>The reading.</returns>
 	public CellReading With(SheetLayout? area, HeldRecord? record, bool rows) =>
-		new(styles, date1904, errorCells, formulas, area, record, rows, skipHiddenColumns, fillMergedCells);
+		new(styles, date1904, errorCells, formulas, area, record, rows, skipHiddenColumns, fillMergedCells, formatter);
 }
 
 /// <summary>Reads sheets with <see cref="SheetScanner"/> into <see cref="Captured"/> records.</summary>
@@ -176,7 +181,7 @@ internal static class Sheets
 		var merged = reading.FillMergedCells ? FindMergedCells(bytes, mode, sheetName, maxSize) : null;
 		var sheet = new SheetScanner(
 			scanner, sheetName, strings ?? SharedStrings.Empty, reading.Styles, skipEmptyRows, null, reading.Date1904, reading.ErrorCells, reading.Formulas, reading.Layout,
-			reading.SkipHiddenRows, reading.SkipHiddenColumns, merged);
+			reading.SkipHiddenRows, reading.SkipHiddenColumns, merged, reading.Formatter);
 		if (reading.Held is not null)
 		{
 			sheet.HoldFirstRecord(reading.Held);
@@ -199,7 +204,7 @@ internal static class Sheets
 		return SyncOrAsync.Result(MergedCells.ReadAsync(scanner, sheetName, maxSize, false, CancellationToken.None));
 	}
 
-	/// <summary>Reads a sheet's records, described (<see cref="CapturedRecord.ToString"/>).</summary>
+	/// <summary>Reads a sheet's records, described (<see cref="CapturedRecord.ToString"/>, or <see cref="CapturedRecord.Styled"/>).</summary>
 	/// <param name="xml">The part.</param>
 	/// <param name="mode">How to read it.</param>
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
@@ -207,13 +212,15 @@ internal static class Sheets
 	/// <param name="sheetName">The sheet's name.</param>
 	/// <param name="maxSize">The window's size limit.</param>
 	/// <param name="reading">The styles, date system, error policy and formulas, or <see langword="null"/> for <see cref="CellReading.Default"/>.</param>
+	/// <param name="styled">Whether the descriptions have the fields' styles.</param>
 	/// <returns>The records.</returns>
 	public static async Task<List<string>> ReadAsync(
-		string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20, CellReading? reading = null)
+		string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20, CellReading? reading = null,
+		bool styled = false)
 	{
 		var records = await ReadRecordsAsync(xml, mode, skipEmptyRows, strings, sheetName, maxSize, reading);
 
-		return [.. records.Select(r => r.ToString())];
+		return [.. records.Select(r => styled ? r.Styled() : r.ToString())];
 	}
 
 	/// <summary>Reads a sheet's records.</summary>
@@ -248,10 +255,11 @@ internal static class Sheets
 	/// <param name="reading">The styles, date system, error policy, formulas, area and hidden and merged cells, or <see langword="null"/> for <see cref="CellReading.Default"/>.</param>
 	/// <param name="csv">The reader's options, which the search's probes read with; <see langword="null"/> for the defaults.</param>
 	/// <param name="sheetName">The sheet's name.</param>
-	/// <returns>The records, described (<see cref="CapturedRecord.ToString"/>).</returns>
+	/// <param name="styled">Whether the descriptions have the fields' styles.</param>
+	/// <returns>The records, described (<see cref="CapturedRecord.ToString"/>, or <see cref="CapturedRecord.Styled"/>).</returns>
 	public static async Task<List<string>> ReadAfterHeaderAsync(
 		string xml, SheetMode mode, ExcelHeaderRow headerRow, bool skipEmptyRows = true, SharedStrings? strings = null, CellReading? reading = null,
-		CsvReaderOptions? csv = null, string sheetName = "Data")
+		CsvReaderOptions? csv = null, string sheetName = "Data", bool styled = false)
 	{
 		reading ??= CellReading.Default;
 		var area = reading.Layout ?? SheetLayout.Sheet;
@@ -261,10 +269,10 @@ internal static class Sheets
 		using (var search = Open(xml, mode.Scan, true, strings, sheetName, reading: searching))
 		{
 			var options = new ExcelReaderOptions { ErrorCells = reading.ErrorCells, Formulas = reading.Formulas, Csv = csv ?? CsvReaderOptions.Default };
-			(layout, held) = await HeaderSearch.RunAsync(search, headerRow, area, options, reading.Date1904, mode.Scan.Async, CancellationToken.None);
+			(layout, held) = await HeaderSearch.RunAsync(search, headerRow, area, options, reading.Date1904, reading.Formatter, mode.Scan.Async, CancellationToken.None);
 		}
 
-		return await ReadAsync(xml, mode, skipEmptyRows, strings, sheetName, reading: reading.With(layout, held, reading.SkipHiddenRows));
+		return await ReadAsync(xml, mode, skipEmptyRows, strings, sheetName, reading: reading.With(layout, held, reading.SkipHiddenRows), styled: styled);
 	}
 
 	/// <summary>Fills until the sheet has no more records, checking each fill.</summary>

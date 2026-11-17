@@ -491,13 +491,19 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		var mergedCells = settings.FillMergedCells
 			? await MergedCells.LoadAsync(archive, partName, chosen.Name, limits, async, cancellationToken).ConfigureAwait(false)
 			: null;
+
+		// A reader's culture is built once, as a culture given can be a writable one changed later.
+		var formatter = settings.Text == ExcelText.Formatted ? new CellFormatter(styles, DisplayCulture.For(settings.Csv.FormatProvider), Date1904) : null;
+		var cellOptions = settings.CellOptions(Date1904, formatter);
 		if (headerRow is not null)
 		{
-			(layout, header) = await FindHeaderAsync(partName, chosen.Name, settings, headerRow, searchArea!, layout ?? SheetLayout.Sheet, mergedCells, async, cancellationToken)
+			(layout, header) = await FindHeaderAsync(
+				partName, chosen.Name, settings, formatter, headerRow, searchArea!, layout ?? SheetLayout.Sheet, mergedCells, async, cancellationToken)
 				.ConfigureAwait(false);
 		}
 
-		var scanner = await OpenScannerAsync(partName, chosen.Name, settings, layout, settings.Csv.SkipEmptyLines, settings.SkipHiddenRows, mergedCells, async, cancellationToken)
+		var scanner = await OpenScannerAsync(
+			partName, chosen.Name, settings, layout, settings.Csv.SkipEmptyLines, settings.SkipHiddenRows, mergedCells, formatter, async, cancellationToken)
 			.ConfigureAwait(false);
 		if (header is not null)
 		{
@@ -506,7 +512,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 		try
 		{
-			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, settings.CellOptions(Date1904)), settings.Csv);
+			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, cellOptions), settings.Csv);
 		}
 		catch
 		{
@@ -525,12 +531,13 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
 	/// <param name="skipHiddenRows">Whether hidden rows are no records.</param>
 	/// <param name="mergedCells">The sheet's merged ranges, to fill their cells with; <see langword="null"/> to fill none.</param>
+	/// <param name="formatter">The formatter of the cells' styles under <see cref="ExcelText.Formatted"/>; <see langword="null"/> under <see cref="ExcelText.Raw"/>.</param>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
 	/// <returns>A task whose result is the scanner, which owns the part's stream.</returns>
 	private async ValueTask<SheetScanner> OpenScannerAsync(
-		string partName, string sheetName, ExcelReaderOptions options, SheetLayout? layout, bool skipEmptyRows, bool skipHiddenRows, MergedCells? mergedCells, bool async,
-		CancellationToken cancellationToken)
+		string partName, string sheetName, ExcelReaderOptions options, SheetLayout? layout, bool skipEmptyRows, bool skipHiddenRows, MergedCells? mergedCells,
+		CellFormatter? formatter, bool async, CancellationToken cancellationToken)
 	{
 		var limits = options.Limits;
 		var stream = await archive.OpenPartAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
@@ -540,7 +547,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 			return new SheetScanner(
 				xml, sheetName, strings!, styles!, skipEmptyRows, stream, Date1904, options.ErrorCells, options.Formulas, layout, skipHiddenRows, options.SkipHiddenColumns,
-				mergedCells);
+				mergedCells, formatter);
 		}
 		catch
 		{
@@ -557,6 +564,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <param name="partName">The sheet's part.</param>
 	/// <param name="sheetName">The sheet's name, for locations.</param>
 	/// <param name="options">The reader's options.</param>
+	/// <param name="formatter">The formatter of the cells' styles under <see cref="ExcelText.Formatted"/>; <see langword="null"/> under <see cref="ExcelText.Raw"/>.</param>
 	/// <param name="headerRow">The header row asked for.</param>
 	/// <param name="searchArea">The rows the search reads, in the area's columns (<see cref="HeaderSearch.SearchArea"/>).</param>
 	/// <param name="area">The area read.</param>
@@ -568,15 +576,16 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	/// <exception cref="CsvFormatException">The row given has no value, or the sheet's content up to the header row can't be read.</exception>
 	/// <exception cref="InvalidOperationException">The search's record type has no mapper.</exception>
 	private async ValueTask<(SheetLayout Layout, HeldRecord Header)> FindHeaderAsync(
-		string partName, string sheetName, ExcelReaderOptions options, ExcelHeaderRow headerRow, SheetLayout searchArea, SheetLayout area, MergedCells? mergedCells,
-		bool async, CancellationToken cancellationToken)
+		string partName, string sheetName, ExcelReaderOptions options, CellFormatter? formatter, ExcelHeaderRow headerRow, SheetLayout searchArea, SheetLayout area,
+		MergedCells? mergedCells, bool async, CancellationToken cancellationToken)
 	{
 		// Rows without a value are no candidates; a row given is the header even when hidden, as it is named.
-		var search = await OpenScannerAsync(partName, sheetName, options, searchArea, true, options.SkipHiddenRows && headerRow.Row == 0, mergedCells, async, cancellationToken)
+		var search = await OpenScannerAsync(
+			partName, sheetName, options, searchArea, true, options.SkipHiddenRows && headerRow.Row == 0, mergedCells, formatter, async, cancellationToken)
 			.ConfigureAwait(false);
 		try
 		{
-			return await HeaderSearch.RunAsync(search, headerRow, area, options, Date1904, async, cancellationToken).ConfigureAwait(false);
+			return await HeaderSearch.RunAsync(search, headerRow, area, options, Date1904, formatter, async, cancellationToken).ConfigureAwait(false);
 		}
 		finally
 		{
