@@ -16,7 +16,7 @@ opens in a spreadsheet also opens here. The options on this page make it stricte
 |---|---|
 | Separator | Detected from the first lines (`,` `;` tab `\|`), scored by how consistently each appears per line. Excel's `sep=;` first line is honored and skipped. |
 | Encoding | UTF-8 (BOM skipped). UTF-16/UTF-32 byte order marks are detected and transcoded. `Encoding` option for other code pages. |
-| Line endings | `\n`, `\r\n` and lone `\r`, mixed freely. |
+| Line endings | `\n`, `\r\n` and lone `\r`, mixed freely. Records that end with other characters, such as `~@^*^@~`, are read through a [`CsvSeparatorStream`](reading.html#records-that-end-with-other-characters). |
 | Quotes | RFC 4180: a quote at the start of a field opens a quoted field (separators/line breaks inside are text, `""` is a quote). |
 | Stray quotes (`5'10"`, `ab"c`) | Kept as text; they do not open a quoted region. |
 | Text after a closing quote (`"ab"c`) | Appended: `abc`. |

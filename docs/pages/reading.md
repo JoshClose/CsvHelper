@@ -789,6 +789,38 @@ stream's `Replacement`. FixedWidth mode has no separator to replace.
   so the reader keeps its UTF-8 fast path. On the benchmark machine it replaces 7 to 10 GB/s with AVX-512 and 4.5 to
   6 GB/s with AVX2. Finding the records of a `||` file takes 1.65 to 1.85 times as long as for the same file with commas.
 
+### Records that end with other characters
+
+A record ends at a line break. When the records of a file end with other characters, such as `~@^*^@~`, give them to a
+`CsvSeparatorStream` as `newLine`. It puts a line break in place of each one, and drops a line break right after it:
+
+```csharp
+// Id~##~Name~##~Note~@^*^@~
+// 1~##~WIDGET~##~a "big" one~@^*^@~
+var options = new CsvReaderOptions { Mode = CsvMode.NoEscape };
+using var reader = CsvReader.Create(
+    new CsvSeparatorStream(File.OpenRead("vendor.txt"), "~##~", newLine: "~@^*^@~"), options);
+while (reader.Read())
+{
+    string note = reader.GetString("Note");     // a "big" one
+}
+```
+
+This file quotes no fields but has quotes in its values, so it is read in [NoEscape](#noescape) mode.
+
+A line break that is not right after a record end would end a record where the file's record doesn't end, so reading
+one throws `CsvFormatException`, with its `ByteOffset`. Line breaks are text only where the reader reads them as text:
+in quoted fields (unless `AllowLineBreaksInQuotes` is `false`), and after an escape character in Escape mode. A record
+end in such a quoted field is text too. A value read in NoEscape mode cannot contain a line break.
+
+- **Other lines.** A comment line ends at the record end, as a record does. The lines that `SkipLines` skips end at line
+  breaks, as they do without the stream.
+- **The record end** is 1 to 16 bytes, with the same rules as the separator, and neither can start with the other.
+  Where one starts inside the other, they are taken from the left, as overlapping separators are: `~@^*^@~##~` is a
+  record end followed by the text `##~`. `RawRecord` shows a line break where the record end was.
+- **Speed.** The stream takes the blocks with a record end on its exact path. Reading every field of such a file takes
+  about 10% longer than for the same file with line breaks; only counting its records takes about three times as long.
+
 ### Comments and empty lines
 
 `CommentPrefix` skips lines that start with that character. Empty lines are skipped by default; with

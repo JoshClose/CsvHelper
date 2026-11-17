@@ -8,7 +8,8 @@ namespace CsvHelper;
 
 /// <summary>
 /// A read-only stream that lets <see cref="CsvReader"/> read files whose separator is longer than one character, such as
-/// <c>||</c>, or is not ASCII: it puts one byte, <see cref="Replacement"/>, in place of every separator.
+/// <c>||</c>, or is not ASCII: it puts one byte, <see cref="Replacement"/>, in place of every separator. It can also read
+/// files whose records end with other characters than a line break, such as <c>~@^*^@~</c>: see <see cref="NewLine"/>.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -17,6 +18,13 @@ namespace CsvHelper;
 /// characters and <see cref="CsvReaderOptions.SkipLines"/>, so the separators that are text stay as they are: in quoted
 /// fields, after an escape character, in comment lines and in the lines the reader skips. Everything else passes through
 /// unchanged, so <see cref="CsvReader.RawRecord"/> shows <see cref="Replacement"/> where the separator was.
+/// </para>
+/// <para>
+/// With a <see cref="NewLine"/>, the stream puts a CR in place of each record end, and drops a line break right after
+/// one. Line breaks elsewhere would end records that do not end there, so reading one throws a
+/// <see cref="CsvFormatException"/>, unless the reader reads it as text: in a quoted field that may have line breaks
+/// (<see cref="CsvReaderOptions.AllowLineBreaksInQuotes"/>), or after an escape character. A record end in such a quoted
+/// field is text too.
 /// </para>
 /// <para>
 /// The stream works on bytes, in the buffer of the caller, so the reader keeps its UTF-8 fast path. The input is UTF-8,
@@ -48,6 +56,8 @@ public sealed partial class CsvSeparatorStream : Stream
 
 	// The dialect, set by Configure: the defaults of CsvReaderOptions until a reader attaches.
 	private byte[] separator = [];
+	private byte[] recordEnd = [];      // NewLine, empty without one
+	private int lookahead;              // the bytes after a separator or record end start that the scan reads to take it whole
 	private int quote;                  // -1 without quotes (Escape and NoEscape modes)
 	private int escape;                 // -1 outside Escape mode
 	private int comment;                // -1 without comments
@@ -66,7 +76,7 @@ public sealed partial class CsvSeparatorStream : Stream
 	// Input bytes before the data of the current read, for the byte offsets of errors.
 	private long consumed;
 	// The input after the last byte a read decided: up to a separator's length - 1 bytes that may start one.
-	private readonly byte[] pending = new byte[MaxSeparatorBytes];
+	private readonly byte[] pending = new byte[MaxSeparatorBytes + 2];
 	private int pendingCount;
 	// Output for reads into small buffers.
 	private byte[]? small;
@@ -90,22 +100,73 @@ public sealed partial class CsvSeparatorStream : Stream
 	/// cannot contain, or <paramref name="replacement"/> is not ASCII or is a line break.
 	/// </exception>
 	public CsvSeparatorStream(Stream stream, string separator, char replacement = DefaultReplacement, bool leaveOpen = false)
+		: this(null, stream, separator, replacement, leaveOpen)
+	{
+	}
+
+	/// <summary>
+	/// Creates a stream that reads <paramref name="stream"/> with <paramref name="replacement"/> in place of
+	/// <paramref name="separator"/>, and a line break in place of <paramref name="newLine"/>, the end of each record.
+	/// </summary>
+	/// <param name="stream">The input, read from its current position. It does not need to be seekable.</param>
+	/// <param name="separator">
+	/// The separator of the input, such as <c>~##~</c>: 1 to 16 bytes in the input encoding, without line breaks, the quote,
+	/// escape or comment character, or <paramref name="replacement"/>.
+	/// </param>
+	/// <param name="newLine">
+	/// The end of each record in the input, such as <c>~@^*^@~</c>: 1 to 16 bytes, without the characters that
+	/// <paramref name="separator"/> cannot contain. A line break right after it is part of it. Neither it nor
+	/// <paramref name="separator"/> can start with the other.
+	/// </param>
+	/// <param name="replacement">
+	/// The ASCII character that takes the place of each separator, and that the reader splits on. The input must not
+	/// contain it outside quoted fields.
+	/// </param>
+	/// <param name="leaveOpen">Whether <paramref name="stream"/> stays open when this stream is disposed.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="stream"/>, <paramref name="separator"/> or <paramref name="newLine"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentException">
+	/// <paramref name="stream"/> cannot be read, <paramref name="separator"/> or <paramref name="newLine"/> is empty, too long
+	/// or contains a character it cannot contain, one of them starts with the other, or <paramref name="replacement"/> is
+	/// not ASCII or is a line break.
+	/// </exception>
+	/// <example>
+	/// <code>
+	/// // Id~##~Name~@^*^@~
+	/// // 1~##~Tea~@^*^@~
+	/// var options = new CsvReaderOptions { Mode = CsvMode.NoEscape };
+	/// using var reader = CsvReader.Create(new CsvSeparatorStream(File.OpenRead("vendor.txt"), "~##~", newLine: "~@^*^@~"), options);
+	/// </code>
+	/// </example>
+	public CsvSeparatorStream(Stream stream, string separator, string newLine, char replacement = DefaultReplacement, bool leaveOpen = false)
+		: this(newLine ?? throw new ArgumentNullException(nameof(newLine)), stream, separator, replacement, leaveOpen)
+	{
+	}
+
+	private CsvSeparatorStream(string? newLine, Stream stream, string separator, char replacement, bool leaveOpen)
 	{
 		ArgumentNullException.ThrowIfNull(stream);
 		ArgumentNullException.ThrowIfNull(separator);
 		if (!stream.CanRead) throw new ArgumentException("The stream must be readable.", nameof(stream));
 		if (separator.Length == 0) throw new ArgumentException("The separator cannot be empty.", nameof(separator));
+		if (newLine is { Length: 0 }) throw new ArgumentException("The record end cannot be empty.", nameof(newLine));
 		CsvReaderOptions.ValidateAscii(replacement, nameof(replacement));
 		this.stream = stream;
 		this.leaveOpen = leaveOpen;
 		this.replacement = (byte)replacement;
 		Separator = separator;
+		NewLine = newLine;
 		Replacement = replacement;
 		Configure(CsvReaderOptions.Default);
 	}
 
 	/// <summary>The separator of the input that this stream replaces.</summary>
 	public string Separator { get; }
+
+	/// <summary>
+	/// The end of each record in the input, which the stream puts a CR in place of (with a line break right after it), or
+	/// <see langword="null"/> when records end with line breaks.
+	/// </summary>
+	public string? NewLine { get; }
 
 	/// <summary>The character that takes the place of each <see cref="Separator"/>, and that the reader splits on.</summary>
 	public char Replacement { get; }
@@ -163,7 +224,10 @@ public sealed partial class CsvSeparatorStream : Stream
 	/// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> and <paramref name="count"/> are not a range of <paramref name="buffer"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The stream has been disposed.</exception>
-	/// <exception cref="CsvFormatException">The input contains <see cref="Replacement"/> outside quoted fields.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The input contains <see cref="Replacement"/> outside quoted fields, or, with a <see cref="NewLine"/>, a line break
+	/// that is not text.
+	/// </exception>
 	/// <exception cref="NotSupportedException">The input starts with a UTF-16 or UTF-32 byte order mark.</exception>
 	public override int Read(byte[] buffer, int offset, int count)
 	{
@@ -186,7 +250,10 @@ public sealed partial class CsvSeparatorStream : Stream
 	/// <param name="buffer">The buffer to read into.</param>
 	/// <returns>The number of bytes read: at least 1, or 0 at the end of the input (or when <paramref name="buffer"/> is empty).</returns>
 	/// <exception cref="ObjectDisposedException">The stream has been disposed.</exception>
-	/// <exception cref="CsvFormatException">The input contains <see cref="Replacement"/> outside quoted fields.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The input contains <see cref="Replacement"/> outside quoted fields, or, with a <see cref="NewLine"/>, a line break
+	/// that is not text.
+	/// </exception>
 	/// <exception cref="NotSupportedException">The input starts with a UTF-16 or UTF-32 byte order mark.</exception>
 	public override int Read(Span<byte> buffer)
 	{
@@ -204,7 +271,10 @@ public sealed partial class CsvSeparatorStream : Stream
 	/// <param name="cancellationToken">Cancels reading from the underlying stream.</param>
 	/// <returns>The number of bytes read: at least 1, or 0 at the end of the input (or when <paramref name="buffer"/> is empty).</returns>
 	/// <exception cref="ObjectDisposedException">The stream has been disposed.</exception>
-	/// <exception cref="CsvFormatException">The input contains <see cref="Replacement"/> outside quoted fields.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The input contains <see cref="Replacement"/> outside quoted fields, or, with a <see cref="NewLine"/>, a line break
+	/// that is not text.
+	/// </exception>
 	/// <exception cref="NotSupportedException">The input starts with a UTF-16 or UTF-32 byte order mark.</exception>
 	public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
 	{
@@ -224,7 +294,10 @@ public sealed partial class CsvSeparatorStream : Stream
 	/// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> and <paramref name="count"/> are not a range of <paramref name="buffer"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The stream has been disposed.</exception>
-	/// <exception cref="CsvFormatException">The input contains <see cref="Replacement"/> outside quoted fields.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The input contains <see cref="Replacement"/> outside quoted fields, or, with a <see cref="NewLine"/>, a line break
+	/// that is not text.
+	/// </exception>
 	/// <exception cref="NotSupportedException">The input starts with a UTF-16 or UTF-32 byte order mark.</exception>
 	public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 	{
@@ -278,7 +351,10 @@ public sealed partial class CsvSeparatorStream : Stream
 	/// <exception cref="ArgumentNullException"><paramref name="buffer"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> and <paramref name="count"/> are not a range of <paramref name="buffer"/>.</exception>
 	/// <exception cref="ObjectDisposedException">The stream has been disposed.</exception>
-	/// <exception cref="CsvFormatException">The input contains <see cref="Replacement"/> outside quoted fields.</exception>
+	/// <exception cref="CsvFormatException">
+	/// The input contains <see cref="Replacement"/> outside quoted fields, or, with a <see cref="NewLine"/>, a line break
+	/// that is not text.
+	/// </exception>
 	/// <exception cref="NotSupportedException">The input starts with a UTF-16 or UTF-32 byte order mark.</exception>
 	public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 	{
@@ -339,31 +415,48 @@ public sealed partial class CsvSeparatorStream : Stream
 		return options.Separator is null ? options with { Separator = Replacement } : options;
 	}
 
-	/// <summary>Takes the dialect of <paramref name="options"/>, after checking that the separator can be used with it.</summary>
+	/// <summary>
+	/// Takes the dialect of <paramref name="options"/>, after checking that the separator and the record end can be used
+	/// with it.
+	/// </summary>
 	/// <param name="options">The reader's options.</param>
-	/// <exception cref="ArgumentException">The separator is too long, or contains a character it cannot contain.</exception>
+	/// <exception cref="ArgumentException">
+	/// The separator or the record end is too long or contains a character it cannot contain, or one starts with the other.
+	/// </exception>
 	/// <exception cref="NotSupportedException">The options set an encoding that is neither UTF-8 nor single-byte.</exception>
 	private void Configure(CsvReaderOptions options)
 	{
 		const string SeparatorName = "separator";
+		const string NewLineName = "newLine";
 		var encoding = options.Encoding;
 		var isUtf8 = encoding is null || encoding.CodePage == Encoding.UTF8.CodePage;
 		if (!isUtf8 && !IsSingleByteAscii(encoding!))
 			throw new NotSupportedException($"A CsvSeparatorStream reads UTF-8 and single-byte encodings, not {encoding!.WebName}.");
-		var bytes = (encoding ?? Encoding.UTF8).GetBytes(Separator);
-		if (bytes.Length > MaxSeparatorBytes)
-			throw new ArgumentException($"The separator can be at most {MaxSeparatorBytes} bytes long.", SeparatorName);
 		var quoteChar = options.Mode == CsvMode.Rfc4180 ? options.Quote : -1;
 		var escapeChar = options.Mode == CsvMode.Escape ? options.Escape : -1;
 		var commentChar = options.CommentPrefix is char c ? c : -1;
-		foreach (var b in bytes)
+		byte[] Encode(string text, string description, string parameter)
 		{
-			if (b == '\r' || b == '\n' || b == quoteChar || b == escapeChar || b == commentChar || b == replacement)
+			var encoded = (encoding ?? Encoding.UTF8).GetBytes(text);
+			if (encoded.Length > MaxSeparatorBytes)
+				throw new ArgumentException($"The {description} can be at most {MaxSeparatorBytes} bytes long.", parameter);
+			foreach (var b in encoded)
 			{
-				throw new ArgumentException(
-					"The separator cannot contain a line break, the quote, escape or comment character, or the replacement.", SeparatorName);
+				if (b == '\r' || b == '\n' || b == quoteChar || b == escapeChar || b == commentChar || b == replacement)
+				{
+					throw new ArgumentException(
+						$"The {description} cannot contain a line break, the quote, escape or comment character, or the replacement.", parameter);
+				}
 			}
+
+			return encoded;
 		}
+
+		var bytes = Encode(Separator, SeparatorName, SeparatorName);
+		var end = NewLine is null ? [] : Encode(NewLine, "record end", NewLineName);
+		// Where both would match, the input could be read either way.
+		if (end.Length > 0 && (bytes.AsSpan().StartsWith(end) || end.AsSpan().StartsWith(bytes)))
+			throw new ArgumentException("Neither the separator nor the record end can start with the other.", NewLineName);
 
 		utf8 = isUtf8;
 		quote = quoteChar;
@@ -384,6 +477,9 @@ public sealed partial class CsvSeparatorStream : Stream
 		linesToSkip = options.SkipLines;
 		skippedCr = false;
 		separator = bytes;
+		recordEnd = end;
+		// A record end is taken with the CR LF after it.
+		lookahead = Math.Max(bytes.Length, end.Length == 0 ? 0 : end.Length + 2) - 1;
 		dropMultiplier = (1UL << bytes.Length) - 2;
 		overlaps = 0;
 		for (var d = 1; d < bytes.Length; d++)
@@ -465,12 +561,12 @@ public sealed partial class CsvSeparatorStream : Stream
 	}
 
 	/// <summary>
-	/// Whether a read needs more input before it can return anything: a separator's length (and 4 bytes for the byte order
-	/// mark at the start), unless the input has ended.
+	/// Whether a read needs more input before it can return anything: a separator's length, or a record end's and the CR LF
+	/// after it (and 4 bytes for the byte order mark at the start), unless the input has ended.
 	/// </summary>
 	/// <param name="length">The number of bytes of data the read has.</param>
 	/// <returns><see langword="true"/> when the read must read more from the underlying stream.</returns>
-	private bool NeedsMore(int length) => !eof && length < (started ? separator.Length : Math.Max(separator.Length, 4));
+	private bool NeedsMore(int length) => !eof && length < (started ? lookahead + 1 : Math.Max(lookahead + 1, 4));
 
 	/// <summary>Counts the bytes of a read from the underlying stream, and notes the end of the input.</summary>
 	/// <param name="length">The number of bytes of data before the read.</param>
@@ -485,8 +581,8 @@ public sealed partial class CsvSeparatorStream : Stream
 	}
 
 	/// <summary>
-	/// Replaces the separators in the first <paramref name="length"/> bytes of <paramref name="buffer"/>, and keeps the bytes
-	/// that may start a separator for the next read.
+	/// Replaces the separators and record ends in the first <paramref name="length"/> bytes of <paramref name="buffer"/>, and
+	/// keeps the bytes that may start one for the next read.
 	/// </summary>
 	/// <param name="buffer">The buffer of the read.</param>
 	/// <param name="length">The number of bytes of data in it.</param>
@@ -507,10 +603,10 @@ public sealed partial class CsvSeparatorStream : Stream
 			if (length == 0) return skipped;
 		}
 
-		// Without the rest of the input, the last length - 1 bytes may start a separator.
-		var processEnd = eof ? length : Math.Max(length - (separator.Length - 1), 0);
+		// Without the rest of the input, the last bytes may start a separator, or a record end and the line break after it.
+		var processEnd = eof ? length : Math.Max(length - lookahead, 0);
 		var written = Replace(buffer, length, processEnd);
-		// A separator that starts before processEnd is taken whole.
+		// A separator or record end that starts before processEnd is taken whole.
 		var next = Math.Max(processEnd, skipUntil);
 		pendingCount = length - next;
 		buffer.Slice(next, pendingCount).CopyTo(pending);

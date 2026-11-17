@@ -102,6 +102,7 @@ recovered from instead of thrown, which is what `BadDataFound = null` asked for.
 | `CultureInfo` (constructor) | `FormatProvider` | Defaults to the invariant culture. |
 | `Delimiter` | `Separator` | One character. `null` (the default) detects a comma, semicolon, tab or vertical bar from the start of the input. |
 | `DetectDelimiter`, `DetectDelimiterValues` | `Separator = null`, `SeparatorCandidates` | Detection is the default. `SeparatorCandidates` (from 34.1) is a string of the characters to choose from, `",;\t\|"` by default. `DetectSeparatorHint` reads Excel's `sep=` line. |
+| `NewLine` | `CsvSeparatorStream`'s `newLine` (from 34.1) | CR, LF and CR LF end records. Records that end with other characters, such as `~@^*^@~`, are read through a [`CsvSeparatorStream`](../../pages/reading.md#records-that-end-with-other-characters). In 33, line breaks were text in such a file; now they are text only in quoted fields and after an escape character, and elsewhere throw `CsvFormatException`. |
 | `HasHeaderRecord` | `HasHeader` | |
 | `Mode` (`CsvMode.RFC4180`) | `Mode` (`CsvMode.Rfc4180`) | The member is spelled `Rfc4180` now. `FixedWidth` is new, with `FieldWidths`. |
 | `Quote`, `Escape` | `Quote`, `Escape` | `Escape` is for `CsvMode.Escape` only; Rfc4180 always doubles quotes. |

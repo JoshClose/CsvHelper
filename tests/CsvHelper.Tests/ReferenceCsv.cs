@@ -8,6 +8,9 @@ internal sealed record ReferenceOptions
 	public char Separator { get; init; } = ',';
 	// A separator of several characters (read through a CsvSeparatorStream); Separator is not used when it is set.
 	public string? SeparatorText { get; init; }
+	// The end of each record (a CsvSeparatorStream's NewLine), with SeparatorText: it ends records, with a line break
+	// right after it, and other line breaks that are not text are errors.
+	public string? NewLineText { get; init; }
 	// Quote set: Rfc4180 mode; else Escape set: Escape mode; else NoEscape.
 	public char? Quote { get; init; } = '"';
 	public char? Escape { get; init; }
@@ -81,6 +84,8 @@ internal static class ReferenceCsv
 		text = AfterLines(text, o.SkipLines);
 		var sep = o.SeparatorText ?? o.Separator.ToString();
 		bool AtSeparator(int at) => at + sep.Length <= text.Length && string.CompareOrdinal(text, at, sep, 0, sep.Length) == 0;
+		var end = o.NewLineText;
+		bool AtEnd(int at) => end is not null && at + end.Length <= text.Length && string.CompareOrdinal(text, at, end, 0, end.Length) == 0;
 		var records = new List<string[]>();
 		var rawFields = new List<string>();
 		var raw = new StringBuilder();
@@ -139,6 +144,25 @@ internal static class ReferenceCsv
 				pending = true;
 				i++;
 				continue;
+			}
+
+			// A record end, and a line break, are text in a quoted field that may have line breaks.
+			if (end is not null && !(state == Quoted && o.LineBreaksInQuotes))
+			{
+				if (AtEnd(i))
+				{
+					if (state == Quoted) bad = true;
+					EndRecord();
+					i += end.Length;
+					// A line break right after it is part of it.
+					if (i < text.Length && text[i] == '\r') i += i + 1 < text.Length && text[i + 1] == '\n' ? 2 : 1;
+					else if (i < text.Length && text[i] == '\n') i++;
+					state = FieldStart;
+					rowStart = true;
+					continue;
+				}
+
+				if (c == '\r' || c == '\n') throw new StrayLineBreakException(i);
 			}
 
 			if (c == '\r' || c == '\n')
@@ -276,6 +300,13 @@ internal static class ReferenceCsv
 
 		return new string(chars.Skip(a).Take(b - a).Select(x => x.C).ToArray());
 	}
+}
+
+/// <summary>A line break that is not text, with a record end (<see cref="ReferenceOptions.NewLineText"/>).</summary>
+/// <param name="index">Its index in the text after the skipped lines.</param>
+internal sealed class StrayLineBreakException(int index) : Exception($"A line break at {index} is not after a record end.")
+{
+	public int Index { get; } = index;
 }
 
 /// <summary>A simple fixed-width parser on strings: the reading rules of FixedWidth mode.</summary>

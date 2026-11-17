@@ -41,7 +41,8 @@ public sealed partial class CsvReader
 	/// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
 	/// <exception cref="ArgumentException">
 	/// <paramref name="options"/> sets a character that is not ASCII, or uses the same character for two purposes; or, for
-	/// a <see cref="CsvSeparatorStream"/>, sets another separator or FixedWidth mode, or a character its separator contains.
+	/// a <see cref="CsvSeparatorStream"/>, sets another separator or FixedWidth mode, or a character that its separator or
+	/// record end contains.
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException"><see cref="CsvReaderOptions.BufferSize"/> is less than 256.</exception>
 	/// <exception cref="NotSupportedException">

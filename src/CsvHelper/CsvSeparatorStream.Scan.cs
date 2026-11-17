@@ -30,6 +30,11 @@ namespace CsvHelper;
 // otherwise a shuffle of each 8 bytes from a table of the 256 masks of kept bytes (shifts on the targets without SIMD).
 // With a separator of two bytes the shuffle writes the replacement too: the byte before each dropped byte is the first
 // of a separator.
+//
+// A record end (NewLine) is found as the separator is, with a mask of its starts, but only by the exact loop: the fast
+// path leaves the blocks with a record end or a line break to it. The exact loop writes a CR over the first byte of each
+// record end and drops the others, and the line break after it, so the record ends drop bytes too, and the pair shuffle,
+// which tells separators from the bytes dropped, is not used with them.
 public sealed partial class CsvSeparatorStream
 {
 	private const int BlockSize = 64;
@@ -143,7 +148,7 @@ public sealed partial class CsvSeparatorStream
 			CompactCompress => Replace<TM, CompressCompactor>(ref buf, length, processEnd),
 #endif
 #if NET
-			CompactPairShuffle when separator.Length == 2 => Replace<TM, PairShuffleCompactor>(ref buf, length, processEnd),
+			CompactPairShuffle when separator.Length == 2 && recordEnd.Length == 0 => Replace<TM, PairShuffleCompactor>(ref buf, length, processEnd),
 			CompactShuffle or CompactPairShuffle => Replace<TM, ShuffleCompactor>(ref buf, length, processEnd),
 #endif
 			_ => Replace<TM, ScalarCompactor>(ref buf, length, processEnd),
@@ -155,8 +160,8 @@ public sealed partial class CsvSeparatorStream
 		var compactor = default(TK).Create(replacement);
 		var written = 0;
 		var pos = 0;
-		// Whole blocks need the separator's length - 1 bytes after them for the shifted loads.
-		var blocksEnd = Math.Min(processEnd, length - (separator.Length - 1));
+		// Whole blocks need the bytes after them that the shifted loads and record ends read.
+		var blocksEnd = Math.Min(processEnd, length - lookahead);
 		while (pos + BlockSize <= blocksEnd)
 		{
 			if (vectorWidth != 0)
@@ -166,7 +171,7 @@ public sealed partial class CsvSeparatorStream
 			}
 
 			ref var block = ref Unsafe.Add(ref buf, (nint)(uint)pos);
-			var rep = ExactBlock<TM>(ref block, pos, BlockSize, BlockSize, out var drop);
+			var rep = ExactBlock<TM>(ref block, pos, BlockSize, BlockSize, BlockSize, out var drop);
 			written += compactor.Compact(ref block, ref Unsafe.Add(ref buf, (nint)(uint)written), rep, ~(drop | (rep * dropMultiplier)));
 			pos += BlockSize;
 		}
@@ -189,17 +194,18 @@ public sealed partial class CsvSeparatorStream
 		Span<byte> copy = stackalloc byte[TailBufferSize];
 		ref var t = ref MemoryMarshal.GetReference(copy);
 		var compactor = default(TK).Create(replacement);
-		var n = separator.Length;
 		while (pos < processEnd)
 		{
 			var valid = Math.Min(BlockSize, processEnd - pos);
 			copy.Clear();
-			Unsafe.CopyBlockUnaligned(ref t, ref Unsafe.Add(ref buf, (nint)(uint)pos), (uint)Math.Min(length - pos, BlockSize + n - 1));
-			// At the end of the input, a separator must fit before it; otherwise processEnd leaves room for one.
-			var starts = eof ? length - n + 1 - pos : valid;
-			var rep = ExactBlock<TM>(ref t, pos, valid, starts, out var drop);
+			Unsafe.CopyBlockUnaligned(ref t, ref Unsafe.Add(ref buf, (nint)(uint)pos), (uint)Math.Min(length - pos, BlockSize + lookahead));
+			// At the end of the input, a separator or record end must fit before it; otherwise processEnd leaves room for one.
+			var starts = eof ? length - separator.Length + 1 - pos : valid;
+			var endStarts = eof ? length - recordEnd.Length + 1 - pos : valid;
+			var rep = ExactBlock<TM>(ref t, pos, valid, starts, endStarts, out var drop);
 			// The bytes after the valid ones are packed too, after them, but not copied: a compactor may tell the
-			// separators from the bytes it drops (PairShuffleCompactor), so only separators may drop bytes.
+			// separators from the bytes it drops (PairShuffleCompactor, without record ends), so only separators and
+			// record ends may drop bytes.
 			var keep = ~(drop | (rep * dropMultiplier));
 			compactor.Compact(ref t, ref t, rep, keep);
 			var count = BitOperations.PopCount(keep & LowBits(valid));
@@ -257,6 +263,9 @@ public sealed partial class CsvSeparatorStream
 		where TQ : struct, IFlag where TS : struct, IFlag where TT : struct, IFlag where TC : struct, IFlag where TP : struct, IFlag
 	{
 		var masks = default(TM).Create(separator, quote >= 0 ? quote : escape, comment, replacement);
+		// The starts of record ends are found as the separator's are: by the same masks, of the record end.
+		var ends = recordEnd.Length > 0;
+		var endMasks = ends ? default(TM).Create(recordEnd, -1, -1, replacement) : default;
 		var compactor = default(TK).Create(replacement);
 		// With a separator of two equal bytes, its length and the multiplier of its other bytes are constants.
 		var n = default(TP).Value ? 2 : separator.Length;
@@ -275,15 +284,24 @@ public sealed partial class CsvSeparatorStream
 		for (; pos < limit; pos += BlockSize)
 		{
 			ref var block = ref Unsafe.Add(ref buf, (nint)(uint)pos);
-			masks.Compute(ref block, n, default(TP).Value, default(TS).Value, default(TQ).Value | default(TC).Value, default(TC).Value, default(TT).Value,
+			masks.Compute(ref block, n, default(TP).Value, default(TS).Value, default(TQ).Value | default(TC).Value | ends, default(TC).Value, default(TT).Value,
 				out var firstM, out var sepM, out var spM, out var nlM, out var cmM, out var rpM, out var wsM);
 			if (default(TT).Value && blankBytes is not null) wsM = Blanks(ref block, blankBytes);
 			var drop = 0UL;
 			if (skipUntil > pos)
 			{
-				// The last bytes of a separator that started in the previous block.
+				// The last bytes of a separator or record end that started in the previous block, and the line break after
+				// a record end.
 				drop = (1UL << (skipUntil - pos)) - 1;
 				sepM &= ~drop;
+			}
+
+			if (ends)
+			{
+				// A record end, or a line break that is not after one, is for the exact loop.
+				endMasks.Compute(ref block, recordEnd.Length, false, false, false, false, false,
+					out _, out var endM, out _, out _, out _, out _, out _);
+				if (((endM | nlM) & ~drop) != 0) break;
 			}
 
 			if (default(TC).Value && state == StateComment) break;
@@ -369,26 +387,41 @@ public sealed partial class CsvSeparatorStream
 		return pos;
 	}
 
-	/// <summary>Finds the separators of one block with the exact loop, updating the state.</summary>
+	/// <summary>Finds the separators and record ends of one block with the exact loop, updating the state.</summary>
 	/// <typeparam name="TM">The vector width of the masks.</typeparam>
-	/// <param name="block">The bytes of the block, readable for 64 bytes plus the separator's length - 1.</param>
+	/// <param name="block">The bytes of the block, readable for 64 bytes plus the lookahead.</param>
 	/// <param name="pos">The position of the block in the data.</param>
 	/// <param name="valid">The number of bytes of the block to process.</param>
 	/// <param name="starts">The number of bytes of the block where a separator can start.</param>
-	/// <param name="drop">The bytes at the start of the block that belong to a separator of the previous block.</param>
+	/// <param name="endStarts">The number of bytes of the block where a record end can start.</param>
+	/// <param name="drop">
+	/// The bytes to drop: those at the start of the block that belong to a separator or record end of the previous block, and
+	/// the bytes of the record ends of this block after their first, with the line breaks after them.
+	/// </param>
 	/// <returns>The starts of the separators to replace.</returns>
-	private ulong ExactBlock<TM>(ref byte block, int pos, int valid, int starts, out ulong drop) where TM : struct, ISeparatorMasks<TM>
+	private ulong ExactBlock<TM>(ref byte block, int pos, int valid, int starts, int endStarts, out ulong drop) where TM : struct, ISeparatorMasks<TM>
 	{
 		var quotes = quote >= 0;
 		var comments = comment >= 0;
+		var ends = recordEnd.Length > 0;
 		var trimQuotes = trim && quotes;
 		default(TM).Create(separator, quotes ? quote : escape, comment, replacement).Compute(ref block, separator.Length,
-			false, quotes || escape >= 0, quotes || comments, comments, trimQuotes,
+			false, quotes || escape >= 0, quotes || comments || ends, comments, trimQuotes,
 			out _, out var sepM, out var spM, out var nlM, out var cmM, out var rpM, out var wsM);
+		var endM = 0UL;
+		if (ends)
+		{
+			default(TM).Create(recordEnd, -1, -1, replacement).Compute(ref block, recordEnd.Length, false, false, false, false, false,
+				out _, out endM, out _, out _, out _, out _, out _);
+			endM &= LowBits(endStarts);
+		}
+
 		if (trimQuotes && blankBytes is not null) wsM = Blanks(ref block, blankBytes);
 		drop = skipUntil > pos ? LowBits(skipUntil - pos) : 0;
-		var events = ((sepM & LowBits(starts)) | spM | nlM | cmM | rpM) & LowBits(valid) & ~drop;
-		var rep = events != 0 ? Events(ref block, pos, events, wsM) : 0;
+		var events = ((sepM & LowBits(starts)) | endM | spM | nlM | cmM | rpM) & LowBits(valid) & ~drop;
+		var ended = 0UL;
+		var rep = events != 0 ? Events(ref block, pos, events, endM, wsM, ref ended) : 0;
+		drop |= ended;
 		if (trimQuotes) blankRun = BlankRunAfter(fieldStart - pos, valid, wsM | ~LowBits(valid), blankRun);
 
 		return rep;
@@ -414,20 +447,23 @@ public sealed partial class CsvSeparatorStream
 	}
 
 	/// <summary>
-	/// The exact state machine, over the bytes of <paramref name="events"/> (separator starts, quotes or escapes, line
-	/// breaks, comment characters and the replacement) in order. It mirrors the reader's: CsvReader.ScalarBlock.
+	/// The exact state machine, over the bytes of <paramref name="events"/> (separator and record end starts, quotes or
+	/// escapes, line breaks, comment characters and the replacement) in order. It mirrors the reader's: CsvReader.ScalarBlock.
 	/// </summary>
-	/// <param name="block">The bytes of the block.</param>
+	/// <param name="block">The bytes of the block, readable for 64 bytes plus the lookahead.</param>
 	/// <param name="pos">The position of the block in the data.</param>
 	/// <param name="events">The bytes to visit; at least one.</param>
+	/// <param name="ends">The starts of record ends: the events that are record ends rather than separators.</param>
 	/// <param name="blanks">The space and tab bytes of the block (with trimming and quotes).</param>
+	/// <param name="ended">The bytes of the block that the record ends drop, added to.</param>
 	/// <returns>The starts of the separators to replace.</returns>
-	/// <exception cref="CsvFormatException">The replacement is outside quoted fields.</exception>
-	private ulong Events(ref byte block, int pos, ulong events, ulong blanks)
+	/// <exception cref="CsvFormatException">The replacement is outside quoted fields, or a line break is not text.</exception>
+	private ulong Events(ref byte block, int pos, ulong events, ulong ends, ulong blanks, ref ulong ended)
 	{
 		var rep = 0UL;
 		var sep0 = separator[0];
 		var n = separator.Length;
+		var endsRecords = recordEnd.Length > 0;
 		do
 		{
 			var i = BitOperations.TrailingZeroCount(events);
@@ -443,6 +479,8 @@ public sealed partial class CsvSeparatorStream
 			}
 
 			if (p == escapedCrPos && c == '\n') continue;
+			// A record end can start with the first byte of the separator.
+			var end = (ends & (1UL << i)) != 0;
 			switch (state)
 			{
 				case StateQuoted:
@@ -451,10 +489,19 @@ public sealed partial class CsvSeparatorStream
 						state = StateQuoteInQuoted;
 						quotePos = p;
 					}
-					else if (!lineBreaksInQuotes && (c == '\r' || c == '\n'))
+					else if (!lineBreaksInQuotes && (end || c == '\r' || c == '\n'))
 					{
+						// A quoted field that cannot have line breaks ends with its record.
 						state = StatePlain;
-						fieldStart = rowStart = p + 1;
+						if (end)
+						{
+							EndRecord(ref block, pos, i, ref ended);
+						}
+						else
+						{
+							if (endsRecords) ThrowLineBreak(p);
+							fieldStart = rowStart = p + 1;
+						}
 					}
 
 					continue;
@@ -469,8 +516,14 @@ public sealed partial class CsvSeparatorStream
 					state = StatePlain;
 					break;
 				case StateComment:
-					if (c == '\r' || c == '\n')
+					if (end)
 					{
+						state = StatePlain;
+						EndRecord(ref block, pos, i, ref ended);
+					}
+					else if (c == '\r' || c == '\n')
+					{
+						if (endsRecords) ThrowLineBreak(p);
 						state = StatePlain;
 						fieldStart = rowStart = p + 1;
 					}
@@ -478,13 +531,18 @@ public sealed partial class CsvSeparatorStream
 					continue;
 			}
 
-			if (c == sep0)
+			if (end)
+			{
+				EndRecord(ref block, pos, i, ref ended);
+			}
+			else if (c == sep0)
 			{
 				rep |= 1UL << i;
 				skipUntil = fieldStart = p + n;
 			}
 			else if (c == '\r' || c == '\n')
 			{
+				if (endsRecords) ThrowLineBreak(p);
 				fieldStart = rowStart = p + 1;
 			}
 			else if (c == quote)
@@ -541,6 +599,40 @@ public sealed partial class CsvSeparatorStream
 
 		return (blanks & range) == range && (from >= 0 || before);
 	}
+
+	/// <summary>
+	/// Puts a CR in place of the record end that starts at byte <paramref name="i"/> of the block, and drops its other
+	/// bytes and the line break right after it (CR LF, LF or CR). The next record starts after them.
+	/// </summary>
+	/// <remarks>
+	/// A CR, not an LF: the byte before the record end can be a CR that is text, after an escape character, or that ends a
+	/// skipped line, and with an LF the reader would take the two as one line break, CR LF. No LF follows the CR: a line
+	/// break right after the record end is dropped, and one after that throws.
+	/// </remarks>
+	/// <param name="block">The bytes of the block, readable for 64 bytes plus the lookahead.</param>
+	/// <param name="pos">The position of the block in the data.</param>
+	/// <param name="i">The byte of the block where the record end starts.</param>
+	/// <param name="ended">The bytes of the block that the record ends drop, added to.</param>
+	private void EndRecord(ref byte block, int pos, int i, ref ulong ended)
+	{
+		var after = i + recordEnd.Length;
+		int next = Unsafe.Add(ref block, (nint)(uint)after);
+		if (next == '\r') after += Unsafe.Add(ref block, (nint)(uint)(after + 1)) == '\n' ? 2 : 1;
+		else if (next == '\n') after++;
+		Unsafe.Add(ref block, (nint)(uint)i) = (byte)'\r';
+		ended |= LowBits(after) & ~LowBits(i + 1);
+		skipUntil = fieldStart = rowStart = pos + after;
+	}
+
+	/// <summary>Throws for a line break that is not text, with a record end.</summary>
+	/// <param name="p">Its position in the data.</param>
+	/// <exception cref="CsvFormatException">Always.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void ThrowLineBreak(int p) =>
+		throw new CsvFormatException(
+			$"The input has a line break that is not right after a record end ({NewLine}), at byte offset {consumed + p}, where the " +
+			"reader would end a record. With a NewLine, a CsvSeparatorStream reads line breaks only where they are text: in " +
+			"quoted fields that may have them (AllowLineBreaksInQuotes), and after an escape character in Escape mode.", 0, consumed + p);
 
 	/// <summary>Throws for the replacement found outside quoted fields.</summary>
 	/// <param name="p">Its position in the data.</param>
