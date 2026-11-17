@@ -16,8 +16,8 @@ namespace CsvHelper.Excel;
 /// </remarks>
 internal sealed class DateFormat
 {
-	/// <summary>The month of each sample value of <see cref="Width"/>: every month, so that the longest name is among them.</summary>
-	private const int Months = 12;
+	/// <summary>A day of a leap year at noon, which <see cref="FormatWidth"/> measures a date's or time's code at: its widest over the year.</summary>
+	private const double LeapDay = 45292.5;
 
 	// The .NET pattern and its provider, to read a field's text back.
 	private readonly string pattern;
@@ -51,9 +51,8 @@ internal sealed class DateFormat
 	public double Width => ColumnWidths.OfPixels(Pixels);
 
 	/// <summary>
-	/// The pixels of the format's widest text (<see cref="ColumnWidths.TextPixels"/>): of sample values on every month and
-	/// every day of the week, with two-digit days and hours, in the morning (<c>AM</c> is wider than <c>PM</c> in Calibri,
-	/// and the formats Excel can show have no other designators).
+	/// The pixels of the format's widest text (<see cref="ColumnWidths.TextPixels"/>), as Excel shows it: its code's widest
+	/// over a leap year's days at 11:59:59 and 23:59:59 (<see cref="FormatWidth"/>).
 	/// </summary>
 	public double Pixels
 	{
@@ -92,21 +91,7 @@ internal sealed class DateFormat
 		return true;
 	}
 
-	/// <summary>Measures the widest text of the format over its sample values.</summary>
+	/// <summary>Measures the widest text of the format's code, as Excel shows it.</summary>
 	/// <returns>Its pixels.</returns>
-	private double Measure()
-	{
-		var widest = 0.0;
-		for (var month = 1; month <= Months; month++)
-		{
-			// Seven days in a row are every day of the week; all have two digits.
-			for (var day = 22; day <= 28; day++)
-			{
-				var text = new DateTime(2024, month, day, 11, 58, 58, 888).ToString(pattern, provider);
-				widest = Math.Max(widest, ColumnWidths.TextPixels(text.AsSpan()));
-			}
-		}
-
-		return widest;
-	}
+	private double Measure() => new FormatWidth(Code).NumberPixels(LeapDay);
 }

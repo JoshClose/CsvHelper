@@ -54,6 +54,12 @@ internal sealed class FormatCode
 	/// <summary>The most digits of fractions of a second: Excel refuses <c>ss.0000</c>.</summary>
 	private const int MaxSubSecondDigits = 3;
 
+	/// <summary>
+	/// The East Asian character an era's name is measured in when measuring (<see cref="Compile(string, bool)"/>): as wide as
+	/// any other (<c>ColumnWidths</c>).
+	/// </summary>
+	private const char Wide = (char)0x5E74;
+
 	/// <summary>The colors Excel knows by name.</summary>
 	private static readonly string[] ColorNames = ["black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"];
 
@@ -111,9 +117,27 @@ internal sealed class FormatCode
 	/// <summary>Compiles a code.</summary>
 	/// <param name="code">The code, as a style holds it.</param>
 	/// <returns>The compiled code; one that isn't <see cref="IsReadable"/> when the renderer can't read it.</returns>
-	public static FormatCode Compile(string code)
+	public static FormatCode Compile(string code) => Compile(code, false);
+
+	/// <summary>
+	/// Compiles a code, to show its text or to measure it. Measuring, as auto-fit does (Phase 8's step 6), it differs where
+	/// a text's width isn't its characters' (Phase 5's step 3):
+	/// <list type="bullet">
+	/// <item><description><c>_x</c> is <c>x</c> itself, whose width it leaves, where it shows a space.</description></item>
+	/// <item><description>An era's name (<c>g</c>), which the renderer shows as nothing, is one East Asian character, or two for <c>ggg</c>.</description></item>
+	/// <item><description>
+	/// Elapsed time after a date part, or beside <c>AM/PM</c>, which the renderer can't read, is its widest time of day in
+	/// zeros, padded to its letters: two digits of hours, four of minutes (1439) and five of seconds (86399).
+	/// </description></item>
+	/// </list>
+	/// A text renders blanks as digits when its <see cref="ShownText"/> measures.
+	/// </summary>
+	/// <param name="code">The code, as a style holds it.</param>
+	/// <param name="measuring">Whether the code is compiled to measure its text, not to show it.</param>
+	/// <returns>The compiled code; one that isn't <see cref="IsReadable"/> when the renderer can't read it.</returns>
+	public static FormatCode Compile(string code, bool measuring)
 	{
-		var raw = Read(code);
+		var raw = Read(code, measuring);
 		if (raw is null)
 		{
 			return new FormatCode(code, [], null, [], false);
@@ -136,7 +160,8 @@ internal sealed class FormatCode
 		FormatSection? text = null;
 		for (var i = 0; i < count; i++)
 		{
-			var section = i == textIndex ? Finish(raw[i], FormatSectionKind.Text, pool) : Finish(raw[i], raw[i].IsDate ? FormatSectionKind.Date : FormatSectionKind.Number, pool);
+			var section = i == textIndex ? Finish(raw[i], FormatSectionKind.Text, pool, measuring) :
+				Finish(raw[i], raw[i].IsDate ? FormatSectionKind.Date : FormatSectionKind.Number, pool, measuring);
 			if (section is null)
 			{
 				return new FormatCode(code, [], null, [], false, i != textIndex && raw[i].IsDate);
@@ -155,7 +180,7 @@ internal sealed class FormatCode
 		// One number section with a condition is followed by General.
 		if (numbers.Count == 1 && numbers[0].Condition != ConditionOperator.None)
 		{
-			numbers.Add(Finish(new RawSection { HasGeneral = true, Tokens = { new Raw(FormatTokenKind.General) } }, FormatSectionKind.Number, pool)!);
+			numbers.Add(Finish(new RawSection { HasGeneral = true, Tokens = { new Raw(FormatTokenKind.General) } }, FormatSectionKind.Number, pool, measuring)!);
 		}
 
 		// A system format counts in the first section alone, and there it is every date section's: Excel reads
@@ -176,8 +201,9 @@ internal sealed class FormatCode
 
 	/// <summary>Reads a code into its sections' raw tokens and brackets.</summary>
 	/// <param name="code">The code.</param>
+	/// <param name="measuring">Whether the code is compiled to measure its text (<see cref="Compile(string, bool)"/>): <c>_x</c> is then <c>x</c>.</param>
 	/// <returns>The sections, one to four; <see langword="null"/> when the code can't be read.</returns>
-	private static List<RawSection>? Read(string code)
+	private static List<RawSection>? Read(string code, bool measuring)
 	{
 		var sections = new List<RawSection>();
 		var section = new RawSection();
@@ -220,7 +246,7 @@ internal sealed class FormatCode
 					}
 					else if (c == '_')
 					{
-						section.Add(Raw.Shown(" "));
+						section.Add(Raw.Shown(measuring ? code.Substring(i + 1, width) : " "));
 					}
 
 					i += width;
@@ -284,8 +310,9 @@ internal sealed class FormatCode
 	/// <param name="raw">The section as read.</param>
 	/// <param name="kind">What it shows: <see cref="FormatSectionKind.Number"/> becomes a fraction when it has one.</param>
 	/// <param name="pool">The code's literal text.</param>
+	/// <param name="measuring">Whether the code is compiled to measure its text (<see cref="Compile(string, bool)"/>).</param>
 	/// <returns>The section; <see langword="null"/> when it has a form the renderer can't read.</returns>
-	private static FormatSection? Finish(RawSection raw, FormatSectionKind kind, List<byte> pool)
+	private static FormatSection? Finish(RawSection raw, FormatSectionKind kind, List<byte> pool, bool measuring)
 	{
 		var tokens = raw.Tokens;
 		var section = new FormatSection
@@ -305,7 +332,7 @@ internal sealed class FormatCode
 		switch (kind)
 		{
 			case FormatSectionKind.Date:
-				if (!FinishDate(tokens, section))
+				if (!FinishDate(tokens, section, measuring))
 				{
 					return null;
 				}
@@ -643,8 +670,9 @@ internal sealed class FormatCode
 	/// </summary>
 	/// <param name="tokens">The tokens, changed in place.</param>
 	/// <param name="section">The section's facts.</param>
+	/// <param name="measuring">Whether the code is compiled to measure its text (<see cref="Compile(string, bool)"/>).</param>
 	/// <returns>Whether the section can be read.</returns>
-	private static bool FinishDate(List<Raw> tokens, FormatSection section)
+	private static bool FinishDate(List<Raw> tokens, FormatSection section, bool measuring)
 	{
 		for (var i = 0; i < tokens.Count; i++)
 		{
@@ -700,14 +728,30 @@ internal sealed class FormatCode
 		var afterDate = false;
 		var elapsed = 0;
 		var others = 0;
-		foreach (var token in tokens)
+		for (var i = 0; i < tokens.Count; i++)
 		{
+			var token = tokens[i];
 			var kind = token.Kind;
+			if (measuring && kind == FormatTokenKind.Era)
+			{
+				tokens[i] = Raw.Shown(new string(Wide, token.Count >= 3 ? 2 : 1));
+				afterDate = true;
+
+				continue;
+			}
+
 			if (IsElapsed(kind))
 			{
 				if (afterDate || section.TwelveHour)
 				{
-					return false;
+					if (!measuring)
+					{
+						return false;
+					}
+
+					tokens[i] = Raw.Shown(new string('0', Math.Max(token.Count, WidestOfDay(kind))));
+
+					continue;
 				}
 
 				elapsed++;
@@ -786,6 +830,16 @@ internal sealed class FormatCode
 	/// <param name="kind">The token's kind.</param>
 	/// <returns>Whether it is.</returns>
 	private static bool IsElapsed(FormatTokenKind kind) => kind is FormatTokenKind.ElapsedHours or FormatTokenKind.ElapsedMinutes or FormatTokenKind.ElapsedSeconds;
+
+	/// <summary>The digits of an elapsed time's widest count within a day: 23 hours, 1439 minutes or 86399 seconds.</summary>
+	/// <param name="kind">The elapsed time's token.</param>
+	/// <returns>The digits.</returns>
+	private static int WidestOfDay(FormatTokenKind kind) => kind switch
+	{
+		FormatTokenKind.ElapsedHours => 2,
+		FormatTokenKind.ElapsedMinutes => 4,
+		_ => 5,
+	};
 
 	/// <summary>A text section: <c>@</c> and literals; any other token shows as itself, or nothing.</summary>
 	/// <param name="tokens">The tokens, changed in place.</param>

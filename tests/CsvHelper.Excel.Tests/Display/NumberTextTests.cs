@@ -71,10 +71,10 @@ public class NumberTextTests
 	public void ShowsPhase5sGeneralAnswers()
 	{
 		var count = 0;
-		foreach (var (key, entries) in NumberFormatWidthTests.Lines(NumberFormatWidthTests.General))
+		foreach (var (key, entries) in FormatWidthTests.Lines(FormatWidthTests.General))
 		{
 			var value = double.Parse(key, CultureInfo.InvariantCulture);
-			Assert.Equal(NumberFormatWidthTests.Parse(entries).Single().Text, Render("General", value));
+			Assert.Equal(FormatWidthTests.Parse(entries).Single().Text, Render("General", value));
 			count++;
 		}
 
@@ -89,17 +89,17 @@ public class NumberTextTests
 	public void ShowsPhase5sCodeAnswers()
 	{
 		var count = 0;
-		foreach (var (code, entries) in NumberFormatWidthTests.Lines(NumberFormatWidthTests.Codes))
+		foreach (var (code, entries) in FormatWidthTests.Lines(FormatWidthTests.Codes))
 		{
 			if (code.Contains('*') || code is "@" or "\"$\"General")
 			{
 				continue;
 			}
 
-			var texts = NumberFormatWidthTests.Parse(entries);
-			for (var i = 0; i < NumberFormatWidthTests.Values.Length; i++)
+			var texts = FormatWidthTests.Parse(entries);
+			for (var i = 0; i < FormatWidthTests.Values.Length; i++)
 			{
-				Assert.Equal(texts[i].Text, Render(code, NumberFormatWidthTests.Values[i]));
+				Assert.Equal(texts[i].Text, Render(code, FormatWidthTests.Values[i]));
 				count++;
 			}
 		}

@@ -293,14 +293,14 @@ public class SheetValidationTests
 		var dateTime = ColumnWidths.OfPixels(ColumnWidths.TextPixels("9999-12-31 23:59:59".AsSpan()));
 		var duration = ColumnWidths.OfPixels(ColumnWidths.TextPixels("71003183:59:59".AsSpan()));
 		var widest = Serial.Days(Serial.PastLast - 1000);
-		var month = ColumnWidths.OfPixels(new NumberFormatWidth("d mmmm yyyy").NumberPixels(widest));
+		var month = ColumnWidths.OfPixels(new FormatWidth("d mmmm yyyy").NumberPixels(widest));
 		Assert.Equal(new Dictionary<string, double> { ["When"] = dateTime, ["Took"] = duration, ["Narrow"] = ColumnWidths.FromCharacters(5), ["Long"] = month }, SheetValidations.Widths(unfitted));
 		Assert.Equal(new Dictionary<string, double>
 		{
 			["When"] = ColumnWidths.Fit(ColumnWidths.TextPixels("9999-12-31 23:59:59".AsSpan())),
 			["Took"] = ColumnWidths.Fit(ColumnWidths.TextPixels("71003183:59:59".AsSpan())),
 			["Narrow"] = ColumnWidths.FromCharacters(5),
-			["Long"] = ColumnWidths.Fit(new NumberFormatWidth("d mmmm yyyy").NumberPixels(widest)),
+			["Long"] = ColumnWidths.Fit(new FormatWidth("d mmmm yyyy").NumberPixels(widest)),
 		}, SheetValidations.Widths(fitted));
 		// A column's own format is its default style, in place of its type's.
 		Assert.Equal("date 1 2958465.9999999884 | d mmmm yyyy", SheetValidations.Describe(fitted)["Long"]);

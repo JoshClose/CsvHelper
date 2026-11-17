@@ -114,6 +114,13 @@ internal sealed class DisplayCulture
 			Code(dates.LongDatePattern, dates), Code(dates.LongTimePattern, dates), currency);
 	}
 
+	/// <summary>The same culture with other separators: auto-fit measures in Excel en-US with the widest (Phase 8's step 6).</summary>
+	/// <param name="decimalSeparator">The decimal separator.</param>
+	/// <param name="groupSeparator">The group separator.</param>
+	/// <returns>The culture.</returns>
+	public DisplayCulture WithSeparators(string decimalSeparator, string groupSeparator) =>
+		new(decimalSeparator, groupSeparator, Names, ShortDate, LongDate, LongTime, Currency);
+
 	/// <summary>The code of a built-in number format id, which a style names without defining.</summary>
 	/// <param name="id">The id: 0 to 163 are built in; any other is General.</param>
 	/// <returns>The code: Excel en-US's, or the culture's for the ids that follow it.</returns>

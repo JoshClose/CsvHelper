@@ -34,7 +34,7 @@ namespace CsvHelper.Excel;
 /// The first records are held, since the columns' widths come before the rows (<see cref="AutoFit"/>). With auto-fit
 /// (<see cref="ExcelSheetOptions.AutoFit"/>), they are the header and the records auto-fit measures, and each column is as
 /// wide as its widest cell among them: the header's in bold when it is, with its filter button when it has one; text on
-/// one line, or its widest line when it wraps; numbers in General (<see cref="NumberFormatWidth.General"/>) or in their
+/// one line, or its widest line when it wraps; numbers in General (<see cref="FormatWidth.GeneralPixels"/>) or in their
 /// column's format; booleans as <c>TRUE</c> and <c>FALSE</c>; dates, times and durations in their formats; and formulas,
 /// whose values aren't known, as the default column. The title counts nothing. Without auto-fit, they are the records up
 /// to the first data record (the one after the header, with <see cref="CsvWriterOptions.HasHeader"/>), and a typed cell
@@ -1063,7 +1063,7 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>The widths of the format a cell takes from its column, if it takes one.</summary>
 	/// <param name="at">The cell's column.</param>
 	/// <returns>The format's widths, or <see langword="null"/>.</returns>
-	private NumberFormatWidth? FormatWidthOf(int at) => ColumnStyleOf(at)?.FormatWidth;
+	private FormatWidth? FormatWidthOf(int at) => ColumnStyleOf(at)?.FormatWidth;
 
 	/// <summary>
 	/// Measures a number cell: in its column's format, or, with auto-fit, in General. Without auto-fit, a number in General
@@ -1080,7 +1080,7 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		var value = double.Parse(Encoding.ASCII.GetString(invariant.ToArray()), NumberStyles.Float, CultureInfo.InvariantCulture);
-		var pixels = format?.NumberPixels(value) ?? NumberFormatWidth.GeneralPixels(value);
+		var pixels = format?.NumberPixels(value) ?? FormatWidth.GeneralPixels(value);
 		measured.Add(at, row, pixels, typed: true);
 	}
 
@@ -1494,7 +1494,7 @@ internal sealed class SheetSink : CsvCellSink
 			if (type is not null && !double.IsNaN(type.Widest) && column?.Width is null)
 			{
 				minimumPixels ??= new double[count];
-				minimumPixels[at] = new NumberFormatWidth(column?.Format ?? type.Format ?? "General").NumberPixels(type.Widest);
+				minimumPixels[at] = new FormatWidth(column?.Format ?? type.Format ?? "General").NumberPixels(type.Widest);
 			}
 		}
 

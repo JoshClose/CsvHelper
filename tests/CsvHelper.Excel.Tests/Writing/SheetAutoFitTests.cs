@@ -59,7 +59,7 @@ public class SheetAutoFitTests
 		Assert.Equal(
 			Columns(
 				Fit(Text("Name", bold: true), Text("apple"), Text("a much longer name")),
-				Fit(Text("Amount", bold: true), NumberFormatWidth.GeneralPixels(1234.5), NumberFormatWidth.GeneralPixels(0.25)),
+				Fit(Text("Amount", bold: true), FormatWidth.GeneralPixels(1234.5), FormatWidth.GeneralPixels(0.25)),
 				Fit(Text("When", bold: true), ColumnWidths.DateTimePixels),
 				Fit(Text("Paid", bold: true), Text("TRUE"), Text("FALSE")),
 				Fit(Text("Note", bold: true), Text("Fresh from the farm"), Text("Ripe"))),
@@ -150,7 +150,7 @@ public class SheetAutoFitTests
 		// Paid's TRUE is narrower than the cap.
 		var cap = ColumnWidths.FromCharacters(5);
 		Assert.Equal(cap, Width(workbook, 1));
-		Assert.Equal(Fit(NumberFormatWidth.GeneralPixels(1234567.891)), Width(workbook, 2));
+		Assert.Equal(Fit(FormatWidth.GeneralPixels(1234567.891)), Width(workbook, 2));
 		Assert.Equal(Fit(ColumnWidths.DateTimePixels), Width(workbook, 3));
 		Assert.Equal(Fit(Text("Paid", bold: true), Text("TRUE")), Width(workbook, 4));
 		Assert.True(Width(workbook, 4) < cap);

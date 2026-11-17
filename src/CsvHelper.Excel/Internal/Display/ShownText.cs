@@ -7,6 +7,11 @@ namespace CsvHelper.Excel;
 /// ask for the room it needs (core's <c>CsvCellFormatter.TryFormat</c>), and the characters are counted as UTF-16 units,
 /// as Excel counts the 255 it shows a number in at most.
 /// </summary>
+/// <remarks>
+/// A text that measures, for auto-fit (Phase 8's step 6), writes the blanks Excel leaves a digit's width for as digits:
+/// <c>?</c>'s spaces, a fraction's spaces, and General's every character, which Excel's AutoFit counts as digits (Phase 5's
+/// step 3). Its code is compiled to measure too (<see cref="FormatCode.Compile(string, bool)"/>).
+/// </remarks>
 internal ref struct ShownText
 {
 	private readonly Span<byte> destination;
@@ -14,11 +19,23 @@ internal ref struct ShownText
 	/// <summary>Creates a text written into a span; an empty span only counts.</summary>
 	/// <param name="destination">Where the text goes.</param>
 	public ShownText(Span<byte> destination)
+		: this(destination, false)
+	{
+	}
+
+	/// <summary>Creates a text written into a span, to show or to measure; an empty span only counts.</summary>
+	/// <param name="destination">Where the text goes.</param>
+	/// <param name="measuring">Whether the text is measured: its blanks are digits.</param>
+	public ShownText(Span<byte> destination, bool measuring)
 	{
 		this.destination = destination;
+		Measuring = measuring;
 		Length = 0;
 		Chars = 0;
 	}
+
+	/// <summary>Whether the text is measured, for auto-fit: its blanks are digits.</summary>
+	public bool Measuring { get; }
 
 	/// <summary>The bytes of the text so far, written or not.</summary>
 	public int Length { get; private set; }
@@ -49,13 +66,16 @@ internal ref struct ShownText
 	/// <param name="digit">The digit, 0 to 9.</param>
 	public void AppendDigit(int digit) => Append((char)('0' + digit));
 
-	/// <summary>Appends spaces.</summary>
+	/// <summary>Appends a blank that Excel leaves a digit's width for: a space, or <c>0</c> when measuring.</summary>
+	public void AppendBlank() => Append(Measuring ? '0' : ' ');
+
+	/// <summary>Appends blanks (<see cref="AppendBlank"/>).</summary>
 	/// <param name="count">How many.</param>
-	public void AppendSpaces(int count)
+	public void AppendBlanks(int count)
 	{
 		for (var i = 0; i < count; i++)
 		{
-			Append(' ');
+			AppendBlank();
 		}
 	}
 

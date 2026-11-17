@@ -1,5 +1,6 @@
 using System.Globalization;
 using System.Runtime.Serialization.Json;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
 using System.Xml.Linq;
@@ -8,18 +9,18 @@ using CsvHelper.Excel.Tests.Corpus;
 namespace CsvHelper.Excel.Tests.Writing;
 
 /// <summary>
-/// The text and the width of numbers, dates and times in Excel's format codes and in General
-/// (<see cref="NumberFormatWidth"/>), against what Excel 365 (16.0 build 20527, en-US, 144 DPI) showed through COM on
+/// The width of numbers, dates and times in Excel's format codes and in General (<see cref="FormatWidth"/>, Phase 8's
+/// step 6: the renderer's text, measured), against what Excel 365 (16.0 build 20527, en-US, 144 DPI) showed through COM on
 /// 2026-11-09 in a workbook whose Normal style is Calibri 11: each value's <c>Text</c>, and the width in points of its
 /// column after <c>AutoFit</c>. The probes are in <c>Csv\_bench\results\phase5\step3</c> (<c>general.ps1</c>,
-/// <c>formats.ps1</c>).
+/// <c>formats.ps1</c>). <c>NumberTextTests</c> checks the renderer's text of <see cref="General"/> and <see cref="Codes"/>.
 /// </summary>
 /// <remarks>
-/// A width is the text's widest form at 96 DPI with Excel's padding, in points. Excel lays text out at 144 DPI and rounds
-/// a column to whole pixels there, so a width can be up to a pixel at 144 DPI, half a point, narrower than Excel's; never
-/// more.
+/// A width is the text at 96 DPI with Excel's padding, in points. Excel lays text out at 144 DPI and rounds a column to
+/// whole pixels there, so a width can be up to a pixel at 144 DPI, half a point, narrower than Excel's; never more. It
+/// errs wide (separators as the widest, a date as its format's widest over a year), within a tenth and two characters.
 /// </remarks>
-public class NumberFormatWidthTests
+public class FormatWidthTests
 {
 	/// <summary>Half a point: a pixel at 144 DPI, by which Excel's rounding of a width can pass ours.</summary>
 	private const double Rounding = 0.5;
@@ -276,61 +277,66 @@ public class NumberFormatWidthTests
 
 	[Theory]
 	[MemberData(nameof(GeneralLines))]
-	public void ShowsNumbersInGeneralAsExcel(string value, string text, double points)
+	public void MeasuresNumbersInGeneralAsExcel(string value, string text, double points)
 	{
 		var number = double.Parse(value, CultureInfo.InvariantCulture);
 
-		Assert.Equal(text, NumberFormatWidth.General(number));
-		Assert.InRange(Points(NumberFormatWidth.GeneralPixels(number)), points - Rounding, points + 1.5);
+		// NumberTextTests checks the text; the width counts every character but a leading minus as a digit.
+		Assert.Equal(text, Render("General", number));
+		Assert.InRange(Points(FormatWidth.GeneralPixels(number)), points - Rounding, points + 1.5);
 	}
 
 	[Theory]
 	[MemberData(nameof(CodeLines))]
-	public void ShowsNumbersInCodesAsExcel(string code)
+	public void MeasuresNumbersInCodesAsExcel(string code)
 	{
-		var width = new NumberFormatWidth(code);
+		var width = new FormatWidth(code);
 		var texts = Parse(Lines(Codes).Single(l => l.Key == code).Entries);
 
 		Assert.Equal(Values.Length, texts.Count);
 		for (var i = 0; i < Values.Length; i++)
 		{
-			if (!Estimated.Contains(code))
-			{
-				Assert.Equal(texts[i].Text, width.Number(Values[i], widest: false));
-			}
-
 			// A value Excel shows nothing for leaves its column as it was.
 			if (texts[i].Text.Length > 0)
 			{
 				var points = Points(width.NumberPixels(Values[i]));
 				Assert.True(points >= texts[i].Points - Rounding, $"{Values[i]} in {code}: {points} points, Excel's {texts[i].Points}.");
+
+				// [DBNum]'s numerals are estimated as an East Asian locale shows them, wider than Excel en-US's digits.
+				Assert.True(code.Contains("DBNum") || points <= Wide(texts[i].Points), $"{Values[i]} in {code}: {points} points, Excel's {texts[i].Points}.");
 			}
 		}
 	}
 
 	[Theory]
 	[MemberData(nameof(DateLines))]
-	public void ShowsDatesInCodesAsExcel(string code)
+	public void MeasuresDatesInCodesAsExcel(string code)
 	{
-		var width = new NumberFormatWidth(code);
+		var width = new FormatWidth(code);
 		var parts = Lines(DateTexts).Single(l => l.Key == code).Entries.Split('\t');
 		var texts = Regex.Matches(parts[1], "'([^']*)'").Cast<Match>().Select(m => m.Groups[1].Value);
+		var excel = double.Parse(parts[0], CultureInfo.InvariantCulture);
 
-		Assert.Equal(texts, Dates.Select(d => width.Number(d.ToOADate(), widest: false)));
-		Assert.True(Points(Dates.Max(d => width.NumberPixels(d.ToOADate()))) >= double.Parse(parts[0], CultureInfo.InvariantCulture) - Rounding);
+		// Every date measures as its format's widest over a leap year, at least as wide as Excel's AutoFit of the 14. The
+		// renderer's text is Excel's, but for tenths of a second at 7.25 seconds (SubSecondDifferences).
+		var shown = Dates.Select(d => Render(code, d.ToOADate())).ToList();
+		Assert.Equal(SubSecondDifferences.TryGetValue(code, out var differs) ? texts.Select(t => t == differs.Excel ? differs.Renderer : t) : texts, shown);
+		var widths = Dates.Select(d => width.NumberPixels(d.ToOADate())).Distinct().ToList();
+		Assert.Single(widths);
+		Assert.InRange(Points(widths[0]), excel - Rounding, Wide(excel));
 	}
 
 	[Theory]
 	[MemberData(nameof(ElapsedLines))]
-	public void ShowsElapsedTimeAsExcel(string code)
+	public void MeasuresElapsedTimeAsExcel(string code)
 	{
-		var width = new NumberFormatWidth(code);
+		var width = new FormatWidth(code);
 		var texts = Parse(Lines(Elapsed).Single(l => l.Key == code).Entries);
 
-		Assert.Equal(texts.Select(t => t.Text), Durations.Select(d => width.Number(d, widest: false)));
+		Assert.Equal(texts.Select(t => t.Text), Durations.Select(d => Render(code, d)));
 		for (var i = 0; i < Durations.Length; i++)
 		{
-			Assert.True(Points(width.NumberPixels(Durations[i])) >= texts[i].Points - Rounding);
+			Assert.InRange(Points(width.NumberPixels(Durations[i])), texts[i].Points - Rounding, Wide(texts[i].Points));
 		}
 	}
 
@@ -342,55 +348,18 @@ public class NumberFormatWidthTests
 	[InlineData("\"Note: \"@", "Note: some text", 77.5, "Note: TRUE", 56)]
 	[InlineData("@\" end\"", "some text end", 69.5, "TRUE end", 48.5)]
 	[InlineData("General", "some text", 49.5, "TRUE", 28.5)]
-	public void ShowsTextAndBooleansInTheTextSection(string code, string text, double textPoints, string boolean, double booleanPoints)
+	public void MeasuresTextAndBooleansInTheTextSection(string code, string text, double textPoints, string boolean, double booleanPoints)
 	{
-		var width = new NumberFormatWidth(code);
+		var width = new FormatWidth(code);
 
-		Assert.Equal(text, width.Text("some text"));
-		Assert.Equal(boolean, width.Text("TRUE"));
+		Assert.Equal(text, RenderText(code, "some text"));
+		Assert.Equal(boolean, RenderText(code, "TRUE"));
 		Assert.InRange(Points(width.TextPixels(ColumnWidths.TextPixels("some text".AsSpan()))), textPoints - Rounding, textPoints + 1);
 		Assert.InRange(Points(width.TextPixels(ColumnWidths.TextPixels("TRUE".AsSpan()))), booleanPoints - Rounding, booleanPoints + 1);
 	}
 
-	[Fact]
-	public void MeasuresTheWidestFormOfDates()
-	{
-		// Names as their language's widest, and days, months and hours in two digits, whatever the date.
-		var january = new DateTime(2024, 1, 1, 1, 0, 0).ToOADate();
-
-		Assert.Equal("1 January 2024 1:00 AM", new NumberFormatWidth("d mmmm yyyy h:mm AM/PM").Number(january, widest: false));
-		Assert.Equal("01 September 2024 01:00 AM", new NumberFormatWidth("d mmmm yyyy h:mm AM/PM").Number(january, widest: true));
-		Assert.Equal("M", new NumberFormatWidth("mmmmm").Number(january, widest: true));
-		Assert.Equal("Wednesday", new NumberFormatWidth("dddd").Number(january, widest: true));
-		Assert.Equal("Donnerstag", new NumberFormatWidth("[$-407]dddd").Number(january, widest: true));
-
-		// The wider designator: AM in capitals, p in lower case.
-		Assert.Equal("AM", new NumberFormatWidth("AM/PM").Number(january, widest: true));
-		Assert.Equal("p", new NumberFormatWidth("a/p").Number(january, widest: true));
-	}
-
-	[Fact]
-	public void MeasuresDBNumAsEastAsianNumerals()
-	{
-		// An East Asian locale shows [DBNum1] in numerals (四万五千三百六 for 45306), Excel elsewhere in digits: each digit
-		// is measured as a numeral and a unit.
-		var width = new NumberFormatWidth("[DBNum1]0");
-
-		Assert.Equal("45307", width.Number(45306.5, widest: false));
-		Assert.Equal(10 * ColumnWidths.TextPixels(((char)0x5E74).ToString().AsSpan()), width.NumberPixels(45306.5), 6);
-	}
-
-	[Fact]
-	public void MeasuresSeparatorsAsTheWidestOfCommonLocales()
-	{
-		// A period is wider than a comma in Calibri; de-DE groups with periods, en-US with commas.
-		var width = new NumberFormatWidth("#,##0.00");
-
-		Assert.Equal("1,234,567.89", width.Number(1234567.891, widest: false));
-		Assert.Equal("1.234.567.89", width.Number(1234567.891, widest: true));
-	}
-
 	[Theory]
+	// Phase 5's answers about signs, rounding, placeholders and dates, from Excel through COM, now the renderer's.
 	[InlineData("0.0", -0.04, "0.0")]
 	[InlineData("0.0", -0.05, "-0.1")]
 	[InlineData("0.0;-0.0", -0.04, "-0.0")]
@@ -404,37 +373,174 @@ public class NumberFormatWidthTests
 	[InlineData("[Red]0%", 0.5, "50%")]
 	[InlineData("0.0\"%\"", 0.5, "0.5%")]
 	[InlineData("[h]:mm:ss", 1.5, "36:00:00")]
-	// Excel's days of the week before 1900-03-01, a day earlier than they were; a date part over elapsed time; aaa and
-	// aaaa as the day's names.
+	// Excel's days of the week before 1900-03-01, a day earlier than they were; aaa and aaaa as the day's names.
 	[InlineData("dddd", 1.5, "Sunday")]
 	[InlineData("dddd", 61, "Thursday")]
-	[InlineData("yyyy-mm-dd [h]:mm", 1.5, "1900-01-01 12:00")]
 	[InlineData("aaaa", 45306.5, "Monday")]
 	[InlineData("[$-407]aaa", 45306.5, "Mo")]
-	public void ModelsSignsRoundingAndPlaceholders(string code, double value, string text)
+	// 2024-01-15 23:59:59.6 is the next day without fractions of a second, and 23:59:59.4 isn't.
+	[InlineData("yyyy-mm-dd", 45306.999995370, "2024-01-16")]
+	[InlineData("hh:mm", 45306.999995370, "00:00")]
+	[InlineData("mmm d", 45306.999995370, "Jan 16")]
+	[InlineData("yyyy-mm-dd hh:mm:ss.0", 45306.999995370, "2024-01-15 23:59:59.6")]
+	[InlineData("yyyy-mm-dd", 45306.999993055, "2024-01-15")]
+	[InlineData("hh:mm", 45306.999993055, "23:59")]
+	// A color, DBNum or a condition alone is General, without a minus sign in a negative section.
+	[InlineData("[Red]", 1234.5, "1234.5")]
+	[InlineData("[Red]", -1, "-1")]
+	[InlineData("[Color10]", 1234.5, "1234.5")]
+	[InlineData("[DBNum1]", 1234.5, "1234.5")]
+	[InlineData("0;[Red]", -1, "1")]
+	[InlineData("[Red];0", 1234.5, "1234.5")]
+	// Elapsed time alone counts on past the last date; before a date part, it is the whole time.
+	[InlineData("[h]", 2958466, "71003184")]
+	[InlineData("[h]\"x\"", 3000000, "72000000x")]
+	[InlineData("[mm]", 2958466, "4260191040")]
+	[InlineData("[ss]", 2958466, "255611462400")]
+	[InlineData("[h]", 1e15, "24000000000000000")]
+	[InlineData("[ss]d", 328, "2833920023")]
+	[InlineData("[mm]mmmm", 1234.5, "1777680May")]
+	// 9999-12-31's last millisecond shows with its milliseconds.
+	[InlineData("hh:mm:ss.000", 2958465.9999999884, "23:59:59.999")]
+	[InlineData("yyyy-mm-dd hh:mm:ss.000", 2958465.9999999884, "9999-12-31 23:59:59.999")]
+	public void ShowsPhase5sAnswersAsExcel(string code, double value, string text)
 	{
-		Assert.Equal(text, new NumberFormatWidth(code).Number(value, widest: false));
+		Assert.Equal(text, Render(code, value));
 	}
 
 	[Theory]
-	// Codes it doesn't model are never narrower than Excel's text: fractions, conditions (their widest section), and
-	// [DBNum], whose East Asian numerals aren't modeled (at least General).
-	[InlineData("# ??/??", 1234.5678, "1234 46/81")]
-	[InlineData("[>=1000]#,##0;0.00", 1234.5678, "1,235")]
-	[InlineData("[DBNum1]0", 0.125, "0")]
-	[InlineData("[DBNum1]0", 1E+20, "100000000000000000000")]
-	public void ErrsWideForCodesItDoesntModel(string code, double value, string excel)
+	// Values Excel shows # for, in any column (Phase 5's answers): past the last date, as elapsed time beside other tokens,
+	// and 9999-12-31's last millisecond rounded to 10000-01-01 without fractions of a second.
+	[InlineData("[h]:mm", 2958466)]
+	[InlineData("[ss].0", 2958466)]
+	[InlineData("[h] d", 2958466)]
+	[InlineData("yyyy-mm-dd", -1)]
+	[InlineData("yyyy-mm-dd", 2958466)]
+	[InlineData("yyyy-mm-dd hh:mm:ss", 2958465.9999999884)]
+	[InlineData("[h]:mm:ss", 2958465.9999999884)]
+	[InlineData("yyyy-mm-dd", 2958465.9999999884)]
+	[InlineData("d", 2958465.9999999884)]
+	public void CantShowWhatExcelCant(string code, double value)
 	{
-		Assert.True(new NumberFormatWidth(code).NumberPixels(value) >= ColumnWidths.TextPixels(excel.AsSpan()));
+		Assert.Null(Render(code, value));
+		Assert.Equal(0, new FormatWidth(code).NumberPixels(value));
 	}
 
 	[Fact]
-	public void ShowsTheCorpusCodesAsExcel()
+	public void MeasuresADateAsItsFormatsWidestOverALeapYear()
+	{
+		// The widest month and day names, two-digit days, months and hours, and the wider designator, whatever the date: a
+		// later date fits the column too.
+		var january = new DateTime(2024, 1, 1, 1, 0, 0).ToOADate();
+		var later = new DateTime(2031, 9, 24, 23, 59, 59).ToOADate();
+
+		Assert.Equal(Pixels("28 September 2024 11:59 AM"), new FormatWidth("d mmmm yyyy h:mm AM/PM").NumberPixels(january), 6);
+		Assert.Equal(new FormatWidth("d mmmm yyyy h:mm AM/PM").NumberPixels(january), new FormatWidth("d mmmm yyyy h:mm AM/PM").NumberPixels(later), 6);
+		Assert.Equal(Pixels("M"), new FormatWidth("mmmmm").NumberPixels(january), 6);
+		Assert.Equal(Pixels("Wednesday"), new FormatWidth("dddd").NumberPixels(january), 6);
+		Assert.Equal(Pixels("Donnerstag"), new FormatWidth("[$-407]dddd").NumberPixels(january), 6);
+		Assert.Equal(Pixels("Wednesday, September 25, 2024"), new FormatWidth("[$-F800]").NumberPixels(january), 6);
+		Assert.Equal(Pixels("12/31/2024"), new FormatWidth("m/d/yyyy").NumberPixels(january), 6);
+
+		// The wider designator: AM in capitals, p in lower case.
+		Assert.Equal(Pixels("AM"), new FormatWidth("AM/PM").NumberPixels(january), 6);
+		Assert.Equal(Pixels("p"), new FormatWidth("a/p").NumberPixels(january), 6);
+
+		// A time of day alone, and a date's section of a code with numbers too.
+		Assert.Equal(Pixels("11:59:59 AM"), new FormatWidth("h:mm:ss AM/PM").NumberPixels(0.25), 6);
+		Assert.Equal(Pixels("2024-01-01"), new FormatWidth("yyyy-mm-dd;0.00").NumberPixels(january), 6);
+		Assert.Equal(Pixels("1.00"), new FormatWidth("0.00;yyyy-mm-dd").NumberPixels(1), 6);
+
+		// Each date section its own widest, measured once.
+		var conditional = new FormatWidth("[<45000]yyyy;mmmm");
+		Assert.Equal(Pixels("2024"), conditional.NumberPixels(44000), 6);
+		Assert.Equal(Pixels("September"), conditional.NumberPixels(45306), 6);
+		Assert.Equal(Pixels("2024"), conditional.NumberPixels(44001), 6);
+	}
+
+	[Fact]
+	public void MeasuresBlanksAsDigitsAndSpacesAsTheirCharacters()
+	{
+		// ? leaves a digit's width, _x the width of x, and General's characters are digits, as Excel's AutoFit counts them.
+		Assert.Equal(Pixels("1.500"), new FormatWidth("0.0??").NumberPixels(1.5), 6);
+		Assert.Equal(Pixels("00005"), new FormatWidth("?,??0").NumberPixels(5), 6);
+		Assert.Equal(Pixels("5)"), new FormatWidth("0_)").NumberPixels(5), 6);
+		Assert.Equal(Pixels("5W"), new FormatWidth("0_W").NumberPixels(5), 6);
+		Assert.Equal(Pixels("x000"), new FormatWidth("\"x\"General").NumberPixels(0.5), 6);
+		Assert.Equal(Pixels("-000"), FormatWidth.GeneralPixels(-0.5), 6);
+
+		// A fraction's spaces are its characters: 0.1 is 0 and four spaces in # ?/?, as wide as 0 0/1, and 0.5 is " 1/2", its
+		// space as wide as a space (Phase 5's probes: 28 and 22.5 points). Numbers through @ are their characters, not
+		// General's digits (18.5 points for 0.5).
+		Assert.Equal(Pixels("0 0/1"), new FormatWidth("# ?/?").NumberPixels(0.1), 6);
+		Assert.Equal(Pixels(" 1/2"), new FormatWidth("# ?/?").NumberPixels(0.5), 6);
+		Assert.Equal(Pixels("0.5"), new FormatWidth("@").NumberPixels(0.5), 6);
+	}
+
+	[Fact]
+	public void MeasuresDBNumAsEastAsianNumerals()
+	{
+		// An East Asian locale shows [DBNum1] in numerals (四万五千三百六 for 45306), Excel elsewhere in digits: each digit
+		// is measured as a numeral and a unit.
+		Assert.Equal(10 * ColumnWidths.TextPixels(((char)0x5E74).ToString().AsSpan()), new FormatWidth("[DBNum1]0").NumberPixels(45306.5), 6);
+		Assert.Equal(Pixels("(") + (4 * ColumnWidths.TextPixels(((char)0x5E74).ToString().AsSpan())) + Pixels(")"), new FormatWidth("[DBNum1](0)").NumberPixels(12), 6);
+		Assert.Equal(8 * ColumnWidths.TextPixels(((char)0x5E74).ToString().AsSpan()), new FormatWidth("[DBNum1]yyyy").NumberPixels(45306.5), 6);
+	}
+
+	[Fact]
+	public void MeasuresSeparatorsAsTheWidestOfCommonLocales()
+	{
+		// A period is wider than a comma, a no-break space or an apostrophe in Calibri; de-DE groups with periods.
+		Assert.Equal("1,234,567.89", Render("#,##0.00", 1234567.891));
+		Assert.Equal(Pixels("1.234.567.89"), new FormatWidth("#,##0.00").NumberPixels(1234567.891), 6);
+	}
+
+	[Fact]
+	public void MeasuresWhatTheRendererLeavesOutWide()
+	{
+		// An era's name, which the renderer shows as nothing: one East Asian character, or two for ggg.
+		var wide = ColumnWidths.TextPixels(((char)0x5E74).ToString().AsSpan());
+		var date = new DateTime(2024, 1, 15).ToOADate();
+		Assert.Equal(wide + Pixels("2024"), new FormatWidth("gyyyy").NumberPixels(date), 6);
+		Assert.Equal((2 * wide) + Pixels("2024"), new FormatWidth("gggyyyy").NumberPixels(date), 6);
+
+		// Elapsed time after a date part, whose text no rule was found for: its widest time of day, padded to its letters.
+		Assert.Equal(Pixels("2024-01-01 00:00"), new FormatWidth("yyyy-mm-dd [h]:mm").NumberPixels(1234.5), 6);
+		Assert.Equal(Pixels("September0000"), new FormatWidth("mmmm[mm]").NumberPixels(1234.5), 6);
+		Assert.Equal(Pixels("September00000"), new FormatWidth("mmmm[ss]").NumberPixels(1234.5), 6);
+		Assert.Equal(Pixels("0000000"), new FormatWidth("d[sssss]").NumberPixels(1234.5), 6);
+		Assert.Equal(Pixels("2024000"), new FormatWidth("yyyy[hhh]").NumberPixels(1234.5), 6);
+		Assert.Equal(wide + Pixels("00"), new FormatWidth("g[h]").NumberPixels(1234.5), 6);
+
+		// Before a date part, elapsed time is the whole time, measured as the value's text.
+		Assert.Equal(Pixels("2833920023"), new FormatWidth("[ss]d").NumberPixels(328), 6);
+	}
+
+	[Fact]
+	public void MeasuresNothingForValuesExcelCantShow()
+	{
+		// Excel shows # in any column for these: a negative date, one past the last, a section that takes nothing.
+		Assert.Equal(0, new FormatWidth("yyyy-mm-dd").NumberPixels(-1));
+		Assert.Equal(0, new FormatWidth("yyyy-mm-dd").NumberPixels(2958466));
+		Assert.Equal(0, new FormatWidth("[h]:mm").NumberPixels(2958466));
+		Assert.Equal(0, new FormatWidth("[>5]0;[<-5]0").NumberPixels(1));
+		Assert.Equal(0, new FormatWidth("0.00").NumberPixels(double.NaN));
+
+		// Elapsed time alone counts on past the last date; General shows an infinity, which a cell can't hold, as 0.
+		Assert.Equal(Pixels("71003184"), new FormatWidth("[h]").NumberPixels(2958466), 6);
+		Assert.Equal(Pixels("0"), FormatWidth.GeneralPixels(double.PositiveInfinity), 6);
+
+		// An empty section, or a locale alone, shows nothing: no width either.
+		Assert.Equal(0, new FormatWidth("0;;0").NumberPixels(-1));
+		Assert.Equal(0, new FormatWidth("[$-409]").NumberPixels(1234.5));
+	}
+
+	[Fact]
+	public void MeasuresTheCorpusCodesAtLeastAsWideAsExcelsText()
 	{
 		// Phase 4's answers (Files/excel-formats.json): Excel's text of 2024-01-15 12:00 and of a day and a half in each code
-		// it takes and FormatCheck passes. Codes whose text is estimated are only never narrower: fractions, conditions,
-		// [DBNum], eras, the system's long date ([$-F800]) and General among literals. Fills are neither: Excel's text
-		// there repeats them across a column widened for the answers.
+		// it takes and FormatCheck passes. Each width is at least its text's. Fills are left out: Excel's text there repeats
+		// them across a column widened for the answers.
 		var failures = new List<string>();
 		var count = 0;
 		foreach (var item in LoadCorpusCodes())
@@ -445,21 +551,13 @@ public class NumberFormatWidthTests
 				continue;
 			}
 
-			var width = new NumberFormatWidth(code);
-			var estimated = code.Contains('?') || code.Contains("[>") || code.Contains("[<") || code.Contains("[=") || code.Contains("DBNum") ||
-				code.Contains('g') || code.Contains("F800") || (code.Contains("General") && code != "General") || code == "@";
+			var width = new FormatWidth(code);
 			foreach (var (value, name) in new[] { (45306.5, "text"), (1.5, "durationText") })
 			{
 				var text = item.Element(name)!.Value;
-				var shown = width.Number(value, widest: false);
-				if (!estimated && shown != text)
-				{
-					failures.Add($"{code} {value}: Excel '{text}', '{shown}'");
-				}
-
 				if (ColumnWidths.TextPixels(text.AsSpan()) > width.NumberPixels(value) + 0.001)
 				{
-					failures.Add($"{code} {value}: narrower than Excel's '{text}': '{width.Number(value, widest: true)}'");
+					failures.Add($"{code} {value}: narrower than Excel's '{text}': {width.NumberPixels(value)} pixels");
 				}
 			}
 
@@ -470,82 +568,48 @@ public class NumberFormatWidthTests
 		Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
 	}
 
-	[Fact]
-	public void RoundsDatesToTheSecondWithoutFractionsOfASecond()
+	/// <summary>
+	/// The date codes whose text the renderer shows otherwise than Phase 5's probe did, Excel's and the renderer's: 09:05:07.250
+	/// in <c>mm:ss.0</c> is <c>05:07.2</c> in Excel, on all twelve days, where step 4's rounding (the day's fraction, to 15
+	/// digits, half away from zero) gives <c>05:07.3</c>, each double being a little above the half. Its width is the same.
+	/// </summary>
+	private static readonly Dictionary<string, (string Excel, string Renderer)> SubSecondDifferences = new(StringComparer.Ordinal)
 	{
-		// 2024-01-15 23:59:59.6 is the next day without fractions of a second, as Excel showed it (step 7's probe), and
-		// 23:59:59.4 isn't.
-		var late = 45306.999995370;
-		var earlier = 45306.999993055;
-		Assert.Equal("2024-01-16", new NumberFormatWidth("yyyy-mm-dd").Number(late, widest: false));
-		Assert.Equal("00:00", new NumberFormatWidth("hh:mm").Number(late, widest: false));
-		Assert.Equal("Jan 16", new NumberFormatWidth("mmm d").Number(late, widest: false));
-		Assert.Equal("2024-01-15 23:59:59.6", new NumberFormatWidth("yyyy-mm-dd hh:mm:ss.0").Number(late, widest: false));
-		Assert.Equal("2024-01-15", new NumberFormatWidth("yyyy-mm-dd").Number(earlier, widest: false));
-		Assert.Equal("23:59", new NumberFormatWidth("hh:mm").Number(earlier, widest: false));
+		["mm:ss.0"] = ("05:07.2", "05:07.3"),
+	};
+
+	/// <summary>The most a width may pass Excel's AutoFit's, in points: a tenth and two characters, as the measuring errs wide.</summary>
+	/// <param name="excel">Excel's width, in points.</param>
+	/// <returns>The points.</returns>
+	private static double Wide(double excel) => (excel * 1.1) + 11;
+
+	/// <summary>The pixels of a text in regular Calibri 11.</summary>
+	/// <param name="text">The text.</param>
+	/// <returns>The pixels.</returns>
+	private static double Pixels(string text) => ColumnWidths.TextPixels(text.AsSpan());
+
+	/// <summary>A number's text in a code, in Excel en-US.</summary>
+	/// <param name="code">The code.</param>
+	/// <param name="value">The number.</param>
+	/// <returns>The text, or <see langword="null"/> where Excel can't show it.</returns>
+	private static string? Render(string code, double value)
+	{
+		var room = new byte[1024];
+		var text = new ShownText(room);
+
+		return NumberText.TryWrite(FormatCode.Compile(code), value, DisplayCulture.Invariant, false, ref text) ? Encoding.UTF8.GetString(text.Written.ToArray()) : null;
 	}
 
-	[Fact]
-	public void ShowsSectionsOfBracketsAloneInGeneral()
+	/// <summary>A text's text in a code: through its text section, or as it is.</summary>
+	/// <param name="code">The code.</param>
+	/// <param name="value">The text.</param>
+	/// <returns>The shown text.</returns>
+	private static string RenderText(string code, string value)
 	{
-		// A color, DBNum or a condition alone is General, without a minus sign in a negative section; a locale alone shows
-		// nothing (step 7's probe).
-		Assert.Equal("1234.5", new NumberFormatWidth("[Red]").Number(1234.5, widest: false));
-		Assert.Equal("-1", new NumberFormatWidth("[Red]").Number(-1, widest: false));
-		Assert.Equal("1234.5", new NumberFormatWidth("[Color10]").Number(1234.5, widest: false));
-		Assert.Equal("1234.5", new NumberFormatWidth("[DBNum1]").Number(1234.5, widest: false));
-		Assert.Equal("1", new NumberFormatWidth("0;[Red]").Number(-1, widest: false));
-		Assert.Equal("1234.5", new NumberFormatWidth("[Red];0").Number(1234.5, widest: false));
-		Assert.Equal("", new NumberFormatWidth("[$-409]").Number(1234.5, widest: false));
-		Assert.Equal("", new NumberFormatWidth("0;;0").Number(-1, widest: false));
-	}
+		var room = new byte[1024];
+		var text = new ShownText(room);
 
-	[Fact]
-	public void ShowsElapsedTimeAfterADateAsTheTimeOfDay()
-	{
-		// After a date part, elapsed time is the time of day in its unit; before one, the whole time (step 7's probes:
-		// Excel showed d[ss] of 1234.5 as 1843200, mmmm[mm] as May720, and [ss]d of 328 as 2833920023).
-		Assert.Equal("1843200", new NumberFormatWidth("d[ss]").Number(1234.5, widest: false));
-		Assert.Equal("May720", new NumberFormatWidth("mmmm[mm]").Number(1234.5, widest: false));
-		Assert.Equal("1903-05-18 12:00", new NumberFormatWidth("yyyy-mm-dd [h]:mm").Number(1234.5, widest: false));
-		Assert.Equal("2833920023", new NumberFormatWidth("[ss]d").Number(328, widest: false));
-		Assert.Equal("1777680May", new NumberFormatWidth("[mm]mmmm").Number(1234.5, widest: false));
-	}
-
-	[Fact]
-	public void CountsElapsedTimeAlonePastTheLastDate()
-	{
-		// Elapsed time with literals alone shows any serial, and any other date or time token stops at the last date (step
-		// 7's probe): [h] shows 2,958,466 days as 71003184, and [h]:mm as ########.
-		Assert.Equal("71003184", new NumberFormatWidth("[h]").Number(2958466, widest: false));
-		Assert.Equal("72000000x", new NumberFormatWidth("[h]\"x\"").Number(3000000, widest: false));
-		Assert.Equal("4260191040", new NumberFormatWidth("[mm]").Number(2958466, widest: false));
-		Assert.Equal("255611462400", new NumberFormatWidth("[ss]").Number(2958466, widest: false));
-		Assert.Equal("24000000000000000", new NumberFormatWidth("[h]").Number(1e15, widest: false));
-		Assert.Equal("", new NumberFormatWidth("[h]:mm").Number(2958466, widest: false));
-		Assert.Equal("", new NumberFormatWidth("[ss].0").Number(2958466, widest: false));
-		Assert.Equal("", new NumberFormatWidth("[h] d").Number(2958466, widest: false));
-	}
-
-	[Fact]
-	public void ShowsNothingForValuesExcelCant()
-	{
-		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd").Number(-1, widest: false));
-		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd").Number(2958466, widest: false));
-
-		// 9999-12-31's last millisecond rounds up to 10000-01-01 in a format without fractions of a second, which Excel
-		// shows as ######## too, even in yyyy or d (step 7's probe); with the milliseconds it shows, and elapsed time alone
-		// counts on.
-		var lastMillisecond = 2958465 + (86_399_999 / 86_400_000.0);
-		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd hh:mm:ss").Number(lastMillisecond, widest: false));
-		Assert.Equal("", new NumberFormatWidth("[h]:mm:ss").Number(lastMillisecond, widest: true));
-		Assert.Equal("", new NumberFormatWidth("yyyy-mm-dd").Number(lastMillisecond, widest: false));
-		Assert.Equal("", new NumberFormatWidth("d").Number(lastMillisecond, widest: false));
-		Assert.Equal("23:59:59.999", new NumberFormatWidth("hh:mm:ss.000").Number(lastMillisecond, widest: false));
-		Assert.Equal("9999-12-31 23:59:59.999", new NumberFormatWidth("yyyy-mm-dd hh:mm:ss.000").Number(lastMillisecond, widest: false));
-		Assert.Equal("71003184", new NumberFormatWidth("[h]").Number(lastMillisecond, widest: false));
-		Assert.Equal("", new NumberFormatWidth("0.00").Number(double.NaN, widest: false));
-		Assert.Equal("0", NumberFormatWidth.General(double.PositiveInfinity));
+		return NumberText.TryWriteText(FormatCode.Compile(code), Encoding.UTF8.GetBytes(value), ref text) ? Encoding.UTF8.GetString(text.Written.ToArray()) : value;
 	}
 
 	/// <summary>The codes Excel takes of Phase 4's answers about number formats, read as XML, as <c>NumberFormatsTests</c> reads them.</summary>

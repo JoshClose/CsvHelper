@@ -118,7 +118,8 @@ internal static class NumberText
 			value = 0;
 		}
 
-		// A code of one text section shows numbers in General.
+		// A code of one text section shows numbers in General, which Excel's AutoFit measures as they are, not as General's
+		// digits (@ shows 0.5 as 18.5 points; Phase 5's probe).
 		if (code.Numbers.Length == 0)
 		{
 			if (value < 0)
@@ -126,7 +127,7 @@ internal static class NumberText
 				text.Append('-');
 			}
 
-			WriteGeneral(Math.Abs(value), culture, ref text);
+			WriteGeneralText(Math.Abs(value), culture, ref text);
 
 			return true;
 		}
@@ -144,6 +145,20 @@ internal static class NumberText
 		var shown = WriteSection(code, section, Math.Abs(value), minus, culture, ref text);
 
 		return shown && text.Chars <= MaxChars;
+	}
+
+	/// <summary>The number section a number shows in, as <see cref="TryWrite"/> chooses it, for auto-fit's widths.</summary>
+	/// <param name="code">The code.</param>
+	/// <param name="value">The number.</param>
+	/// <returns>The section; <see langword="null"/> for a code the renderer can't read or of a text section alone, and for a value no section takes.</returns>
+	public static FormatSection? SectionOf(FormatCode code, double value)
+	{
+		if (!code.IsReadable || double.IsNaN(value) || double.IsInfinity(value) || code.Numbers.Length == 0)
+		{
+			return null;
+		}
+
+		return Choose(code, Math.Abs(value) < MinNormal ? 0 : value, out var section, out _) ? section : null;
 	}
 
 	/// <summary>Writes a text's, or a boolean's <c>TRUE</c> or <c>FALSE</c>, through a code's text section.</summary>
@@ -515,7 +530,7 @@ internal static class NumberText
 		}
 		else if (kind == '?')
 		{
-			text.Append(' ');
+			text.AppendBlank();
 		}
 	}
 
@@ -616,13 +631,22 @@ internal static class NumberText
 		}
 
 		// A zero fraction after a whole number shows as spaces of its width with a ? in its numerator, else as nothing.
+		// Measured, it is the fraction's characters, as Excel's AutoFit measures them: # ?/? shows 1 as 1 and four spaces,
+		// as wide as 1 0/1 (Phase 5's probe).
 		WriteFractionTokens(code, section, 0, section.WholeEnd, ref parts, culture, ref text);
 		if (section.NumeratorKinds.IndexOf('?') >= 0)
 		{
-			var measure = new ShownText(Span<byte>.Empty);
 			var zeroParts = new FractionParts(default, 0, section.Denominator > 0 ? section.Denominator : 1, section, Between.Shown);
-			WriteFractionTokens(code, section, section.WholeEnd, section.FractionEnd, ref zeroParts, culture, ref measure);
-			text.AppendSpaces(measure.Chars);
+			if (text.Measuring)
+			{
+				WriteFractionTokens(code, section, section.WholeEnd, section.FractionEnd, ref zeroParts, culture, ref text);
+			}
+			else
+			{
+				var measure = new ShownText(Span<byte>.Empty);
+				WriteFractionTokens(code, section, section.WholeEnd, section.FractionEnd, ref zeroParts, culture, ref measure);
+				text.AppendBlanks(measure.Chars);
+			}
 		}
 
 		WriteFractionTokens(code, section, section.FractionEnd, section.Tokens.Length, ref parts, culture, ref text);
@@ -655,7 +679,16 @@ internal static class NumberText
 					}
 					else if (parts.Between == Between.Spaces)
 					{
-						text.AppendSpaces(ShownText.CountChars(literal));
+						// Measured, the literals themselves, whose width Excel's AutoFit gives the spaces (# ?/? shows 0.5 as
+						// " 1/2", as wide as its space; Phase 5's probe).
+						if (text.Measuring)
+						{
+							text.Append(literal);
+						}
+						else
+						{
+							text.AppendBlanks(ShownText.CountChars(literal));
+						}
 					}
 
 					break;
@@ -737,11 +770,33 @@ internal static class NumberText
 		return bound - 1;
 	}
 
-	/// <summary>Writes a number in General: at most 11 characters besides its sign, in decimals or in scientific notation.</summary>
+	/// <summary>
+	/// Writes a number in General: at most 11 characters besides its sign, in decimals or in scientific notation. Measured,
+	/// every character is a digit, as Excel's AutoFit counts General's characters (Phase 5's step 3: <c>0.5</c> as wide as
+	/// <c>123</c>).
+	/// </summary>
 	/// <param name="abs">The number's absolute value.</param>
 	/// <param name="culture">The culture's decimal separator.</param>
 	/// <param name="text">The text.</param>
 	private static void WriteGeneral(double abs, DisplayCulture culture, ref ShownText text)
+	{
+		if (text.Measuring)
+		{
+			var counted = new ShownText(Span<byte>.Empty);
+			WriteGeneralText(abs, culture, ref counted);
+			text.AppendBlanks(counted.Chars);
+
+			return;
+		}
+
+		WriteGeneralText(abs, culture, ref text);
+	}
+
+	/// <summary>Writes a number's General text (<see cref="WriteGeneral"/>), as it shows.</summary>
+	/// <param name="abs">The number's absolute value.</param>
+	/// <param name="culture">The culture's decimal separator.</param>
+	/// <param name="text">The text.</param>
+	private static void WriteGeneralText(double abs, DisplayCulture culture, ref ShownText text)
 	{
 		var digits = Digits.Of(abs);
 		if (digits.IsZero)
@@ -890,7 +945,7 @@ internal static class NumberText
 			}
 			else if (kind == '?')
 			{
-				text.Append(' ');
+				text.AppendBlank();
 				Separate(power, culture, true, ref text);
 			}
 		}
@@ -919,7 +974,7 @@ internal static class NumberText
 
 			if (space)
 			{
-				text.Append(' ');
+				text.AppendBlank();
 			}
 			else
 			{

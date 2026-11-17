@@ -234,15 +234,16 @@ public class SheetLookTests
 	{
 		// Excel's widest column, 255 characters, is 255.71 as stored at 96 DPI (Excel itself wrote 255.63 at 144), past the
 		// schema's 255, which the validator refuses (step 7's fuzzer): the writer writes 255. So it does a formatted
-		// number's width, which 240 digits grouped in thousands make wider still, with or without auto-fit. 254 characters
-		// are as they are.
+		// number's width, which 123 per mille signs before it make wider still, with or without auto-fit: 124 characters,
+		// the most a code's literal can have, as wide as 258 digits. (A number's text can't pass 255 characters, where Excel
+		// shows # at any width: Phase 8's step 6 gives that no width.) 254 characters are as they are.
 		var options = new ExcelSheetOptions
 		{
 			AutoFit = autoFit,
 			Columns = new Dictionary<string, ExcelColumnOptions>
 			{
 				["Name"] = new() { Width = 255 },
-				["Amount"] = new() { Format = "#,##" + new string('0', 240) },
+				["Amount"] = new() { Format = "\"" + new string((char)0x2030, 123) + "\"0" },
 				["Note"] = new() { Width = 254 },
 			},
 		};

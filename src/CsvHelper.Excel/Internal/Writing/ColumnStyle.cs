@@ -19,7 +19,7 @@ internal sealed class ColumnStyle
 	private int lastOwn = -1;
 	private int lastStyle;
 	// The format's widths, once a cell is measured.
-	private NumberFormatWidth? formatWidth;
+	private FormatWidth? formatWidth;
 
 	/// <summary>Creates a column's style, adding its cell formats to the workbook's.</summary>
 	/// <param name="options">The column's options, which have a format or wrap.</param>
@@ -48,7 +48,7 @@ internal sealed class ColumnStyle
 	public bool Wrap { get; }
 
 	/// <summary>The widths of the column's format, read when a cell is first measured; <see langword="null"/> without a format.</summary>
-	public NumberFormatWidth? FormatWidth => code is null ? null : formatWidth ??= new NumberFormatWidth(code);
+	public FormatWidth? FormatWidth => code is null ? null : formatWidth ??= new FormatWidth(code);
 
 	/// <summary>Whether a column's options style its cells: they have a format or wrap.</summary>
 	/// <param name="options">The options, or <see langword="null"/>.</param>

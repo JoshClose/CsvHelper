@@ -12,8 +12,8 @@ namespace CsvHelper.Excel.Tests.Security;
 /// exponents, fractions, percents, literals quoted, escaped and open, fills and spaces, colors, conditions, locales,
 /// <c>[DBNum]</c>, elapsed times, dates and times in every length, <c>@</c> and <c>General</c>, sections, and characters
 /// that are none of these), and lengths around 255. <see cref="FormatCheck"/> throws nothing, and a column's options take
-/// a code exactly when it passes. Each code that passes measures every kind of value without throwing
-/// (<see cref="NumberFormatWidth"/>), at a width that is a number of pixels, and workbooks of a column for each, auto-fitted
+/// a code exactly when it passes. Each code that passes compiles as auto-fit measures it, and measures every kind of value
+/// without throwing (<see cref="FormatWidth"/>), at a width that is a number of pixels, and workbooks of a column for each, auto-fitted
 /// over numbers, dates, durations, booleans and text, pass the Open XML SDK's validator and read back.
 /// <c>CSVHELPER_EXCEL_FUZZ_CODES</c> sets the number of codes, <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the first seed, and
 /// <c>CSVHELPER_EXCEL_FUZZ_SAVE</c> a folder to save each workbook in, for the corpus tool's <c>fuzzed</c> command to
@@ -154,18 +154,17 @@ public class FormatCodeFuzzTests(ITestOutputHelper output)
 		}
 
 		Count(tally, "codes that pass");
-		var width = new NumberFormatWidth(code);
+
+		// The renderer reads every code the writer takes, as auto-fit compiles it: elapsed time after a date part, which it
+		// can't show, as its widest time of day (Phase 8's step 6).
+		if (!FormatCode.Compile(code, true).IsReadable)
+		{
+			return "auto-fit can't read it";
+		}
+
+		var width = new FormatWidth(code);
 		foreach (var number in Numbers)
 		{
-			foreach (var widest in new[] { false, true })
-			{
-				var text = width.Number(number, widest);
-				if (text is null)
-				{
-					return $"{number.ToString("R", CultureInfo.InvariantCulture)} has no text";
-				}
-			}
-
 			var pixels = width.NumberPixels(number);
 			if (!(pixels >= 0 && pixels < 1e7))
 			{
@@ -175,7 +174,7 @@ public class FormatCodeFuzzTests(ITestOutputHelper output)
 
 		foreach (var text in new[] { "", "abc", Units(0x65E5, 0x672C), "TRUE" })
 		{
-			if (width.Text(text) is null || !(width.TextPixels(ColumnWidths.TextPixels(text.AsSpan())) >= 0))
+			if (!(width.TextPixels(ColumnWidths.TextPixels(text.AsSpan())) >= 0))
 			{
 				return $"the text {Show(text)} has no width";
 			}
