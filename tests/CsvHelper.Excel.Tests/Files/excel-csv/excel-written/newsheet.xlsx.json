@@ -1,0 +1,42 @@
+{
+  "file": "excel-written/newsheet.xlsx",
+  "sha256": "34c0bbb54bfabd49b99c3a7eac27cd40c0b08c357078b64e973141fcd3eb2d86",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Name,When,Code\r\nn0,2024-01-15 10:30:00,\r\nn1,2024-01-16 10:30:00,\r\n"
+    },
+    {
+      "name": "Orders (2)",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Name,When,Code\r\nn2,2024-01-17 10:30:00,\r\nn3,2024-01-18 10:30:00,\r\n"
+    },
+    {
+      "name": "Orders (3)",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Name,When,Code\r\nn4,2024-01-19 10:30:00,00123\r\nn5,2024-01-20 10:30:00,\r\n"
+    },
+    {
+      "name": "Orders (4)",
+      "used": "A1:C2",
+      "bom": true,
+      "csv": "Name,When,Code\r\nn6,2024-01-21 10:30:00,\r\n"
+    },
+    {
+      "name": "abcdefghijklmnopqrstuvwxyz12345",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Total,Value,Shows\r\nt1,21,21\r\nt2,32,32\r\n"
+    },
+    {
+      "name": "abcdefghijklmnopqrstuvwxyz1 (2)",
+      "used": "A1:C2",
+      "bom": true,
+      "csv": "Total,Value,Shows\r\nt3,23,23\r\n"
+    }
+  ]
+}

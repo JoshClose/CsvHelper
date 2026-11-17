@@ -1,0 +1,24 @@
+{
+  "file": "excel-written/formulas.xlsx",
+  "sha256": "dd858907d371a52256ef0835f5ea3edfc97331c12b96bed538e5124bf2ed31c6",
+  "sheets": [
+    {
+      "name": "Calc",
+      "used": "A1:E18",
+      "bom": true,
+      "csv": "Case,A,B,Formula,Shows\r\na sum,2,3,5,5\r\ngiven with =,5,7,35,35\r\na condition,,,big,big\r\nescapes and entities,,,a_x0041_b<&>,a_x0041_b<&>\r\nline breaks,,,\"x\r\ny\",\"x\r\ny\"\r\ncontrol characters,,,a\u0001b\uFFFE,a\u0001b\uFFFE\r\na newer function,,,3,3\r\nits own sheet,,,7,7\r\na quoted sheet,,,quoted!,quoted!\r\nan emoji,,,1,1\r\nnot ASCII,,,日本é,日本é\r\nan array constant,,,10,10\r\nan unknown function,,,#NAME?,#NAME?\r\na missing sheet,,,#REF!,#REF!\r\na percent,,,0.02,0.02\r\nan empty argument,,,1,1\r\ntext that looks like a number,,,00123,00123\r\n"
+    },
+    {
+      "name": "Q1 Data",
+      "used": "A1",
+      "bom": true,
+      "csv": "quoted\r\n"
+    },
+    {
+      "name": "Records",
+      "used": "A1:D4",
+      "bom": true,
+      "csv": "A,B,Total,Shows\r\n1,2,3,3\r\n3,4,14,14\r\n5,6,,\r\n"
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "file": "excel-written/cultures.xlsx",
+  "sha256": "21d15a2cddc18e8472a4fb83159f948ed0f8fb963df2800ce2d0a36536f06825",
+  "cultureData": "3751ce771a135e8b16355426d03483e2c6b473e25e205e99c4cd96892ea51203",
+  "sheets": [
+    {
+      "name": "Standard",
+      "used": "A1:AJ4",
+      "bom": true,
+      "csv": "UsShortDate,UsLongDate,UsFull,UsFullLong,UsGeneral,UsGeneralLong,UsShortTime,UsLongTime,UsYearMonth,GermanShortDate,GermanLongDate,GermanFull,GermanFullLong,GermanGeneral,GermanGeneralLong,GermanShortTime,GermanLongTime,GermanYearMonth,FrenchShortDate,FrenchLongDate,FrenchFull,FrenchFullLong,FrenchGeneral,FrenchGeneralLong,FrenchShortTime,FrenchLongTime,FrenchYearMonth,JapaneseShortDate,JapaneseLongDate,JapaneseFull,JapaneseFullLong,JapaneseGeneral,JapaneseGeneralLong,JapaneseShortTime,JapaneseLongTime,JapaneseYearMonth\r\n1/15/2024,\"Monday, January 15, 2024\",\"Monday, January 15, 2024 10:30 AM\",\"Monday, January 15, 2024 10:30:05 AM\",1/15/2024 10:30 AM,1/15/2024 10:30:05 AM,10:30 AM,10:30:05 AM,January 2024,15.01.2024,\"Montag, 15. Januar 2024\",\"Montag, 15. Januar 2024 10:30\",\"Montag, 15. Januar 2024 10:30:05\",15.01.2024 10:30,15.01.2024 10:30:05,10:30,10:30:05,Januar 2024,15/01/2024,lundi 15 janvier 2024,lundi 15 janvier 2024 10:30,lundi 15 janvier 2024 10:30:05,15/01/2024 10:30,15/01/2024 10:30:05,10:30,10:30:05,janvier 2024,2024/01/15,2024年1月15日月曜日,2024年1月15日月曜日 10:30,2024年1月15日月曜日 10:30:05,2024/01/15 10:30,2024/01/15 10:30:05,10:30,10:30:05,2024年1月\r\n3/9/2024,\"Saturday, March 9, 2024\",\"Saturday, March 9, 2024 10:05 PM\",\"Saturday, March 9, 2024 10:05:09 PM\",3/9/2024 10:05 PM,3/9/2024 10:05:09 PM,10:05 PM,10:05:09 PM,March 2024,09.03.2024,\"Samstag, 9. März 2024\",\"Samstag, 9. März 2024 22:05\",\"Samstag, 9. März 2024 22:05:09\",09.03.2024 22:05,09.03.2024 22:05:09,22:05,22:05:09,März 2024,09/03/2024,samedi 9 mars 2024,samedi 9 mars 2024 22:05,samedi 9 mars 2024 22:05:09,09/03/2024 22:05,09/03/2024 22:05:09,22:05,22:05:09,mars 2024,2024/03/09,2024年3月9日土曜日,2024年3月9日土曜日 22:05,2024年3月9日土曜日 22:05:09,2024/03/09 22:05,2024/03/09 22:05:09,22:05,22:05:09,2024年3月\r\n9/25/2024,\"Wednesday, September 25, 2024\",\"Wednesday, September 25, 2024 11:58 PM\",\"Wednesday, September 25, 2024 11:58:58 PM\",9/25/2024 11:58 PM,9/25/2024 11:58:58 PM,11:58 PM,11:58:58 PM,September 2024,25.09.2024,\"Mittwoch, 25. September 2024\",\"Mittwoch, 25. September 2024 23:58\",\"Mittwoch, 25. September 2024 23:58:58\",25.09.2024 23:58,25.09.2024 23:58:58,23:58,23:58:58,September 2024,25/09/2024,mercredi 25 septembre 2024,mercredi 25 septembre 2024 23:58,mercredi 25 septembre 2024 23:58:58,25/09/2024 23:58,25/09/2024 23:58:58,23:58,23:58:58,septembre 2024,2024/09/25,2024年9月25日水曜日,2024年9月25日水曜日 23:58,2024年9月25日水曜日 23:58:58,2024/09/25 23:58,2024/09/25 23:58:58,23:58,23:58:58,2024年9月\r\n"
+    },
+    {
+      "name": "Custom",
+      "used": "A1:N4",
+      "bom": true,
+      "csv": "GermanAbbreviated,FrenchNames,FrenchAbbreviated,GermanDesignator,GermanDateTime,PolishMonth,BritishNames,SwedishSlashes,JapaneseAbbreviated,PolishGenitive,GermanDayAbbreviated,GermanMonth,RussianGenitive,FrenchDay\r\nJan 2024,lundi 15 janvier 2024,lun. 15 janv. 2024,Januar 2024 10 AM,15.01.2024 10:30,styczeń 2024,Monday 15 January 2024,2024-01-15,1 2024年,15 stycznia 2024,15. Jan. 2024,Januar 2024,15 января 2024,lundi\r\nMrz 2024,samedi 9 mars 2024,sam. 9 mars 2024,März 2024 10 PM,09.03.2024 22:05,marzec 2024,Saturday 9 March 2024,2024-03-09,3 2024年,9 marca 2024,09. März 2024,März 2024,9 марта 2024,samedi\r\nSep 2024,mercredi 25 septembre 2024,mer. 25 sept. 2024,September 2024 11 PM,25.09.2024 23:58,wrzesień 2024,Wednesday 25 September 2024,2024-09-25,9 2024年,25 września 2024,25. Sept. 2024,September 2024,25 сентября 2024,mercredi\r\n"
+    },
+    {
+      "name": "Kinds",
+      "used": "A1:T4",
+      "bom": true,
+      "csv": "UsDate,UsLongDate,GermanDate,GermanLongDate,FrenchDate,FrenchLongDate,FrenchMonth,JapaneseDate,JapaneseLongDate,UsTime,UsLongTime,GermanTime,GermanLongTime,FrenchTime,FrenchLongTime,JapaneseTime,JapaneseLongTime,GermanOffset,FrenchOffset,JapaneseOffset\r\n1/15/2024,\"Monday, January 15, 2024\",15.01.2024,\"Montag, 15. Januar 2024\",15/01/2024,lundi 15 janvier 2024,janvier 2024,2024/01/15,2024年1月15日月曜日,10:30 AM,10:30:05 AM,10:30,10:30:05,10:30,10:30:05,10:30,10:30:05,15.01.2024 10:30,lundi 15 janvier 2024,10:30:05\r\n3/9/2024,\"Saturday, March 9, 2024\",09.03.2024,\"Samstag, 9. März 2024\",09/03/2024,samedi 9 mars 2024,mars 2024,2024/03/09,2024年3月9日土曜日,10:05 PM,10:05:09 PM,22:05,22:05:09,22:05,22:05:09,22:05,22:05:09,09.03.2024 22:05,samedi 9 mars 2024,22:05:09\r\n9/25/2024,\"Wednesday, September 25, 2024\",25.09.2024,\"Mittwoch, 25. September 2024\",25/09/2024,mercredi 25 septembre 2024,septembre 2024,2024/09/25,2024年9月25日水曜日,11:58 PM,11:58:58 PM,23:58,23:58:58,23:58,23:58:58,23:58,23:58:58,25.09.2024 23:58,mercredi 25 septembre 2024,23:58:58\r\n"
+    },
+    {
+      "name": "Numbers",
+      "used": "A1:I4",
+      "bom": true,
+      "csv": "Case,German,GermanDouble,French,Swedish,Arabic,Persian,Invariant,GermanLong\r\nnegative,-1234.5,-1234.5,-1234.5,-1234.5,-1234.5,-1234.5,-1234.5,-1234567\r\nlarge,1234567890,1.5E+20,1.5E+20,1.5E+20,1.5E+20,1.5E+20,1.5E+20,1.23457E+14\r\nsmall,0.001,0.00001,-0.00001,-0.00001,0.00001,-0.00001,0.00001,0\r\n"
+    }
+  ]
+}

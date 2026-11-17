@@ -1,0 +1,30 @@
+{
+  "file": "excel-written/look.xlsx",
+  "sha256": "8081ce7e9d13f50cddb24eeeb0c5fbfbe348e9b3e306c891dac7d8e02fa19285",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:H6",
+      "bom": true,
+      "csv": "Id,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n333,Ken,2024-02-29 23:59:59.999,-0.5,TRUE,9600:00:00,mailto:ken@example.com,a note longer than the others\r\n4444,名前,2024-12-31 12:00:00,0,FALSE,0:00:00,,\r\n55555,Zoë,1900-03-01,99999999.99,TRUE,1:30:00,https://example.com/orders/55555?x=1#top,last\r\n"
+    },
+    {
+      "name": "Titled",
+      "used": "A1:H5",
+      "bom": true,
+      "csv": "Orders for January 2024,,,,,,,\r\nId,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n333,Ken,2024-02-29 23:59:59.999,-0.5,TRUE,9600:00:00,mailto:ken@example.com,a note longer than the others\r\n"
+    },
+    {
+      "name": "One column",
+      "used": "A1:A4",
+      "bom": true,
+      "csv": "\"A title over one column, which isn't merged\"\r\nName\r\na\r\nb\r\n"
+    },
+    {
+      "name": "Columns",
+      "used": "A1:C2",
+      "bom": true,
+      "csv": "A,B,C\r\n1,2,3\r\n"
+    }
+  ]
+}

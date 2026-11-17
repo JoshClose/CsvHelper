@@ -1,0 +1,18 @@
+{
+  "file": "excel-written/merges.xlsx",
+  "sha256": "0c6ca59167eb069fcfe1572928e5eba2fac8a5d5865e1d9fbbf56f119a541b84",
+  "sheets": [
+    {
+      "name": "Report",
+      "used": "A1:E10",
+      "bom": true,
+      "csv": "Quarterly report,,,,\r\nRegion,Q1,Q2,Q3,Notes\r\nNorth,10,20,30,steady\r\n,11,21,31,\r\nSouth,5,6,7,growing\r\n,8,9,10,\r\nTotal,34,56,78,\r\n,,,,\r\n,,,,\r\n,,,,\r\n"
+    },
+    {
+      "name": "Beside",
+      "used": "A1:F7",
+      "bom": true,
+      "csv": "Name,Value,Code,,,\r\na,1,x,,,\r\nb,2,y,,,\r\nc,3,z,,,\r\n,,,,,\r\n,,,,,\r\n,,,,,\r\n"
+    }
+  ]
+}

@@ -35,6 +35,10 @@ internal static class Program
 		  oracle         Excel through COM: excel-oracle/, what every corpus workbook's cells hold as Excel reads them
 		  written        Excel through COM: excel-written/, what Excel reads in each workbook CsvHelper.Excel writes
 		                 (Written.cs), with each workbook's SHA-256
+		  display        Python and Excel through COM: display/, the workbooks of Phase 8's probes of number formats
+		                 (python/display.py), and excel-display.json, the text Excel shows in each case and its CSV export's
+		  exports        Excel through COM: excel-csv/, Excel's own CSV UTF-8 export of every worksheet of the corpus workbooks
+		                 the oracle answers about, and of the written set
 		  fuzzed         Excel through COM: opens each workbook the writer's fuzzers saved in a folder (their
 		                 CSVHELPER_EXCEL_FUZZ_SAVE), and reports which Excel repairs or refuses, and the numbers it shows
 		                 as ########, to standard output and the folder's fuzzed.txt; nothing is committed
@@ -132,6 +136,14 @@ internal static class Program
 				ExcelWritten.Write(files);
 
 				break;
+			case "display":
+				ExcelDisplay.Write(files, python);
+
+				break;
+			case "exports":
+				ExcelExports.Write(files);
+
+				break;
 			case "spec":
 				Console.WriteLine(Basic.ToJson());
 
@@ -151,6 +163,8 @@ internal static class Program
 				ExcelFormats.Write(files);
 				ExcelOracle.Write(files);
 				ExcelWritten.Write(files);
+				ExcelDisplay.Write(files, python);
+				ExcelExports.Write(files);
 
 				break;
 			default:
@@ -251,7 +265,7 @@ internal static class Program
 	/// <summary>Finds Python 3.14 from its PEP 514 registry entry, since shells can resolve <c>python</c> to the Store's alias.</summary>
 	/// <returns>The interpreter's path.</returns>
 	[SupportedOSPlatform("windows")]
-	private static string FindPython()
+	internal static string FindPython()
 	{
 		foreach (var hive in new[] { Registry.CurrentUser, Registry.LocalMachine })
 		{

@@ -20,13 +20,16 @@ namespace CsvHelper.Excel;
 /// </description></item>
 /// <item><description>
 /// The time is rounded to the precision the section shows, whole seconds or one to three digits of their fractions, before
-/// its parts are taken: the fraction of a day times 86,400 and the precision, taken to 15 significant digits
-/// (<see cref="Digits"/>), rounded half away from zero, a whole day carrying to the date. Elapsed time is the whole value
-/// times the same, so rounded, while the minutes, seconds and dates beside it are the time of day's: 45306.000005787035,
-/// 0.4999998 seconds past midnight, is 3914438400.5 seconds to 15 digits, so <c>[s] yyyy</c> shows it as
-/// <c>3914438401 2024</c>, where <c>[h]:mm:ss</c> shows <c>1087344:00:00</c>. Minutes and hours aren't rounded:
-/// <c>h:mm</c> shows 0:00:59 as <c>0:00</c>. Each group of fractions of a second shows the first digits of the most
-/// precise one.
+/// its parts are taken, as Excel's arithmetic does it in doubles (Phase 8's step 7): half the unit shown is added to the
+/// serial, in days, a whole day carrying to the date, and the fraction of the day left is taken apart by truncation, its
+/// hours times 24, its minutes the rest times 60, its seconds the rest times 60, and their fractions the rest times the
+/// precision. So the double nearest a half can go either way: 09:05:07.250 of 2024's days shows <c>05:07.2</c> in <c>mm:ss.0</c>,
+/// though each double is a little above the half. Elapsed time is the whole value times 86,400 and the precision, taken
+/// to 15 significant digits (<see cref="Digits"/>), rounded half away from zero, while the minutes, seconds and dates
+/// beside it are the time of day's: 45306.000005787035, 0.4999998 seconds past midnight, is 3914438400.5 seconds to 15
+/// digits, so <c>[s] yyyy</c> shows it as <c>3914438401 2024</c>, where <c>[h]:mm:ss</c> shows <c>1087344:00:00</c>.
+/// Minutes and hours aren't rounded: <c>h:mm</c> shows 0:00:59 as <c>0:00</c>. Each group of fractions of a second shows
+/// the first digits of the most precise one.
 /// </description></item>
 /// <item><description>
 /// In the 1900 system serial 0 is 1900-01-00 and 60 is 1900-02-29, and the days before 1900-03-01 fall a weekday early
@@ -137,20 +140,16 @@ internal static class DateText
 		var total = whole.IntegerLength <= Digits.MaxSignificant ? Whole(whole) : -1;
 		if (!section.ElapsedAlone)
 		{
-			// A date, a time of day, and the parts beside elapsed time: the fraction of the day at the precision shown, a
-			// whole day carrying to the date, up to the last date.
+			// A date, a time of day, and the parts beside elapsed time: half the unit shown added to the serial, a whole day
+			// carrying to the date, up to the last date, and the time of day taken apart by truncation.
 			if (abs >= lastDay + 1)
 			{
 				return false;
 			}
 
-			day = (long)Math.Floor(abs);
-			within = Whole(Digits.Of((abs - day) * perDay).Round(0));
-			if (within >= perDay)
-			{
-				day++;
-				within -= perDay;
-			}
+			var rounded = abs + (0.5 / perDay);
+			day = (long)Math.Floor(rounded);
+			within = TimeOfDay(rounded - day, unit);
 		}
 
 		if (day > lastDay)
@@ -280,6 +279,29 @@ internal static class DateText
 			var date = (serial < LeapDay1900 ? Before1900 : Epoch1900).AddDays(serial);
 			(year, month, day) = (date.Year, date.Month, date.Day);
 		}
+	}
+
+	/// <summary>
+	/// The time of a day's fraction, rounded already by half the unit shown, in the section's units of a second, as Excel
+	/// takes it apart in doubles: the hours are the fraction times 24, truncated; the minutes the rest times 60, truncated;
+	/// the seconds the rest times 60, truncated; and their fractions the rest times the units, truncated. It fits all but
+	/// eight of 2,277 of Excel's answers about times shown to the second or its fractions (Phase 8's step 7; four doubles),
+	/// where step 4's rule, the day's fraction times the units to 15 digits rounded half away from zero, missed 345 (94
+	/// doubles), and the seconds times the units, truncated at once, 25 (22).
+	/// </summary>
+	/// <param name="fraction">The day's fraction, from 0 to below 1.</param>
+	/// <param name="unit">The units a second is shown in: 1, 10, 100 or 1,000.</param>
+	/// <returns>The time in those units, less than a day's.</returns>
+	private static long TimeOfDay(double fraction, long unit)
+	{
+		var hours = fraction * 24;
+		var hour = Math.Floor(hours);
+		var minutes = (hours - hour) * 60;
+		var minute = Math.Floor(minutes);
+		var seconds = (minutes - minute) * 60;
+		var second = Math.Floor(seconds);
+
+		return ((((((long)hour * 60) + (long)minute) * SecondsPerMinute) + (long)second) * unit) + (long)Math.Floor((seconds - second) * unit);
 	}
 
 	/// <summary>An integer's value, from its digits.</summary>

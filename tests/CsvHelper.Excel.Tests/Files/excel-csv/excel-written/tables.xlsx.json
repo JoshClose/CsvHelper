@@ -1,0 +1,54 @@
+{
+  "file": "excel-written/tables.xlsx",
+  "sha256": "01ce8312199ded85fcff770a7f14ae986e8c585d13634624509062d309290a24",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:H4",
+      "bom": true,
+      "csv": "Id,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n333,Ken,2024-02-29 23:59:59.999,-0.5,TRUE,9600:00:00,mailto:ken@example.com,a note longer than the others\r\n"
+    },
+    {
+      "name": "Q1 Orders",
+      "used": "A1:H3",
+      "bom": true,
+      "csv": "Id,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n"
+    },
+    {
+      "name": "2024",
+      "used": "A1:B2",
+      "bom": true,
+      "csv": "Year,Total\r\n2024,1.5\r\n"
+    },
+    {
+      "name": "Renamed",
+      "used": "A1:I2",
+      "bom": true,
+      "csv": "Name,Name3,Name2,Column4,2024,True,\"Two\nLines\", Name,NAME5\r\na,b,c,d,e,f,g,h,i\r\n"
+    },
+    {
+      "name": "Header",
+      "used": "A1:C1",
+      "bom": true,
+      "csv": "A,B,C\r\n"
+    },
+    {
+      "name": "Titled",
+      "used": "A1:H4",
+      "bom": true,
+      "csv": "A titled table,,,,,,,\r\nId,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n"
+    },
+    {
+      "name": "Filtered",
+      "used": "A1:B3",
+      "bom": true,
+      "csv": "Name,Value\r\na,1\r\nb,2\r\n"
+    },
+    {
+      "name": "Sales",
+      "used": "A1:B3",
+      "bom": true,
+      "csv": "Region,Amount\r\nNorth,\"1,234.50\"\r\nSouth,99.99\r\n"
+    }
+  ]
+}

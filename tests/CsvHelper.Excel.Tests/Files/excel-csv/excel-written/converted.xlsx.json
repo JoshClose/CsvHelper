@@ -1,0 +1,30 @@
+{
+  "file": "excel-written/converted.xlsx",
+  "sha256": "d2859082a8b828b3c60825b8684081429ceb7316c06a56358a1cf2c526e6b73f",
+  "sheets": [
+    {
+      "name": "Forms",
+      "used": "A1:BK2",
+      "bom": true,
+      "csv": "int,zeros,zero-7,negative,plus,decimal,dot-first,dot-last,exp-lower,exp-upper,exp-big,digits-15,digits-16,digits-19,decimal-21,trailing-zero,one-point-zero,grouped,grouped-dec,de-decimal,dollar,percent,lead-space,trail-space,neg-zero,hex,nan,infinity,quoted-num,date,date-T-time,date-space-time,date-space-hm,date-T-ms,date-T-7,date-Z,date-offset,date-mdy,date-dmy,date-slash-iso,date-text,date-words,date-1900-02-29,date-1899,date-0001,date-9999,date-bad,time-hm,time-hms,time-ms,duration,TRUE,true,True,FALSE,yes,one,error,error-div,formula,formula-plus,at,empty\r\n123,00123,007,-45,+45,1.5,.5,5.,100000,100000,1.5E+20,1.23457E+14,1234567890123456,1234567890123456789,3.14159265358979323846,1.5,1,\"1,234\",\"1,234.5\",\"1,5\",$5,50%, 5,5 ,0,0x10,NaN,Infinity,123,2024-01-15,2024-01-15 10:30:00,2024-01-15 10:30:00,2024-01-15 10:30:00,2024-01-15 10:30:00.123,2024-01-15 10:30:00.123,2024-01-15T10:30:00Z,2024-01-15T10:30:00+01:00,1/15/2024,15/01/2024,2024/01/15,15-Jan-2024,Jan 15 2024,1900-02-29,1899-12-31,0001-01-01,9999-12-31,2024-02-30,10:30,10:30:45,10:30:45.123,36:00:00,TRUE,TRUE,TRUE,FALSE,yes,1,#N/A,#DIV/0!,=1+1,+1+1,@SUM(1),\r\n"
+    },
+    {
+      "name": "As is",
+      "used": "A1:B64",
+      "bom": true,
+      "csv": "label,value\r\nint,123\r\nzeros,00123\r\nzero-7,007\r\nnegative,-45\r\nplus,+45\r\ndecimal,1.5\r\ndot-first,.5\r\ndot-last,5.\r\nexp-lower,1e5\r\nexp-upper,1E5\r\nexp-big,1.5E+20\r\ndigits-15,123456789012345\r\ndigits-16,1234567890123456\r\ndigits-19,1234567890123456789\r\ndecimal-21,3.14159265358979323846\r\ntrailing-zero,1.50\r\none-point-zero,1.0\r\ngrouped,\"1,234\"\r\ngrouped-dec,\"1,234.5\"\r\nde-decimal,\"1,5\"\r\ndollar,$5\r\npercent,50%\r\nlead-space, 5\r\ntrail-space,5 \r\nneg-zero,-0\r\nhex,0x10\r\nnan,NaN\r\ninfinity,Infinity\r\nquoted-num,123\r\ndate,2024-01-15\r\ndate-T-time,2024-01-15T10:30:00\r\ndate-space-time,2024-01-15 10:30:00\r\ndate-space-hm,2024-01-15 10:30\r\ndate-T-ms,2024-01-15T10:30:00.123\r\ndate-T-7,2024-01-15T10:30:00.1234567\r\ndate-Z,2024-01-15T10:30:00Z\r\ndate-offset,2024-01-15T10:30:00+01:00\r\ndate-mdy,1/15/2024\r\ndate-dmy,15/01/2024\r\ndate-slash-iso,2024/01/15\r\ndate-text,15-Jan-2024\r\ndate-words,Jan 15 2024\r\ndate-1900-02-29,1900-02-29\r\ndate-1899,1899-12-31\r\ndate-0001,0001-01-01\r\ndate-9999,9999-12-31\r\ndate-bad,2024-02-30\r\ntime-hm,10:30\r\ntime-hms,10:30:45\r\ntime-ms,10:30:45.123\r\nduration,36:00:00\r\nTRUE,TRUE\r\ntrue,true\r\nTrue,True\r\nFALSE,FALSE\r\nyes,yes\r\none,1\r\nerror,#N/A\r\nerror-div,#DIV/0!\r\nformula,=1+1\r\nformula-plus,+1+1\r\nat,@SUM(1)\r\nempty,\r\n"
+    },
+    {
+      "name": "Columns",
+      "used": "A1:H4",
+      "bom": true,
+      "csv": "Count,Price,Day,At,Paid,Code,Note,Mixed\r\n3,1.5,2024-01-15,2024-01-15 10:30:00,TRUE,00123,,1\r\n-4,2.25,2024-01-16,2024-01-16,FALSE,123,x,2024-01-15\r\n0,0.00001,1900-01-01,2024-01-15 23:59:59.999,TRUE,7,y,true\r\n"
+    },
+    {
+      "name": "Later",
+      "used": "A1:B5",
+      "bom": true,
+      "csv": "Id,Amount\r\n1,10\r\n2,20\r\n00123,N/A\r\n4,40\r\n"
+    }
+  ]
+}

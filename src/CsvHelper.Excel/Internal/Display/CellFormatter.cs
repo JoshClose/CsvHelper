@@ -135,7 +135,10 @@ internal sealed class CellFormatter : CsvCellFormatter
 		return text.Fits;
 	}
 
-	/// <summary>The compiled code of a number format, compiled the first time it is asked for.</summary>
+	/// <summary>
+	/// The compiled code of a number format, compiled the first time it is asked for: the custom code, else the built-in
+	/// id's in the culture. An empty custom code is General, whatever its id, as Excel shows it (ClosedXML writes id 0 so).
+	/// </summary>
 	/// <param name="index">The number format's index.</param>
 	/// <returns>The code.</returns>
 	private FormatCode Code(int index)
@@ -144,7 +147,8 @@ internal sealed class CellFormatter : CsvCellFormatter
 		if (code is null)
 		{
 			var id = styles.NumberFormatIdAt(index);
-			code = FormatCode.Compile(styles.FormatCode(id) ?? culture.BuiltIn(id));
+			var custom = styles.FormatCode(id);
+			code = FormatCode.Compile(custom is null ? culture.BuiltIn(id) : custom.Length == 0 ? "General" : custom);
 			Volatile.Write(ref codes[index], code);
 		}
 

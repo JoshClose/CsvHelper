@@ -318,9 +318,9 @@ public class FormatWidthTests
 		var excel = double.Parse(parts[0], CultureInfo.InvariantCulture);
 
 		// Every date measures as its format's widest over a leap year, at least as wide as Excel's AutoFit of the 14. The
-		// renderer's text is Excel's, but for tenths of a second at 7.25 seconds (SubSecondDifferences).
+		// renderer's text is Excel's, tenths of a second at 7.25 seconds among them (step 7's rounding).
 		var shown = Dates.Select(d => Render(code, d.ToOADate())).ToList();
-		Assert.Equal(SubSecondDifferences.TryGetValue(code, out var differs) ? texts.Select(t => t == differs.Excel ? differs.Renderer : t) : texts, shown);
+		Assert.Equal(texts, shown);
 		var widths = Dates.Select(d => width.NumberPixels(d.ToOADate())).Distinct().ToList();
 		Assert.Single(widths);
 		Assert.InRange(Points(widths[0]), excel - Rounding, Wide(excel));
@@ -567,16 +567,6 @@ public class FormatWidthTests
 		Assert.True(count > 150, $"{count} codes");
 		Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
 	}
-
-	/// <summary>
-	/// The date codes whose text the renderer shows otherwise than Phase 5's probe did, Excel's and the renderer's: 09:05:07.250
-	/// in <c>mm:ss.0</c> is <c>05:07.2</c> in Excel, on all twelve days, where step 4's rounding (the day's fraction, to 15
-	/// digits, half away from zero) gives <c>05:07.3</c>, each double being a little above the half. Its width is the same.
-	/// </summary>
-	private static readonly Dictionary<string, (string Excel, string Renderer)> SubSecondDifferences = new(StringComparer.Ordinal)
-	{
-		["mm:ss.0"] = ("05:07.2", "05:07.3"),
-	};
 
 	/// <summary>The most a width may pass Excel's AutoFit's, in points: a tenth and two characters, as the measuring errs wide.</summary>
 	/// <param name="excel">Excel's width, in points.</param>

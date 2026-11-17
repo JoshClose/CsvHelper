@@ -1,0 +1,11 @@
+{
+  "file": "google/66365.xlsx",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "used": "A1:B2",
+      "bom": true,
+      "csv": "Alice,Alice\r\nBob,#VALUE!\r\n"
+    }
+  ]
+}

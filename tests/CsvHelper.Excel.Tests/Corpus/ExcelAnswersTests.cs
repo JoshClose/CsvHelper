@@ -24,29 +24,29 @@ namespace CsvHelper.Excel.Tests.Corpus;
 /// </remarks>
 public class ExcelAnswersTests
 {
-	private const string PastTheLastDay = "a serial past the date system's last day (9999-12-31) in a date format: Excel's Value has no date for it, and CsvHelper.Excel reads it as a date cell that no date target takes";
+	internal const string PastTheLastDay = "a serial past the date system's last day (9999-12-31) in a date format: Excel's Value has no date for it, and CsvHelper.Excel reads it as a date cell that no date target takes";
 
-	private const string NegativeDates = "Excel's 1904 date system shows a negative serial as a date before 1904 (-1 as -1904-01-02); CsvHelper.Excel takes dates from serial 0, and reads -1 as a number's text";
+	internal const string NegativeDates = "Excel's 1904 date system shows a negative serial as a date before 1904 (-1 as -1904-01-02); CsvHelper.Excel takes dates from serial 0, and reads -1 as a number's text";
 
-	private const string NewerErrors = "Excel stores #CALC! and #SPILL! as #VALUE! with rich value metadata, which shows the newer error";
+	internal const string NewerErrors = "Excel stores #CALC! and #SPILL! as #VALUE! with rich value metadata, which shows the newer error";
 
-	private const string DateCompatibility = "a Strict workbook (dateCompatibility=\"0\") counts days as OLE Automation dates do, without 1900-02-29: its t=\"d\" dates before March 1900 read as the same dates in the 1900 system, whose serials are a day less, and 1899-12-30 stays text";
+	internal const string DateCompatibility = "a Strict workbook (dateCompatibility=\"0\") counts days as OLE Automation dates do, without 1900-02-29: its t=\"d\" dates before March 1900 read as the same dates in the 1900 system, whose serials are a day less, and 1899-12-30 stays text";
 
-	private const string Overflow = "the producer wrote the largest double with 15 or 16 digits, past it, which Excel reads as #NULL!";
+	internal const string Overflow = "the producer wrote the largest double with 15 or 16 digits, past it, which Excel reads as #NULL!";
 
-	private const string Subnormal = "the producer wrote the least normal double with 15 or 16 digits, below it, and Excel reads a subnormal number as 0";
+	internal const string Subnormal = "the producer wrote the least normal double with 15 or 16 digits, below it, and Excel reads a subnormal number as 0";
 
-	private const string ClosedXmlNa = "ClosedXML 0.105.1 wrote NA()'s result #N/A as a number, without t=\"e\"; Excel repairs the cell to #VALUE!";
+	internal const string ClosedXmlNa = "ClosedXML 0.105.1 wrote NA()'s result #N/A as a number, without t=\"e\"; Excel repairs the cell to #VALUE!";
 
-	private const string PivotTable = "Google Sheets writes a pivot table's sheet without its cells, which Excel builds from the pivot table when it opens the file";
+	internal const string PivotTable = "Google Sheets writes a pivot table's sheet without its cells, which Excel builds from the pivot table when it opens the file";
 
-	private const string ArrayValues = "Excel shows #VALUE! for a legacy array formula's other cell, whatever value the file stores there";
+	internal const string ArrayValues = "Excel shows #VALUE! for a legacy array formula's other cell, whatever value the file stores there";
 
-	private const string EmptyArrayCells = "openpyxl writes no value in an array formula's other cells, which Excel shows as 0";
+	internal const string EmptyArrayCells = "openpyxl writes no value in an array formula's other cells, which Excel shows as 0";
 
-	private const string LowercaseFormulas = "LibreOffice writes error literals and ANCHORARRAY in lowercase (#ref!, _xlfn.anchorarray), which Excel shows in capitals";
+	internal const string LowercaseFormulas = "LibreOffice writes error literals and ANCHORARRAY in lowercase (#ref!, _xlfn.anchorarray), which Excel shows in capitals";
 
-	private const string OwnTable = "Excel shows a structured reference to the table the cell is in without the table's name: Sales[Qty] in Sales' totals row as [Qty], which XlsxWriter and ClosedXML store";
+	internal const string OwnTable = "Excel shows a structured reference to the table the cell is in without the table's name: Sales[Qty] in Sales' totals row as [Qty], which XlsxWriter and ClosedXML store";
 
 	/// <summary>The cells where Excel reads the corpus otherwise, and why. A cell of <c>Sheet!</c> alone stands for every cell of the sheet.</summary>
 	private static readonly (string File, string Cell, string Reason)[] Differences =

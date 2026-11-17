@@ -1,0 +1,36 @@
+{
+  "file": "excel-written/types.xlsx",
+  "sha256": "f4834039dfbab46c125743b98968f25a82521b8ea1191d3c2b993254460bfedc",
+  "sheets": [
+    {
+      "name": "Numbers",
+      "used": "A1:G17",
+      "bom": true,
+      "csv": "Case,Int64,UInt64,Int32,Decimal,Double,Single\r\nzero,0,0,0,0,0,0\r\nnegative,-42,,-42,-1234.5,-1234.5,-2.5\r\nnegative zero,,,,,0,0\r\n15 digits,1.23457E+14,1.23457E+14,,1.23457E+14,1.23457E+14,\r\n16 digits,1234567890123456,1234567890123456,,1234567890123456,1.23457E+15,\r\nzeros at the end,1E+18,1E+19,,1.5,1E+300,\r\nlargest,9223372036854775807,18446744073709551615,2147483647,79228162514264337593543950335,1.7977E+308,3.40282E+38\r\nleast,-9223372036854775808,,-2147483648,-79228162514264337593543950335,-1.7977E+308,-3.40282E+38\r\n17 digits,,,,0.1,0.3,0.1\r\n1 and an ulp,,,,,1,\r\nsmall,,,,0.00001,0.00001,0.00001\r\nlarge,,,,,1.5E+20,1.5E+20\r\nleast normal,,,,,2.2251E-308,1E-45\r\nsubnormal,,,,,0,\r\nnot a number,,,,,NaN,NaN\r\ninfinities,,,,,Infinity,-Infinity\r\n"
+    },
+    {
+      "name": "Integers",
+      "used": "A1:F3",
+      "bom": true,
+      "csv": "Case,SByte,Byte,Int16,UInt16,UInt32\r\nleast,-128,0,-32768,0,0\r\nlargest,127,255,32767,65535,4294967295\r\n"
+    },
+    {
+      "name": "Dates",
+      "used": "A1:D15",
+      "bom": true,
+      "csv": "Case,DateTime,TimeSpan,Offset\r\nmilliseconds,2024-12-31 23:59:59.999,24000:00:00.005,2024-01-15T10:30:00.0000000+02:00\r\nmidnight,2024-01-15,0:00:00,2024-01-15T10:30:00.0000000-05:00\r\nseconds,2024-01-15 10:30:00,36:00:00,2024-01-15T10:30:00.0000000+00:00\r\nExcel's first day,1900-01-01,0:00:00.500,\r\nbefore 1900-02-29,1900-02-28,-01:00:00,\r\nafter 1900-02-29,1900-03-01 00:00:00.001,0:00:00,\r\nExcel's last second,9999-12-31 23:59:59,,\r\nDateTime's last tick,9999-12-31 23:59:59.999,,\r\nbefore 1900,1899-12-31T00:00:00.0000000,,\r\nDateTime's first,0001-01-01T00:00:00.0000000,,\r\nUTC,2024-01-15 10:30:00,,\r\nlocal,2024-01-15 10:30:00,,\r\nless than half a millisecond,2024-01-15 10:30:00,,\r\nhalf a millisecond,2024-01-15 10:30:00.001,,\r\n"
+    },
+    {
+      "name": "Other",
+      "used": "A1:G4",
+      "bom": true,
+      "csv": "Case,Flag,Letter,Id,Day,Link,Note\r\nset,TRUE,x,6f9619ff-8b86-d011-b42d-00c04fc964ff,Monday,https://example.com/a?b=c&d=e,plain\r\nother,FALSE,0,00000000-0000-0000-0000-000000000000,Sunday,urn:isbn:0451450523,\r\nnull,,,,,,\r\n"
+    },
+    {
+      "name": "Widths",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Case,When,Took\r\nnarrow first,2024-01-15,1:00:00\r\nwider after,2024-01-15 10:30:00.123,10675199.02:48:05.4775807\r\n"
+    }
+  ]
+}

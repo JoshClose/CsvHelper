@@ -1,0 +1,11 @@
+{
+  "file": "excel-mac/test_conditional_formatting.xlsx",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "used": "A1:F5",
+      "bom": true,
+      "csv": "Fooo,Grain,,,,1\r\n,,,,,0\r\ncell with formula  condition,4,,,,2\r\ncell with formula value and > condition,5,,,,0\r\n,,,,,1\r\n"
+    }
+  ]
+}

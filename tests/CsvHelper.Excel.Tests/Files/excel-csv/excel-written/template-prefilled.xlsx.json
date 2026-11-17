@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/template-prefilled.xlsx",
+  "sha256": "8ddf5cbfd3c355fcb9335e345210f73d67924c075b42388fc44791b55244842b",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:K5",
+      "bom": true,
+      "csv": "Orders,,,,,,,,,,\r\nId,Status,When,Amount,Paid,Took,Note,Big,Grade,Region,Count\r\n1,Open,2024-01-15 10:30:00,9.5,TRUE,1:30:00,first,1.23457E+14,A,North,5\r\n2,On hold,2024-01-16,0.25,FALSE,36:00:00,00123,1,B,South,0\r\n3,Closed,2024-01-17,2,TRUE,0:00:00,,0,C,North,100\r\n"
+    }
+  ]
+}

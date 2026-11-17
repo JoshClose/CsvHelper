@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/template-types.xlsx",
+  "sha256": "294bd5d446b6c16eefcacded9ce2371142be0cd4c1306f17d8b61ad2f9d35d1c",
+  "sheets": [
+    {
+      "name": "Types",
+      "used": "A1:Y2",
+      "bom": true,
+      "csv": "Every type,,,,,,,,,,,,,,,,,,,,,,,,\r\nPaid,Shipped,Status,Access,SByte,Byte,Short,UShort,Int,UInt,Long,ULong,Float,Double,Decimal,When,Took,Stamp,Grade,Name,Key,Site,Maybe,Dotted,Priced\r\n"
+    }
+  ]
+}

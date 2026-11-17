@@ -1,0 +1,29 @@
+{
+  "file": "libreoffice/messy.xlsx",
+  "sheets": [
+    {
+      "name": "Report",
+      "used": "B1:G15",
+      "bom": true,
+      "csv": "Sales report,,,,,\r\n\"Units in boxes, prices in dollars\",,,,,\r\n,,,,,\r\nRegion,Product,Code,Units,Price,Total\r\nNorth,apple,A-1,10,1.5,15\r\n,pear,P-2,20,0.25,5\r\n,plum,M-3,30,2,60\r\nSouth,apple,A-1,5,1.5,7.5\r\n,pear,P-2,6,0.25,1.5\r\n,plum,M-3,7,2,14\r\nWest,mixed,,8,1,8\r\n,,,9,1,9\r\nEast,apple,A-1,1,1.5,1.5\r\n,pear,P-2,2,0.25,0.5\r\nTotal,,,98,,122\r\n"
+    },
+    {
+      "name": "Chart",
+      "used": "A1",
+      "bom": true,
+      "csv": "\r\n"
+    },
+    {
+      "name": "Tables",
+      "used": "A1:I10",
+      "bom": true,
+      "csv": "Item,Qty,Price,,,,,\"First\nline\",Value\r\napple,3,1.5,,,,,x,1\r\npear,10,0.25,,ann,7,,y,2\r\nplum,7,2,,bob,9,,,\r\nTotal,20,,,,,,,\r\n,,,,,,,,\r\n,,,,,,,,\r\n,,Code,Count,,,,,\r\n,,k1,4,,,,,\r\n,,k2,5,,,,,\r\n"
+    },
+    {
+      "name": "Filtered",
+      "used": "A1:C10",
+      "bom": true,
+      "csv": "Kind,Name,Amount\r\na,one,1\r\nb,two,2\r\na,three,3\r\nb,four,4\r\n,,\r\na,five,5\r\nb,six,6\r\na,seven,7\r\nb,eight,8\r\n"
+    }
+  ]
+}

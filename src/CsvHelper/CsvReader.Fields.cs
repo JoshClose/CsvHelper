@@ -821,7 +821,11 @@ public sealed partial class CsvReader
 		return trimInsideQuotes ? TrimWhitespace(value) : value;
 	}
 
-	/// <summary>Decodes a field of the modes other than Rfc4180 (where a fixed-width length can be -1, see <see cref="FixedWidthField"/>).</summary>
+	/// <summary>
+	/// Decodes a field of the modes other than Rfc4180 (where a fixed-width length can be -1, see <see cref="FixedWidthField"/>),
+	/// and of record sources. Without escapes, CSV flags a field only to trim it; a record source flags a field for its text
+	/// (a typed cell, or one with a style), whose value is trimmed only when the reader trims.
+	/// </summary>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private ReadOnlySpan<byte> DecodeUnquoted(int start, int length)
 	{
@@ -829,7 +833,7 @@ public sealed partial class CsvReader
 		var raw = new ReadOnlySpan<byte>(buffer, start, length);
 		if (escapes) return UnescapeEscaped(raw);
 
-		return TrimWhitespace(raw);
+		return trim ? TrimWhitespace(raw) : raw;
 	}
 
 	/// <summary>

@@ -1,0 +1,42 @@
+{
+  "file": "excel-written/newsheet-look.xlsx",
+  "sha256": "d6ce6e057080dc44858db5d745fc6c36588fafe6e5d289ce9b8abf812a2beeb6",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:H4",
+      "bom": true,
+      "csv": "Orders,,,,,,,\r\nId,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n"
+    },
+    {
+      "name": "Orders (2)",
+      "used": "A1:H4",
+      "bom": true,
+      "csv": "Orders,,,,,,,\r\nId,Customer,Placed,Total,Paid,Took,Site,Note\r\n333,Ken,2024-02-29 23:59:59.999,-0.5,TRUE,9600:00:00,mailto:ken@example.com,a note longer than the others\r\n4444,名前,2024-12-31 12:00:00,0,FALSE,0:00:00,,\r\n"
+    },
+    {
+      "name": "Orders (3)",
+      "used": "A1:H3",
+      "bom": true,
+      "csv": "Orders,,,,,,,\r\nId,Customer,Placed,Total,Paid,Took,Site,Note\r\n55555,Zoë,1900-03-01,99999999.99,TRUE,1:30:00,https://example.com/orders/55555?x=1#top,last\r\n"
+    },
+    {
+      "name": "Filtered",
+      "used": "A1:B4",
+      "bom": true,
+      "csv": "Filtered,\r\nName,Value\r\na,1\r\nb,22\r\n"
+    },
+    {
+      "name": "Filtered (2)",
+      "used": "A1:B4",
+      "bom": true,
+      "csv": "Filtered,\r\nName,Value\r\nc,333\r\nd,4444\r\n"
+    },
+    {
+      "name": "Filtered (3)",
+      "used": "A1:B3",
+      "bom": true,
+      "csv": "Filtered,\r\nName,Value\r\ne,55555\r\n"
+    }
+  ]
+}

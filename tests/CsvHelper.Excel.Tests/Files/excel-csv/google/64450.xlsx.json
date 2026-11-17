@@ -1,0 +1,17 @@
+{
+  "file": "google/64450.xlsx",
+  "sheets": [
+    {
+      "name": "Hoja 1",
+      "used": "A1:H2",
+      "bom": true,
+      "csv": "uno,dos,tres,cuatro,cinco,seis,siete,ocho\r\n1,2,3,4,5,6,7,8\r\n"
+    },
+    {
+      "name": "Hoja 2",
+      "used": "A1:F7",
+      "bom": true,
+      "csv": "SUM of siete,,,,dos,\r\nuno,tres,cinco,siete,2,Grand Total\r\n1,3,5,7,7,7\r\n,,5 Total,,7,7\r\n,3 Total,,,7,7\r\n1 Total,,,,7,7\r\nGrand Total,,,,7,7\r\n"
+    }
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "file": "excel-written/autofit.xlsx",
+  "sha256": "201a3ae0e8ce440c103da7d803f5e4be6b60534f6d856346282fe80246c82a52",
+  "sheets": [
+    {
+      "name": "Widths",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Case,When,Took\r\nnarrow first,2024-01-15,1:00:00\r\nwider after,2024-01-15 10:30:00.123,10675199.02:48:05.4775807\r\n"
+    },
+    {
+      "name": "General",
+      "used": "A1:B11",
+      "bom": true,
+      "csv": "Case,Value\r\nsmall,0.000123457\r\npi,3.141592654\r\nnegative,-1234567.891\r\ndecimals,123456.1235\r\nlarge,1.5E+20\r\ntiny,0.00001\r\n11 digits,12345678901\r\n12 digits,1.23457E+11\r\na half,-0.5\r\n17 digits,0.3\r\n"
+    },
+    {
+      "name": "Text",
+      "used": "A1:D3",
+      "bom": true,
+      "csv": "Short,Long,Lines,Wide\r\na,\"This text is a hundred characters long, which is more than the sixty that auto-fit takes at most.\",\"first line\nsecond, longer line\",日本語のテキスト\uD83D\uDE00\r\nb,short,one line,ascii\r\n"
+    },
+    {
+      "name": "Capped",
+      "used": "A1:B4",
+      "bom": true,
+      "csv": "Name,Value\r\nshort,1.5\r\na name of thirty characters ok,123456.5\r\n\"past the held rows, a much longer name\",2.5\r\n"
+    },
+    {
+      "name": "Header",
+      "used": "A1:B3",
+      "bom": true,
+      "csv": "A header much wider than its cells,B\r\n1,2\r\n3,4\r\n"
+    },
+    {
+      "name": "Formulas",
+      "used": "A1:D3",
+      "bom": true,
+      "csv": "A,B,Sum,Shows\r\n1,2,3,3\r\n10,20,200,200\r\n"
+    },
+    {
+      "name": "Midnight",
+      "used": "A1:A3",
+      "bom": true,
+      "csv": "Day\r\n2024-01-15\r\n2024-01-16\r\n"
+    }
+  ]
+}

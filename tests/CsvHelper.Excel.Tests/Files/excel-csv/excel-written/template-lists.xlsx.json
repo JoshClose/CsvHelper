@@ -1,0 +1,19 @@
+{
+  "file": "excel-written/template-lists.xlsx",
+  "sha256": "c464daa94df51ad008f82699530c15473b72cec8ddded153e35c6dbfe98c8239",
+  "sheets": [
+    {
+      "name": "Lists",
+      "used": "A1:H1",
+      "bom": true,
+      "csv": "Color,Quote,Region,Padded,Many,Repeated,TheCustomersPreferredDeliveryRegion,Notes\r\n"
+    },
+    {
+      "name": "Lists2",
+      "used": "A1:C30",
+      "visible": 2,
+      "bom": true,
+      "csv": "\"North, East\", padded ,Region01\r\n\"South, West\",plain,Region02\r\n,,Region03\r\n,,Region04\r\n,,Region05\r\n,,Region06\r\n,,Region07\r\n,,Region08\r\n,,Region09\r\n,,Region10\r\n,,Region11\r\n,,Region12\r\n,,Region13\r\n,,Region14\r\n,,Region15\r\n,,Region16\r\n,,Region17\r\n,,Region18\r\n,,Region19\r\n,,Region20\r\n,,Region21\r\n,,Region22\r\n,,Region23\r\n,,Region24\r\n,,Region25\r\n,,Region26\r\n,,Region27\r\n,,Region28\r\n,,Region29\r\n,,Region30\r\n"
+    }
+  ]
+}

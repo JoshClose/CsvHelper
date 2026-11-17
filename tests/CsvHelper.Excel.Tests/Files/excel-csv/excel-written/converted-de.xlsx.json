@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/converted-de.xlsx",
+  "sha256": "b8f7c943b78b6e542f69c8dd89db74af8cdf5432a73ca9670bcaf9380b2d0dc5",
+  "sheets": [
+    {
+      "name": "Preise",
+      "used": "A1:G4",
+      "bom": true,
+      "csv": "Name,Menge,Preis,Datum,Zeit,Bezahlt,Code\r\nÄpfel,3,1.5,2024-01-15,2024-01-15 10:30:00,TRUE,1.5\r\nBirnen,-4,-2.25,2024-01-16,2024-01-16 23:59:59.500,FALSE,\"1.234,5\"\r\nKirschen,1000,1500,2024-02-29,2024-02-29,TRUE,\"0,5\"\r\n"
+    }
+  ]
+}

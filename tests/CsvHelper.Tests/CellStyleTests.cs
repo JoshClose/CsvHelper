@@ -271,6 +271,32 @@ public class CellStyleTests
 	}
 
 	[Fact]
+	public void StyledFieldsKeepTheirWhitespaceAndQuotes()
+	{
+		// A styled field is flagged for its text, not decoded as CSV: its spaces and quotes reach the formatter and GetSpan,
+		// as an unstyled field's do (Phase 8's step 7 found them trimmed). Only the reader's own trimming trims it.
+		List<StyledRow> rows = [new(1, Text("  lead ", 0), Text("\"q\" x", 0), Text("  own "), Number(" 1.5", 0))];
+		using (var reader = new CsvReader(new StyledRecordSource(rows, new MarkingFormatter()), new CsvReaderOptions { HasHeader = false }))
+		{
+			Assert.True(reader.Read());
+			Assert.Equal("[  lead ]", reader.GetString(0));
+			Assert.Equal("  lead "u8.ToArray(), reader.GetSpan(0).ToArray());
+			Assert.Equal("[\"q\" x]", reader.GetString(1));
+			Assert.Equal("\"q\" x"u8.ToArray(), reader.GetSpan(1).ToArray());
+			Assert.Equal("  own ", reader.GetString(2));
+			Assert.Equal(" 1.5"u8.ToArray(), reader.GetSpan(3).ToArray());
+		}
+
+		using (var reader = new CsvReader(new StyledRecordSource(rows, new MarkingFormatter()), new CsvReaderOptions { HasHeader = false, TrimWhitespace = true }))
+		{
+			Assert.True(reader.Read());
+			Assert.Equal("[lead]", reader.GetString(0));
+			Assert.Equal("lead"u8.ToArray(), reader.GetSpan(0).ToArray());
+			Assert.Equal("own", reader.GetString(2));
+		}
+	}
+
+	[Fact]
 	public void GeneratedMappersReadValuesAndStyledText()
 	{
 		using var reader = new CsvReader(new StyledRecordSource(Lines(), new MarkingFormatter(), rowsPerFill: 1), null);

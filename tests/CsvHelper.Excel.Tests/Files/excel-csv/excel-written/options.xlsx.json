@@ -1,0 +1,18 @@
+{
+  "file": "excel-written/options.xlsx",
+  "sha256": "7446dca7a4b854d1d3f5d109d8b36a1701fc46953c97860e302261dc5b60c91a",
+  "sheets": [
+    {
+      "name": "Numbers",
+      "used": "A1:G5",
+      "bom": true,
+      "csv": "Case,Int64,UInt64,Int32,Decimal,Double,Single\r\n16 digits,1.23457E+15,1.23457E+15,,1.23457E+15,,\r\n17 digits,1.23457E+16,1.23457E+16,,1.23457E+15,,\r\nlargest,9.22337E+18,1.84467E+19,,7.92282E+28,,\r\nleast,-9.22337E+18,,,-7.92282E+28,,\r\n"
+    },
+    {
+      "name": "Offsets",
+      "used": "A1:C5",
+      "bom": true,
+      "csv": "Case,Offset,Formatted\r\nmilliseconds,2024-01-15 08:30:00.123,2024-01-15 10:30\r\nwest,2024-01-16 03:30:00,2024-01-15 22:30\r\nUTC,2024-01-15,2024-01-15 00:00\r\nbefore 1900 in UTC,1900-01-01T00:30:00.0000000+01:00,1900-01-01 00:30\r\n"
+    }
+  ]
+}

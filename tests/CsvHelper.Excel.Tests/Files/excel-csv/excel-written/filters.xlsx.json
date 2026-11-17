@@ -1,0 +1,30 @@
+{
+  "file": "excel-written/filters.xlsx",
+  "sha256": "8af2fff7fd4757afd5acac55797ef8ec332076388ab3c83f64bbead5cecf116d",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:H6",
+      "bom": true,
+      "csv": "Id,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n333,Ken,2024-02-29 23:59:59.999,-0.5,TRUE,9600:00:00,mailto:ken@example.com,a note longer than the others\r\n4444,名前,2024-12-31 12:00:00,0,FALSE,0:00:00,,\r\n55555,Zoë,1900-03-01,99999999.99,TRUE,1:30:00,https://example.com/orders/55555?x=1#top,last\r\n"
+    },
+    {
+      "name": "Bob's orders",
+      "used": "A1:H5",
+      "bom": true,
+      "csv": "Bob's orders,,,,,,,\r\nId,Customer,Placed,Total,Paid,Took,Site,Note\r\n1,Ada,2024-01-15,12.5,TRUE,1:00:00,https://example.com/orders/1,first\r\n22,Grace Hopper,2024-01-16 10:30:05,1234567.891,FALSE,26:03:04.500,https://example.com/orders/22,\r\n333,Ken,2024-02-29 23:59:59.999,-0.5,TRUE,9600:00:00,mailto:ken@example.com,a note longer than the others\r\n"
+    },
+    {
+      "name": "Header",
+      "used": "A1:B1",
+      "bom": true,
+      "csv": "Name,Value\r\n"
+    },
+    {
+      "name": "a_x0041_b",
+      "used": "A1:B2",
+      "bom": true,
+      "csv": "A,B\r\n1,2\r\n"
+    }
+  ]
+}

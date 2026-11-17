@@ -84,13 +84,14 @@ internal static class CorpusFiles
 	/// <summary>
 	/// The workbooks CsvHelper.Excel reads, by path relative to <see cref="Folder"/>, with <c>/</c> between folders. Not the
 	/// written set's filled templates (<c>excel-written/filled/</c>), which Excel saved from the set's own workbooks: the
-	/// import's tests read them against Excel's answers about each text typed (<c>TemplateAnswersTests</c>).
+	/// import's tests read them against Excel's answers about each text typed (<c>TemplateAnswersTests</c>). Nor the display
+	/// set (<c>display/</c>), the probes of number formats, which <c>DisplayAnswersTests</c> reads against Excel's text.
 	/// </summary>
 	public static IReadOnlyList<string> Workbooks { get; } =
 		[.. Directory.EnumerateFiles(Folder, "*", SearchOption.AllDirectories)
 			.Where(p => Path.GetExtension(p) is ".xlsx" or ".xlsm" or ".xltx")
 			.Select(p => p.Substring(Folder.Length + 1).Replace(Path.DirectorySeparatorChar, '/'))
-			.Where(p => p != "excel/encrypted.xlsx" && !p.StartsWith("excel-written/", StringComparison.Ordinal))
+			.Where(p => p != "excel/encrypted.xlsx" && !p.StartsWith("excel-written/", StringComparison.Ordinal) && !p.StartsWith("display/", StringComparison.Ordinal))
 			.OrderBy(p => p, StringComparer.Ordinal)];
 
 	/// <summary>The workbooks, as theory data.</summary>

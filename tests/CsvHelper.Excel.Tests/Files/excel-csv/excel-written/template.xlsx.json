@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/template.xlsx",
+  "sha256": "93364b9d8428fdf42f705801a3a4be82e77be9373cf0c8704d7b1b09fb74949d",
+  "sheets": [
+    {
+      "name": "Orders",
+      "used": "A1:K1",
+      "bom": true,
+      "csv": "Id,Status,When,Amount,Paid,Took,Note,Big,Grade,Region,Count\r\n"
+    }
+  ]
+}

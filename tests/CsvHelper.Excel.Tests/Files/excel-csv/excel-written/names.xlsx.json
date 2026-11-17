@@ -1,0 +1,114 @@
+{
+  "file": "excel-written/names.xlsx",
+  "sha256": "4216341d65697e7320e4c946d8d559b3ad92365944a820c38e80c0feb5b4e3cf",
+  "sheets": [
+    {
+      "name": "Q&A <1>",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "Q&A <1>\r\n1\r\n"
+    },
+    {
+      "name": "\"Quoted\"",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "\"\"\"Quoted\"\"\"\r\n2\r\n"
+    },
+    {
+      "name": "a_x0041_b",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "a_x0041_b\r\n3\r\n"
+    },
+    {
+      "name": "History",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "History\r\n4\r\n"
+    },
+    {
+      "name": "日本",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "日本\r\n5\r\n"
+    },
+    {
+      "name": " spaced ",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": " spaced \r\n6\r\n"
+    },
+    {
+      "name": "TRUE",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "TRUE\r\n7\r\n"
+    },
+    {
+      "name": "A1",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "A1\r\n8\r\n"
+    },
+    {
+      "name": "R1C1",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "R1C1\r\n9\r\n"
+    },
+    {
+      "name": "123",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "123\r\n10\r\n"
+    },
+    {
+      "name": "=a",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "=a\r\n11\r\n"
+    },
+    {
+      "name": "+a",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "+a\r\n12\r\n"
+    },
+    {
+      "name": "!#$%&;,",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "\"!#$%&;,\"\r\n13\r\n"
+    },
+    {
+      "name": "Bob's",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "Bob's\r\n14\r\n"
+    },
+    {
+      "name": "ab",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "ab\r\n15\r\n"
+    },
+    {
+      "name": "a​b",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "a​b\r\n16\r\n"
+    },
+    {
+      "name": "Ａ",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "Ａ\r\n17\r\n"
+    },
+    {
+      "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\uD83D\uDE00",
+      "used": "A1:A2",
+      "bom": true,
+      "csv": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxx\uD83D\uDE00\r\n18\r\n"
+    }
+  ]
+}

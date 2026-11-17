@@ -1,0 +1,18 @@
+{
+  "file": "excel-written/presentation.xlsx",
+  "sha256": "b7753bb3b17e6d69c55465e88a25bf272591feea8952c999051869541635b6c9",
+  "sheets": [
+    {
+      "name": "Report",
+      "used": "A1:L7",
+      "bom": true,
+      "csv": "Sales report,,,,,,,,,,,\r\nRegion,Product,Units,Revenue,Share,Updated,Link,Notes,Internal,,,\r\nNorth,Widgets,\"12,345\",\"$98,765.40\",45.67%,2024-01-15,https://example.com/north,steady,a,,,\r\nSouth,Gadgets and gizmos,7,$12.50,0.12%,2024-02-29,mailto:south@example.com,\"growing\nfast\",b,,,\r\nEast,Widgets,0,-$150.00,100.00%,2024-12-31,,A note long enough to wrap in a column twenty-four characters wide.,c,,,\r\n,,,,,,,,,,,\r\n,,,,,,,,,,,\r\n"
+    },
+    {
+      "name": "Summary",
+      "used": "A1:C5",
+      "bom": true,
+      "csv": "Summary,,\r\nRegion,Total,Site\r\nNorth,98765.4,https://example.com/north\r\n,1.5,https://example.com/north/2\r\nSouth,12.5,\r\n"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/text.xlsx",
+  "sha256": "ab3ea9464bdb1d5926976051ce84f1b3fd4829a8541b08774dfe17e850c92ca4",
+  "sheets": [
+    {
+      "name": "Text",
+      "used": "A1:B32",
+      "bom": true,
+      "csv": "Case,Text\r\ntab,\"a\tb\"\r\nLF,\"a\nb\"\r\nCR,\"a\rb\"\r\nCR LF,\"a\r\nb\"\r\nC0 controls,\"\u0000\u0001\u0002\u0003\u0004\u0005\u0006\u0007\b\t\n\u000B\f\r\u000E\u000F\u0010\u0011\u0012\u0013\u0014\u0015\u0016\u0017\u0018\u0019\u001A\u001B\u001C\u001D\u001E\u001F\"\r\nC1 controls,a\u007F\u0080\u0085\u009Fb\r\nan escape,_x0041_\r\nan escape in lowercase,_x004a_\r\na capital X,_X0041_\r\nno closing underscore,_x0041\r\nnot hex,_x004G_\r\nan escaped escape,_x005F_x0041_\r\nnoncharacters,a\uFFFEb\uFFFF\r\nan emoji,\uD83D\uDE00\r\nJapanese,日本語\r\nentities,\"&<>\"\"'\"\r\nspaces at the ends,  padded  \r\ntabs at the ends,\"\tx\t\"\r\nLFs at the ends,\"\nx\n\"\r\na lone surrogate,a�b\r\ninvalid UTF-8,a�b\r\nleading zeros,00123\r\na decimal,1.5\r\nan exponent,1E5\r\na sign,-1\r\na point,.5\r\na formula,=1+1\r\nan error,#N/A\r\na boolean,TRUE\r\na date,2024-01-15\r\nthe longest,\r\n"
+    }
+  ]
+}

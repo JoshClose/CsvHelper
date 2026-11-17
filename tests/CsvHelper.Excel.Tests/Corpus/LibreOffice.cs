@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using CsvHelper.Excel.Corpus;
 
@@ -20,6 +21,17 @@ internal static class LibreOffice
 	/// <summary>LibreOffice's Excel 2007 filter, for workbooks it can't export as CSV.</summary>
 	private const string XlsxFilter = "xlsx:Calc MS Excel 2007 XML";
 
+	/// <summary>
+	/// A profile's settings that set LibreOffice's locale (<c>ooSetupSystemLocale</c>), which its number formats' separators,
+	/// built-in formats and names follow, as the design's probes set it (<c>Csv\_bench\results\phase8\design\lo_probe.py</c>).
+	/// </summary>
+	private const string LocaleSettings =
+		"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+		"<oor:items xmlns:oor=\"http://openoffice.org/2001/registry\" xmlns:xs=\"http://www.w3.org/2001/XMLSchema\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">\n" +
+		"<item oor:path=\"/org.openoffice.Setup/L10N\"><prop oor:name=\"ooSetupSystemLocale\" oor:op=\"fuse\"><value>{0}</value></prop></item>\n" +
+		"<item oor:path=\"/org.openoffice.Office.Common/Misc\"><prop oor:name=\"FirstRun\" oor:op=\"fuse\"><value>false</value></prop></item>\n" +
+		"</oor:items>\n";
+
 	/// <summary>The folder of the corpus's converted sheets, made once for every test.</summary>
 	private static readonly Lazy<string> Converted = new(() => Convert(CorpusFiles.Workbooks.Select(f => (Flat(f) + Path.GetExtension(f), File.ReadAllBytes(CorpusFiles.PathOf(f)))), CsvFilter));
 
@@ -35,6 +47,9 @@ internal static class LibreOffice
 
 	/// <summary>Every workbook of the written set, converted to <c>.xlsx</c>, for what LibreOffice keeps of its look.</summary>
 	private static readonly Lazy<string> WrittenLooks = new(() => Convert(Written.Workbooks.Select(w => (w.Name, Written.Write(w))), XlsxFilter));
+
+	/// <summary>The display set's workbooks converted to CSV in a locale, by locale, each made once for every test.</summary>
+	private static readonly ConcurrentDictionary<string, Lazy<string>> DisplayInLocale = new(StringComparer.Ordinal);
 
 	/// <summary>LibreOffice's <c>soffice</c>: <c>CSVHELPER_SOFFICE</c>, or the default install's; <see langword="null"/> when there is none.</summary>
 	public static string? Program { get; } = new[] { Environment.GetEnvironmentVariable("CSVHELPER_SOFFICE"), @"C:\Program Files\LibreOffice\program\soffice.exe" }
@@ -73,6 +88,22 @@ internal static class LibreOffice
 	/// <returns>Whether every sheet's name can be a file name.</returns>
 	public static bool CanExport(WrittenWorkbook workbook) => workbook.Sheets.SelectMany(s => s.Names).All(n => n.IndexOfAny(Path.GetInvalidFileNameChars()) < 0);
 
+	/// <summary>
+	/// The records of a display set's workbook as LibreOffice exports it in a locale, through a profile of its own whose
+	/// locale is set (Phase 8's decision 17): one per row, from row 1, each field the cell's shown text.
+	/// </summary>
+	/// <param name="file">The workbook, in <c>Files/display</c>.</param>
+	/// <param name="locale">The locale, such as <c>de-DE</c>.</param>
+	/// <returns>The records, or <see langword="null"/> when LibreOffice exported no such sheet.</returns>
+	public static List<string[]>? DisplaySheet(string file, string locale)
+	{
+		var folder = DisplayInLocale.GetOrAdd(locale, l => new Lazy<string>(() => Convert(
+			Directory.EnumerateFiles(CorpusFiles.PathOf("display"), "*.xlsx").Select(p => (Path.GetFileName(p), File.ReadAllBytes(p))), CsvFilter, l))).Value;
+		var name = Path.GetFileNameWithoutExtension(file);
+
+		return Records(Path.Combine(folder, $"{name}-{name}.csv"));
+	}
+
 	/// <summary>A CSV file's records, or <see langword="null"/> when there is no such file.</summary>
 	/// <param name="path">The file.</param>
 	/// <returns>The records.</returns>
@@ -101,8 +132,9 @@ internal static class LibreOffice
 	/// <summary>Converts workbooks in one run of LibreOffice.</summary>
 	/// <param name="workbooks">Each workbook's file name and bytes.</param>
 	/// <param name="filter">The filter to convert with.</param>
+	/// <param name="locale">The locale its profile sets, or <see langword="null"/> for the system's.</param>
 	/// <returns>The folder of the converted files.</returns>
-	private static string Convert(IEnumerable<(string Name, byte[] Bytes)> workbooks, string filter)
+	private static string Convert(IEnumerable<(string Name, byte[] Bytes)> workbooks, string filter, string? locale = null)
 	{
 		var folder = Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Tests.LibreOffice." + Guid.NewGuid().ToString("N"));
 		var inputs = Directory.CreateDirectory(Path.Combine(folder, "in")).FullName;
@@ -110,6 +142,12 @@ internal static class LibreOffice
 		foreach (var (name, bytes) in workbooks)
 		{
 			File.WriteAllBytes(Path.Combine(inputs, name), bytes);
+		}
+
+		if (locale is not null)
+		{
+			var user = Directory.CreateDirectory(Path.Combine(folder, "profile", "user")).FullName;
+			File.WriteAllText(Path.Combine(user, "registrymodifications.xcu"), string.Format(System.Globalization.CultureInfo.InvariantCulture, LocaleSettings, locale));
 		}
 
 		if (!Directory.EnumerateFiles(inputs).Any())

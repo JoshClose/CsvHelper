@@ -1,0 +1,30 @@
+{
+  "file": "excel-written/links.xlsx",
+  "sha256": "c239bccb4246d1fd764754a2d32ea78f4575d91df34b156b1ebf04344cfc9d31",
+  "sheets": [
+    {
+      "name": "Sites",
+      "used": "A1:B10",
+      "bom": true,
+      "csv": "Name,Link\r\nhttps,https://example.com/a?b=1&c=2#frag\r\nmailto,mailto:someone@example.com?subject=Hi%20there\r\nupper case,HTTP://Example.COM\r\nagain,https://example.com/a?b=1&c=2#frag\r\npast ASCII,https://example.com/caf%C3%A9\r\nfile,file:///C:/Temp/report.txt\r\nrelative,docs/report.txt\r\nurn,urn:isbn:0451450523\r\nnone,\r\n"
+    },
+    {
+      "name": "Table",
+      "used": "A1:B10",
+      "bom": true,
+      "csv": "Name,Link\r\nhttps,https://example.com/a?b=1&c=2#frag\r\nmailto,mailto:someone@example.com?subject=Hi%20there\r\nupper case,HTTP://Example.COM\r\nagain,https://example.com/a?b=1&c=2#frag\r\npast ASCII,https://example.com/caf%C3%A9\r\nfile,file:///C:/Temp/report.txt\r\nrelative,docs/report.txt\r\nurn,urn:isbn:0451450523\r\nnone,\r\n"
+    },
+    {
+      "name": "Styled",
+      "used": "A1:B10",
+      "bom": true,
+      "csv": "Name,Link\r\nhttps,https://example.com/a?b=1&c=2#frag\r\nmailto,mailto:someone@example.com?subject=Hi%20there\r\nupper case,HTTP://Example.COM\r\nagain,https://example.com/a?b=1&c=2#frag\r\npast ASCII,https://example.com/caf%C3%A9\r\nfile,file:///C:/Temp/report.txt\r\nrelative,docs/report.txt\r\nurn,urn:isbn:0451450523\r\nnone,\r\n"
+    },
+    {
+      "name": "Header",
+      "used": "A1:B2",
+      "bom": true,
+      "csv": "https://example.com/header,Name\r\nhttps://example.com/row,a\r\n"
+    }
+  ]
+}

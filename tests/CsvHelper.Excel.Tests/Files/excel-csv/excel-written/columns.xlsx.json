@@ -1,0 +1,24 @@
+{
+  "file": "excel-written/columns.xlsx",
+  "sha256": "64818ded8ad998b903f4e3c415558cbcd347b3a8aeae1c515bdc00b515303d9c",
+  "sheets": [
+    {
+      "name": "Attributes",
+      "used": "A1:M4",
+      "bom": true,
+      "csv": "Case,Amount,Rate,Big,Price,Part,Code,When,Paid,Zip,Notes,Secret,Wide\r\nfirst,\"1,234.50\",12.5%,1.50E+20,\"$1,234.50\",1 1/2,000123,15/01/2024 10:30,Paid: TRUE,00123,short,hidden,wide\r\nsecond,0.00,100.0%,1.23E+04,-$42.00, 1/4,000000,01/01/1900 00:00,Paid: FALSE,007,\"a line\nand another line\",s,\r\nthird,-0.13,-1.2%,-1.00E-03,$0.00,2 3/4,1234567,31/12/2024 23:59,Paid: TRUE,,This note is long enough to wrap across several lines in a column twenty characters wide.,x,text\r\n"
+    },
+    {
+      "name": "Options",
+      "used": "A1:M4",
+      "bom": true,
+      "csv": "Case,Amount,Rate,Big,Price,Part,Code,When,Paid,Zip,Notes,Secret,Wide\r\nfirst,1234.50,12.5%,1.50E+20,\"$1,234.50\",1 1/2,000123,15/01/2024 10:30,Paid: TRUE,00123,short,hidden,wide\r\nsecond,0.00,100.0%,1.23E+04,-$42.00, 1/4,000000,01/01/1900 00:00,Paid: FALSE,007,\"a line\nand another line\",s,\r\nthird,-0.13,-1.2%,-1.00E-03,$0.00,2 3/4,1234567,31/12/2024 23:59,Paid: TRUE,,This note is long enough to wrap across several lines in a column twenty characters wide.,x,text\r\n"
+    },
+    {
+      "name": "Mixed",
+      "used": "A1:B6",
+      "bom": true,
+      "csv": "Case,Value\r\nnumber,\"1,234,567\"\r\ntext,n/a\r\nboolean,TRUE\r\ndate,\"45,306\"\r\ndecimal,3\r\n"
+    }
+  ]
+}

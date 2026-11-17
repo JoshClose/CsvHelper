@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/converted-options.xlsx",
+  "sha256": "87d974203a7d4c899bffef00a067f213185ae193c68c9e9770f18b266fdcafa3",
+  "sheets": [
+    {
+      "name": "Options",
+      "used": "A1:C3",
+      "bom": true,
+      "csv": "Id,At,Day\r\n1.23457E+15,2024-01-15 09:30:00,1899-12-31\r\n1.23457E+19,2024-01-15 10:30:00,1900-01-01\r\n"
+    }
+  ]
+}

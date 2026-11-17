@@ -96,7 +96,7 @@ internal static class ExcelOracle
 		var workbooks = Directory.EnumerateFiles(files, "*", SearchOption.AllDirectories)
 			.Where(p => Path.GetExtension(p) is ".xlsx" or ".xlsm" or ".xltx")
 			.Select(p => Path.GetRelativePath(files, p).Replace(Path.DirectorySeparatorChar, '/'))
-			.Where(p => !LeftOut.Contains(p))
+			.Where(p => !LeftOut.Contains(p) && !p.StartsWith("display/", StringComparison.Ordinal))
 			.OrderBy(p => p, StringComparer.Ordinal)
 			.ToList();
 		var folder = Path.Combine(files, "excel-oracle");

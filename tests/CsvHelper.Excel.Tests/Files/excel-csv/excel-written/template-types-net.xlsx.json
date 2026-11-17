@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/template-types-net.xlsx",
+  "sha256": "05e5f8ddfc3ea6330920c27207b9b1c92441a11c78f80372a2da9465e299c18a",
+  "sheets": [
+    {
+      "name": "Types",
+      "used": "A1:B1",
+      "bom": true,
+      "csv": "Day,Time\r\n"
+    }
+  ]
+}

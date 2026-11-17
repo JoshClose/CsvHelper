@@ -1,0 +1,11 @@
+{
+  "file": "excel-mac/github-321.xlsx",
+  "sheets": [
+    {
+      "name": "Sheet1",
+      "used": "A1:A6",
+      "bom": true,
+      "csv": "2.04\r\n2.0\r\n2.05\r\n2.1\r\n2.06\r\n2.1\r\n"
+    }
+  ]
+}

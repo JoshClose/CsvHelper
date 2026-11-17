@@ -1,0 +1,12 @@
+{
+  "file": "excel-written/converted-text.xlsx",
+  "sha256": "1dc4745bf237885ba582964d1ddffa2d69ae76fc601335cfff4517f01e508e19",
+  "sheets": [
+    {
+      "name": "Forms",
+      "used": "A1:BK2",
+      "bom": true,
+      "csv": "int,zeros,zero-7,negative,plus,decimal,dot-first,dot-last,exp-lower,exp-upper,exp-big,digits-15,digits-16,digits-19,decimal-21,trailing-zero,one-point-zero,grouped,grouped-dec,de-decimal,dollar,percent,lead-space,trail-space,neg-zero,hex,nan,infinity,quoted-num,date,date-T-time,date-space-time,date-space-hm,date-T-ms,date-T-7,date-Z,date-offset,date-mdy,date-dmy,date-slash-iso,date-text,date-words,date-1900-02-29,date-1899,date-0001,date-9999,date-bad,time-hm,time-hms,time-ms,duration,TRUE,true,True,FALSE,yes,one,error,error-div,formula,formula-plus,at,empty\r\n123,00123,007,-45,+45,1.5,.5,5.,1e5,1E5,1.5E+20,123456789012345,1234567890123456,1234567890123456789,3.14159265358979323846,1.50,1.0,\"1,234\",\"1,234.5\",\"1,5\",$5,50%, 5,5 ,-0,0x10,NaN,Infinity,123,2024-01-15,2024-01-15T10:30:00,2024-01-15 10:30:00,2024-01-15 10:30,2024-01-15T10:30:00.123,2024-01-15T10:30:00.1234567,2024-01-15T10:30:00Z,2024-01-15T10:30:00+01:00,1/15/2024,15/01/2024,2024/01/15,15-Jan-2024,Jan 15 2024,1900-02-29,1899-12-31,0001-01-01,9999-12-31,2024-02-30,10:30,10:30:45,10:30:45.123,36:00:00,TRUE,true,True,FALSE,yes,1,#N/A,#DIV/0!,=1+1,+1+1,@SUM(1),\r\n"
+    }
+  ]
+}

@@ -40,9 +40,9 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 
 	private const string NewSheetFit = "with NewSheet, every sheet takes the first sheet's widths (step 3), where Excel's AutoFit fits each sheet's own cells";
 
-	private const string JapaneseMonths = "Excel shows ja-JP's abbreviated month ([$-411]mmm) as its number alone (1), where .NET writes 1月";
+	internal const string JapaneseMonths = "Excel shows ja-JP's abbreviated month ([$-411]mmm) as its number alone (1), where .NET writes 1月";
 
-	private const string GermanMarch = "ICU's de-DE abbreviates March as Mär, and Excel's [$-407]mmm as Mrz";
+	internal const string GermanMarch = "ICU's de-DE abbreviates March as Mär, and Excel's [$-407]mmm as Mrz";
 
 	private const string LibreOffice1900 = "LibreOffice's 1900 date system has no 1900-02-29, so serials before 61 show a day earlier there (1 is 1899-12-31)";
 

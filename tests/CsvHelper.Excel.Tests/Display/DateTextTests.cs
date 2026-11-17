@@ -30,8 +30,8 @@ public class DateTextTests
 		("elapsed time after a date part, and General in a date, can't be read: Excel shows text no rule found (yyyy-mm-dd [h]:mm shows 12 hours for most values)",
 			(code, _) => !FormatCode.Compile(code).IsReadable, 50),
 		("Excel reads [s] m as s [] (its NumberFormat), and shows text no rule found", (code, _) => code == "[s] m", 3),
-		("a half second no rule found rounds down in h:mm:ss (2.8935185185185183E-05, one double below 2.5 seconds), where 1.5 and 0.5 seconds round up",
-			(code, value) => code == "h:mm:ss" && value == "2.8935185185185183E-05", 1),
+		("0.0005 and 0.0015 seconds past midnight of day 0 (5.787037037037037E-09 and 1.736111111111111E-08) show a thousandth more in Excel than its arithmetic, as step 7 fitted it to 2,196 answers, gives",
+			(_, value) => value is "5.787037037037037E-09" or "1.736111111111111E-08", 6),
 	];
 
 	/// <summary>Every cell of the probes whose code shows a date shows Excel's text, but for the listed differences.</summary>
@@ -105,6 +105,23 @@ public class DateTextTests
 	[InlineData("h:mm:ss", 5.78125E-06, false, "0:00:00")]
 	[InlineData("ss.00", 1.736111111111111E-07, false, "00.02")]
 	[InlineData("ss.0", 2.8935185185185184E-06, false, "00.3")]
+	// The double nearest a half goes either way, as Excel's arithmetic takes it: half the unit added to the serial, then
+	// the parts truncated (step 7's probe of halves).
+	[InlineData("h:mm:ss", 2.8935185185185183E-05, false, "0:00:02")]
+	[InlineData("h:mm:ss", 61.000028935185185, false, "0:00:03")]
+	[InlineData("h:mm:ss", 45306.37855902778, false, "9:05:07")]
+	[InlineData("h:mm:ss", 45306.37855902779, false, "9:05:08")]
+	[InlineData("mm:ss.0", 45319.37855613426, false, "05:07.2")]
+	[InlineData("h:mm:ss", 2958465.3785590264, false, "9:05:07")]
+	[InlineData("h:mm:ss", 2958465.378559028, false, "9:05:08")]
+	// The hours, minutes and seconds truncated, and the fractions taken from the seconds' rest (step 7's probes of truncation):
+	// 58.599999999999994 seconds show 58.5, where the seconds times ten, 586 in doubles, would show 58.6.
+	[InlineData("h:mm:ss", 0.0004571759259259258, false, "0:00:40")]
+	[InlineData("h:mm:ss.0", 0.19928877314814814, false, "4:46:58.5")]
+	[InlineData("h:mm:ss.00", 0.1048529513888889, false, "2:30:59.29")]
+	[InlineData("h:mm:ss.000", 0.025443385416666665, false, "0:36:38.308")]
+	[InlineData("h:mm:ss.00", 2.2858796296296297E-05, false, "0:00:01.98")]
+	[InlineData("h:mm:ss.000", 0.0001135474537037037, false, "0:00:09.811")]
 	[InlineData("h:mm:ss.000", 45306.123456789, false, "2:57:46.667")]
 	[InlineData("h:mm:ss.000.0", 45306.5208333, false, "12:29:59.997.9")]
 	[InlineData("ss.0.0", 45306.999994, false, "59.5.5")]
@@ -116,7 +133,7 @@ public class DateTextTests
 	[InlineData("[hhh]:mm", 0.25, false, "006:00")]
 	[InlineData("[mm]:ss.0", 0.99999, false, "1439:59.1")]
 	[InlineData("[s].000", 45306.000000005784, false, "3914438400.000")]
-	[InlineData("[s].000", 1.736111111111111E-08, false, "0.002")]
+	[InlineData("[s].000", 2.8935185185185185E-08, false, "0.003")]
 	[InlineData("[s]", 45306.000005787035, false, "3914438401")]
 	[InlineData("[s]", 2958465.000005787, false, "255611376001")]
 	[InlineData("[s]", 1234.000005787, false, "106617600")]
