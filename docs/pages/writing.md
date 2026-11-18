@@ -290,8 +290,9 @@ writer.EndRecord();
 
 `type` is `string` for text (strings and character or UTF-8 spans) and the type of the value otherwise, `index` is the
 field's position in its record and `record` is `RecordCount` (0 for the header). A field that needs quotes is quoted
-whatever the callback returns, so the output stays valid. The callback gets the text of every field, which makes
-writing slower. Per-field quoting and `ShouldQuote` apply to RFC 4180 mode only.
+whatever the callback returns, so the output stays valid. To write every field as it is, never quoted, use
+[NoEscape mode](#noescape). The callback gets the text of every field, which makes writing slower. Per-field quoting
+and `ShouldQuote` apply to RFC 4180 mode only.
 
 A record whose only field is empty is written as `""`, so that a reader does not take it for an empty line. A record
 with no fields at all is an error.

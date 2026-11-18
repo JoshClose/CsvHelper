@@ -4,7 +4,10 @@ using System.Globalization;
 
 namespace CsvHelper;
 
-/// <summary>When <see cref="CsvWriter"/> encloses fields in quotes.</summary>
+/// <summary>
+/// When <see cref="CsvWriter"/> encloses fields in quotes in <see cref="CsvMode.Rfc4180"/> mode. To write every field
+/// as it is, never quoted, use <see cref="CsvMode.NoEscape"/>.
+/// </summary>
 public enum CsvQuoting
 {
 	/// <summary>
@@ -48,7 +51,7 @@ public enum CsvInjection
 /// <summary>
 /// Decides whether <see cref="CsvWriter"/> quotes a field in <see cref="CsvMode.Rfc4180"/> mode
 /// (<see cref="CsvWriterOptions.ShouldQuote"/>). A field that contains the separator, a quote, CR or LF is quoted whatever
-/// it returns.
+/// it returns. To write every field as it is, never quoted, use <see cref="CsvMode.NoEscape"/>.
 /// </summary>
 /// <param name="field">The text of the field, as it will be written (before quoting).</param>
 /// <param name="fieldType">
@@ -130,9 +133,9 @@ public sealed record CsvWriterOptions
 	/// <summary>
 	/// Called for each field in <see cref="CsvMode.Rfc4180"/> mode to decide whether to quote a field that does not need
 	/// quotes, such as text fields but not numbers. A field that contains the separator, a quote, CR or LF is always
-	/// quoted, and with <see cref="CsvQuoting.Always"/> every field is. Defaults to <see langword="null"/>. Writing is
-	/// slower with a callback, which gets the text of every field. The parallel writes of <see cref="CsvWriter"/> call it
-	/// on several threads at once.
+	/// quoted, and with <see cref="CsvQuoting.Always"/> every field is. To write every field as it is, never quoted, use
+	/// <see cref="CsvMode.NoEscape"/>. Defaults to <see langword="null"/>. Writing is slower with a callback, which gets
+	/// the text of every field. The parallel writes of <see cref="CsvWriter"/> call it on several threads at once.
 	/// </summary>
 	public CsvShouldQuote? ShouldQuote { get; init; }
 
