@@ -613,97 +613,6 @@ internal static class CsvParse
 
 		return System.DateTimeOffset.Parse(Encoding.UTF8.GetString(s), provider, DateTimeStyles.RoundtripKind);
 	}
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTime"/> in exactly <paramref name="format"/>, with the BCL's
-	/// <c>DateTime.ParseExact</c>, the provider and <see cref="DateTimeStyles.RoundtripKind"/>. A field of at most
-	/// 128 bytes is decoded on the stack, a longer one to a string.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="format">The exact format of the field, as <c>DateTime.ParseExact</c> takes it.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	private static DateTime DateTimeExactCore(ReadOnlySpan<byte> s, string format, IFormatProvider provider)
-	{
-		if (s.Length <= 128)
-		{
-			Span<char> chars = stackalloc char[128];
-			var n = Encoding.UTF8.GetChars(s, chars);
-
-			return System.DateTime.ParseExact(chars.Slice(0, n), format, provider, DateTimeStyles.RoundtripKind);
-		}
-
-		return System.DateTime.ParseExact(Encoding.UTF8.GetString(s), format, provider, DateTimeStyles.RoundtripKind);
-	}
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTimeOffset"/> in exactly <paramref name="format"/>, with the BCL's
-	/// <c>DateTimeOffset.ParseExact</c>, the provider and <see cref="DateTimeStyles.RoundtripKind"/>; a value without an
-	/// offset gets the local time zone's. A field of at most 128 bytes is decoded on the stack, a longer one to a string.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="format">The exact format of the field, as <c>DateTimeOffset.ParseExact</c> takes it.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	private static DateTimeOffset DateTimeOffsetExactCore(ReadOnlySpan<byte> s, string format, IFormatProvider provider)
-	{
-		if (s.Length <= 128)
-		{
-			Span<char> chars = stackalloc char[128];
-			var n = Encoding.UTF8.GetChars(s, chars);
-
-			return System.DateTimeOffset.ParseExact(chars.Slice(0, n), format, provider, DateTimeStyles.RoundtripKind);
-		}
-
-		return System.DateTimeOffset.ParseExact(Encoding.UTF8.GetString(s), format, provider, DateTimeStyles.RoundtripKind);
-	}
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTime"/> in exactly one of <paramref name="formats"/>, tried in
-	/// order, as <see cref="DateTimeExactCore(ReadOnlySpan{byte}, string, IFormatProvider)"/> parses one format.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="formats">The formats the field may have, as <c>DateTime.ParseExact</c> takes them.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	private static DateTime DateTimeExactCore(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider)
-	{
-		if (s.Length <= 128)
-		{
-			Span<char> chars = stackalloc char[128];
-			var n = Encoding.UTF8.GetChars(s, chars);
-
-			return System.DateTime.ParseExact(chars.Slice(0, n), formats, provider, DateTimeStyles.RoundtripKind);
-		}
-
-		return System.DateTime.ParseExact(Encoding.UTF8.GetString(s), formats, provider, DateTimeStyles.RoundtripKind);
-	}
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTimeOffset"/> in exactly one of <paramref name="formats"/>,
-	/// tried in order, as <see cref="DateTimeOffsetExactCore(ReadOnlySpan{byte}, string, IFormatProvider)"/> parses one
-	/// format.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="formats">The formats the field may have, as <c>DateTimeOffset.ParseExact</c> takes them.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	private static DateTimeOffset DateTimeOffsetExactCore(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider)
-	{
-		if (s.Length <= 128)
-		{
-			Span<char> chars = stackalloc char[128];
-			var n = Encoding.UTF8.GetChars(s, chars);
-
-			return System.DateTimeOffset.ParseExact(chars.Slice(0, n), formats, provider, DateTimeStyles.RoundtripKind);
-		}
-
-		return System.DateTimeOffset.ParseExact(Encoding.UTF8.GetString(s), formats, provider, DateTimeStyles.RoundtripKind);
-	}
 #else
 		return System.DateTime.Parse(Text(s), provider, DateTimeStyles.RoundtripKind);
 	}
@@ -719,57 +628,6 @@ internal static class CsvParse
 	/// <exception cref="FormatException"><paramref name="s"/> is not a date and time.</exception>
 	private static DateTimeOffset DateTimeOffsetCore(ReadOnlySpan<byte> s, IFormatProvider provider) =>
 		System.DateTimeOffset.Parse(Text(s), provider, DateTimeStyles.RoundtripKind);
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTime"/> in exactly <paramref name="format"/>: decoded to a string
-	/// for the BCL's <c>DateTime.ParseExact</c> with the provider and <see cref="DateTimeStyles.RoundtripKind"/>.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="format">The exact format of the field, as <c>DateTime.ParseExact</c> takes it.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	private static DateTime DateTimeExactCore(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
-		System.DateTime.ParseExact(Text(s), format, provider, DateTimeStyles.RoundtripKind);
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTimeOffset"/> in exactly <paramref name="format"/>: decoded to a
-	/// string for the BCL's <c>DateTimeOffset.ParseExact</c> with the provider and <see cref="DateTimeStyles.RoundtripKind"/>.
-	/// A value without an offset gets the local time zone's.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="format">The exact format of the field, as <c>DateTimeOffset.ParseExact</c> takes it.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	private static DateTimeOffset DateTimeOffsetExactCore(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
-		System.DateTimeOffset.ParseExact(Text(s), format, provider, DateTimeStyles.RoundtripKind);
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTime"/> in exactly one of <paramref name="formats"/>, tried in
-	/// order: decoded to a string for the BCL's <c>DateTime.ParseExact</c> with the provider and
-	/// <see cref="DateTimeStyles.RoundtripKind"/>.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="formats">The formats the field may have, as <c>DateTime.ParseExact</c> takes them.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	private static DateTime DateTimeExactCore(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
-		System.DateTime.ParseExact(Text(s), formats, provider, DateTimeStyles.RoundtripKind);
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTimeOffset"/> in exactly one of <paramref name="formats"/>,
-	/// tried in order: decoded to a string for the BCL's <c>DateTimeOffset.ParseExact</c> with the provider and
-	/// <see cref="DateTimeStyles.RoundtripKind"/>. A value without an offset gets the local time zone's.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="formats">The formats the field may have, as <c>DateTimeOffset.ParseExact</c> takes them.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	private static DateTimeOffset DateTimeOffsetExactCore(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
-		System.DateTimeOffset.ParseExact(Text(s), formats, provider, DateTimeStyles.RoundtripKind);
 #endif
 
 	/// <summary>
@@ -807,69 +665,59 @@ internal static class CsvParse
 	public static DateTimeOffset DateTimeOffset(ReadOnlySpan<byte> s, IFormatProvider provider, bool hide) =>
 		hide ? Hide(s, provider, static (x, p) => DateTimeOffsetCore(x, p), "DateTimeOffset") : DateTimeOffsetCore(s, provider);
 
-	/// <summary>Parses <paramref name="s"/> as a <see cref="System.DateTime"/> in exactly <paramref name="format"/>, as <see cref="DateTimeExactCore(ReadOnlySpan{byte}, string, IFormatProvider)"/> describes.</summary>
+	/// <summary>A type's <c>ParseExact</c>, for <see cref="Exact{T, TFormat}"/>.</summary>
+	/// <typeparam name="T">The type parsed.</typeparam>
+	/// <typeparam name="TFormat">A <see cref="string"/> for one format, a <see cref="string"/> array for several.</typeparam>
+	/// <param name="s">The text of the field.</param>
+	/// <param name="format">The format, or the formats.</param>
+	/// <param name="provider">The format provider.</param>
+	/// <returns>The parsed value.</returns>
+#if NET
+	internal delegate T ExactParser<T, TFormat>(ReadOnlySpan<char> s, TFormat format, IFormatProvider provider);
+#else
+	internal delegate T ExactParser<T, TFormat>(string s, TFormat format, IFormatProvider provider);
+#endif
+
+	/// <summary>
+	/// Parses <paramref name="s"/> in exactly <paramref name="format"/>, or in one of several formats, with
+	/// <paramref name="parse"/>, which calls the BCL's <c>ParseExact</c> of the type. On .NET a field of at most 128 bytes
+	/// is decoded on the stack and a longer one to a string; elsewhere the BCL parses a string. When
+	/// <paramref name="hide"/> is set, a <see cref="FormatException"/> or <see cref="OverflowException"/> is replaced with
+	/// one whose message leaves the value out.
+	/// </summary>
+	/// <typeparam name="T">The type parsed.</typeparam>
+	/// <typeparam name="TFormat">A <see cref="string"/> for one format, a <see cref="string"/> array for several.</typeparam>
 	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="format">The exact format of the field.</param>
+	/// <param name="format">The format, or the formats.</param>
 	/// <param name="provider">The format provider.</param>
 	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
+	/// <param name="type">The name of the type, for that message.</param>
+	/// <param name="parse">The type's <c>ParseExact</c>.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static DateTime DateTimeExact(ReadOnlySpan<byte> s, string format, IFormatProvider provider, bool hide) =>
-		hide ? DateTimeExactHidden(s, format, provider) : DateTimeExactCore(s, format, provider);
+	/// <exception cref="OverflowException">A component of a <see cref="System.TimeSpan"/> is out of range.</exception>
+	public static T Exact<T, TFormat>(
+		ReadOnlySpan<byte> s, TFormat format, IFormatProvider provider, bool hide, string type, ExactParser<T, TFormat> parse)
+	{
+		try
+		{
+#if NET
+			if (s.Length <= 128)
+			{
+				Span<char> chars = stackalloc char[128];
+				var n = Encoding.UTF8.GetChars(s, chars);
 
-	// Separate, so that the closure over the format is only created when it is used.
-	private static DateTime DateTimeExactHidden(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
-		Hide(s, provider, (x, p) => DateTimeExactCore(x, format, p), "DateTime");
+				return parse(chars.Slice(0, n), format, provider);
+			}
+#endif
 
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTimeOffset"/> in exactly <paramref name="format"/>, as
-	/// <see cref="DateTimeOffsetExactCore(ReadOnlySpan{byte}, string, IFormatProvider)"/> describes.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="format">The exact format of the field.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static DateTimeOffset DateTimeOffsetExact(ReadOnlySpan<byte> s, string format, IFormatProvider provider, bool hide) =>
-		hide ? DateTimeOffsetExactHidden(s, format, provider) : DateTimeOffsetExactCore(s, format, provider);
-
-	private static DateTimeOffset DateTimeOffsetExactHidden(ReadOnlySpan<byte> s, string format, IFormatProvider provider) =>
-		Hide(s, provider, (x, p) => DateTimeOffsetExactCore(x, format, p), "DateTimeOffset");
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTime"/> in exactly one of <paramref name="formats"/>, tried in
-	/// order, as <see cref="DateTimeExactCore(ReadOnlySpan{byte}, string[], IFormatProvider)"/> describes.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="formats">The formats the field may have.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	public static DateTime DateTimeExact(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider, bool hide) =>
-		hide ? DateTimeExactHidden(s, formats, provider) : DateTimeExactCore(s, formats, provider);
-
-	private static DateTime DateTimeExactHidden(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
-		Hide(s, provider, (x, p) => DateTimeExactCore(x, formats, p), "DateTime");
-
-	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="System.DateTimeOffset"/> in exactly one of <paramref name="formats"/>,
-	/// tried in order, as <see cref="DateTimeOffsetExactCore(ReadOnlySpan{byte}, string[], IFormatProvider)"/> describes.
-	/// </summary>
-	/// <param name="s">The UTF-8 text of the field.</param>
-	/// <param name="formats">The formats the field may have.</param>
-	/// <param name="provider">The format provider.</param>
-	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
-	/// <returns>The parsed value.</returns>
-	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	public static DateTimeOffset DateTimeOffsetExact(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider, bool hide) =>
-		hide ? DateTimeOffsetExactHidden(s, formats, provider) : DateTimeOffsetExactCore(s, formats, provider);
-
-	private static DateTimeOffset DateTimeOffsetExactHidden(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider) =>
-		Hide(s, provider, (x, p) => DateTimeOffsetExactCore(x, formats, p), "DateTimeOffset");
+			return parse(Encoding.UTF8.GetString(s), format, provider);
+		}
+		catch (Exception e) when (hide && e is FormatException or OverflowException)
+		{
+			throw Hidden(e, type);
+		}
+	}
 
 	/// <summary>Parses <paramref name="s"/> as a <see cref="System.Guid"/>, as <see cref="GuidCore"/> describes.</summary>
 	/// <param name="s">The UTF-8 text of the field.</param>

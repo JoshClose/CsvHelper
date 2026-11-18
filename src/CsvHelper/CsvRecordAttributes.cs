@@ -120,9 +120,9 @@ public sealed class CsvConstructorAttribute : Attribute
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="DateTime"/> and <see cref="DateTimeOffset"/> members are read with
-/// <see cref="CsvReader.ParseExact{T}(int, string, IFormatProvider)"/>; members of other types, such as
-/// <c>DateOnly</c>, <c>TimeOnly</c> and <see cref="TimeSpan"/>, with their static
+/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/> and <see cref="TimeSpan"/> members, and on .NET 8 and later
+/// <c>DateOnly</c> and <c>TimeOnly</c> members, are read with
+/// <see cref="CsvReader.ParseExact{T}(int, string, IFormatProvider)"/>; members of other types with their static
 /// <c>ParseExact(string, string, IFormatProvider)</c> method.
 /// </para>
 /// <para>

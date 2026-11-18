@@ -561,14 +561,38 @@ public class ReaderTests
 	}
 
 	[Fact]
-	public void ParseExactParsesOnlyDates()
+	public void ParseExactParsesDatesAndTimes()
 	{
-		using var reader = CsvReader.FromText("20240301,01:30\n", NoHeader);
+		using var reader = CsvReader.FromText("20240301,01:30,24.12.2024,10.30\n", NoHeader);
 		Assert.True(reader.Read());
 
 		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, ["dd/MM/yyyy", "yyyyMMdd"]));
-		Assert.Throws<NotSupportedException>(() => reader.ParseExact<TimeSpan>(1, "hh\\:mm"));
+		Assert.Equal(new TimeSpan(1, 30, 0), reader.ParseExact<TimeSpan>(1, "hh\\:mm"));
+		Assert.Equal(new TimeSpan(1, 30, 0), reader.ParseExact<TimeSpan>(1, ["hh\\:mm\\:ss", "hh\\:mm"], CultureInfo.InvariantCulture));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeSpan>(0, "hh\\:mm"));
+#if NET
+		Assert.Equal(new DateOnly(2024, 12, 24), reader.ParseExact<DateOnly>(2, "dd.MM.yyyy"));
+		Assert.Equal(new DateOnly(2024, 12, 24), reader.ParseExact<DateOnly>(2, ["yyyyMMdd", "dd.MM.yyyy"]));
+		Assert.Equal(new TimeOnly(10, 30), reader.ParseExact<TimeOnly>(3, "HH.mm"));
+		Assert.Equal(new TimeOnly(10, 30), reader.ParseExact<TimeOnly>(3, ["HH:mm", "HH.mm"], CultureInfo.InvariantCulture));
+		Assert.Throws<FormatException>(() => reader.ParseExact<DateOnly>(0, "dd.MM.yyyy"));
+		Assert.Throws<FormatException>(() => reader.ParseExact<TimeOnly>(1, "HH.mm"));
+#endif
 		Assert.Throws<NotSupportedException>(() => reader.ParseExact<int>(0, ["yyyyMMdd"]));
+		Assert.Throws<NotSupportedException>(() => reader.ParseExact<decimal>(0, "0.00"));
+	}
+
+	[Fact]
+	public void ParseExactParsesLongFields()
+	{
+		// Fields of more than 128 bytes are decoded to a string instead of on the stack.
+		var text = new string('x', 200);
+		using var reader = CsvReader.FromText(text + "20240301\n", NoHeader);
+		Assert.True(reader.Read());
+
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, "'" + text + "'yyyyMMdd"));
+		Assert.Equal(new DateTime(2024, 3, 1), reader.ParseExact<DateTime>(0, ["yyyyMMdd", "'" + text + "'yyyyMMdd"]));
+		Assert.Throws<FormatException>(() => reader.ParseExact<DateTime>(0, "yyyyMMdd"));
 	}
 
 	[Fact]
