@@ -183,6 +183,9 @@ internal readonly struct ExcelDataReaderOrderSource(EdrReader reader) : IOrderSo
 [CategoriesColumn]
 public class ExcelOrdersRead : ReadBenchmarkBase
 {
+	/// <summary>The options of <see cref="CsvHelper_StringsFormatted"/>: the defaults, with the text Excel shows.</summary>
+	private static readonly ExcelReaderOptions Formatted = new() { Text = ExcelText.Formatted };
+
 	/// <summary>The workbook every library reads.</summary>
 	private byte[] workbook = [];
 
@@ -346,6 +349,29 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	public long CsvHelper_Strings()
 	{
 		using var reader = ExcelReader.Create(NewWorkbookStream());
+		var length = 0L;
+		while (reader.Read())
+		{
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				length += reader.GetString(i).Length;
+			}
+		}
+
+		return length;
+	}
+
+	/// <summary>
+	/// CsvHelper.Excel under <see cref="ExcelText.Formatted"/>: every field of every order as the text Excel shows, through
+	/// <see cref="CsvReader.GetString(int)"/>. Seven of the twelve cells a row are rendered: the five numbers in General, and
+	/// the two dates in <see cref="ExcelOrders.DateFormat"/>; the booleans and the strings keep their text.
+	/// </summary>
+	/// <returns>The total length of the texts.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Strings")]
+	public long CsvHelper_StringsFormatted()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Formatted);
 		var length = 0L;
 		while (reader.Read())
 		{

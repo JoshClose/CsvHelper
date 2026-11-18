@@ -17,7 +17,8 @@ namespace CsvHelper.Benchmarks;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="ExcelConvert.ToCsv(Stream, Stream, ExcelToCsvOptions)"/> at its defaults; the string path it avoids, a
+/// <see cref="ExcelConvert.ToCsv(Stream, Stream, ExcelToCsvOptions)"/> at its defaults, and under
+/// <see cref="ExcelText.Formatted"/>, for what the text Excel shows costs; the string path it avoids, a
 /// <see cref="CsvReader.GetString(int)"/> into <see cref="CsvWriter.WriteField(string)"/> for each field; Sylvan.Data.Excel
 /// 0.5.8's reader into Sylvan.Data.Csv 1.4.4's <c>CsvDataWriter</c> (the baseline), each with its defaults; and MiniExcel
 /// 1.46.0's <c>ConvertXlsxToCsv</c>.
@@ -29,6 +30,9 @@ namespace CsvHelper.Benchmarks;
 /// </remarks>
 public abstract class ExcelToCsvBenchmarkBase : ExcelWriteBenchmarkBase
 {
+	/// <summary>The options of <see cref="CsvHelper_ToCsvFormatted"/>: the defaults, with the text Excel shows.</summary>
+	private static readonly ExcelToCsvOptions Formatted = new() { Excel = new ExcelReaderOptions { Text = ExcelText.Formatted } };
+
 	/// <summary>The workbook every library converts.</summary>
 	private byte[] workbook = [];
 
@@ -68,6 +72,21 @@ public abstract class ExcelToCsvBenchmarkBase : ExcelWriteBenchmarkBase
 	{
 		var stream = NewOutput();
 		ExcelConvert.ToCsv(NewWorkbookStream(), stream);
+
+		return stream.Count;
+	}
+
+	/// <summary>
+	/// CsvHelper.Excel: <see cref="ExcelConvert.ToCsv(Stream, Stream, ExcelToCsvOptions)"/> under
+	/// <see cref="ExcelText.Formatted"/>, each field the text Excel shows, as UTF-8.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("ToCsv")]
+	public long CsvHelper_ToCsvFormatted()
+	{
+		var stream = NewOutput();
+		ExcelConvert.ToCsv(NewWorkbookStream(), stream, Formatted);
 
 		return stream.Count;
 	}

@@ -69,6 +69,9 @@ internal readonly struct ArraySource(string[] values) : IColumnSource
 [CategoriesColumn]
 public class ExcelPackageAssetsRead : ReadBenchmarkBase
 {
+	/// <summary>The options of <see cref="CsvHelper_StringsFormatted"/>: the defaults, with the text Excel shows.</summary>
+	private static readonly ExcelReaderOptions Formatted = new() { Text = ExcelText.Formatted };
+
 	/// <summary>The workbook every library reads, for the current <see cref="Strings"/>.</summary>
 	private byte[] workbook = [];
 
@@ -220,6 +223,28 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	public long CsvHelper_Strings()
 	{
 		using var reader = ExcelReader.Create(NewWorkbookStream());
+		var total = 0L;
+		while (reader.Read())
+		{
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				total += reader.GetString(i).Length;
+			}
+		}
+
+		return total;
+	}
+
+	/// <summary>
+	/// CsvHelper.Excel under <see cref="ExcelText.Formatted"/>: every field as a string, the text Excel shows. Every cell is
+	/// text without a style, so no field is rendered: this is what <c>Formatted</c> costs a sheet of text.
+	/// </summary>
+	/// <returns>The total length of the strings.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Strings")]
+	public long CsvHelper_StringsFormatted()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Formatted);
 		var total = 0L;
 		while (reader.Read())
 		{
