@@ -12,7 +12,9 @@ public sealed partial class CsvTable<T>
 {
 	/// <summary>
 	/// Adds records to the end of the file, creating it (with a header) when it does not exist or is empty. They are
-	/// written with the file's separator and line break, after a line break when the file does not end with one.
+	/// written as the table reads the file, so that it reads them back: with the file's separator and line break, after a
+	/// line break when the file does not end with one, and with the mode, quote and escape character, column widths and
+	/// comment prefix of <see cref="CsvQueryOptions.ReaderOptions"/>.
 	/// </summary>
 	/// <param name="records">The records, enumerated once.</param>
 	/// <returns>The number of records added.</returns>

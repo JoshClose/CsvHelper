@@ -224,7 +224,8 @@ public static class CsvEnumerable
 	/// <summary>
 	/// Adds records to the end of a CSV file, creating it (with a header) when it does not exist or is empty. The records
 	/// are written with the file's separator and line break, after a line break when the file does not end with one, and
-	/// must be written with the header the file has.
+	/// must be written with the header the file has. The rest of the format, such as the mode and the quote character, is
+	/// that of <paramref name="options"/>, which the file's header is read with too, so they must be the file's.
 	/// </summary>
 	/// <typeparam name="T">The type of the records.</typeparam>
 	/// <param name="records">The records, enumerated once.</param>
