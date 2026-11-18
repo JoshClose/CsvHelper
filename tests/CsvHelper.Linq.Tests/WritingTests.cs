@@ -369,6 +369,39 @@ public sealed class WritingTests : IDisposable
 	}
 
 	[Fact]
+	public void UpdatedRecordsDoNotReadAsComments()
+	{
+		// The file's first column is Country; Customer writes Name first.
+		var path = File("comments.csv", "Country,Name,Rank\n# a comment\nNO,Ada,1\nSE,Bob,2\n");
+		var options = new CsvQueryOptions { ReaderOptions = new CsvReaderOptions { CommentPrefix = '#' } };
+		var table = CsvQueryable.FromFile<Customer>(path, options);
+		Assert.Equal(1, table.Update(c => c.Rank == 1, c => c with { Country = "#NO" }));
+		Assert.Equal(1, table.Update(c => c.Rank == 2, c => c with { Name = "#Bob" }));
+		Assert.Equal("Country,Name,Rank\n# a comment\n\"#NO\",Ada,1\nSE,#Bob,2\n", Text(path));
+		Assert.Equal([new Customer("Ada", "#NO", 1), new Customer("#Bob", "SE", 2)], table.ToList());
+
+		path = File("escaped.csv", "Name,Country,Rank\nAda,NO,1\n");
+		options = new CsvQueryOptions { ReaderOptions = new CsvReaderOptions { Mode = CsvMode.Escape, CommentPrefix = '#' } };
+		table = CsvQueryable.FromFile<Customer>(path, options);
+		Assert.Equal(1, table.Update(c => true, c => c with { Name = "#Ada" }));
+		Assert.Equal("Name,Country,Rank\n\\#Ada,NO,1\n", Text(path));
+		Assert.Equal("#Ada", table.Single().Name);
+
+		path = File("rows.csv", "Name,Country,Rank\nAda,NO,1\n");
+		options = new CsvQueryOptions
+		{
+			ReaderOptions = new CsvReaderOptions { CommentPrefix = '#' },
+			// The table's comment prefix is the one that matters; the writer's would quote the first field it writes.
+			WriterOptions = new CsvWriterOptions { CommentPrefix = '!' },
+		};
+		var rows = CsvQueryable.FromFile(path, options);
+		Assert.Equal(1, rows.Update(r => true, r => r["Country"] = "!NO"));
+		Assert.Equal(1, rows.Update(r => true, r => r["Name"] = "#Ada"));
+		Assert.Equal("Name,Country,Rank\n\"#Ada\",!NO,1\n", Text(path));
+		Assert.Equal("#Ada", rows.Single()["Name"]);
+	}
+
+	[Fact]
 	public async Task DeletesAsynchronouslyAndCanBeCanceled()
 	{
 		var path = File("cancel.csv", Data.CustomersCsv);

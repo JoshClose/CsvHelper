@@ -49,3 +49,9 @@ parameter a `[CsvConverter]`. See
 field, and with `IncludeValuesInExceptions` off, a `DateOnly` or `TimeOnly` field that doesn't have the format no longer
 shows its value in the exception. See [Parse and TryParse](../../pages/reading.md#parse-and-tryparse) and
 [Exact formats](../../pages/records.md#exact-formats-csvformat).
+
+CsvHelper.Linq's `Update` no longer turns a record into a comment. A changed value in the file's first column that
+starts with the `CommentPrefix` of the table's `ReaderOptions` is now quoted, or escaped in Escape mode. In 34.0 it was
+written as it was, so the table skipped the record from then on. The `CommentPrefix` of the writer options, which could
+quote a value in another column, no longer applies to `Update`. See
+[Changing files](../../pages/linq.md#changing-files).

@@ -228,12 +228,16 @@ internal sealed class DeleteRows<T> : RowChange
 internal abstract class FieldPatch : RowChange
 {
 	private byte[] separator = [];
+	private CsvMode mode;
+	private byte quote;
+	private byte escape;
+	private byte? comment;
 	private CsvReaderOptions scratchOptions = CsvReaderOptions.Default;
 
 	/// <summary>The options of the writer that encodes the fields.</summary>
 	protected CsvWriterOptions WriterOptions { get; private set; } = CsvWriterOptions.Default;
 
-	/// <summary>Takes the file's separator, mode, quote and escape for the writer.</summary>
+	/// <summary>Takes the file's separator, mode, quote and escape for the writer, and its comment prefix for <see cref="Patch"/>.</summary>
 	/// <param name="reader">The reader of the file.</param>
 	/// <param name="options">The writer options to start from.</param>
 	/// <exception cref="NotSupportedException">The file is fixed-width.</exception>
@@ -251,11 +255,17 @@ internal abstract class FieldPatch : RowChange
 			Mode = readerOptions.Mode,
 			Quote = readerOptions.Quote,
 			Escape = readerOptions.Escape,
+			// The first field the writer writes may go to any column of the file; Patch protects the first column.
+			CommentPrefix = null,
 			HasHeader = false,
 			WriteByteOrderMark = false,
 			NewLine = "\n",
 		};
 		separator = Encoding.UTF8.GetBytes([reader.Separator]);
+		mode = readerOptions.Mode;
+		quote = (byte)readerOptions.Quote;
+		escape = (byte)readerOptions.Escape;
+		comment = readerOptions.CommentPrefix is char prefix ? (byte)prefix : null;
 		scratchOptions = new CsvReaderOptions
 		{
 			HasHeader = false,
@@ -290,7 +300,8 @@ internal abstract class FieldPatch : RowChange
 
 	/// <summary>
 	/// The bytes of the current record with some fields replaced: each file column keeps its raw bytes, unless
-	/// <paramref name="replacements"/> has a field for it.
+	/// <paramref name="replacements"/> has a field for it. A field that replaces the first column is quoted or escaped
+	/// when it starts with the comment prefix, so that the record does not read as a comment.
 	/// </summary>
 	/// <param name="reader">The reader, on the record.</param>
 	/// <param name="replacements">The raw bytes of the changed fields, by file column.</param>
@@ -308,6 +319,11 @@ internal abstract class FieldPatch : RowChange
 
 			if (replacements.TryGetValue(column, out var raw))
 			{
+				if (column == 0)
+				{
+					raw = NotAComment(raw);
+				}
+
 				record.Write(raw, 0, raw.Length);
 			}
 			else if (column < reader.FieldCount)
@@ -318,6 +334,26 @@ internal abstract class FieldPatch : RowChange
 		}
 
 		return record.ToArray();
+	}
+
+	/// <summary>
+	/// The raw bytes of a field that starts a record, protected as a writer protects its first field when it starts with
+	/// the comment prefix: quoted in Rfc4180 mode, with the prefix escaped in Escape mode, and as it is in NoEscape mode.
+	/// </summary>
+	private byte[] NotAComment(byte[] raw)
+	{
+		if (comment is not { } prefix || raw.Length == 0 || raw[0] != prefix)
+		{
+			return raw;
+		}
+
+		// The field is not quoted, since it starts with the prefix, so it holds no quote to double: a writer always quotes those.
+		return mode switch
+		{
+			CsvMode.Rfc4180 => [quote, .. raw, quote],
+			CsvMode.Escape => [escape, .. raw],
+			_ => raw,
+		};
 	}
 }
 
