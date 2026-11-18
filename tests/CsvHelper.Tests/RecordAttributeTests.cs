@@ -512,6 +512,32 @@ public class RecordAttributeTests
 	}
 
 	[Fact]
+	public void ExactFormatsLeaveValuesOutOfExceptions()
+	{
+		const string secret = "s3cr3t";
+		string[] fields = ["20240401", "202404011230+02:00", "20240401", "01:30", "24.12.2024"];
+		string[] members =
+		[
+			"Dated.Day", "Dated.At", "Dated.Maybe", "Dated.Span",
+#if NET
+			"Dated.Due",
+#endif
+		];
+		for (var i = 0; i < members.Length; i++)
+		{
+			var record = (string[])fields.Clone();
+			record[i] = secret;
+			using var reader = CsvReader.FromText("Day,At,Maybe,Span,Due\n" + string.Join(",", record) + "\n",
+				new CsvReaderOptions { IncludeValuesInExceptions = false });
+
+			var e = Assert.Throws<CsvFormatException>(() => reader.GetRecords<Dated>().ToList());
+			Assert.Equal(members[i], e.Member);
+			Assert.Contains("IncludeValuesInExceptions", e.Message);
+			Assert.DoesNotContain(secret, e.ToString());
+		}
+	}
+
+	[Fact]
 	public void ReadsWithConverters()
 	{
 		using var reader = CsvReader.FromText("Target,Code,MaybeCode\nhttps://example.com/a,ff,\nhttps://example.com/b,10,1A\n");

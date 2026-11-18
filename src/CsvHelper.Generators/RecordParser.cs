@@ -1593,8 +1593,12 @@ internal sealed class RecordParser
 	{
 		var column = context.Column;
 		var several = formats.Length > 1;
-		// The types of CsvReader.ParseExact<T>.
-		var readerExact = fieldType.SpecialType == SpecialType.System_DateTime || fieldType.ToDisplayString() == "System.DateTimeOffset";
+		// The types of CsvReader.ParseExact<T>, which parses them without creating a string and keeps the value out of its
+		// exceptions when IncludeValuesInExceptions is off. DateOnly and TimeOnly only in its .NET build, the one that
+		// parses ISpanParsable<T> types: ParseExact<T> has no constraint that would tell the builds apart.
+		var name = fieldType.ToDisplayString();
+		var readerExact = fieldType.SpecialType == SpecialType.System_DateTime || name is "System.DateTimeOffset" or "System.TimeSpan" ||
+			(readerParsesSpans && name is "System.DateOnly" or "System.TimeOnly");
 		// A static ParseExact(string, string, IFormatProvider) or ParseExact(string, string) (string[] for several
 		// formats), with any further parameters optional.
 		var parses = readerExact

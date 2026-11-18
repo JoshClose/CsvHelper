@@ -308,8 +308,9 @@ var options = new CsvReaderOptions { TrueValues = ["Ja", "J"], FalseValues = ["N
 reader.Parse<bool>(0);                            // true
 ```
 
-`Parse<T>(index, provider)` takes a format provider for one call, and `ParseExact<T>` parses a `DateTime` or a
-`DateTimeOffset` in an exact format, as their own `ParseExact` does:
+`Parse<T>(index, provider)` takes a format provider for one call, and `ParseExact<T>` parses a `DateTime`,
+`DateTimeOffset` or `TimeSpan`, and on .NET 8 and later a `DateOnly` or `TimeOnly`, in an exact format, as their own
+`ParseExact` does but without creating a string:
 
 ```csharp
 // Opened;Amount;Month
@@ -973,7 +974,8 @@ chunks, so it does.
 
 - **Look indexes up once.** Call `GetFieldIndex` before the loop and use the index inside it.
 - **Parse straight from the field.** `Parse<int>`, `Parse<double>`, `Parse<decimal>` and the other built-in types
-  parse the UTF-8 bytes; `int.Parse(reader.GetString(i))` creates a string first.
+  parse the UTF-8 bytes, and `ParseExact<T>` parses dates and times in an exact format without a string;
+  `int.Parse(reader.GetString(i))` and `DateOnly.ParseExact(reader.GetString(i), format)` create a string first.
 - **Use spans for comparisons and copies.** `reader.GetSpan(i).SequenceEqual("EUR"u8)` allocates nothing, and
   `CsvWriter.WriteField(reader.GetSpan(i))` copies a field to a writer as UTF-8.
 - **Keep strings with `PoolStrings`.** When you keep many records in memory, `PoolStrings = true` makes repeated values

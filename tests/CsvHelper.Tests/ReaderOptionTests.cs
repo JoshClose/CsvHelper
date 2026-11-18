@@ -181,8 +181,10 @@ public class ReaderOptionTests
 			r => r.Parse<bool>(0), r => r.Parse<DateTime>(0), r => r.Parse<DateTimeOffset>(0), r => r.Parse<Guid>(0),
 			r => r.Parse<short>(0), r => r.Parse<ulong>(0), r => r.ParseExact<DateTime>(0, "yyyyMMdd"),
 			r => r.Parse<TimeSpan>(0), r => r.Parse<BigInteger>(0),
+			r => r.ParseExact<DateTime>(0, ["yyyyMMdd", "dd.MM.yyyy"]), r => r.ParseExact<DateTimeOffset>(0, "yyyyMMdd"),
+			r => r.ParseExact<TimeSpan>(0, "hh\\:mm"), r => r.ParseExact<TimeSpan>(0, ["hh\\:mm"]),
 #if NET
-			r => r.Parse<DateOnly>(0),
+			r => r.Parse<DateOnly>(0), r => r.ParseExact<DateOnly>(0, "dd.MM.yyyy"), r => r.ParseExact<TimeOnly>(0, ["HH:mm"]),
 #endif
 		];
 		foreach (var get in getters)

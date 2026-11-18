@@ -457,7 +457,7 @@ public class RecordGeneratorTests
 		Assert.DoesNotContain("Secret", output);
 		Assert.Contains("Total = converter0.Read(reader, column0),", output);
 		Assert.Contains("reader.ParseExact<global::System.DateTime>(column2, formats0)", output);
-		Assert.Contains("global::System.TimeSpan.ParseExact(reader.GetString(column3), formats1, provider)", output);
+		Assert.Contains("reader.ParseExact<global::System.TimeSpan>(column3, formats1)", output);
 		Assert.Contains("new global::System.Uri(reader.GetString(column4), global::System.UriKind.RelativeOrAbsolute)", output);
 		Assert.Contains("Version = \"v2\",", output);
 		Assert.Contains("columns0 = Columns(reader, new string[] { \"Value\", \"Val\" }, true, \"Collections.Values\");", output);

@@ -210,55 +210,109 @@ internal static class CsvValue
 	}
 
 	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly
-	/// <paramref name="format"/>, with <see cref="DateTimeStyles.RoundtripKind"/>.
+	/// Parses <paramref name="s"/> in exactly <paramref name="format"/> as a <see cref="DateTime"/> or
+	/// <see cref="DateTimeOffset"/>, with <see cref="DateTimeStyles.RoundtripKind"/>, or as a <see cref="TimeSpan"/> or (on
+	/// .NET) a <c>DateOnly</c> or <c>TimeOnly</c>, without styles, as <c>ParseExact(string, string, IFormatProvider)</c>
+	/// of these types does.
 	/// </summary>
-	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <typeparam name="T">
+	/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/>, <see cref="TimeSpan"/>, or on .NET <c>DateOnly</c> or
+	/// <c>TimeOnly</c>.
+	/// </typeparam>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="format">The exact format of the field, as <c>ParseExact</c> of the type takes it.</param>
 	/// <param name="provider">The format provider.</param>
 	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException"><paramref name="s"/> does not have the format, or the format is not valid.</exception>
-	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="OverflowException">A component of a <see cref="TimeSpan"/> is out of range.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is none of these types.</exception>
 	public static T ParseExact<T>(ReadOnlySpan<byte> s, string format, IFormatProvider provider, bool hide)
 	{
 		if (typeof(T) == typeof(DateTime))
 		{
-			return As<DateTime, T>(CsvParse.DateTimeExact(s, format, provider, hide));
+			return As<DateTime, T>(CsvParse.Exact(s, format, provider, hide, "DateTime",
+				static (x, f, p) => DateTime.ParseExact(x, f, p, DateTimeStyles.RoundtripKind)));
 		}
 
 		if (typeof(T) == typeof(DateTimeOffset))
 		{
-			return As<DateTimeOffset, T>(CsvParse.DateTimeOffsetExact(s, format, provider, hide));
+			return As<DateTimeOffset, T>(CsvParse.Exact(s, format, provider, hide, "DateTimeOffset",
+				static (x, f, p) => DateTimeOffset.ParseExact(x, f, p, DateTimeStyles.RoundtripKind)));
 		}
+
+		if (typeof(T) == typeof(TimeSpan))
+		{
+			return As<TimeSpan, T>(CsvParse.Exact(s, format, provider, hide, "TimeSpan",
+				static (x, f, p) => TimeSpan.ParseExact(x, f, p)));
+		}
+
+#if NET
+		if (typeof(T) == typeof(DateOnly))
+		{
+			return As<DateOnly, T>(CsvParse.Exact(s, format, provider, hide, "DateOnly",
+				static (x, f, p) => DateOnly.ParseExact(x, f, p, DateTimeStyles.None)));
+		}
+
+		if (typeof(T) == typeof(TimeOnly))
+		{
+			return As<TimeOnly, T>(CsvParse.Exact(s, format, provider, hide, "TimeOnly",
+				static (x, f, p) => TimeOnly.ParseExact(x, f, p, DateTimeStyles.None)));
+		}
+#endif
 
 		throw NotSupportedExact(typeof(T));
 	}
 
 	/// <summary>
-	/// Parses <paramref name="s"/> as a <see cref="DateTime"/> or <see cref="DateTimeOffset"/> in exactly one of
-	/// <paramref name="formats"/>, tried in order, with <see cref="DateTimeStyles.RoundtripKind"/>.
+	/// Parses <paramref name="s"/> in exactly one of <paramref name="formats"/>, tried in order, as
+	/// <see cref="ParseExact{T}(ReadOnlySpan{byte}, string, IFormatProvider, bool)"/> parses one format.
 	/// </summary>
-	/// <typeparam name="T"><see cref="DateTime"/> or <see cref="DateTimeOffset"/>.</typeparam>
+	/// <typeparam name="T">
+	/// <see cref="DateTime"/>, <see cref="DateTimeOffset"/>, <see cref="TimeSpan"/>, or on .NET <c>DateOnly</c> or
+	/// <c>TimeOnly</c>.
+	/// </typeparam>
 	/// <param name="s">The UTF-8 text of the field.</param>
 	/// <param name="formats">The formats the field may have, as <c>ParseExact</c> of the type takes them.</param>
 	/// <param name="provider">The format provider.</param>
 	/// <param name="hide">Whether the message of an exception leaves the value out.</param>
 	/// <returns>The parsed value.</returns>
 	/// <exception cref="FormatException"><paramref name="s"/> has none of the formats, or a format is not valid.</exception>
-	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is neither <see cref="DateTime"/> nor <see cref="DateTimeOffset"/>.</exception>
+	/// <exception cref="OverflowException">A component of a <see cref="TimeSpan"/> is out of range.</exception>
+	/// <exception cref="NotSupportedException"><typeparamref name="T"/> is none of these types.</exception>
 	public static T ParseExact<T>(ReadOnlySpan<byte> s, string[] formats, IFormatProvider provider, bool hide)
 	{
 		if (typeof(T) == typeof(DateTime))
 		{
-			return As<DateTime, T>(CsvParse.DateTimeExact(s, formats, provider, hide));
+			return As<DateTime, T>(CsvParse.Exact(s, formats, provider, hide, "DateTime",
+				static (x, f, p) => DateTime.ParseExact(x, f, p, DateTimeStyles.RoundtripKind)));
 		}
 
 		if (typeof(T) == typeof(DateTimeOffset))
 		{
-			return As<DateTimeOffset, T>(CsvParse.DateTimeOffsetExact(s, formats, provider, hide));
+			return As<DateTimeOffset, T>(CsvParse.Exact(s, formats, provider, hide, "DateTimeOffset",
+				static (x, f, p) => DateTimeOffset.ParseExact(x, f, p, DateTimeStyles.RoundtripKind)));
 		}
+
+		if (typeof(T) == typeof(TimeSpan))
+		{
+			return As<TimeSpan, T>(CsvParse.Exact(s, formats, provider, hide, "TimeSpan",
+				static (x, f, p) => TimeSpan.ParseExact(x, f, p)));
+		}
+
+#if NET
+		if (typeof(T) == typeof(DateOnly))
+		{
+			return As<DateOnly, T>(CsvParse.Exact(s, formats, provider, hide, "DateOnly",
+				static (x, f, p) => DateOnly.ParseExact(x, f, p, DateTimeStyles.None)));
+		}
+
+		if (typeof(T) == typeof(TimeOnly))
+		{
+			return As<TimeOnly, T>(CsvParse.Exact(s, formats, provider, hide, "TimeOnly",
+				static (x, f, p) => TimeOnly.ParseExact(x, f, p, DateTimeStyles.None)));
+		}
+#endif
 
 		throw NotSupportedExact(typeof(T));
 	}
@@ -277,8 +331,13 @@ internal static class CsvValue
 	/// <returns>The exception to throw.</returns>
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	private static NotSupportedException NotSupportedExact(Type type) => new(
-		$"ParseExact<{type.Name}> is not supported: ParseExact<T> parses DateTime and DateTimeOffset. Parse other types with " +
-		"Parse(index, parser), which gives the parser the field as a string.");
+		$"ParseExact<{type.Name}> is not supported: ParseExact<T> parses " +
+#if NET
+		"DateTime, DateTimeOffset, TimeSpan, DateOnly and TimeOnly. " +
+#else
+		"DateTime, DateTimeOffset and TimeSpan. " +
+#endif
+		"Parse other types with Parse(index, parser), which gives the parser the field as a string.");
 
 #if NET
 	/// <summary>

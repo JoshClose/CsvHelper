@@ -43,3 +43,9 @@ When a constructor parameter's type can't be read, CSVH002 no longer suggests `[
 parameters. It says which constructor was chosen and suggests marking another one `[CsvConstructor]` or giving the
 parameter a `[CsvConverter]`. See
 [A constructor for types made from other objects](../../pages/records.md#a-constructor-for-types-made-from-other-objects).
+
+`ParseExact<T>` now parses `TimeSpan`, and on .NET 8 and later `DateOnly` and `TimeOnly`, as well as `DateTime` and
+`DateTimeOffset`. `[CsvFormat]` members of these types are read with it, so they no longer create a string for each
+field, and with `IncludeValuesInExceptions` off, a `DateOnly` or `TimeOnly` field that doesn't have the format no longer
+shows its value in the exception. See [Parse and TryParse](../../pages/reading.md#parse-and-tryparse) and
+[Exact formats](../../pages/records.md#exact-formats-csvformat).
