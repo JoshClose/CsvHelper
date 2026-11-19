@@ -57,3 +57,9 @@ quoted with `'` as `"Bob, B"`, which reads as two fields. Appending to a fixed-w
 `AppendCsv` reads the headers it compares with the mode, quote character and comment prefix of its writer options; in
 34.0, with another quote than `"` and `CsvQuoting.Always`, a file whose header was not quoted failed the check. See
 [Changing files](../../pages/linq.md#changing-files).
+
+CsvHelper.Linq's `Update` no longer turns a record into a comment. A changed value in the file's first column that
+starts with the `CommentPrefix` of the table's `ReaderOptions` is now quoted, or escaped in Escape mode. In 34.0 it was
+written as it was, so the table skipped the record from then on. The `CommentPrefix` of the writer options, which could
+quote a value in another column, no longer applies to `Update`. See
+[Changing files](../../pages/linq.md#changing-files).

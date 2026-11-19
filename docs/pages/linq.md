@@ -309,7 +309,9 @@ complete, so a failure, or a canceled token, leaves the file as it was:
 
 The condition reads only the members it uses. A record that cannot be read and that `OnRecordError` skips is kept.
 Files must be UTF-8. `Update` needs a file that is not fixed-width, and writes the changed fields with the separator,
-mode, quote and escape character that the file is read with.
+mode, quote and escape character that the file is read with. A changed value in the file's first column that starts
+with the reader's comment prefix is quoted or escaped, as the writer's [`CommentPrefix`](writing.html#comments) does,
+so that the record is not read as a comment.
 
 ## Trimming and native AOT
 
