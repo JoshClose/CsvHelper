@@ -18,19 +18,35 @@ internal static class Appender
 
 	/// <summary>
 	/// Works out how to add records to a file: a new or empty file gets the header; a file with records keeps its separator
-	/// (found from its header, unless <paramref name="options"/> sets one) and its line break, gets one at its end first if it
-	/// has none there, and must have the header that the records would be written with.
+	/// (found from its header, unless the options set one) and its line break, gets one at its end first if it has none
+	/// there, and must have the header that the records would be written with. The records are written as
+	/// <paramref name="readerOptions"/> read the file, when they are given: with its mode, quote, escape character, column
+	/// widths and comment prefix. Otherwise the writer's options say how the file is written, and its header is read
+	/// with them.
 	/// </summary>
 	/// <param name="path">The path of the file.</param>
 	/// <param name="options">The options of the writer, or <see langword="null"/> for those of the records' type, with the file's separator.</param>
 	/// <param name="defaults">The options of the writer when <paramref name="options"/> is <see langword="null"/>.</param>
-	/// <param name="readerOptions">The options to read the file's header with, or <see langword="null"/> for the defaults.</param>
+	/// <param name="readerOptions">The options that a table reads the file with, or <see langword="null"/> for none.</param>
 	/// <param name="header">The names of the columns that the records are written with, or <see langword="null"/> when they are not known in advance.</param>
 	/// <returns>How to add the records.</returns>
 	/// <exception cref="InvalidOperationException">The file's header is not the one that the records are written with.</exception>
 	public static AppendTarget Prepare(string path, CsvWriterOptions? options, CsvWriterOptions defaults, CsvReaderOptions? readerOptions, Func<CsvWriterOptions, string[]?> header)
 	{
 		var writerOptions = options ?? defaults;
+		if (readerOptions is not null)
+		{
+			writerOptions = writerOptions with
+			{
+				Separator = readerOptions.Separator ?? writerOptions.Separator,
+				Mode = readerOptions.Mode,
+				Quote = readerOptions.Quote,
+				Escape = readerOptions.Escape,
+				FieldWidths = readerOptions.Mode == CsvMode.FixedWidth ? readerOptions.FieldWidths : writerOptions.FieldWidths,
+				CommentPrefix = readerOptions.CommentPrefix,
+			};
+		}
+
 		var file = new FileInfo(path);
 		if (!file.Exists || file.Length == 0)
 		{
@@ -51,11 +67,9 @@ internal static class Appender
 		}
 
 		var (lineBreak, endsWithLineBreak) = LineBreaks(path);
-		var readOptions = (readerOptions ?? CsvReaderOptions.Default) with
-		{
-			HasHeader = writerOptions.HasHeader,
-			Separator = options is not null ? options.Separator : readerOptions?.Separator,
-		};
+		var readOptions = readerOptions is not null
+			? readerOptions with { HasHeader = writerOptions.HasHeader }
+			: ReadAs(writerOptions, options is not null ? options.Separator : null) with { HasHeader = writerOptions.HasHeader };
 		using (var reader = CsvReader.FromFile(path, readOptions))
 		{
 			var existing = writerOptions.HasHeader ? reader.Headers : null;
@@ -66,7 +80,8 @@ internal static class Appender
 
 			writerOptions = writerOptions with
 			{
-				Separator = reader.Separator,
+				// A fixed-width reader has no separator ('\0'), which the header's reader would refuse.
+				Separator = writerOptions.Mode == CsvMode.FixedWidth ? writerOptions.Separator : reader.Separator,
 				NewLine = options is null && lineBreak is not null ? lineBreak : writerOptions.NewLine,
 				HasHeader = false,
 				WriteByteOrderMark = false,
@@ -135,8 +150,23 @@ internal static class Appender
 			writer.EndRecord();
 		}
 
-		using var reader = CsvReader.FromText(text.ToString(), new CsvReaderOptions { HasHeader = false, Separator = options.Separator });
+		using var reader = CsvReader.FromText(text.ToString(), ReadAs(options, options.Separator));
 
 		return reader.Read() ? Enumerable.Range(0, reader.FieldCount).Select(reader.GetString).ToArray() : [];
 	}
+
+	/// <summary>The options of a reader that reads what a writer with <paramref name="options"/> writes, without a header.</summary>
+	/// <param name="options">The options of the writer.</param>
+	/// <param name="separator">The separator, or <see langword="null"/> to detect it.</param>
+	/// <returns>The options of the reader.</returns>
+	private static CsvReaderOptions ReadAs(CsvWriterOptions options, char? separator) => new()
+	{
+		HasHeader = false,
+		Separator = separator,
+		Mode = options.Mode,
+		Quote = options.Quote,
+		Escape = options.Escape,
+		FieldWidths = options.FieldWidths,
+		CommentPrefix = options.CommentPrefix,
+	};
 }

@@ -105,6 +105,8 @@ public sealed class WritingTests : IDisposable
 
 	private static string Text(string path) => Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(path));
 
+	private static CsvQueryOptions Reading(CsvReaderOptions options) => new() { ReaderOptions = options };
+
 	private static string Written<T>(IEnumerable<T> records, CsvWriterOptions? options = null)
 	{
 		var text = new StringWriter();
@@ -267,6 +269,82 @@ public sealed class WritingTests : IDisposable
 		Assert.Equal(63, table.Count());
 		Assert.Equal("New", table.Single(o => o.Id == 61).Customer);
 		Assert.EndsWith("\n63,,Open,0,0,0001-01-01T00:00:00.0000000,\n", Text(path));
+	}
+
+	[Fact]
+	public void TablesAppendInTheFormatTheyRead()
+	{
+		// In 34.0, records were appended as RFC 4180 with ", whatever the table read.
+		var bob = new Customer("Bob, \"B\"", "SE", 2);
+		var path = File("apostrophes.csv", "Name,Country,Rank\n'Ada, A',NO,1\n");
+		var table = CsvQueryable.FromFile<Customer>(path, Reading(new CsvReaderOptions { Quote = '\'' }));
+		Assert.Equal(1, table.AppendRecords([bob]));
+		Assert.Equal("Name,Country,Rank\n'Ada, A',NO,1\n'Bob, \"B\"',SE,2\n", Text(path));
+		Assert.Equal(bob, table.Single(c => c.Rank == 2));
+
+		path = File("escape.csv", "Name,Country,Rank\nAda\\, A,NO,1\n");
+		table = CsvQueryable.FromFile<Customer>(path, Reading(new CsvReaderOptions { Mode = CsvMode.Escape }));
+		table.AppendRecords([bob]);
+		Assert.Equal("Name,Country,Rank\nAda\\, A,NO,1\nBob\\, \"B\",SE,2\n", Text(path));
+		Assert.Equal(bob, table.Single(c => c.Rank == 2));
+
+		var tabbed = new Customer("Bob \"B\"", "SE", 2);
+		path = File("noescape.tsv", "Name\tCountry\tRank\nAda\tNO\t1\n");
+		table = CsvQueryable.FromFile<Customer>(path, Reading(new CsvReaderOptions { Mode = CsvMode.NoEscape, Separator = '\t' }));
+		table.AppendRecords([tabbed]);
+		Assert.Equal("Name\tCountry\tRank\nAda\tNO\t1\nBob \"B\"\tSE\t2\n", Text(path));
+		Assert.Equal(tabbed, table.Single(c => c.Rank == 2));
+
+		// A new file is written in the table's format too.
+		path = File("new.csv");
+		table = CsvQueryable.FromFile<Customer>(path, Reading(new CsvReaderOptions { Quote = '\'', Separator = ';' }));
+		table.AppendRecords([new Customer("Bob; B", "SE", 2)]);
+		Assert.Equal("Name;Country;Rank\r\n'Bob; B';SE;2\r\n", Text(path));
+		Assert.Equal("Bob; B", table.Single().Name);
+
+		// The table's format wins over the writer options, whose other settings apply.
+		path = File("always.csv", "Name;Country;Rank\nAda;NO;1\n");
+		table = CsvQueryable.FromFile<Customer>(path, new CsvQueryOptions
+		{
+			ReaderOptions = new CsvReaderOptions { Quote = '\'' },
+			WriterOptions = new CsvWriterOptions { Quoting = CsvQuoting.Always, NewLine = "\n" },
+		});
+		table.AppendRecords([new Customer("Bob", "SE", 2)]);
+		Assert.Equal("Name;Country;Rank\nAda;NO;1\n'Bob';'SE';'2'\n", Text(path));
+	}
+
+	[Fact]
+	public void TablesAppendWithTheirCommentPrefixAndColumnWidths()
+	{
+		// A first value that starts with the comment prefix is quoted, so that the table does not skip the record.
+		var path = File("comments.csv", "Name,Country,Rank\n# a comment\nAda,NO,1\n");
+		var table = CsvQueryable.FromFile<Customer>(path, Reading(new CsvReaderOptions { CommentPrefix = '#' }));
+		table.AppendRecords([new Customer("#Bob", "SE", 2)]);
+		Assert.Equal("Name,Country,Rank\n# a comment\nAda,NO,1\n\"#Bob\",SE,2\n", Text(path));
+		Assert.Equal(2, table.Count());
+
+		// In 34.0, appending to a fixed-width file threw.
+		path = File("fixed.txt", "Name  CountryRank\nAda   NO     1   \n");
+		table = CsvQueryable.FromFile<Customer>(path, Reading(new CsvReaderOptions { Mode = CsvMode.FixedWidth, FieldWidths = [6, 7, 4] }));
+		table.AppendRecords([new Customer("Bob", "SE", 2)]);
+		Assert.Equal("Name  CountryRank\nAda   NO     1   \nBob   SE     2   \n", Text(path));
+		Assert.Equal(new Customer("Bob", "SE", 2), table.Single(c => c.Rank == 2));
+	}
+
+	[Fact]
+	public void AppendsReadingTheHeaderWithTheWriterOptions()
+	{
+		// Only the values are quoted. In 34.0, the header that the records are written with was read back with ", as
+		// 'Name','Country','Rank', which is not the file's.
+		var path = File("apostrophes.csv", "Name,Country,Rank\n'Ada','NO','1'\n");
+		var options = new CsvWriterOptions { Quote = '\'', Quoting = CsvQuoting.Always, NewLine = "\n" };
+		Assert.Equal(1, new[] { new Customer("Bob", "SE", 2) }.AppendCsv(path, options));
+		Assert.Equal("Name,Country,Rank\n'Ada','NO','1'\n'Bob','SE','2'\n", Text(path));
+
+		// The writer's comment prefix skips the comments above the header.
+		path = File("comments.csv", "# exported today\nName,Country,Rank\nAda,NO,1\n");
+		new[] { new Customer("#Bob", "SE", 2) }.AppendCsv(path, new CsvWriterOptions { CommentPrefix = '#', NewLine = "\n" });
+		Assert.Equal("# exported today\nName,Country,Rank\nAda,NO,1\n\"#Bob\",SE,2\n", Text(path));
 	}
 
 	[Theory]

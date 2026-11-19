@@ -272,7 +272,12 @@ they can be.
 
 `AppendCsv` adds records to the end of a file: a new or empty file gets a header; a file with records keeps its
 separator and line break, gets a line break at its end first when it has none, and must have the header that the records
-are written with (ignoring case and surrounding spaces).
+are written with (ignoring case and surrounding spaces). The rest of the format, such as the mode and the quote
+character, is that of the writer options, which the header is read with too, so they must be the file's:
+
+```csharp
+newOrders.AppendCsv("orders.csv", new CsvWriterOptions { Quote = '\'' });
+```
 
 ## Changing files
 
@@ -287,6 +292,11 @@ var changed = orders.Update(o => o.Status == Status.Pending, o => o with { Statu
 var rows = CsvQueryable.FromFile("orders.csv");
 rows.Update(r => r["Status"] == "Pending", r => r["Status"] = "Open");
 ```
+
+`AppendRecords` writes the records as the table reads its file, so that it reads them back: with the file's separator
+and line break, and the mode, quote and escape character, column widths and comment prefix of the table's
+`ReaderOptions`. As with the writer's [`CommentPrefix`](writing.html#comments), a record whose first value starts with
+the comment prefix is quoted or escaped, so that it is not read as a comment.
 
 `Delete` and `Update` (and their `Async` versions) rewrite the file next to itself and replace it when the new one is
 complete, so a failure, or a canceled token, leaves the file as it was:
