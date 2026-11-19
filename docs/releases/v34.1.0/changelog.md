@@ -50,6 +50,14 @@ field, and with `IncludeValuesInExceptions` off, a `DateOnly` or `TimeOnly` fiel
 shows its value in the exception. See [Parse and TryParse](../../pages/reading.md#parse-and-tryparse) and
 [Exact formats](../../pages/records.md#exact-formats-csvformat).
 
+CsvHelper.Linq's `AppendRecords` now writes records as the table reads its file: with the mode, quote and escape
+character, column widths and comment prefix of its `ReaderOptions`, as `Update` does. In 34.0 they came from the writer
+options, RFC 4180 with `"` by default, so the table read some of them back differently: `Bob, B` was appended to a file
+quoted with `'` as `"Bob, B"`, which reads as two fields. Appending to a fixed-width file no longer throws.
+`AppendCsv` reads the headers it compares with the mode, quote character and comment prefix of its writer options; in
+34.0, with another quote than `"` and `CsvQuoting.Always`, a file whose header was not quoted failed the check. See
+[Changing files](../../pages/linq.md#changing-files).
+
 CsvHelper.Linq's `Update` no longer turns a record into a comment. A changed value in the file's first column that
 starts with the `CommentPrefix` of the table's `ReaderOptions` is now quoted, or escaped in Escape mode. In 34.0 it was
 written as it was, so the table skipped the record from then on. The `CommentPrefix` of the writer options, which could

@@ -21,7 +21,8 @@ public sealed record CsvQueryOptions
 	/// <summary>
 	/// The options of the writer that adds, changes and removes records of a <see cref="CsvTable{T}"/>, or
 	/// <see langword="null"/> (the default) for those of the record type's <see cref="CsvOptionsAttribute"/>
-	/// (<see cref="CsvWriterOptions.For{T}"/>), with the separator of the file.
+	/// (<see cref="CsvWriterOptions.For{T}"/>). Either way, records are written in the format that
+	/// <see cref="ReaderOptions"/> reads the file in: with its separator, mode, quote and escape character.
 	/// </summary>
 	public CsvWriterOptions? WriterOptions { get; init; }
 
