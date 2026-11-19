@@ -277,17 +277,24 @@ public class DigitsTests
 			sum += Digits.Of(value).Round(2).Count;
 		}
 
-		var before = GC.GetAllocatedBytesForCurrentThread();
-		for (var i = 0; i < 1000; i++)
-		{
-			foreach (var value in values)
-			{
-				sum += Digits.Of(value).Round(2).Count;
-			}
-		}
-
-		Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+		// Two passes are measured, and the smaller kept: the runtime allocates once on the thread at a moment the JIT's
+		// tiering sets (see ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows), which can fall in one pass but not in both.
+		Assert.Equal(0, Math.Min(Allocated(), Allocated()));
 		Assert.True(sum > 0);
+
+		long Allocated()
+		{
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 1000; i++)
+			{
+				foreach (var value in values)
+				{
+					sum += Digits.Of(value).Round(2).Count;
+				}
+			}
+
+			return GC.GetAllocatedBytesForCurrentThread() - before;
+		}
 	}
 #endif
 

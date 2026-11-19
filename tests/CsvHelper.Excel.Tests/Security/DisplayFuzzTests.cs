@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Runtime;
 using System.Text;
 using CsvHelper.Excel.Tests.Api;
 using CsvHelper.Excel.Tests.Package;
@@ -150,25 +151,53 @@ public class DisplayFuzzTests(ITestOutputHelper output)
 #if NET10_0_OR_GREATER
 	/// <summary>
 	/// The renderer over 500 random codes allocates nothing once each code is compiled, whatever it shows: numbers, dates
-	/// and text, in German and in the 1904 date system too.
+	/// and text, in German and in the 1904 date system too. Where it allocates, the failure names the codes that allocate
+	/// rendered alone.
 	/// </summary>
 	[OptimizedFact]
 	public void RendersRandomCodesWithoutAllocating()
 	{
-		var codes = Enumerable.Range(1, 500).Select(FormatCodeFuzzTests.Code).Select(FormatCode.Compile).ToArray();
+		var sources = Enumerable.Range(1, 500).Select(FormatCodeFuzzTests.Code).ToArray();
+		var codes = sources.Select(FormatCode.Compile).ToArray();
 		var cultures = new[] { DisplayCulture.Invariant, DisplayCulture.For(CultureInfo.GetCultureInfo("de-DE")) };
 		var texts = Texts.Select(t => Encoding.UTF8.GetBytes(t)).ToArray();
 		var room = new byte[Room];
-		Render();
-		var before = GC.GetAllocatedBytesForCurrentThread();
-		Render();
-		Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+		Render(codes);
 
-		void Render()
+		// Two passes are measured, and the smaller kept: the runtime allocates once on the thread at a moment the JIT's
+		// tiering sets (6,352 bytes in CI's run 44415834480; see ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows),
+		// which can fall in one pass but not in both, where the renderer's own allocation would be in both. The methods the
+		// JIT compiled on the thread in each pass show whether it was the runtime's.
+		var first = Measure(codes);
+		var second = Measure(codes);
+		output.WriteLine($"Two passes over {codes.Length} codes allocated {first.Bytes:N0} and {second.Bytes:N0} bytes, while the JIT compiled {first.Compiled} and {second.Compiled} methods on the thread.");
+		if (Math.Min(first.Bytes, second.Bytes) == 0)
+		{
+			return;
+		}
+
+		var allocating = codes
+			.Select((code, i) => (Seed: i + 1, Bytes: Math.Min(Measure([code]).Bytes, Measure([code]).Bytes)))
+			.Where(c => c.Bytes > 0)
+			.Select(c => $"Seed {c.Seed} ({Show(sources[c.Seed - 1])}): {c.Bytes:N0} bytes")
+			.ToList();
+		Assert.Fail($"Two passes allocated {first.Bytes:N0} and {second.Bytes:N0} bytes. The codes that allocate rendered alone, twice: {(allocating.Count == 0 ? "none" : string.Join("; ", allocating))}.");
+
+		(long Bytes, long Compiled) Measure(FormatCode[] some)
+		{
+			var compiled = JitInfo.GetCompiledMethodCount(currentThread: true);
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			Render(some);
+			var bytes = GC.GetAllocatedBytesForCurrentThread() - before;
+
+			return (bytes, JitInfo.GetCompiledMethodCount(currentThread: true) - compiled);
+		}
+
+		void Render(FormatCode[] some)
 		{
 			foreach (var culture in cultures)
 			{
-				foreach (var code in codes)
+				foreach (var code in some)
 				{
 					foreach (var number in Fixed)
 					{

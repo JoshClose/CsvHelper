@@ -402,13 +402,21 @@ public class DateTextTests
 		var room = new byte[256];
 		double[] numbers = [45306.5208333, -1, 0, 1E+20, 2958465.99999];
 		Render(compiled, numbers, room);
-		var before = GC.GetAllocatedBytesForCurrentThread();
-		for (var i = 0; i < 100; i++)
-		{
-			Render(compiled, numbers, room);
-		}
 
-		Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+		// Two passes are measured, and the smaller kept: the runtime allocates once on the thread at a moment the JIT's
+		// tiering sets (see ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows), which can fall in one pass but not in both.
+		Assert.Equal(0, Math.Min(Allocated(), Allocated()));
+
+		long Allocated()
+		{
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 100; i++)
+			{
+				Render(compiled, numbers, room);
+			}
+
+			return GC.GetAllocatedBytesForCurrentThread() - before;
+		}
 
 		static void Render(FormatCode[] compiled, double[] numbers, byte[] room)
 		{

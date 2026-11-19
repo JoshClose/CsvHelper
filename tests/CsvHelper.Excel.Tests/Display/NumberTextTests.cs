@@ -452,13 +452,21 @@ public class NumberTextTests
 		var room = new byte[256];
 		double[] numbers = [1234.5678, -0.37, 0, 1E+20];
 		Render(compiled, numbers, text, room);
-		var before = GC.GetAllocatedBytesForCurrentThread();
-		for (var i = 0; i < 100; i++)
-		{
-			Render(compiled, numbers, text, room);
-		}
 
-		Assert.Equal(0, GC.GetAllocatedBytesForCurrentThread() - before);
+		// Two passes are measured, and the smaller kept: the runtime allocates once on the thread at a moment the JIT's
+		// tiering sets (see ExcelToCsvTests.AllocatesTheSameForAnyNumberOfRows), which can fall in one pass but not in both.
+		Assert.Equal(0, Math.Min(Allocated(), Allocated()));
+
+		long Allocated()
+		{
+			var before = GC.GetAllocatedBytesForCurrentThread();
+			for (var i = 0; i < 100; i++)
+			{
+				Render(compiled, numbers, text, room);
+			}
+
+			return GC.GetAllocatedBytesForCurrentThread() - before;
+		}
 
 		static void Render(FormatCode[] compiled, double[] numbers, byte[] value, byte[] room)
 		{
