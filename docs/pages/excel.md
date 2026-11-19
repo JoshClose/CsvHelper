@@ -142,7 +142,8 @@ cell's value to the target it is read as:
 | `DateTimeOffset` | the serial number's date and time at offset zero | the same | fails | fails |
 | enums, `Guid`, other types | its stored text, parsed as for CSV | | | fails |
 
-Text cells read as CSV fields do, in the reader's culture.
+Text cells read as CSV fields do, in the reader's culture. The table's text is a cell's stored value's, whatever its
+format; [`Text = Formatted`](#displayed-text) reads text as Excel shows it, and the other targets read the same.
 
 - **Numbers.** Excel often stores 17 significant digits where it shows 15: `=0.1+0.2` is `0.30000000000000004`.
   `decimal` and integer targets round a number to 15 significant digits, half away from zero, as Excel shows it, so
@@ -168,6 +169,88 @@ var options = new ExcelReaderOptions
     Formulas = ExcelFormulas.FormulaText,    // =SUM(A1:A3) rather than its value
 };
 ```
+
+### Displayed text
+
+A typed cell's text is its stored value's by default (`Text = Raw`), whatever its number format: `1234.5`,
+`2024-01-15`. `Text = Formatted` reads the text Excel shows in the cell's format instead, as in a column wide enough.
+Only text follows it: typed reads keep the value.
+
+```csharp
+using var reader = ExcelReader.FromFile("orders.xlsx", new ExcelReaderOptions { Text = ExcelText.Formatted });
+while (reader.Read())
+{
+    var shown = reader.GetString("Total");         // $1,234.50, as Excel shows it
+    var total = reader.Parse<decimal>("Total");    // 1234.5, the value
+}
+```
+
+| Cell | Format | `Raw` | `Formatted` |
+| --- | --- | --- | --- |
+| 1234.5 | `$#,##0.00` | `1234.5` | `$1,234.50` |
+| 1234567 | `[>=1000]0.0,"K";0` | `1234567` | `1234.6K` |
+| -5 | `0;(0)` | `-5` | `(5)` |
+| 0.125 | `0.0%` | `0.125` | `12.5%` |
+| 3.14159 | `# ?/?` | `3.14159` | `3 1/7` |
+| 1/3 | General | `0.3333333333333333` | `0.333333333` |
+| 2024-01-15 | `mmm-yy` | `2024-01-15` | `Jan-24` |
+| 2024-01-15 13:45 | `m/d/yyyy h:mm AM/PM` | `2024-01-15T13:45:00` | `1/15/2024 1:45 PM` |
+| 1.5 days | `[h]:mm` | `36:00:00` | `36:00` |
+| `abc` | `"Note: "@` | `abc` | `Note: abc` |
+
+- **What follows it:** `GetString`, string members, `GetChars`, header names and `ExcelHeaderRow.Find`'s search (a
+  header cell of 1 in `"Q"0` names its column `Q1`), dynamic records, `CsvDataReader`'s text,
+  [the conversion to CSV](#workbooks-to-csv) and an import error's [`Value`](#importing). A `decimal` member of a cell
+  shown `$1,234.50` reads 1234.5, and a `DateTime` member of one shown `Jan-24` the date and time stored. A
+  [table](#choosing-the-cells)'s header is its columns' names, as before.
+- **As Excel shows it:** sections and conditions, Excel's 15 significant digits rounded half away from zero to the
+  places shown (2.675 in `0.00` is `2.68`), grouping, scaling, percents, exponents, fractions as Excel finds them, text
+  sections, dates and times rounded to what they show, elapsed time, AM and PM, in either date system. Excel's own
+  text of over 10,000 cells tests it.
+- **As in a column wide enough,** as Excel's own CSV export writes cells: never `########` for want of room, and General
+  in at most 11 characters (`0.333333333`, `1.23457E+11`). A `*` fill shows nothing, `_` and the character after it a
+  space, and colors (`[Red]`) nothing.
+- **What Excel can't show** at any width, such as a negative date in the 1900 date system or a date past 9999-12-31,
+  reads as `Raw`'s text, where Excel fills the cell with `#`; so does a format the reader can't read.
+- **Errors, empty cells and formulas.** Error cells read as `ErrorCells` says whatever their format, as Excel shows
+  them; empty cells and empty text read as empty; and a formula read as its text (`FormulaText`) isn't formatted.
+
+**The culture** is the reader's `FormatProvider`, the one it parses text cells with. The invariant culture, the
+default, shows what Excel shows with en-US settings: `$`, `AM` and `PM`, English names, and `m/d/yyyy` for the built-in
+short date. Another culture gives:
+
+- the decimal and group separators: `#,##0.00` shows 1234.5 as `1.234,50` in de-DE, as Excel with German settings does;
+- month and day names, and AM and PM, where the format names no language of its own;
+- the built-in short date (`15.01.2024`), the system long date (`[$-F800]`: `Montag, 15. Januar 2024`) and long time
+  (`[$-F400]`), and the built-in currency formats' currency (`1.235 €`);
+- and nothing else: a format's `/` and `:` show as written (`dd/mm/yyyy` is `15/01/2024`), and the other built-in
+  formats are Excel en-US's, in the culture's separators.
+
+```csharp
+var options = new ExcelReaderOptions
+{
+    Text = ExcelText.Formatted,
+    Csv = new CsvReaderOptions { FormatProvider = CultureInfo.GetCultureInfo("de-DE") },
+};
+```
+
+Excel's text was checked with en-US settings; with others, Excel follows Windows' regional settings, which the
+reader's culture stands for.
+
+**A format's locale code** names its own language: `[$-407]mmmm` shows `Januar` in any culture, `[$-411]aaaa` `月曜日`,
+and `[$€-407]` shows `€`. The language gives the names and AM and PM, never the separators or the order of a date. Names
+come from .NET's culture data (ICU on .NET, NLS on .NET Framework), which is Excel's for most languages; on .NET,
+Russian months are in lower case (`январь`, where Excel shows `Январь`), and Japanese and Korean abbreviated months
+are `1月` and `1월`, where Excel shows `1`. With invariant globalization (`InvariantGlobalization`), there is no culture
+data, and names are English.
+
+**Not shown:** calendars (`[$-1060409]`'s Hijri dates), numeral systems (`[$-2010401]`'s Arabic-Indic digits),
+`[DBNum1]` to `[DBNum3]` and Japanese eras. Dates are Gregorian and digits Western; `g` shows nothing and `e` is the
+year (`[$-411]ggge"年"` shows `2024年`). Buddhist years (`bbbb`) are shown, 2567 for 2024, as Excel shows them.
+
+**The cost:** each text read of a number renders it, in 50 to 110 ns, allocating nothing but the string. Reading a
+sheet of numbers and dates as strings takes about a quarter longer (the benchmarks' orders, seven of twelve cells
+rendered), and a sheet of text 0.6% to 2.4% longer. Typed reads render nothing, and `Raw` is the default.
 
 ### Choosing the sheet
 
@@ -259,10 +342,10 @@ using var query = ExcelReader.FromFile("orders.xlsx");                     // Cs
 var big = query.Query<Order>().Where(o => o.Total > 100).ToList();
 ```
 
-A dynamic record's values are the cells' text, as `GetString` gives it: a date is ISO 8601 text, a boolean `TRUE` or
-`FALSE`. Writing dynamic records with a CSV writer (`WriteRecords(reader.GetRecords<dynamic>())`) writes each cell's
-stored form instead, a date as its serial number and a boolean as `1` or `0`; [`ExcelConvert.ToCsv`](#workbooks-to-csv)
-writes their text.
+A dynamic record's values are the cells' text, as `GetString` gives it: under `Raw`, a date is ISO 8601 text, a
+boolean `TRUE` or `FALSE`. Writing dynamic records with a CSV writer (`WriteRecords(reader.GetRecords<dynamic>())`)
+writes each cell's stored form instead, a date as its serial number and a boolean as `1` or `0`;
+[`ExcelConvert.ToCsv`](#workbooks-to-csv) writes their text.
 
 ### Untrusted workbooks
 
@@ -464,8 +547,8 @@ ExcelConvert.ToCsv(reader, writer);
 ```
 
 The CSV is the sheet as the reader reads it (`ExcelToCsvOptions.Excel`: the sheet or block, the header, hidden rows,
-merged cells, errors and formulas), written as `ExcelToCsvOptions.Csv` says. Each field is the cell's text, copied as
-UTF-8 without a string:
+merged cells, errors, formulas and text), written as `ExcelToCsvOptions.Csv` says. Each field is the cell's text,
+copied as UTF-8 without a string; by default (`Text = Raw`):
 
 - text as it is;
 - numbers to 15 significant digits, as Excel shows them, so that `0.30000000000000004` is `0.3`; `SignificantDigits =
@@ -473,20 +556,33 @@ UTF-8 without a string:
 - dates and times in ISO 8601 (`2024-01-15`, `2024-01-15T10:30:00`), durations as `36:00:00`, booleans as `TRUE` and
   `FALSE`, and errors as `ErrorCells` says.
 
+With `Text = Formatted`, each field is the text Excel shows ([Displayed text](#displayed-text)), as Excel's own "Save
+As" CSV writes it. Every field is then written as text, so that `Injection` checks it, since a format can show a number
+as `=1`, or a negative with its minus sign first:
+
+```csharp
+ExcelConvert.ToCsv("orders.xlsx", "orders.csv", new ExcelToCsvOptions
+{
+    Excel = new ExcelReaderOptions { Text = ExcelText.Formatted },     // $1,234.50, 1/15/2024
+    Csv = new CsvWriterOptions { Injection = CsvInjection.Escape },    // -$5.00 is written "'-$5.00"
+});
+```
+
 `ToCsvFiles` writes every worksheet, hidden ones included, to a file named after its sheet, made a file name on every
 system: a sheet named `Sales <2024>` is `Sales _2024_.csv`, and no name writes outside the folder. A conversion that
 fails deletes the file it was writing; streams are left open.
 
-The CSV differs from Excel's own "Save As" CSV, which writes what each cell shows:
+Excel's own "Save As" CSV writes what each cell shows, as `Text = Formatted` does:
 
-| | ExcelConvert.ToCsv | Excel's "Save As" |
-| --- | --- | --- |
-| Numbers | 15 significant digits, unformatted: `1234.5` | as shown: `$1,234.50`, General in 11 characters |
-| Dates | ISO 8601: `2024-01-15` | as shown: `1/15/2024` |
-| Booleans | `TRUE`, `FALSE` | `TRUE`, `FALSE` |
-| Columns | from column `A`, each row as wide as the first | the used range, every row as wide as it |
-| Byte order mark | none, as CsvHelper writes CSV | "CSV UTF-8" writes one |
-| Sheets | one, or every worksheet with `ToCsvFiles` | the active sheet |
+| | `ToCsv` | `ToCsv`, `Text = Formatted` | Excel's "Save As" |
+| --- | --- | --- | --- |
+| Numbers | 15 significant digits, unformatted: `1234.5` | as shown: `$1,234.50`, General in 11 characters | as shown |
+| Dates | ISO 8601: `2024-01-15` | as shown: `1/15/2024`, Buddhist years too (`2567`) | as shown, but Buddhist years as Gregorian ones |
+| Booleans | `TRUE`, `FALSE` | as shown: `TRUE`, `FALSE` | as shown |
+| What Excel can't show | the value: `-1` for a negative date | the value: `-1` | 255 `#` |
+| Columns | from column `A`, each row as wide as the first | the same | the used range, every row as wide as it |
+| Byte order mark | none, as CsvHelper writes CSV | none | "CSV UTF-8" writes one |
+| Sheets | one, or every worksheet with `ToCsvFiles` | the same | the active sheet |
 
 Excel reads a CSV file without a byte order mark in the system's code page, so set `WriteByteOrderMark` for a CSV that
 Excel will open and that has text beyond ASCII.
@@ -693,7 +789,7 @@ of the wrong file can have a million cells at fault. Each `ExcelImportError` say
 | `Location` | `OrderUpload!D3`; a record's row, `OrderUpload!3:3`, when no one cell is at fault, such as when its constructor throws |
 | `Row` | 3 |
 | `Column`, `Member` | `Total`, `OrderUpload.Total` |
-| `Value` | `abc`, the cell's text as users see it |
+| `Value` | `abc`, the cell's text: under `Text = Formatted`, as users see it |
 | `Message`, `Exception` | the cause's message and the cause, here a `FormatException` |
 
 - **What is checked** is what `T`'s mapping reads: types, enum names, converters and
@@ -717,7 +813,8 @@ The `net10.0` and `net8.0` builds are marked `IsAotCompatible` and `IsTrimmable`
 and native AOT applications: `[CsvRecord]` types use their generated code, and `[ExcelSheet]`, `[ExcelColumn]` and
 `[CsvFormat]` are read by reflection over the members that the annotations of `WriteSheet<T>` and `AddSheet<T>` keep.
 C#'s `dynamic` and CsvHelper.Linq's queries need code generated at run time, as for CSV
-([Target frameworks](target-frameworks.html#trimming-and-native-aot)).
+([Target frameworks](target-frameworks.html#trimming-and-native-aot)). `Text = Formatted` works as anywhere, but with
+`InvariantGlobalization`, which native AOT apps often set, its names are English.
 
 On .NET Standard and .NET Framework, `DateOnly` and `TimeOnly` don't exist, and an `ExcelFormula` member reads through
 `[CsvConverter(typeof(ExcelFormulaConverter))]`.
@@ -735,6 +832,7 @@ On .NET Standard and .NET Framework, `DateOnly` and `TimeOnly` don't exist, and 
 | `FillMergedCells` | `false` | Whether a merged range's cells read as its top-left cell. |
 | `ErrorCells` | `Text` | How error cells read. |
 | `Formulas` | `CachedValue` | What a formula's cell reads as. |
+| `Text` | `Raw` | What text a cell reads as: its stored value's, or the text Excel shows. |
 | `SignificantDigits` | 15 | The digits `decimal` and integer targets round numbers to. |
 | `Csv` | `CsvReaderOptions.Default` | The options of the readers. |
 | `MaxPartSize`, `MaxUncompressedSize` | 256 MiB, 4 GiB | The limits of what a workbook inflates to. |
