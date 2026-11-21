@@ -262,7 +262,7 @@ These are the shapes the corpus covers; the oracle tests check every cell.
   - Excel, LibreOffice, XlsxWriter, ClosedXML, EPPlus, MiniExcel and LargeXlsx write a literal `_x0041_` as `_x005F_x0041_`. The Open XML SDK, openpyxl, POI and SpreadCheetah write it as it is, so Excel and every reader read it as "A".
   - MiniExcel writes non-BMP characters as `_xD83D__xDE00_` escapes.
   - SpreadCheetah drops U+0001, POI writes it as `?`, and openpyxl can't write it.
-- **Zip:** POI's SXSSF writes a Zip64 data descriptor after each entry. Its local headers say version 45 but have no Zip64 field, and its central directory says version 20. Excel, .NET's `ZipArchive` and its `System.IO.Packaging` read it; .NET Framework's `System.IO.Packaging` (WindowsBase), which the Open XML SDK and ClosedXML use there, rejects it as corrupt.
+- **Zip:** POI's SXSSF writes a Zip64 data descriptor (8-byte sizes) after each entry, and its central directory says version 20 where its local headers say 45. Excel, .NET's `ZipArchive` and its `System.IO.Packaging` read it; .NET Framework's `System.IO.Packaging` (WindowsBase), which the Open XML SDK and ClosedXML use there, rejects it as corrupt. What WindowsBase refuses is the central version 20 beside an 8-byte descriptor: it wants each local header's version to equal its central header's, and an 8-byte descriptor only under version 45, with or without a local Zip64 field (Phase 9's zip checks, 2026-11-20).
 - **White space:** SpreadCheetah writes a text with spaces around it without `xml:space="preserve"`, so Excel, and CsvHelper.Excel, read it trimmed.
 - **Strict:** Excel's Strict workbook writes its dates as `t="d"` ISO 8601 cells.
 - **Google Sheets:**

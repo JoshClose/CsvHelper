@@ -72,9 +72,10 @@ public class OracleTests
 
 	/// <summary>
 	/// The workbook whose zip .NET Framework's <c>System.IO.Packaging</c> (WindowsBase), which the Open XML SDK and
-	/// ClosedXML use there, rejects: POI's SXSSF writes a Zip64 data descriptor after each entry, while the local headers
-	/// declare version 45 without a Zip64 field and the central directory version 20. Excel, .NET's packaging and
-	/// <c>ZipArchive</c> read it.
+	/// ClosedXML use there, rejects: POI's SXSSF writes a Zip64 data descriptor (8-byte sizes) after each entry, and its
+	/// central directory declares version 20 beside the local headers' 45. WindowsBase wants each local header's version
+	/// to equal its central header's, and an 8-byte descriptor only under version 45; a local Zip64 field isn't needed.
+	/// Excel, .NET's packaging and <c>ZipArchive</c> read it.
 	/// </summary>
 	private const string Zip64Descriptors = "poi/sxssf.xlsx";
 
