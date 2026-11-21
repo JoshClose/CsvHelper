@@ -17,10 +17,12 @@ namespace CsvHelper.Benchmarks;
 /// Each has numbers of its own, from a fixed seed, every one of which it shows (<see cref="Setup"/> checks).
 /// </para>
 /// <para>
-/// Two references, for scale: <see cref="Parse"/>, the stored text of General's numbers parsed as a reader parses a cell's
-/// value before it renders it (core's <c>CsvParse.TryDouble</c>), which a read under <c>Formatted</c> pays besides the
-/// renderer; and <see cref="DotNet"/>, the same numbers written by .NET's <see cref="double.TryFormat(Span{byte}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>,
-/// the shortest text that reads back as the same number.
+/// Three references, for scale: <see cref="Parse"/>, the stored text of General's numbers parsed as a reader parses a
+/// cell's value before it renders it (core's <c>CsvParse.TryDouble</c>), which a read under <c>Formatted</c> pays besides
+/// the renderer; <see cref="DotNet"/>, the same numbers written by .NET's <see cref="double.TryFormat(Span{byte}, out int, ReadOnlySpan{char}, IFormatProvider?)"/>,
+/// the shortest text that reads back as the same number; and <see cref="Digits"/>, the same numbers taken to the 15
+/// significant digits Excel shows (<c>Digits.Of</c>), where the renderer gets each number's digits, so that a change to
+/// that step shows apart from the rest of the renderer's work.
 /// </para>
 /// </remarks>
 [MemoryDiagnoser]
@@ -184,6 +186,26 @@ public class ExcelCellRender
 			{
 				total += written;
 			}
+		}
+
+		return total;
+	}
+
+	/// <summary>
+	/// A reference: General's numbers taken to the 15 significant digits Excel shows, as the renderer takes each number's
+	/// digits before it writes them (<c>Digits.Of</c>).
+	/// </summary>
+	/// <returns>A sum of the digits and their exponents, so that the work isn't dropped.</returns>
+	[Benchmark(OperationsPerInvoke = Count)]
+	[BenchmarkCategory("Digits")]
+	public long Digits()
+	{
+		var total = 0L;
+		foreach (var value in generalValues)
+		{
+			// Qualified: this method's name hides the type's.
+			var digits = CsvHelper.Excel.Digits.Of(value);
+			total += (long)digits.Significand + digits.Exponent;
 		}
 
 		return total;

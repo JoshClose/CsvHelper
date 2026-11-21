@@ -1,0 +1,56 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<!-- Phase 9's per-target runner (the plan's "Other runtimes"): times CsvHelper.Excel's read and write defaults and their
+	     stages in interleaved rounds on .NET 10, .NET 8 and .NET Framework 4.8, since the benchmark project runs on .NET 10
+	     only. Each runs CsvHelper.Excel's build for it: net10.0 its net10.0 build, so that the same code compares across
+	     runtimes, net8.0 its net8.0 build (ZipArchive's synchronous writes), and net48 its net47 build, on .NET Framework's
+	     ZipArchive. See Program.cs for the commands. -->
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
+		<ImplicitUsings>disable</ImplicitUsings>
+		<IsPackable>false</IsPackable>
+		<Prefer32Bit>false</Prefer32Bit>
+		<ServerGarbageCollection>false</ServerGarbageCollection>
+		<ConcurrentGarbageCollection>false</ConcurrentGarbageCollection>
+		<TieredPGO>true</TieredPGO>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<!-- Signed with the library's key, as the benchmark project is, so that an InternalsVisibleTo of this assembly by that
+		     public key would let stage methods reach internals (step 6's own zip writer, say). -->
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\..\src\CsvHelper\CsvHelper.snk</AssemblyOriginatorKeyFile>
+		<PublicSign Condition="'$(OS)' != 'Windows_NT'">true</PublicSign>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(TargetFramework)' == 'net48'">
+		<!-- The package assemblies (System.Memory, System.Buffers, ...) reference older versions of each other. -->
+		<AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+	</PropertyGroup>
+
+	<!-- App.config holds .NET Framework's GC settings. -->
+	<ItemGroup Condition="'$(TargetFramework)' != 'net48'">
+		<None Remove="App.config" />
+	</ItemGroup>
+
+	<!-- ZipArchive, for the inflate, stored-copy and zip stages, which .NET has in its shared framework. -->
+	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+		<Reference Include="System.IO.Compression" />
+	</ItemGroup>
+
+	<!-- CsvHelper.Excel, and the [CsvRecord] generator for PackageAsset's and OrderRecord's mappers and record writer. -->
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\CsvHelper.Excel\CsvHelper.Excel.csproj" />
+		<ProjectReference Include="..\..\src\CsvHelper.Generators\CsvHelper.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+	</ItemGroup>
+
+	<!-- The benchmarks' orders and NCsvPerf's package assets data, which the writes write, as ExcelOrdersWrite and
+	     ExcelPackageAssetsWrite do. -->
+	<ItemGroup>
+		<Compile Include="..\CsvHelper.Benchmarks\OrderRecord.cs" Link="Bench\OrderRecord.cs" />
+		<Compile Include="..\CsvHelper.Benchmarks\ExcelOrders.cs" Link="Bench\ExcelOrders.cs" />
+		<None Include="..\CsvHelper.Benchmarks\Data\PackageAssets.csv" Link="Data\PackageAssets.csv" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
+
+</Project>

@@ -186,6 +186,9 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	/// <summary>The options of <see cref="CsvHelper_StringsFormatted"/>: the defaults, with the text Excel shows.</summary>
 	private static readonly ExcelReaderOptions Formatted = new() { Text = ExcelText.Formatted };
 
+	/// <summary>The options of the <c>*Pooled</c> methods: the defaults, with <see cref="CsvReaderOptions.PoolStrings"/> on.</summary>
+	private static readonly ExcelReaderOptions Pooled = new() { Csv = CsvReaderOptions.Default with { PoolStrings = true } };
+
 	/// <summary>The workbook every library reads.</summary>
 	private byte[] workbook = [];
 
@@ -230,6 +233,20 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	public List<OrderRecord> CsvHelper_Records()
 	{
 		using var reader = ExcelReader.Create(NewWorkbookStream());
+
+		return reader.GetRecords<OrderRecord>().ToList();
+	}
+
+	/// <summary>
+	/// CsvHelper.Excel: the orders, with <see cref="CsvReaderOptions.PoolStrings"/> on: the kept <c>Customer</c>,
+	/// <c>Status</c> and <c>Notes</c> strings pooled per column, against the cost of looking them up.
+	/// </summary>
+	/// <returns>The orders.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Records")]
+	public List<OrderRecord> CsvHelper_RecordsPooled()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
 
 		return reader.GetRecords<OrderRecord>().ToList();
 	}
@@ -300,6 +317,26 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 		return checksum;
 	}
 
+	/// <summary>
+	/// CsvHelper.Excel: <see cref="CsvHelper_Values"/> with <see cref="CsvReaderOptions.PoolStrings"/> on, which changes only
+	/// how its three string columns are made: what pooling costs or saves where the strings aren't kept.
+	/// </summary>
+	/// <returns>The checksum of the values.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Values")]
+	public long CsvHelper_ValuesPooled()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		var checksum = 0L;
+		var source = new CsvOrderSource(reader);
+		while (reader.Read())
+		{
+			checksum = Fold(checksum, ref source);
+		}
+
+		return checksum;
+	}
+
 	/// <summary>ExcelDataReader: every field through its typed getter, after the header row.</summary>
 	/// <returns>The checksum of the values.</returns>
 	[Benchmark]
@@ -349,6 +386,29 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	public long CsvHelper_Strings()
 	{
 		using var reader = ExcelReader.Create(NewWorkbookStream());
+		var length = 0L;
+		while (reader.Read())
+		{
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				length += reader.GetString(i).Length;
+			}
+		}
+
+		return length;
+	}
+
+	/// <summary>
+	/// CsvHelper.Excel: <see cref="CsvHelper_Strings"/> with <see cref="CsvReaderOptions.PoolStrings"/> on, every field's
+	/// text through the pool: the <c>CustomerId</c> column's million distinct values test the pool's switching itself off
+	/// for a column whose values don't repeat.
+	/// </summary>
+	/// <returns>The total length of the texts.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Strings")]
+	public long CsvHelper_StringsPooled()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
 		var length = 0L;
 		while (reader.Read())
 		{

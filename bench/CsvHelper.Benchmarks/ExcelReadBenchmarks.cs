@@ -72,6 +72,9 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	/// <summary>The options of <see cref="CsvHelper_StringsFormatted"/>: the defaults, with the text Excel shows.</summary>
 	private static readonly ExcelReaderOptions Formatted = new() { Text = ExcelText.Formatted };
 
+	/// <summary>The options of the <c>*Pooled</c> methods: the defaults, with <see cref="CsvReaderOptions.PoolStrings"/> on.</summary>
+	private static readonly ExcelReaderOptions Pooled = new() { Csv = CsvReaderOptions.Default with { PoolStrings = true } };
+
 	/// <summary>The workbook every library reads, for the current <see cref="Strings"/>.</summary>
 	private byte[] workbook = [];
 
@@ -236,6 +239,28 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	}
 
 	/// <summary>
+	/// CsvHelper.Excel: every field as a string, with <see cref="CsvReaderOptions.PoolStrings"/> on, so that a value seen
+	/// before in its column is the same string: the strings that die at once, made or looked up.
+	/// </summary>
+	/// <returns>The total length of the strings.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Strings")]
+	public long CsvHelper_StringsPooled()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		var total = 0L;
+		while (reader.Read())
+		{
+			for (var i = 0; i < reader.FieldCount; i++)
+			{
+				total += reader.GetString(i).Length;
+			}
+		}
+
+		return total;
+	}
+
+	/// <summary>
 	/// CsvHelper.Excel under <see cref="ExcelText.Formatted"/>: every field as a string, the text Excel shows. Every cell is
 	/// text without a style, so no field is rendered: this is what <c>Formatted</c> costs a sheet of text.
 	/// </summary>
@@ -359,6 +384,21 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	public List<PackageAsset> CsvHelper_Records()
 	{
 		using var reader = ExcelReader.Create(NewWorkbookStream());
+
+		return reader.GetRecords<PackageAsset>().ToList();
+	}
+
+	/// <summary>
+	/// CsvHelper.Excel: the records, with <see cref="CsvReaderOptions.PoolStrings"/> on. The records keep their strings, and
+	/// the data repeats its 1,695 rows, so the pool keeps one string of each value instead of a million: the cost of making
+	/// and keeping strings, and the garbage collections it causes, against a lookup's.
+	/// </summary>
+	/// <returns>The records.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Records")]
+	public List<PackageAsset> CsvHelper_RecordsPooled()
+	{
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
 
 		return reader.GetRecords<PackageAsset>().ToList();
 	}

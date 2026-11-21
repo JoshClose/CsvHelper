@@ -124,6 +124,12 @@ public abstract class ExcelWriteBenchmarkBase
 	/// </summary>
 	protected static readonly ExcelSheetOptions Protected = new() { Protect = true };
 
+	/// <summary>
+	/// A sheet at the defaults but without auto-fit: a bold, frozen header, and no records held back to measure. A write
+	/// with it allocates what a write at the defaults allocates, less what auto-fit's held records cost.
+	/// </summary>
+	protected static readonly ExcelSheetOptions NoAutoFit = new() { AutoFit = 0 };
+
 	/// <summary>The stream the last benchmark wrote to.</summary>
 	private CountingStream? last;
 
@@ -187,6 +193,13 @@ public abstract class ExcelWriteBenchmarkBase
 /// header unlocked. Validation isn't here: the sheet has no members' types, and no lists or prompts, so it would write
 /// nothing more. And its links: each row with a 26th column, the package's NuGet page as a <see cref="Uri"/>, written as
 /// links (the first 65,530, as a sheet holds no more) and, for what they cost, as text.
+/// </para>
+/// <para>
+/// Four of these are also written with stored entries (<see cref="CompressionLevel.NoCompression"/>): the defaults, shared
+/// strings, Phase 4's look and the protected sheet. Each one's time is then making the XML without deflating it, and its
+/// Written column is about the size of its sheet's XML. <see cref="CsvHelper_WriteNoAutoFit"/> writes the defaults
+/// without auto-fit: <see cref="CsvHelper_Write"/>'s Allocated column less its own is what auto-fit's 100 held records
+/// cost. They come after the others, so that the methods before them run in the order they always have.
 /// </para>
 /// <para>
 /// The MB/s column is of the same data as CSV, and <see cref="Csv_Write"/> writes that CSV with CsvHelper, as a
@@ -373,6 +386,42 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 		return stream.Count;
 	}
 
+	/// <summary>
+	/// CsvHelper.Excel at its defaults with stored entries (<see cref="CompressionLevel.NoCompression"/>): making the XML
+	/// without deflating it, and the sheet's XML as the Written size.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteStored() => WriteWorkbook(new ExcelWriterOptions { CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>CsvHelper.Excel with shared strings and stored entries: the table's cost without deflate's.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteSharedStored() => WriteWorkbook(new ExcelWriterOptions { Strings = ExcelStrings.Shared, CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>CsvHelper.Excel with Phase 4's look (no bold header, no frozen header and no auto-fit) and stored entries.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WritePlainStored() => WriteWorkbook(new ExcelWriterOptions { Sheets = Plain, CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>CsvHelper.Excel with the sheet protected and stored entries: the unlocked cells' styles without deflate's time.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteProtectedStored() => WriteWorkbook(new ExcelWriterOptions { Sheets = Protected, CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>
+	/// CsvHelper.Excel at its defaults but without auto-fit: <see cref="CsvHelper_Write"/>'s allocation less this one's is
+	/// what auto-fit's 100 held records cost.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteNoAutoFit() => WriteWorkbook(new ExcelWriterOptions { Sheets = NoAutoFit });
+
 	/// <inheritdoc/>
 	public override object ReadBack()
 	{
@@ -500,6 +549,13 @@ public class ExcelPackageAssetsWrite : ExcelWriteBenchmarkBase
 /// with their defaults: <c>CustomerId</c> as its string, <c>ShippedAt</c> as its UTC date, and the dates in
 /// <see cref="ExcelOrders.DateFormat"/> (MiniExcel in its own). SpreadCheetah and LargeXlsx get each row by hand, and
 /// MiniExcel through a data reader, as it takes properties and <see cref="OrderRecord"/>'s members are fields.
+/// </para>
+/// <para>
+/// Four of CsvHelper.Excel's sheets are also written with stored entries (<see cref="CompressionLevel.NoCompression"/>):
+/// the defaults, shared strings, Phase 4's look and the protected sheet. Each one's time is then making the XML without
+/// deflating it, and its Written column is about the size of its sheet's XML. <see cref="CsvHelper_WriteNoAutoFit"/>
+/// writes the defaults without auto-fit: <see cref="CsvHelper_Write"/>'s Allocated column less its own is what auto-fit's
+/// 100 held records cost. They come after the others, so that the methods before them run in the order they always have.
 /// </para>
 /// <para>
 /// The MB/s column is of the same orders as CSV, and <see cref="Csv_Write"/> writes that CSV with CsvHelper, as a
@@ -707,6 +763,42 @@ public class ExcelOrdersWrite : ExcelWriteBenchmarkBase
 
 		return stream.Count;
 	}
+
+	/// <summary>
+	/// CsvHelper.Excel at its defaults with stored entries (<see cref="CompressionLevel.NoCompression"/>): making the XML
+	/// without deflating it, and the sheet's XML as the Written size.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteStored() => WriteWorkbook(Utc with { CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>CsvHelper.Excel with shared strings and stored entries: the table's cost without deflate's.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteSharedStored() => WriteWorkbook(Utc with { Strings = ExcelStrings.Shared, CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>CsvHelper.Excel with Phase 4's look (no bold header, no frozen header and no auto-fit) and stored entries.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WritePlainStored() => WriteWorkbook(Utc with { Sheets = Plain, CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>CsvHelper.Excel with the sheet protected and stored entries: the unlocked cells' styles without deflate's time.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteProtectedStored() => WriteWorkbook(Utc with { Sheets = Protected, CompressionLevel = CompressionLevel.NoCompression });
+
+	/// <summary>
+	/// CsvHelper.Excel at its defaults but without auto-fit: <see cref="CsvHelper_Write"/>'s allocation less this one's is
+	/// what auto-fit's 100 held records cost.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Write")]
+	public long CsvHelper_WriteNoAutoFit() => WriteWorkbook(Utc with { Sheets = NoAutoFit });
 
 	/// <inheritdoc/>
 	public override object ReadBack()
