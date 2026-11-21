@@ -40,14 +40,14 @@ public partial class TenNumbers
 
 /// <summary>
 /// The import's limit on errors (Phase 7's step 8), as an upload of the wrong file meets it: a sheet of a million cells at
-/// fault stops at <c>maxErrors</c>, having read a little of the sheet, and the import's memory is the errors', whatever the
-/// sheet's size.
+/// fault stops at <c>maxErrors</c>, having read a little of the sheet. That the import's memory is the errors', whatever the
+/// sheet's size, <see cref="ImportAllocationTests"/> measures, alone.
 /// </summary>
 /// <param name="output">Shows what the tests measured.</param>
 public class ImportSecurityTests(ITestOutputHelper output)
 {
 	/// <summary>The rows of the sheet of a million cells at fault, ten each.</summary>
-	private const int MillionCells = 100_000;
+	internal const int MillionCells = 100_000;
 
 	[Theory]
 	[InlineData(false)]
@@ -78,39 +78,10 @@ public class ImportSecurityTests(ITestOutputHelper output)
 		Assert.False(one.Complete);
 	}
 
-#if NET
-	[OptimizedFact]
-	public void AllocatesForTheErrorsWhateverTheSheetsSize()
-	{
-		var bytes = new Func<byte[], long>(zip =>
-		{
-			using var reader = ExcelReader.Create(new MemoryStream(zip));
-			reader.ReadHeader();
-			var before = GC.GetAllocatedBytesForCurrentThread();
-			var result = ExcelReader.Import<TenNumbers>(reader);
-			var allocated = GC.GetAllocatedBytesForCurrentThread() - before;
-			Assert.Equal(1000, result.Errors.Count);
-
-			return allocated;
-		});
-
-		// Each size measured twice, and the smaller kept, as the writer's allocation tests do (the runtime allocates once at a
-		// moment tiering sets). A thousand errors cost the same in a sheet of 10,000 rows and of 100,000, and a few megabytes.
-		var small = BadCells(10_000);
-		var large = BadCells(MillionCells);
-		bytes(small);
-		var few = Math.Min(bytes(small), bytes(small));
-		var many = Math.Min(bytes(large), bytes(large));
-		output.WriteLine($"A thousand errors allocated {few:N0} bytes in a sheet of 10,000 rows and {many:N0} in one of 100,000.");
-		Assert.True(Math.Abs(many - few) < 64 * 1024, $"10,000 rows allocated {few:N0} bytes and 100,000 rows {many:N0}.");
-		Assert.True(many < 8 * 1024 * 1024, $"A thousand errors allocated {many:N0} bytes.");
-	}
-#endif
-
 	/// <summary>A workbook of one sheet, Upload: <see cref="TenNumbers"/>'s header, then rows of text in each column.</summary>
 	/// <param name="rows">The rows after the header.</param>
 	/// <returns>The workbook's bytes.</returns>
-	private static byte[] BadCells(int rows)
+	internal static byte[] BadCells(int rows)
 	{
 		using var stream = new MemoryStream();
 		using (var workbook = ExcelWorkbookWriter.Create(stream, leaveOpen: true))
