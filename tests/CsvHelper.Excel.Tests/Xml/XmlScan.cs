@@ -3,14 +3,24 @@ using System.Xml;
 
 namespace CsvHelper.Excel.Tests.Xml;
 
-/// <summary>A way of reading a part: the stream, the window's starting size, and sync or async.</summary>
+/// <summary>
+/// A way of reading a part: the stream, the window's starting size, sync or async, and whether the sheet readers skip by a
+/// raw search.
+/// </summary>
 /// <param name="name">The name of the mode, for failures.</param>
 /// <param name="trickle">Whether the stream returns one byte per read, rather than all it can.</param>
 /// <param name="windowSize">The size the window starts at.</param>
 /// <param name="async">Whether to read asynchronously.</param>
-public sealed class ScanMode(string name, bool trickle, int windowSize, bool async)
+/// <param name="rawSkips">
+/// Whether the sheet readers skip the rows they skip whole, and the merged cells' read skips <c>sheetData</c>, by a raw
+/// search for the end tag (<see cref="XmlScanner.RawSkips"/>), rather than token by token.
+/// </param>
+public sealed class ScanMode(string name, bool trickle, int windowSize, bool async, bool rawSkips = true)
 {
-	/// <summary>Every mode: whole and one-byte reads, a 64 KB and a 16-byte window, sync and async.</summary>
+	/// <summary>
+	/// Every mode: whole and one-byte reads, a 64 KB and a 16-byte window, sync and async, all with raw skips (which only the
+	/// sheet readers use: <see cref="WithRawSkips"/> gives each mode's twin without them).
+	/// </summary>
 	public static IReadOnlyList<ScanMode> All { get; } =
 	[
 		new("whole", false, XmlWindow.DefaultSize, false),
@@ -35,8 +45,19 @@ public sealed class ScanMode(string name, bool trickle, int windowSize, bool asy
 	/// <summary>Whether to read asynchronously.</summary>
 	public bool Async => async;
 
+	/// <summary>
+	/// Whether the sheet readers skip the rows they skip whole, and the merged cells' read skips <c>sheetData</c>, by a raw
+	/// search for the end tag (<see cref="XmlScanner.RawSkips"/>), rather than token by token.
+	/// </summary>
+	public bool RawSkips => rawSkips;
+
+	/// <summary>The same mode with raw skips on or off: its twin, or itself when it already has that setting.</summary>
+	/// <param name="raw">Whether the sheet readers skip by a raw search.</param>
+	/// <returns>The mode.</returns>
+	public ScanMode WithRawSkips(bool raw) => raw == rawSkips ? this : new(name, trickle, windowSize, async, raw);
+
 	/// <inheritdoc/>
-	public override string ToString() => name;
+	public override string ToString() => rawSkips ? name : $"{name}, raw skips off";
 }
 
 /// <summary>Reads parts with <see cref="XmlScanner"/>, and with <see cref="XmlReader"/> to compare.</summary>
@@ -45,7 +66,7 @@ internal static class XmlScan
 	/// <summary>The part name of the tests' parts.</summary>
 	public const string PartName = "test.xml";
 
-	/// <summary>Opens a scanner over <paramref name="xml"/>.</summary>
+	/// <summary>Opens a scanner over <paramref name="xml"/>, with the mode's raw skips for the readers that use them.</summary>
 	/// <param name="xml">The part.</param>
 	/// <param name="mode">How to read it.</param>
 	/// <param name="maxSize">The window's size limit.</param>
@@ -54,7 +75,7 @@ internal static class XmlScan
 	{
 		Stream stream = mode.Trickle ? new TrickleStream(xml) : new MemoryStream(xml);
 
-		return new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
+		return new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize)) { RawSkips = mode.RawSkips };
 	}
 
 	/// <summary>Reads the next token as <paramref name="mode"/> says.</summary>

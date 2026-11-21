@@ -83,9 +83,10 @@ internal readonly struct XmlScannerState
 /// <para>
 /// It is not a validating parser. It throws <see cref="InvalidDataException"/> when something stops it from reading: a
 /// tag, comment, CDATA section or processing instruction the part ends inside, an end tag without a start tag, a part
-/// that ends inside an element or has no root element, a second root element, a DOCTYPE, and (when they are decoded)
-/// undefined entities and invalid character references. It doesn't check that end tags match their start tags, that
-/// names are valid, or that attributes are unique.
+/// that ends inside an element or has no root element, a second root element, a DOCTYPE, a <c>&lt;</c> in an attribute
+/// value (which Excel refuses, as XML does), and (when they are decoded) undefined entities and invalid character
+/// references. It doesn't check that end tags match their start tags, that names are valid, or that attributes are
+/// unique.
 /// </para>
 /// </remarks>
 internal sealed class XmlScanner : IDisposable, IAsyncDisposable
@@ -102,6 +103,10 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	// The content of a text or CDATA token, or the attributes of a start tag.
 	private int contentStart;
 	private int contentLength;
+	// A raw skip in progress (TrySkipRaw), across refills: whether it has begun, and the markup it is inside, from where.
+	private bool rawSkipping;
+	private RawMarkup rawMarkup;
+	private long rawMarkupOffset;
 
 	/// <summary>Creates a scanner over a window, which it owns: disposing the scanner disposes the window.</summary>
 	/// <param name="window">The window over the part.</param>
@@ -147,6 +152,31 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// <summary>The local name of a start or end tag (<c>c</c> for <c>x:c</c>); empty for other tokens.</summary>
 	public ReadOnlySpan<byte> LocalName =>
 		Kind is XmlTokenKind.StartTag or XmlTokenKind.EndTag ? window.Buffer.AsSpan(nameStart, nameLength) : default;
+
+	/// <summary>The name of a start or end tag with its prefix (<c>x:c</c> for <c>x:c</c>, <c>c</c> for <c>c</c>); empty for other tokens.</summary>
+	public ReadOnlySpan<byte> QualifiedName
+	{
+		get
+		{
+			if (Kind is not (XmlTokenKind.StartTag or XmlTokenKind.EndTag))
+			{
+				return default;
+			}
+
+			// After the '<' of a start tag, or the '</' of an end tag.
+			var start = tokenStart + (Kind == XmlTokenKind.EndTag ? 2 : 1);
+
+			return window.Buffer.AsSpan(start, nameStart + nameLength - start);
+		}
+	}
+
+	/// <summary>
+	/// Whether the readers of the part skip elements whose content they don't need by a raw search (<see cref="TrySkipRaw"/>)
+	/// rather than token by token (<see cref="TrySkipTo"/>): the merged cells' read through a sheet skips its
+	/// <c>sheetData</c>, and a sheet's scanner the rows it skips whole. The scanner itself doesn't read it. On by default;
+	/// tests turn it off, so that both paths are tested.
+	/// </summary>
+	public bool RawSkips { get; set; } = true;
 
 	/// <summary>The content of a text or CDATA token, as it is in the XML; empty for other tokens.</summary>
 	public ReadOnlySpan<byte> Content =>
@@ -456,6 +486,238 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Skips to after the end tag <c>&lt;/qualifiedName&gt;</c> that brings the depth to <paramref name="targetDepth"/>, if
+	/// the window holds it, by a raw search for the name rather than token by token: the element of that name is the one
+	/// open at <c>targetDepth + 1</c>, and the elements open inside it, wherever the scanner is in them, end with it.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// Each hit of the name is looked at: <c>&lt;/</c>, the name, and white space or <c>&gt;</c> is an end tag, which ends
+	/// the skip or a nested element of the same name; <c>&lt;</c>, the name, and white space, <c>&gt;</c> or <c>/</c> is
+	/// such a nested element's start tag, counted unless it is empty. Both are read as tokens, so they must fit the window.
+	/// Anything else, such as a longer name or the name in text, is passed over.
+	/// </para>
+	/// <para>
+	/// A search for <c>!</c> and <c>?</c> beside it finds comments, CDATA sections and processing instructions, which are
+	/// skipped to their ends, so that the name in them is no hit; any other <c>&lt;!</c> is passed over. Nothing else in
+	/// the skipped bytes is read or checked: not their tags, nor their attribute values, so a literal <c>&lt;/</c> and the
+	/// name in a value, which isn't XML (<see cref="TryReadStartTag"/>), would end the skip there.
+	/// </para>
+	/// <para>
+	/// When the window runs out, only the bytes from where a hit could still start are kept, a few more than the name's,
+	/// so that <see cref="Refill"/> doesn't grow the window for the skipped bytes, however long their comments, values or
+	/// text are.
+	/// </para>
+	/// </remarks>
+	/// <param name="qualifiedName">
+	/// The name of the element, with its prefix, as its start tag has it (<see cref="QualifiedName"/>): a copy, not the
+	/// window's bytes, which a refill moves.
+	/// </param>
+	/// <param name="targetDepth">The depth to stop at, after the end tag that reaches it.</param>
+	/// <returns>
+	/// <see langword="true"/> at the depth, at once when the scanner is there already; <see langword="false"/> when the
+	/// window runs out first, which <see cref="Refill"/> fixes: what is skipped already stays skipped.
+	/// </returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="targetDepth"/> is negative.</exception>
+	/// <exception cref="ArgumentException"><paramref name="qualifiedName"/> is empty.</exception>
+	/// <exception cref="InvalidDataException">
+	/// The part ends inside the element, a comment, a CDATA section or a processing instruction; or a tag of the name
+	/// can't be read.
+	/// </exception>
+	public bool TrySkipRaw(ReadOnlySpan<byte> qualifiedName, int targetDepth)
+	{
+		if (targetDepth < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(targetDepth), targetDepth, "The depth can't be negative.");
+		}
+
+		if (qualifiedName.IsEmpty)
+		{
+			throw new ArgumentException("The name can't be empty.", nameof(qualifiedName));
+		}
+
+		if (depth <= targetDepth)
+		{
+			return true;
+		}
+
+		if (!rawSkipping)
+		{
+			// The elements open inside the one skipped end with it: only nested elements of its name are counted from here.
+			depth = targetDepth + 1;
+			rawSkipping = true;
+		}
+
+		var buffer = window.Buffer;
+		var end = window.End;
+		var pos = position;
+		// The next hit of the name at or after pos: -1 to search for it, end when the window holds none.
+		var nameAt = -1;
+		// The bytes from pos to here hold no '!' or '?' that starts markup: each byte is searched once, and only up to the
+		// next hit, so that a skip of a short row doesn't search the rest of the window.
+		var marked = pos;
+		while (true)
+		{
+			if (rawMarkup != RawMarkup.None)
+			{
+				var close = MarkupEnd(rawMarkup);
+				var at = buffer.AsSpan(pos, end - pos).IndexOf(close);
+				if (at < 0)
+				{
+					// All but the last bytes, which could start the end.
+					position = Math.Max(pos, end - (close.Length - 1));
+
+					return RawNeedMore();
+				}
+
+				pos += at + close.Length;
+				rawMarkup = RawMarkup.None;
+				marked = pos;
+				if (nameAt < pos)
+				{
+					nameAt = -1;
+				}
+
+				continue;
+			}
+
+			if (nameAt < pos)
+			{
+				nameAt = IndexOf(buffer, pos, end, qualifiedName);
+			}
+
+			// Markup before the hit, which could hold it.
+			var markAt = IndexOfMark(buffer, marked, nameAt);
+			if (markAt < nameAt)
+			{
+				var lt = markAt - 1;
+				if (lt < pos || buffer[lt] != (byte)'<')
+				{
+					// '!' or '?' in text, or in a tag passed over.
+					marked = markAt + 1;
+
+					continue;
+				}
+
+				var markup = buffer.AsSpan(lt, end - lt);
+				if (markup[1] == (byte)'?')
+				{
+					EnterMarkup(RawMarkup.ProcessingInstruction, lt);
+					pos = lt + 2;
+				}
+				else if (markup.StartsWith(CommentStart))
+				{
+					EnterMarkup(RawMarkup.Comment, lt);
+					pos = lt + CommentStart.Length;
+				}
+				else if (markup.StartsWith(CDataStart))
+				{
+					EnterMarkup(RawMarkup.CData, lt);
+					pos = lt + CDataStart.Length;
+				}
+				else
+				{
+					// A DOCTYPE, other markup, or the start of a comment or CDATA section that the window cuts short: passed
+					// over. Such a start is in the bytes kept at the window's end, so it is looked at again after the refill.
+					marked = markAt + 1;
+				}
+
+				continue;
+			}
+
+			marked = nameAt;
+			if (nameAt == end)
+			{
+				// From where a hit could still start: the name with its "</" and the byte after it, or "<![CDATA[".
+				position = Math.Max(pos, end - Math.Max(qualifiedName.Length + 2, CDataStart.Length - 1));
+
+				return RawNeedMore();
+			}
+
+			var after = nameAt + qualifiedName.Length;
+			if (after == end)
+			{
+				if (!window.IsEof)
+				{
+					// The byte after the name tells whether it is a tag of the name.
+					position = Math.Max(pos, nameAt - 2);
+
+					return false;
+				}
+
+				nameAt = end;
+
+				continue;
+			}
+
+			var next = buffer[after];
+			var tag = nameAt - 2 >= pos && buffer[nameAt - 2] == (byte)'<' && buffer[nameAt - 1] == (byte)'/' && (IsWhitespace(next) || next == (byte)'>')
+				? nameAt - 2
+				: nameAt - 1 >= pos && buffer[nameAt - 1] == (byte)'<' && IsNameEnd(next)
+					? nameAt - 1
+					: -1;
+			if (tag < 0)
+			{
+				nameAt = IndexOf(buffer, nameAt + 1, end, qualifiedName);
+
+				continue;
+			}
+
+			// The tag, read as a token: an end tag lowers the depth, a nested start tag that isn't empty raises it.
+			tokenStart = tag;
+			var read = buffer[tag + 1] == (byte)'/'
+				? TryReadEndTag(buffer.AsSpan(tag, end - tag), tag)
+				: TryReadStartTag(buffer.AsSpan(tag, end - tag), tag);
+			if (!read)
+			{
+				position = tag;
+
+				return false;
+			}
+
+			if (depth == targetDepth)
+			{
+				rawSkipping = false;
+
+				return true;
+			}
+
+			pos = position;
+			marked = pos;
+		}
+	}
+
+	/// <summary>Skips to the end tag of <paramref name="qualifiedName"/> that reaches <paramref name="targetDepth"/>, refilling the window as needed. See <see cref="TrySkipRaw"/>.</summary>
+	/// <param name="qualifiedName">The name of the element, with its prefix.</param>
+	/// <param name="targetDepth">The depth to stop at.</param>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="targetDepth"/> is negative.</exception>
+	/// <exception cref="ArgumentException"><paramref name="qualifiedName"/> is empty.</exception>
+	/// <exception cref="InvalidDataException">The part ends inside the element or its markup, or a tag of the name can't be read.</exception>
+	public void SkipRaw(ReadOnlySpan<byte> qualifiedName, int targetDepth)
+	{
+		while (!TrySkipRaw(qualifiedName, targetDepth))
+		{
+			Refill();
+		}
+	}
+
+	/// <summary>Asynchronously skips to the end tag of <paramref name="qualifiedName"/> that reaches <paramref name="targetDepth"/>. See <see cref="TrySkipRaw"/>.</summary>
+	/// <param name="qualifiedName">The name of the element, with its prefix.</param>
+	/// <param name="targetDepth">The depth to stop at.</param>
+	/// <param name="cancellationToken">Cancels reading the part's stream.</param>
+	/// <returns>A task that completes at the depth.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="targetDepth"/> is negative.</exception>
+	/// <exception cref="ArgumentException"><paramref name="qualifiedName"/> is empty.</exception>
+	/// <exception cref="InvalidDataException">The part ends inside the element or its markup, or a tag of the name can't be read.</exception>
+	public async ValueTask SkipRawAsync(ReadOnlyMemory<byte> qualifiedName, int targetDepth, CancellationToken cancellationToken)
+	{
+		while (!TrySkipRaw(qualifiedName.Span, targetDepth))
+		{
+			await RefillAsync(cancellationToken).ConfigureAwait(false);
+		}
+	}
+
+	/// <summary>
 	/// Reads more of the part, keeping the bytes from <see cref="Position"/> on: the token that <see cref="TryRead"/> or
 	/// <see cref="TrySkipTo"/> found incomplete, or where <see cref="Restore"/> went back to. The current token and saved
 	/// states are gone.
@@ -553,6 +815,9 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// <param name="b">The byte.</param>
 	/// <returns>Whether it is white space.</returns>
 	internal static bool IsWhitespace(byte b) => b is (byte)' ' or (byte)'\t' or (byte)'\n' or (byte)'\r';
+
+	/// <summary>What is wrong with a <c>&lt;</c> in an attribute value, for <see cref="TryReadStartTag"/> and <see cref="XmlAttributes.MoveNext"/>.</summary>
+	internal const string LessThanInValue = "an attribute value has '<', which XML doesn't allow";
 
 	/// <summary><c>&lt;!--</c>.</summary>
 	private static ReadOnlySpan<byte> CommentStart => "<!--"u8;
@@ -658,10 +923,16 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 				break;
 			}
 
-			var close = markup.Slice(i + 1).IndexOf(quote);
+			// A '<' in a value isn't XML, and a raw skip (TrySkipRaw) could take one there for a tag.
+			var close = markup.Slice(i + 1).IndexOfAny(quote, (byte)'<');
 			if (close < 0)
 			{
 				return NeedMore(pos, "a tag");
+			}
+
+			if (markup[i + 1 + close] == (byte)'<')
+			{
+				throw window.Error(pos + i + 1 + close, LessThanInValue);
 			}
 
 			i += close + 2;
@@ -786,5 +1057,90 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 		IsEmptyElement = false;
 		contentStart = start;
 		contentLength = length;
+	}
+
+	/// <summary>The position of <paramref name="value"/> in the window from <paramref name="from"/>, for a raw skip.</summary>
+	/// <param name="buffer">The window's bytes.</param>
+	/// <param name="from">Where to search from.</param>
+	/// <param name="end">The end of the window's bytes.</param>
+	/// <param name="value">The bytes to find.</param>
+	/// <returns>The position, or <paramref name="end"/> when the window doesn't hold them.</returns>
+	private static int IndexOf(byte[] buffer, int from, int end, ReadOnlySpan<byte> value)
+	{
+		var at = buffer.AsSpan(from, end - from).IndexOf(value);
+
+		return at < 0 ? end : from + at;
+	}
+
+	/// <summary>The position of the next <c>!</c> or <c>?</c> in the window from <paramref name="from"/>, which can start markup, for a raw skip.</summary>
+	/// <param name="buffer">The window's bytes.</param>
+	/// <param name="from">Where to search from.</param>
+	/// <param name="end">The end of the window's bytes.</param>
+	/// <returns>The position, or <paramref name="end"/> when the window holds neither.</returns>
+	private static int IndexOfMark(byte[] buffer, int from, int end)
+	{
+		var at = buffer.AsSpan(from, end - from).IndexOfAny((byte)'!', (byte)'?');
+
+		return at < 0 ? end : from + at;
+	}
+
+	/// <summary>What ends markup that a raw skip is inside.</summary>
+	/// <param name="markup">The markup.</param>
+	/// <returns><c>--&gt;</c>, <c>]]&gt;</c> or <c>?&gt;</c>.</returns>
+	private static ReadOnlySpan<byte> MarkupEnd(RawMarkup markup) => markup switch
+	{
+		RawMarkup.Comment => CommentEnd,
+		RawMarkup.CData => CDataEnd,
+		_ => "?>"u8,
+	};
+
+	/// <summary>Begins markup in a raw skip, which is skipped to its end, across refills.</summary>
+	/// <param name="markup">The markup.</param>
+	/// <param name="start">The position of its <c>&lt;</c>, for the error when the part ends inside it.</param>
+	private void EnterMarkup(RawMarkup markup, int start)
+	{
+		rawMarkup = markup;
+		rawMarkupOffset = window.Offset(start);
+	}
+
+	/// <summary>Returns <see langword="false"/> when a raw skip needs more of the part, or throws if the part has ended.</summary>
+	/// <returns><see langword="false"/>.</returns>
+	/// <exception cref="InvalidDataException">The part has ended: inside the element skipped, or inside markup in it.</exception>
+	private bool RawNeedMore()
+	{
+		if (!window.IsEof)
+		{
+			return false;
+		}
+
+		var what = rawMarkup switch
+		{
+			RawMarkup.Comment => "a comment",
+			RawMarkup.CData => "a CDATA section",
+			RawMarkup.ProcessingInstruction => "a processing instruction",
+			_ => null,
+		};
+		if (what is not null)
+		{
+			throw XmlError.Create(window.PartName, rawMarkupOffset, $"it ends inside {what}");
+		}
+
+		throw window.Error(window.End, "it ends inside an element");
+	}
+
+	/// <summary>The markup a raw skip is inside (<see cref="TrySkipRaw"/>), which it skips to its end.</summary>
+	private enum RawMarkup : byte
+	{
+		/// <summary>None: the skip is searching for the name.</summary>
+		None,
+
+		/// <summary>A comment, to <c>--&gt;</c>.</summary>
+		Comment,
+
+		/// <summary>A CDATA section, to <c>]]&gt;</c>.</summary>
+		CData,
+
+		/// <summary>A processing instruction, to <c>?&gt;</c>.</summary>
+		ProcessingInstruction,
 	}
 }

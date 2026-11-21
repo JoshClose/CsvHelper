@@ -85,10 +85,16 @@ internal struct XmlAttributes
 			offset++;
 			SkipWhitespace(span);
 			var quote = offset < span.Length ? span[offset] : (byte)0;
-			var close = quote is (byte)'"' or (byte)'\'' ? span.Slice(offset + 1).IndexOf(quote) : -1;
+			// The tokenizer found no '<' between the quotes it paired, but a malformed tag can pair them differently here.
+			var close = quote is (byte)'"' or (byte)'\'' ? span.Slice(offset + 1).IndexOfAny(quote, (byte)'<') : -1;
 			if (close < 0)
 			{
 				throw scanner.Window.Error(start + name, "an attribute value has no quotes");
+			}
+
+			if (span[offset + 1 + close] == (byte)'<')
+			{
+				throw scanner.Window.Error(start + offset + 1 + close, XmlScanner.LessThanInValue);
 			}
 
 			valueStart = start + offset + 1;

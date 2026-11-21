@@ -92,14 +92,19 @@ namespace CsvHelper.Excel;
 /// and reads the window as often as it needs to in between. A cell is written only once its value is all in the window:
 /// otherwise the scanner goes back to the cell's start, refills (which keeps the cell, and grows the window for one larger
 /// than it), and reads the cell again. The rest of a cell after its value, elements it doesn't read, and text between the
-/// elements it reads (white space between rows and cells) are skipped across refills, so they never grow the window. Only
-/// the refills read the part's stream, synchronously (<see cref="Fill"/>) or not (<see cref="FillAsync"/>).
+/// elements it reads (white space between rows and cells) are skipped across refills, so they never grow the window. A
+/// row skipped whole (above the area, or hidden) is skipped by a raw search for its end tag
+/// (<see cref="XmlScanner.TrySkipRaw"/>), its XML unchecked, when <see cref="XmlScanner.RawSkips"/> is on and the row's
+/// name is <c>sheetData</c>'s prefix and <c>row</c>; otherwise token by token. Only the refills read the part's stream,
+/// synchronously (<see cref="Fill"/>) or not (<see cref="FillAsync"/>).
 /// </para>
 /// <para>
 /// <b>Errors.</b> The sheet's content that can't be read (its XML, a cell reference, cells or rows out of order, a shared
 /// string index) throws <see cref="CsvFormatException"/> with the cell, or the row, in its location and message, and the
-/// part and byte offset in its message. A limit, or a part that can't be inflated, throws
-/// <see cref="InvalidDataException"/>. After either, every fill throws the same exception again.
+/// part and byte offset in its message. So does an end tag that ends the rows but isn't <c>sheetData</c>'s, which is how
+/// a raw skip that stopped at a <c>&lt;/row&gt;</c> in an attribute value (which isn't XML) shows. A limit, or a part
+/// that can't be inflated, throws <see cref="InvalidDataException"/>. After either, every fill throws the same exception
+/// again.
 /// </para>
 /// </remarks>
 internal sealed class SheetScanner : IDisposable, IAsyncDisposable
@@ -183,6 +188,14 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	// The formatter of the cells' styles under ExcelText.Formatted; null under Raw, when no field has a style. Declared
 	// last, so that the fields the reading of every cell uses keep their places.
 	private readonly CellFormatter? formatter;
+	// The rows' qualified name, sheetData's prefix and "row", when rows can be skipped whole by a raw search: with a
+	// layout, and raw skips on; null otherwise. Declared after the fields above, for the same reason.
+	private byte[]? rowName;
+	// Whether the row skipped next has that name: noted at its tag, or at the start of a row without r, whose number
+	// comes from its first cell, where its tag is gone.
+	private bool rowNamed;
+	// Whether the skip in progress is a raw one, of a row.
+	private bool skipsRaw;
 
 	/// <summary>Creates the scanner of a worksheet part.</summary>
 	/// <param name="scanner">The part's XML, at its start; the sheet scanner owns it, and disposes it.</param>
@@ -444,7 +457,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			switch (mode)
 			{
 				case Mode.Skip:
-					if (!scanner.TrySkipTo(skipDepth))
+					if (!TrySkip())
 					{
 						return Step.More;
 					}
@@ -685,12 +698,69 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		cellColumn = -1;
 		lastRow = row;
 
-		// Past the row's end tag, from its start tag, a cell in it, or after an empty row (where nothing is left to skip).
+		// Past the row's end tag, from its start tag, a cell in it, or after an empty row (where nothing is left to skip):
+		// raw when the row has the rows' name.
 		resume = Mode.SheetData;
 		skipDepth = RowDepth - 1;
+		skipsRaw = rowNamed;
 		mode = Mode.Skip;
 
 		return Step.Read;
+	}
+
+	/// <summary>Skips what <see cref="Mode.Skip"/> skips, if the window holds it: a row by a raw search, anything else token by token.</summary>
+	/// <returns><see langword="true"/> past the end tag; <see langword="false"/> when the window runs out first.</returns>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private bool TrySkip()
+	{
+		if (!skipsRaw)
+		{
+			return scanner.TrySkipTo(skipDepth);
+		}
+
+		if (!scanner.TrySkipRaw(rowName, skipDepth))
+		{
+			return false;
+		}
+
+		skipsRaw = false;
+
+		return true;
+	}
+
+	/// <summary>Notes the rows' name, sheetData's prefix and <c>row</c>, at <c>sheetData</c>'s start tag, when rows can be skipped whole by a raw search.</summary>
+	private void NoteRowName()
+	{
+		if (layout is null || !scanner.RawSkips)
+		{
+			return;
+		}
+
+		var data = scanner.QualifiedName;
+		var prefix = data.Slice(0, data.Length - "sheetData".Length);
+		var name = new byte[prefix.Length + 3];
+		prefix.CopyTo(name);
+		"row"u8.CopyTo(name.AsSpan(prefix.Length));
+		rowName = name;
+	}
+
+	/// <summary>Whether the tag read, a row's, has the rows' name, so that the row can be skipped by a raw search.</summary>
+	/// <returns>Whether it has.</returns>
+	private bool IsRowName() => rowName is not null && scanner.QualifiedName.SequenceEqual(rowName);
+
+	/// <summary>
+	/// Checks that the end tag that ends the rows is <c>sheetData</c>'s, or, without <c>sheetData</c>, that the root's is
+	/// <c>worksheet</c>'s, as in XML they are: a raw skip that stopped at <c>&lt;/row&gt;</c> in an attribute value, which
+	/// isn't XML, meets another, which would otherwise end the rows there unseen.
+	/// </summary>
+	/// <exception cref="CsvFormatException">The end tag is another element's.</exception>
+	private void CheckEnd()
+	{
+		var data = mode == Mode.SheetData;
+		if (!scanner.LocalName.SequenceEqual(data ? "sheetData"u8 : "worksheet"u8))
+		{
+			throw Error(TokenOffset, $"the end tag </{Encoding.UTF8.GetString(scanner.QualifiedName)}> doesn't close {(data ? "sheetData" : "worksheet")}", -1, 0);
+		}
 	}
 
 	/// <summary>Handles a start tag: the root, <c>sheetData</c>, a row or a cell, or an element to skip.</summary>
@@ -719,6 +789,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					// An empty sheetData has no rows, and nothing after it is read.
 					dataPreserves = scanner.SpaceOf() ?? rootPreserves;
 					mode = scanner.IsEmptyElement ? Mode.Done : Mode.SheetData;
+					NoteRowName();
 
 					return BeginRows(target);
 				}
@@ -794,6 +865,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		}
 
 		// </sheetData>, after which nothing is read, or the root's end tag when it has no sheetData.
+		CheckEnd();
+
 		return End(target);
 	}
 
@@ -894,6 +967,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			SetRow(number.Value);
 			if (layout is not null && layout.Place(row) is var place && place != RowPlace.In && (place == RowPlace.Below || !ReadsUnwritten()))
 			{
+				rowNamed = IsRowName();
+
 				return LeaveRow(place);
 			}
 
@@ -909,8 +984,15 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			// Once the missing rows before it are written: a hidden row is no record.
 			if (rowHidden && !ReadsUnwritten())
 			{
+				rowNamed = IsRowName();
+
 				return SkipRow();
 			}
+		}
+		else if (rowName is not null)
+		{
+			// Its first cell gives its number, and may make it a row to skip, when its tag is gone.
+			rowNamed = IsRowName();
 		}
 
 		if (scanner.IsEmptyElement)

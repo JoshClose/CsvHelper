@@ -6,8 +6,9 @@ namespace CsvHelper.Excel.Tests.Sheet;
 /// <summary>
 /// Finding a sheet's merged ranges (<see cref="MergedCells"/>): Excel's shape, after <c>sheetData</c>; the references
 /// Excel opens and those it can't (checked through COM on 2026-11-04); sorting and the order of the ranges' ends;
-/// overlaps; stopping after <c>&lt;/mergeCells&gt;</c>; the limit; and the XML's errors. Each test runs in every
-/// <see cref="ScanMode"/>.
+/// overlaps; stopping after <c>&lt;/mergeCells&gt;</c>; the limit; the XML's errors; and <c>sheetData</c> skipped by a
+/// raw search (Phase 9's step 2): its rows unread, markup in them that holds the ranges' tags, and the end tag that must
+/// close the worksheet. Each test runs in every <see cref="ScanMode"/>, with raw skips on and off.
 /// </summary>
 public class MergedCellsTests
 {
@@ -104,10 +105,14 @@ public class MergedCellsTests
 			"</sheetData><mergeCells count=\"7\"><foo ref=\"C3:D4\"/><mergeCell ref=\"A1:B2\"><x><mergeCell ref=\"E5:F6\"/></x></mergeCell><!-- c --></mergeCells>");
 		var prefixed = TestPackage.Declaration + $"<x:worksheet xmlns:x=\"{TestPackage.StrictMainNamespace}\"><x:sheetData/><x:mergeCells><x:mergeCell ref=\"B2:C3\"/></x:mergeCells></x:worksheet>";
 
+		// Prefixed rows, which a raw skip passes over to </x:sheetData>.
+		var prefixedRows = prefixed.Replace("<x:sheetData/>", "<x:sheetData><x:row r=\"1\"><x:c r=\"A1\"><x:v>1</x:v></x:c></x:row></x:sheetData>");
+
 		await InEveryModeAsync(mode =>
 		{
 			Assert.Equal(["A1:B2"], Find(xml, mode)!.Ranges.Select(r => r.ToString()));
 			Assert.Equal(["B2:C3"], Find(prefixed, mode)!.Ranges.Select(r => r.ToString()));
+			Assert.Equal(["B2:C3"], Find(prefixedRows, mode)!.Ranges.Select(r => r.ToString()));
 		});
 	}
 
@@ -176,17 +181,20 @@ public class MergedCellsTests
 	[Fact]
 	public void StopsAfterTheRanges()
 	{
-		// What follows the ranges isn't read: not even its broken XML.
+		// What follows the ranges isn't read: not even its broken XML. The rows are skipped raw or token by token.
 		var xml = Sheets.Worksheet(Rows).Replace("</sheetData>", "</sheetData><mergeCells><mergeCell ref=\"A1:B2\"/></mergeCells><pageSetup <<<");
 		var bytes = Encoding.UTF8.GetBytes(xml);
 		var end = Encoding.UTF8.GetByteCount(xml.Substring(0, xml.IndexOf("</mergeCells>", StringComparison.Ordinal) + "</mergeCells>".Length));
 
-		var stream = new TrickleStream(bytes);
-		using var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16));
-		var cells = SyncOrAsync.Result(MergedCells.ReadAsync(scanner, "Data", 1 << 20, false, CancellationToken.None));
+		foreach (var raw in new[] { true, false })
+		{
+			var stream = new TrickleStream(bytes);
+			using var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = raw };
+			var cells = SyncOrAsync.Result(MergedCells.ReadAsync(scanner, "Data", 1 << 20, false, CancellationToken.None));
 
-		Assert.Single(cells!.Ranges);
-		Assert.Equal(end, stream.Delivered);
+			Assert.Single(cells!.Ranges);
+			Assert.Equal(end, stream.Delivered);
+		}
 	}
 
 	[Fact]
@@ -209,17 +217,103 @@ public class MergedCellsTests
 	[Fact]
 	public async Task ReportsTheXmlsErrorsForTheSheet()
 	{
-		// XML that ends in the rows, inside a tag, is found by the read that looks for the ranges.
+		// XML that ends in the rows, inside a tag, is found by the read that looks for the ranges: token by token, at the
+		// tag; raw, the rows aren't read, and the part ends inside sheetData.
 		var whole = Sheets.Worksheet("<row r=\"1\"><c r=\"A1\"><v>1</v></c></row><row r=\"2\"><c r=\"A2\"><v>2</v></c></row>");
 		var xml = whole.Substring(0, whole.IndexOf("<row r=\"2\">", StringComparison.Ordinal) + 4);
+		var tag = Encoding.UTF8.GetByteCount(xml) - 4;
+		var end = Encoding.UTF8.GetByteCount(xml);
+
+		// A part that ends inside a comment in the rows: the same error both ways, at the comment.
+		var comment = whole.Substring(0, whole.IndexOf("<row r=\"2\">", StringComparison.Ordinal)) + "<!-- no end";
+		var commentAt = Encoding.UTF8.GetByteCount(comment) - "<!-- no end".Length;
 
 		await InEveryModeAsync(mode =>
 		{
 			var e = Assert.Throws<CsvFormatException>(() => Find(xml, mode));
-			Assert.StartsWith("Sheet Data can't be read at byte ", e.Message);
-			Assert.Contains($" of {Sheets.PartName}: ", e.Message);
+			Assert.Equal(
+				mode.RawSkips
+					? $"Sheet Data can't be read at byte {end} of {Sheets.PartName}: it ends inside an element."
+					: $"Sheet Data can't be read at byte {tag} of {Sheets.PartName}: it ends inside a tag.",
+				e.Message);
 			Assert.IsType<InvalidDataException>(e.InnerException);
 			Assert.Equal(0, e.LineNumber);
+
+			e = Assert.Throws<CsvFormatException>(() => Find(comment, mode));
+			Assert.Equal($"Sheet Data can't be read at byte {commentAt} of {Sheets.PartName}: it ends inside a comment.", e.Message);
+		});
+	}
+
+	[Fact]
+	public async Task LeavesTheRowsUnreadWithRawSkips()
+	{
+		// Rows whose XML can't be read: token by token, the read that looks for the ranges stops at them; raw, it finds the
+		// ranges after them, and leaves the rows to the sheet's reader, which reports them at their cells.
+		var cases = new (string Rows, string At, int From, string Detail)[]
+		{
+			("<row r=\"1\"><c r=\"A1\" note=\"a<b\"><v>1</v></c></row>", "a<b", 1, "an attribute value has '<', which XML doesn't allow"),
+			("<row r=\"1\"><c r=\"A1\"><v>1</v></c><!x></row>", "<!x>", 0, "'<!' starts neither a comment nor a CDATA section"),
+			("<row r=\"1\"><c r=\"A1\"><v>1</v></c x></row>", "</c x>", 0, "an end tag has more than a name"),
+		};
+
+		foreach (var (rows, at, from, detail) in cases)
+		{
+			var xml = Sheets.Worksheet(rows).Replace("</sheetData>", "</sheetData><mergeCells count=\"1\"><mergeCell ref=\"A1:B2\"/></mergeCells>");
+			var offset = Encoding.UTF8.GetByteCount(xml.Substring(0, xml.IndexOf(at, StringComparison.Ordinal) + from));
+
+			await InEveryModeAsync(mode =>
+			{
+				if (mode.RawSkips)
+				{
+					Assert.Equal(["A1:B2"], Find(xml, mode)!.Ranges.Select(r => r.ToString()));
+				}
+				else
+				{
+					var e = Assert.Throws<CsvFormatException>(() => Find(xml, mode));
+					Assert.Equal($"Sheet Data can't be read at byte {offset} of {Sheets.PartName}: {detail}.", e.Message);
+				}
+			});
+		}
+	}
+
+	[Fact]
+	public async Task FindsTheRangesPastMarkupThatHoldsTheirTags()
+	{
+		// A comment, a processing instruction and a CDATA section in the rows that hold </sheetData> and a list of other
+		// ranges, and markup in the list that holds </mergeCells>: neither read ends sheetData or the list there, and the
+		// other ranges are never found (as EPPlus 4.5, which cuts the XML at the text </sheetData>, would).
+		var fake = "</sheetData><mergeCells count=\"1\"><mergeCell ref=\"D9:E10\"/></mergeCells>";
+		var rows = $"<row r=\"1\"><c r=\"A1\"><v>1</v></c><!-- {fake} --></row><?probe {fake}?><row r=\"2\"><c r=\"A2\" t=\"str\"><v><![CDATA[{fake}]]></v></c></row>";
+		var merges = "<mergeCells count=\"2\"><mergeCell ref=\"A1:B1\"/><!-- </mergeCells> --><![CDATA[</mergeCells>]]><?probe </mergeCells>?><mergeCell ref=\"A2:B2\"/></mergeCells>";
+		var xml = Sheets.Worksheet("").Replace("<sheetData></sheetData>", $"<sheetData>{rows}</sheetData>{merges}");
+
+		await InEveryModeAsync(mode => Assert.Equal(["A1:B1", "A2:B2"], Find(xml, mode)!.Ranges.Select(r => r.ToString())));
+	}
+
+	[Fact]
+	public async Task RefusesAnEndTagThatDoesntCloseTheWorksheet()
+	{
+		// The worksheet's children end at an end tag that isn't the worksheet's: the root's, misspelled; and, raw, the cell's
+		// own end tag after a skip that stopped at a </sheetData> in the cell's attribute value, which token by token is the
+		// '<' that XML doesn't allow there.
+		var misspelled = Sheets.Worksheet(Rows).Replace("</worksheet>", "</worksheets>");
+		var inValue = Sheets.Worksheet("").Replace("<sheetData></sheetData>", "<sheetData><row r=\"1\"><c r=\"A1\" note=\"</sheetData>\"><v>1</v></c></row></sheetData>");
+		var misspelledAt = Encoding.UTF8.GetByteCount(misspelled.Substring(0, misspelled.IndexOf("</worksheets>", StringComparison.Ordinal)));
+		var lessThan = Encoding.UTF8.GetByteCount(inValue.Substring(0, inValue.IndexOf("</sheetData>\"", StringComparison.Ordinal)));
+		var cellEnd = Encoding.UTF8.GetByteCount(inValue.Substring(0, inValue.IndexOf("</c>", StringComparison.Ordinal)));
+
+		await InEveryModeAsync(mode =>
+		{
+			var e = Assert.Throws<CsvFormatException>(() => Find(misspelled, mode));
+			Assert.Equal($"Sheet Data can't be read at byte {misspelledAt} of {Sheets.PartName}: the end tag </worksheets> doesn't close worksheet.", e.Message);
+
+			e = Assert.Throws<CsvFormatException>(() => Find(inValue, mode));
+			Assert.Equal(
+				mode.RawSkips
+					? $"Sheet Data can't be read at byte {cellEnd} of {Sheets.PartName}: the end tag </c> doesn't close worksheet."
+					: $"Sheet Data can't be read at byte {lessThan} of {Sheets.PartName}: an attribute value has '<', which XML doesn't allow.",
+				e.Message);
+			Assert.Null(e.Location);
 		});
 	}
 
@@ -229,7 +323,7 @@ public class MergedCellsTests
 	/// <returns>The ranges, or <see langword="null"/>.</returns>
 	private static MergedCells? Find(string xml, ScanMode mode) => Read(Encoding.UTF8.GetBytes(xml), mode, 1 << 20, 1 << 20);
 
-	/// <summary>Finds the merged ranges of a part, under limits.</summary>
+	/// <summary>Finds the merged ranges of a part, under limits, skipping <c>sheetData</c> raw or token by token as the mode says.</summary>
 	/// <param name="bytes">The part.</param>
 	/// <param name="mode">How to read it.</param>
 	/// <param name="windowSize">The window's size limit.</param>
@@ -238,19 +332,19 @@ public class MergedCellsTests
 	private static MergedCells? Read(byte[] bytes, ScanMode mode, long windowSize, long maxSize)
 	{
 		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
-		using var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, windowSize, mode.WindowSize));
+		using var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, windowSize, mode.WindowSize)) { RawSkips = mode.RawSkips };
 
 		return mode.Async
 			? MergedCells.ReadAsync(scanner, "Data", maxSize, true, CancellationToken.None).AsTask().GetAwaiter().GetResult()
 			: SyncOrAsync.Result(MergedCells.ReadAsync(scanner, "Data", maxSize, false, CancellationToken.None));
 	}
 
-	/// <summary>Runs a check in every <see cref="ScanMode"/>, and says which mode failed.</summary>
+	/// <summary>Runs a check in every <see cref="ScanMode"/>, with raw skips on and off, and says which mode failed.</summary>
 	/// <param name="test">The check, for one mode.</param>
 	/// <returns>A task that completes when every mode has passed.</returns>
 	private static Task InEveryModeAsync(Action<ScanMode> test)
 	{
-		foreach (var mode in ScanMode.All)
+		foreach (var mode in ScanMode.All.SelectMany(m => new[] { m, m.WithRawSkips(false) }))
 		{
 			try
 			{

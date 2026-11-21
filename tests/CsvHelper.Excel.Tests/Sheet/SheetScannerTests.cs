@@ -246,18 +246,23 @@ public class SheetScannerTests
 			Assert.Equal(["1: number:1"], await Sheets.ReadAsync(xml, mode));
 		});
 
-		// And it isn't inflated: a stream of one byte per read is read no further than the window's first refill after it.
+		// And it isn't inflated: a stream of one byte per read is read no further than the window's first refill after it,
+		// with raw skips and without.
 		var tail = Sheets.Worksheet("<row r=\"1\"><c r=\"A1\"><v>1</v></c></row>").Replace("<pageMargins", string.Concat(Enumerable.Repeat("<extLst/>", 1000)) + "<pageMargins");
 		var bytes = System.Text.Encoding.UTF8.GetBytes(tail);
-		var stream = new TrickleStream(bytes);
-		using (var sheet = new SheetScanner(new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)), "Data", SharedStrings.Empty, StyleTable.Empty, true, null))
+		foreach (var raw in new[] { true, false })
 		{
-			var captured = new Captured(int.MaxValue);
-			await Sheets.FillAllAsync(sheet, captured, false);
-			Assert.Single(captured.Records);
-		}
+			var stream = new TrickleStream(bytes);
+			var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = raw };
+			using (var sheet = new SheetScanner(scanner, "Data", SharedStrings.Empty, StyleTable.Empty, true, null))
+			{
+				var captured = new Captured(int.MaxValue);
+				await Sheets.FillAllAsync(sheet, captured, false);
+				Assert.Single(captured.Records);
+			}
 
-		Assert.InRange(stream.Delivered, 0, tail.IndexOf("</sheetData>") + "</sheetData>".Length + 16);
+			Assert.InRange(stream.Delivered, 0, tail.IndexOf("</sheetData>") + "</sheetData>".Length + 16);
+		}
 	}
 
 	[Fact]

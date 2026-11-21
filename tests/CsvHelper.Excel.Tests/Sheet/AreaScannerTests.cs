@@ -104,19 +104,24 @@ public class AreaScannerTests
 			await Assert.ThrowsAsync<CsvFormatException>(() => Sheets.ReadAsync(xml, mode, reading: CellReading.Area("A1:A5")));
 		});
 
-		// And it isn't inflated: a stream of one byte per read is read no further than the first refill after that row's tag.
+		// And it isn't inflated: a stream of one byte per read is read no further than the first refill after that row's tag,
+		// with raw skips and without.
 		var tail = Sheets.Worksheet(Row(1, "A") + Row(5, "A") + string.Concat(Enumerable.Range(6, 1000).Select(r => Row(r, "AB"))));
 		var bytes = Encoding.UTF8.GetBytes(tail);
-		var stream = new TrickleStream(bytes);
 		var reading = CellReading.Area("A1:A4");
-		using (var sheet = new SheetScanner(new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)), "Data", SharedStrings.Empty, StyleTable.Empty, true, null, layout: reading.Layout))
+		foreach (var raw in new[] { true, false })
 		{
-			var captured = new Captured(int.MaxValue);
-			await Sheets.FillAllAsync(sheet, captured, false);
-			Assert.Equal(["1: A1"], captured.Records.Select(r => r.ToString()));
-		}
+			var stream = new TrickleStream(bytes);
+			var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = raw };
+			using (var sheet = new SheetScanner(scanner, "Data", SharedStrings.Empty, StyleTable.Empty, true, null, layout: reading.Layout))
+			{
+				var captured = new Captured(int.MaxValue);
+				await Sheets.FillAllAsync(sheet, captured, false);
+				Assert.Equal(["1: A1"], captured.Records.Select(r => r.ToString()));
+			}
 
-		Assert.InRange(stream.Delivered, 0, tail.IndexOf("<row r=\"5\">") + "<row r=\"5\">".Length + 16);
+			Assert.InRange(stream.Delivered, 0, tail.IndexOf("<row r=\"5\">") + "<row r=\"5\">".Length + 16);
+		}
 	}
 
 	[Fact]

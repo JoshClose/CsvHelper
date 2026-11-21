@@ -11,7 +11,9 @@ namespace CsvHelper.Excel.Tests.Security;
 /// shared formula that grows past the part limit, a shared string and a shared formula repeated a million times, formulas
 /// nested a million deep, and absurd <c>t="d"</c> texts; and Phase 3's: a merged range of the whole grid around a
 /// megabyte's value, a million merged ranges, a million <c>col</c> elements, a million defined names, a table of a million
-/// columns, and a header search over a million missing rows. Each parser's own tests check the same rules part by part.
+/// columns, and a header search over a million missing rows. The cases that skip rows or <c>sheetData</c> (merged cells
+/// filled, hidden rows, areas and header searches) run with the workbook's raw skips on and off (<c>rawSkips</c>, Phase 9's
+/// step 2), and trip at the same places. Each parser's own tests check the same rules part by part.
 /// </summary>
 public class SecurityTests
 {
@@ -264,16 +266,23 @@ public class SecurityTests
 	}
 
 	[Theory]
-	[InlineData("cell", false)]
-	[InlineData("cell", true)]
-	[InlineData("sheetData", false)]
-	[InlineData("sheetData", true)]
-	[InlineData("string", false)]
-	[InlineData("string", true)]
-	public async Task SkipsAMillionNestedElements(string where, bool async)
+	[InlineData("cell", false, true)]
+	[InlineData("cell", true, true)]
+	[InlineData("sheetData", false, true)]
+	[InlineData("sheetData", true, true)]
+	[InlineData("sheetData", false, false)]
+	[InlineData("sheetData", true, false)]
+	[InlineData("hidden row", false, true)]
+	[InlineData("hidden row", true, true)]
+	[InlineData("hidden row", false, false)]
+	[InlineData("hidden row", true, false)]
+	[InlineData("string", false, true)]
+	[InlineData("string", true, true)]
+	public async Task SkipsAMillionNestedElements(string where, bool async, bool rawSkips)
 	{
-		// A million unknown elements nested in a cell, in sheetData, or in a shared string: skipped by depth, without
-		// recursion, and the value after them read.
+		// A million unknown elements nested in a cell, in sheetData, in a hidden row after the value, or in a shared string:
+		// skipped by depth, without recursion, and the value read. In sheetData, merged cells are filled, so that the read
+		// that finds their ranges skips sheetData; a hidden row is skipped whole; each raw, or token by token.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
 		{
 			Write(stream, SheetStart);
@@ -288,7 +297,15 @@ public class SecurityTests
 				Nest(stream);
 			}
 
-			Write(stream, (where == "string" ? "<v>0</v>" : "<v>7</v>") + "</c></row>" + SheetEnd);
+			Write(stream, (where == "string" ? "<v>0</v>" : "<v>7</v>") + "</c></row>");
+			if (where == "hidden row")
+			{
+				Write(stream, "<row r=\"2\" hidden=\"1\"><c r=\"A2\"><v>2</v></c>");
+				Nest(stream);
+				Write(stream, "</row>");
+			}
+
+			Write(stream, SheetEnd);
 		}).SharedStringsPart("").SetStreamed(StringsPart, stream =>
 		{
 			Write(stream, $"<sst xmlns=\"{TestPackage.MainNamespace}\"><si>");
@@ -299,8 +316,10 @@ public class SecurityTests
 
 			Write(stream, "<t>seven</t></si></sst>");
 		});
+		var options = NoHeader() with { FillMergedCells = where is "sheetData" or "hidden row", SkipHiddenRows = where == "hidden row" };
 
-		using var workbook = await Workbooks.OpenAsync(package, async, NoHeader());
+		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		workbook.rawSkips = rawSkips;
 		using var reader = await workbook.OpenReaderAsync(async);
 		Assert.Equal([where == "string" ? "seven" : "7"], await reader.ReadAllAsync(async));
 	}
@@ -576,18 +595,25 @@ public class SecurityTests
 	}
 
 	[Theory]
-	[InlineData("sheet", false)]
-	[InlineData("sheet", true)]
-	[InlineData("column", false)]
-	[InlineData("column", true)]
-	[InlineData("column before a row", false)]
-	[InlineData("column before a row", true)]
-	public async Task StopsAMergedRangeOfTheGridAtTheLimit(string read, bool async)
+	[InlineData("sheet", false, true)]
+	[InlineData("sheet", true, true)]
+	[InlineData("column", false, true)]
+	[InlineData("column", true, true)]
+	[InlineData("column before a row", false, true)]
+	[InlineData("column before a row", true, true)]
+	[InlineData("sheet", false, false)]
+	[InlineData("sheet", true, false)]
+	[InlineData("column", false, false)]
+	[InlineData("column", true, false)]
+	[InlineData("column before a row", false, false)]
+	[InlineData("column before a row", true, false)]
+	public async Task StopsAMergedRangeOfTheGridAtTheLimit(string read, bool async, bool rawSkips)
 	{
 		// A merged range of the whole grid around a top-left cell of a megabyte, under a 16 MB limit: each fill counts its
 		// bytes before it is written. The whole sheet stops in its first row, before the 16,383 fills it would add, rather
 		// than after 16 GB. The range's column B, which the top-left cell is left of, stops within 16 rows, which are rows the
-		// file lacks, filled: after its last row, or before a row at the grid's end.
+		// file lacks, filled: after its last row, or before a row at the grid's end. The same, whether the read that finds the
+		// ranges skips the rows raw or token by token.
 		var value = new string('x', MiB);
 		var last = read == "column before a row" ? "<row r=\"1048576\"><c r=\"C1048576\"><v>2</v></c></row>" : "";
 		var sheet = MergedSheet($"<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>{value}</t></is></c></row>{last}", 1, _ => "A1:XFD1048576");
@@ -595,6 +621,7 @@ public class SecurityTests
 		var options = NoHeader(maxPartSize: 4L * MiB, maxUncompressedSize: 16L * MiB) with { FillMergedCells = true, Range = read == "sheet" ? null : "B:B" };
 
 		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		workbook.rawSkips = rawSkips;
 		using var reader = await workbook.OpenReaderAsync(async);
 		var rows = 0;
 		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
@@ -611,32 +638,38 @@ public class SecurityTests
 	}
 
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task StopsAMillionMergedRangesAtThePartLimit(bool async)
+	[InlineData(false, true)]
+	[InlineData(true, true)]
+	[InlineData(false, false)]
+	[InlineData(true, false)]
+	public async Task StopsAMillionMergedRangesAtThePartLimit(bool async, bool rawSkips)
 	{
 		// A million merged ranges take 20 MB as the reader holds them, which a 16 MB part limit stops at its 838,861st range,
-		// when the reader opens.
+		// when the reader opens, whether the read that finds them skips the rows raw or token by token.
 		var package = Workbooks.Data("").Set(Sheets.PartName, MergedSheet(FirstRow, 1_000_000, n => $"A{n + 1}:B{n + 1}"));
 		var options = NoHeader(maxPartSize: 16L * MiB) with { FillMergedCells = true };
 
 		using var workbook = await Workbooks.OpenAsync(package, async, options);
+		workbook.rawSkips = rawSkips;
 		var e = await Assert.ThrowsAsync<InvalidDataException>(() => workbook.OpenReaderAsync(async));
 		Assert.Equal($"The merged cells of {Sheets.PartName} take more than ExcelReaderOptions.MaxPartSize ({16L * MiB} bytes).", e.Message);
 	}
 
 	[Theory]
-	[InlineData(false, false)]
-	[InlineData(false, true)]
-	[InlineData(true, false)]
-	[InlineData(true, true)]
-	public async Task CountsAMillionMergedRangesInRowsTheFileLacksAsMissingRows(bool wide, bool async)
+	[InlineData(false, false, true)]
+	[InlineData(false, true, true)]
+	[InlineData(true, false, true)]
+	[InlineData(true, true, true)]
+	[InlineData(false, false, false)]
+	[InlineData(true, true, false)]
+	public async Task CountsAMillionMergedRangesInRowsTheFileLacksAsMissingRows(bool wide, bool async, bool rawSkips)
 	{
 		// A million merged ranges down column A, of two columns or of the grid's width, in the rows the file lacks between its
 		// first and its last: their top-left cells have no value, so they fill nothing, and their rows are missing rows, read
 		// in one pass. Skipping empty rows, the records are the file's two rows; keeping them, the 1,048,574 rows between are
 		// empty records too, each counted as a byte, as missing rows are: a limit with room for 100,000 of them stops the
-		// reader soon after.
+		// reader soon after. The same, whether the read that finds the ranges skips the rows raw or token by token (two of
+		// the four cases token by token, since each takes seconds).
 		var sheet = MergedSheet(FirstRow + "<row r=\"1048576\"><c r=\"A1048576\"><v>2</v></c></row>", 1_000_000, n => wide ? $"A{n + 1}:XFD{n + 1}" : $"A{n + 1}:B{n + 1}");
 		var package = Workbooks.Data("").Set(Sheets.PartName, sheet);
 		var options = NoHeader(maxPartSize: 64L * MiB) with { FillMergedCells = true };
@@ -644,6 +677,7 @@ public class SecurityTests
 
 		using (var workbook = await Workbooks.OpenAsync(package, async, options))
 		{
+			workbook.rawSkips = rawSkips;
 			Assert.Equal(["1", "2"], await InLinearTimeAsync(async () =>
 			{
 				using var reader = await workbook.OpenReaderAsync(async);
@@ -667,6 +701,7 @@ public class SecurityTests
 		// </sheetData>, which a refill or two holds.
 		var counted = OtherParts(package) + sheet.Length + 128 * 1024;
 		using var limited = await Workbooks.OpenAsync(package, async, keeping with { MaxUncompressedSize = counted + 100_000 });
+		limited.rawSkips = rawSkips;
 		using var stopped = await limited.OpenReaderAsync(async);
 		var rows = 0;
 		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
@@ -790,15 +825,18 @@ public class SecurityTests
 	}
 
 	[Theory]
-	[InlineData(20, false)]
-	[InlineData(20, true)]
-	[InlineData(CellReference.MaxRow, false)]
-	[InlineData(CellReference.MaxRow, true)]
-	public async Task StopsAHeaderSearchAfterItsRows(int maxRows, bool async)
+	[InlineData(20, false, true)]
+	[InlineData(20, true, true)]
+	[InlineData(CellReference.MaxRow, false, true)]
+	[InlineData(CellReference.MaxRow, true, true)]
+	[InlineData(20, false, false)]
+	[InlineData(CellReference.MaxRow, true, false)]
+	public async Task StopsAHeaderSearchAfterItsRows(int maxRows, bool async, bool rawSkips)
 	{
 		// A sheet whose one row, the grid's last, holds the header after 64 MB of white space, which deflate makes about
 		// 64 KB. A search of the first 20 rows stops at that row's tag, past the million rows the file lacks, and fails,
-		// having read little of the sheet's compressed data. A search of every row finds it, trying no missing row.
+		// having read little of the sheet's compressed data. A search of every row finds it, trying no missing row. The same
+		// with the search's and the reader's scanners skipping raw or token by token.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
 			WriteSheet(stream, "<row r=\"1048576\">", 64L * MiB, "<c r=\"A1048576\" t=\"inlineStr\"><is><t>Name</t></is></c></row>"));
 		var zip = package.ToArray();
@@ -806,6 +844,7 @@ public class SecurityTests
 		var options = new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.Find(["Name"], maxRows) };
 
 		using var workbook = async ? await ExcelWorkbook.OpenAsync(input, options) : ExcelWorkbook.Open(input, options);
+		workbook.rawSkips = rawSkips;
 		input.Forget();
 		if (maxRows == CellReference.MaxRow)
 		{

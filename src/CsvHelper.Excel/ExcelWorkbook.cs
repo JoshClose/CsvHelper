@@ -48,6 +48,9 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	private readonly bool fromStream;
 	private StyleTable? styles;
 	private SharedStrings? strings;
+	// Whether readers skip sheetData's and rows' content they don't need by a raw search (XmlScanner.RawSkips): on, but
+	// for tests that read both ways, as core's CsvReader.vectorWidth.
+	internal bool rawSkips = true;
 
 	/// <summary>Creates the workbook.</summary>
 	/// <param name="archive">The package.</param>
@@ -489,7 +492,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 		// Merged ranges come after the rows: a read of the part through finds them, before the reader reads it again.
 		var mergedCells = settings.FillMergedCells
-			? await MergedCells.LoadAsync(archive, partName, chosen.Name, limits, async, cancellationToken).ConfigureAwait(false)
+			? await MergedCells.LoadAsync(archive, partName, chosen.Name, limits, async, cancellationToken, rawSkips).ConfigureAwait(false)
 			: null;
 
 		// A reader's culture is built once, as a culture given can be a writable one changed later.
@@ -543,7 +546,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		var stream = await archive.OpenPartAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
 		try
 		{
-			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize));
+			var xml = new XmlScanner(new XmlWindow(stream, partName, limits.MaxPartSize)) { RawSkips = rawSkips };
 
 			return new SheetScanner(
 				xml, sheetName, strings!, styles!, skipEmptyRows, stream, Date1904, options.ErrorCells, options.Formulas, layout, skipHiddenRows, options.SkipHiddenColumns,

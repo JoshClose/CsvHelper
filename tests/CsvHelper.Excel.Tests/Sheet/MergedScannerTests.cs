@@ -320,38 +320,44 @@ public class MergedScannerTests
 	}
 
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task CountsFillsTowardTheUncompressedSize(bool async)
+	[InlineData(false, true)]
+	[InlineData(true, true)]
+	[InlineData(false, false)]
+	[InlineData(true, false)]
+	public async Task CountsFillsTowardTheUncompressedSize(bool async, bool rawSkips)
 	{
-		// Each fill but the top-left cell's own counts its bytes, and each filled missing row 1; the second read of the part counts too.
+		// Each fill but the top-left cell's own counts its bytes, and each filled missing row 1; the second read of the part
+		// counts too, whether it skips the rows raw or token by token.
 		var abcde = Worksheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>abcde</t></is></c></row>", "A1:D3");
-		await AssertChargesAsync(abcde, (3 * 5) + (2 * (1 + (4 * 5))), ["1: abcde | abcde | abcde | abcde", "2: abcde | abcde | abcde | abcde", "3: abcde | abcde | abcde | abcde"], async);
+		await AssertChargesAsync(abcde, (3 * 5) + (2 * (1 + (4 * 5))), ["1: abcde | abcde | abcde | abcde", "2: abcde | abcde | abcde | abcde", "3: abcde | abcde | abcde | abcde"], async, rawSkips);
 
 		// An empty fill counts 1.
 		var blank = Worksheet("<row r=\"1\"><c r=\"A1\" t=\"str\"><v>&#32;</v></c></row>", "A1:C1");
-		await AssertChargesAsync(blank, 2, ["1: () | () | ()"], async);
+		await AssertChargesAsync(blank, 2, ["1: () | () | ()"], async, rawSkips);
 
 		// A shared string counts its bytes at each fill; its own cell counts as it does without fills.
 		var shared = Worksheet("<row r=\"1\"><c r=\"A1\" t=\"s\"><v>0</v></c></row>", "A1:C1");
-		await AssertChargesAsync(shared, 2 * 10, ["1: 0123456789 | 0123456789 | 0123456789"], async, sharedStrings: true);
+		await AssertChargesAsync(shared, 2 * 10, ["1: 0123456789 | 0123456789 | 0123456789"], async, rawSkips, sharedStrings: true);
 	}
 
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task StopsFillsAtTheUncompressedSize(bool async)
+	[InlineData(false, true)]
+	[InlineData(true, true)]
+	[InlineData(false, false)]
+	[InlineData(true, false)]
+	public async Task StopsFillsAtTheUncompressedSize(bool async, bool rawSkips)
 	{
 		var xml = Worksheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>abcde</t></is></c></row>", "A1:D3");
 		var part = Encoding.UTF8.GetByteCount(xml);
 		var package = TestPackage.Workbook(new TestSheet("Data", xml: xml));
 		var charges = (3 * 5) + (2 * (1 + (4 * 5)));
 
-		var (records, total) = await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges), fillMergedCells: true);
+		var (records, total) = await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges), fillMergedCells: true, rawSkips: rawSkips);
 		Assert.Equal(3, records.Count);
 		Assert.Equal((2 * part) + charges, total);
 
-		var e = await Assert.ThrowsAsync<InvalidDataException>(() => Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges - 1), fillMergedCells: true));
+		var e = await Assert.ThrowsAsync<InvalidDataException>(
+			() => Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges - 1), fillMergedCells: true, rawSkips: rawSkips));
 		Assert.Contains("ExcelReaderOptions.MaxUncompressedSize", e.Message);
 	}
 
@@ -363,9 +369,10 @@ public class MergedScannerTests
 	/// <param name="charges">The bytes the fills count.</param>
 	/// <param name="expected">The records with fills.</param>
 	/// <param name="async">Whether to read asynchronously.</param>
+	/// <param name="rawSkips">Whether the reads skip by a raw search, rather than token by token.</param>
 	/// <param name="sharedStrings">Whether the package has the shared string <c>0123456789</c>, loaded first.</param>
 	/// <returns>A task that completes when the checks pass.</returns>
-	private static async Task AssertChargesAsync(string xml, long charges, string[] expected, bool async, bool sharedStrings = false)
+	private static async Task AssertChargesAsync(string xml, long charges, string[] expected, bool async, bool rawSkips, bool sharedStrings = false)
 	{
 		var package = TestPackage.Workbook(new TestSheet("Data", xml: xml));
 		if (sharedStrings)
@@ -374,8 +381,8 @@ public class MergedScannerTests
 		}
 
 		var limits = new PartLimits(1 << 20, 1 << 20);
-		var (plain, plainTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings);
-		var (filled, filledTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, fillMergedCells: true);
+		var (plain, plainTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, rawSkips: rawSkips);
+		var (filled, filledTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, fillMergedCells: true, rawSkips: rawSkips);
 
 		Assert.Equal(expected, filled.Select(r => r.ToString()));
 		Assert.Single(plain);

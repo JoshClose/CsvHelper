@@ -163,4 +163,34 @@ internal static class XmlElements
 
 		return default;
 	}
+
+	/// <summary>
+	/// Skips the content and end tag of the element whose start tag was just read, by a raw search for its end tag
+	/// (<see cref="XmlScanner.TrySkipRaw"/>), for a large element whose content isn't read, such as a sheet's
+	/// <c>sheetData</c>; nothing for an empty element. Unlike <see cref="SkipElementAsync"/>, the content's XML isn't checked.
+	/// </summary>
+	/// <param name="scanner">The scanner, at a start tag.</param>
+	/// <param name="async">Whether to read the part's stream asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <returns>A task that completes after the element's end tag.</returns>
+	/// <exception cref="System.IO.InvalidDataException">The part ends inside the element, or its end tag can't be read.</exception>
+	public static ValueTask SkipElementRawAsync(this XmlScanner scanner, bool async, CancellationToken cancellationToken)
+	{
+		if (scanner.Kind != XmlTokenKind.StartTag || scanner.IsEmptyElement)
+		{
+			return default;
+		}
+
+		// The name is copied, since a refill moves the window's bytes.
+		var name = scanner.QualifiedName.ToArray();
+		var depth = scanner.Depth - 1;
+		if (async)
+		{
+			return scanner.SkipRawAsync(name, depth, cancellationToken);
+		}
+
+		scanner.SkipRaw(name, depth);
+
+		return default;
+	}
 }

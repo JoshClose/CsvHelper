@@ -20,6 +20,13 @@ namespace CsvHelper.Excel;
 /// elements in <c>mergeCells</c>, and content in a <c>mergeCell</c>, are skipped, as Excel ignores them.
 /// </para>
 /// <para>
+/// <b>Skipping the rows.</b> <c>sheetData</c> is skipped by a raw search for its end tag (<see cref="XmlScanner.TrySkipRaw"/>),
+/// past comments, CDATA sections and processing instructions, at about the speed of inflating it: its XML isn't checked
+/// here, but by the read of the rows after, which names the cell of an error. With <see cref="XmlScanner.RawSkips"/> off it
+/// is skipped token by token. The end tag that ends the root must be the root's: a skip that stopped at a
+/// <c>&lt;/sheetData&gt;</c> in an attribute value, which isn't XML, meets another first.
+/// </para>
+/// <para>
 /// <b>Strictness.</b> Excel opens no file whose <c>mergeCell</c> has no <c>ref</c>, or a <c>ref</c> that isn't one block of
 /// cells as a range's corners write it (white space around it, a sheet's name, a list, a cell past the grid), nor one
 /// whose ranges overlap, even when one of them is a single cell: each throws <see cref="CsvFormatException"/> for the
@@ -62,12 +69,15 @@ internal sealed class MergedCells
 	/// <param name="limits">The limits of the call.</param>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
+	/// <param name="rawSkips">Whether <c>sheetData</c> is skipped by a raw search (<see cref="XmlScanner.RawSkips"/>); off only in tests.</param>
 	/// <returns>A task whose result is the ranges, or <see langword="null"/> when the sheet has none.</returns>
 	/// <exception cref="CsvFormatException">The part's XML can't be read, or its merged cells are not as Excel writes them.</exception>
 	/// <exception cref="InvalidDataException">The part passes a limit, or can't be inflated.</exception>
-	public static async ValueTask<MergedCells?> LoadAsync(PackageArchive archive, string partName, string sheetName, PartLimits limits, bool async, CancellationToken cancellationToken)
+	public static async ValueTask<MergedCells?> LoadAsync(
+		PackageArchive archive, string partName, string sheetName, PartLimits limits, bool async, CancellationToken cancellationToken, bool rawSkips = true)
 	{
 		var scanner = await archive.OpenXmlAsync(partName, false, limits, async, cancellationToken).ConfigureAwait(false);
+		scanner.RawSkips = rawSkips;
 		try
 		{
 			return await ReadAsync(scanner, sheetName, limits.MaxPartSize, async, cancellationToken).ConfigureAwait(false);
@@ -103,8 +113,16 @@ internal sealed class MergedCells
 			{
 				if (!scanner.IsStartTag("mergeCells"u8))
 				{
-					// sheetData among them: its text is skipped as it comes, so the window holds a tag at a time.
-					await scanner.SkipElementAsync(async, cancellationToken).ConfigureAwait(false);
+					if (scanner.RawSkips && scanner.IsStartTag("sheetData"u8))
+					{
+						// By a search for its end tag, at the speed of inflating it: its errors are the main read's to find, at their cells.
+						await scanner.SkipElementRawAsync(async, cancellationToken).ConfigureAwait(false);
+					}
+					else
+					{
+						// Token by token: sheetData's text is skipped as it comes, so the window holds a tag at a time.
+						await scanner.SkipElementAsync(async, cancellationToken).ConfigureAwait(false);
+					}
 
 					continue;
 				}
@@ -132,6 +150,12 @@ internal sealed class MergedCells
 
 				// Nothing after the list is read.
 				return ranges.Count == 0 ? null : Create(ranges.ToArray(), location, scanner.Window.PartName, listOffset);
+			}
+
+			// A raw skip that stopped at "</sheetData>" in an attribute value leaves the worksheet at the next end tag.
+			if (scanner.Kind == XmlTokenKind.EndTag && !scanner.LocalName.SequenceEqual("worksheet"u8))
+			{
+				throw Error(location, scanner.Window.PartName, scanner.Window.Offset(scanner.TokenStart), $"the end tag </{Encoding.UTF8.GetString(scanner.QualifiedName)}> doesn't close worksheet");
 			}
 
 			return null;

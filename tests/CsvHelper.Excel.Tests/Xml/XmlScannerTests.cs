@@ -168,6 +168,117 @@ public class XmlScannerTests
 	}
 
 	[Theory]
+	[InlineData("<a b=\"x<y\"/>", 7)]
+	[InlineData("<a b='x<y'/>", 7)]
+	[InlineData("<a b=\"1\" c='x\"<y'/>", 14)]
+	[InlineData("<r><a b=\"ok\"/><a b=\"x<\"/></r>", 21)]
+	[InlineData("<a b=\"x><c/></a>", 8)]
+	[InlineData("<c r=\"A1><v>1</v></c>", 9)]
+	public async Task RejectsALessThanInAnAttributeValue(string xml, int offset)
+	{
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			using var scanner = XmlScan.Open(Utf8(xml), mode);
+			// The tokenizer throws as it reads the tag, with no attributes enumerated. A value without its closing quote
+			// ends at the next '<'.
+			var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
+			{
+				while (await scanner.NextAsync(mode))
+				{
+				}
+			});
+			Assert.Equal(Message(offset, LessThanInValue), e.Message);
+			Assert.True(XmlError.TryGet(e, out var errorOffset, out var detail));
+			Assert.Equal((long)offset, errorOffset);
+			Assert.Equal(LessThanInValue, detail);
+		});
+	}
+
+	[Fact]
+	public async Task RejectsALessThanInAnAttributeValueAtTheWindowsEdge()
+	{
+		// Values of every length put the '<' at every position around the 16-byte window's edges, before and after it
+		// grows, and in the one-byte modes at the end of what has been read.
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			foreach (var quote in new[] { "\"", "'" })
+			{
+				foreach (var before in new[] { "", "<r>" })
+				{
+					for (var length = 0; length <= 40; length++)
+					{
+						var xml = before + "<a b=" + quote + new string('x', length) + "<y" + quote + "/>" + (before.Length > 0 ? "</r>" : "");
+						var e = await Assert.ThrowsAsync<InvalidDataException>(() => XmlScan.EventsAsync(Utf8(xml), mode));
+						Assert.Equal(Message(before.Length + 6 + length, LessThanInValue), e.Message);
+					}
+				}
+			}
+		});
+	}
+
+	[Fact]
+	public async Task ReadsEscapedLessThansAndGreaterThansInAttributeValues()
+	{
+		var xml = Utf8("<a b=\"x&lt;y\" c='&lt;/a&gt;' d=\"x>y\" e='>'/>");
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			Assert.Equal(["<a b=\"x<y\" c=\"</a>\" d=\"x>y\" e=\">\">", "</a>"], await XmlScan.EventsAsync(xml, mode));
+		});
+	}
+
+	[Fact]
+	public async Task LeavesALessThanBetweenAttributesToTheAttributes()
+	{
+		// The rule is for values: between attributes, a '<' is a byte of the tag, which reads; the attributes then can't
+		// read it as a name with a value.
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			using var scanner = XmlScan.Open(Utf8("<a <b/>"), mode);
+			Assert.True(await scanner.NextAsync(mode));
+			Assert.True(scanner.IsStartTag("a"u8));
+			Assert.True(scanner.IsEmptyElement);
+			var e = Assert.Throws<InvalidDataException>(() =>
+			{
+				var attributes = scanner.Attributes;
+				while (attributes.MoveNext())
+				{
+				}
+			});
+			Assert.Equal(Message(3, "an attribute has no name, or no value"), e.Message);
+		});
+	}
+
+	[Theory]
+	[InlineData("<a x'=' <''/>")]
+	[InlineData("<a x\"=\" <\"\"/>")]
+	public async Task AttributesRejectALessThanInTheValueTheyRead(string xml)
+	{
+		// The tokenizer pairs quotes left to right from the first one after the name: 4 with 6 (a value of "=") and 9 with
+		// 10 (an empty value), so the '<' at 8 is between values, where its rule doesn't look, and the tag reads. The
+		// attributes read a name up to '=' or white space, so "x'" (or "x\"") is a name, the quote at 6 opens its value,
+		// and the quote at 9 closes it: " <", with the '<' at 8.
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			using var scanner = XmlScan.Open(Utf8(xml), mode);
+			Assert.True(await scanner.NextAsync(mode));
+			Assert.True(scanner.IsStartTag("a"u8));
+			Assert.True(scanner.IsEmptyElement);
+			var e = Assert.Throws<InvalidDataException>(() =>
+			{
+				var attributes = scanner.Attributes;
+				while (attributes.MoveNext())
+				{
+				}
+			});
+			Assert.Equal(Message(8, LessThanInValue), e.Message);
+			Assert.True(XmlError.TryGet(e, out var offset, out var detail));
+			Assert.Equal(8L, offset);
+			Assert.Equal(LessThanInValue, detail);
+		});
+	}
+
+	[Theory]
 	[InlineData("<a>x&foo;y</a>", 4, "'&foo;'")]
 	[InlineData("<a>x&#0;</a>", 4, "'&#0;'")]
 	[InlineData("<a>&#xD800;</a>", 3, "'&#xD800;'")]
@@ -717,6 +828,9 @@ public class XmlScannerTests
 		XmlTokenKind.EndTag => $"EndTag {scanner.Depth} {Encoding.UTF8.GetString(scanner.LocalName.ToArray())}",
 		_ => $"{scanner.Kind} {scanner.Depth} '{Encoding.UTF8.GetString(scanner.Content.ToArray())}'",
 	};
+
+	/// <summary>What the tokenizer and the attributes say of a <c>&lt;</c> in an attribute value.</summary>
+	private const string LessThanInValue = "an attribute value has '<', which XML doesn't allow";
 
 	/// <summary>The message of an error in the tests' part.</summary>
 	/// <param name="offset">The byte offset.</param>

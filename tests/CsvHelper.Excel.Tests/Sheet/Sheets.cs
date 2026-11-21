@@ -4,13 +4,20 @@ using CsvHelper.Excel.Tests.Xml;
 
 namespace CsvHelper.Excel.Tests.Sheet;
 
-/// <summary>A way of reading a sheet: a <see cref="ScanMode"/>, and the number of records after which a fill's target is full.</summary>
+/// <summary>
+/// A way of reading a sheet: a <see cref="ScanMode"/>, with raw skips on or off (<see cref="ScanMode.RawSkips"/>), and the
+/// number of records after which a fill's target is full.
+/// </summary>
 /// <param name="scan">How the part is read.</param>
 /// <param name="recordsPerFill">The records a fill takes.</param>
 public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 {
-	/// <summary>Every scan mode, with fills that take every record and fills that take one.</summary>
-	public static IReadOnlyList<SheetMode> All { get; } = [.. ScanMode.All.SelectMany(s => new[] { new SheetMode(s, int.MaxValue), new SheetMode(s, 1) })];
+	/// <summary>
+	/// Every scan mode with raw skips on and with them off, each with fills that take every record and fills that take one:
+	/// 32 modes.
+	/// </summary>
+	public static IReadOnlyList<SheetMode> All { get; } =
+		[.. ScanMode.All.SelectMany(s => new[] { s, s.WithRawSkips(false) }).SelectMany(s => new[] { new SheetMode(s, int.MaxValue), new SheetMode(s, 1) })];
 
 	/// <summary>How the part is read.</summary>
 	public ScanMode Scan => scan;
@@ -18,8 +25,14 @@ public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 	/// <summary>The records a fill takes.</summary>
 	public int RecordsPerFill => recordsPerFill;
 
+	/// <summary>The same mode with raw skips on or off.</summary>
+	/// <param name="raw">Whether the sheet readers skip by a raw search.</param>
+	/// <returns>The mode.</returns>
+	public SheetMode WithRawSkips(bool raw) => new(scan.WithRawSkips(raw), recordsPerFill);
+
 	/// <inheritdoc/>
-	public override string ToString() => recordsPerFill == int.MaxValue ? scan.Name : $"{scan.Name}, {recordsPerFill} record per fill";
+	public override string ToString() =>
+		$"{scan.Name}, raw skips {(scan.RawSkips ? "on" : "off")}" + (recordsPerFill == int.MaxValue ? "" : $", {recordsPerFill} record per fill");
 }
 
 /// <summary>
@@ -162,7 +175,10 @@ internal static class Sheets
 	/// <returns>The XML.</returns>
 	public static string Escape(string text) => text.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 
-	/// <summary>Opens a sheet scanner over a part's XML, as <paramref name="mode"/> says.</summary>
+	/// <summary>
+	/// Opens a sheet scanner over a part's XML, as <paramref name="mode"/> says, its raw skips included; with merged cells
+	/// filled, the part's ranges are found first, with the same raw skips.
+	/// </summary>
 	/// <param name="xml">The part.</param>
 	/// <param name="mode">How to read it.</param>
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
@@ -176,7 +192,7 @@ internal static class Sheets
 	{
 		var bytes = Encoding.UTF8.GetBytes(xml);
 		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
-		var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
+		var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize)) { RawSkips = mode.RawSkips };
 		reading ??= CellReading.Default;
 		var merged = reading.FillMergedCells ? FindMergedCells(bytes, mode, sheetName, maxSize) : null;
 		var sheet = new SheetScanner(
@@ -190,7 +206,10 @@ internal static class Sheets
 		return sheet;
 	}
 
-	/// <summary>Finds a part's merged ranges, reading it through as <paramref name="mode"/> says, as opening a reader does.</summary>
+	/// <summary>
+	/// Finds a part's merged ranges, reading it through as <paramref name="mode"/> says (its <c>sheetData</c> skipped raw or
+	/// token by token, as the mode's raw skips say), as opening a reader does.
+	/// </summary>
 	/// <param name="bytes">The part.</param>
 	/// <param name="mode">How to read it.</param>
 	/// <param name="sheetName">The sheet's name.</param>
@@ -199,7 +218,7 @@ internal static class Sheets
 	public static MergedCells? FindMergedCells(byte[] bytes, ScanMode mode, string sheetName = "Data", long maxSize = 1 << 20)
 	{
 		Stream stream = mode.Trickle ? new TrickleStream(bytes) : new MemoryStream(bytes);
-		using var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize));
+		using var scanner = new XmlScanner(new XmlWindow(stream, PartName, maxSize, mode.WindowSize)) { RawSkips = mode.RawSkips };
 
 		return SyncOrAsync.Result(MergedCells.ReadAsync(scanner, sheetName, maxSize, false, CancellationToken.None));
 	}
@@ -307,18 +326,19 @@ internal static class Sheets
 	/// <param name="formulas">What cells with a formula read as.</param>
 	/// <param name="fillMergedCells">Whether to find the part's merged ranges first, reading it through, and fill their cells.</param>
 	/// <param name="layout">The area read, or <see langword="null"/> for the whole sheet.</param>
+	/// <param name="rawSkips">Whether the merged cells' read and the scanner skip by a raw search (<see cref="XmlScanner.RawSkips"/>), rather than token by token.</param>
 	/// <returns>The records, and the workbook's uncompressed total after them.</returns>
 	public static async Task<(List<CapturedRecord> Records, long Total)> ReadPackageAsync(
 		TestPackage package, bool async, PartLimits limits, bool skipEmptyRows = true, bool sharedStrings = false, ExcelFormulas formulas = ExcelFormulas.CachedValue,
-		bool fillMergedCells = false, SheetLayout? layout = null)
+		bool fillMergedCells = false, SheetLayout? layout = null, bool rawSkips = true)
 	{
 		using var archive = await package.OpenAsync(async);
 		var strings = sharedStrings ? await Packages.Run(async, a => SharedStrings.LoadAsync(archive, "xl/sharedStrings.xml", limits, a, CancellationToken.None)) : SharedStrings.Empty;
-		var merged = fillMergedCells ? await Packages.Run(async, a => MergedCells.LoadAsync(archive, PartName, "Data", limits, a, CancellationToken.None)) : null;
+		var merged = fillMergedCells ? await Packages.Run(async, a => MergedCells.LoadAsync(archive, PartName, "Data", limits, a, CancellationToken.None, rawSkips)) : null;
 		var stream = await Packages.Run(async, a => archive.OpenPartAsync(PartName, false, limits, a, CancellationToken.None));
 		using var sheet = new SheetScanner(
-			new XmlScanner(new XmlWindow(stream, PartName, limits.MaxPartSize)), "Data", strings, StyleTable.Empty, skipEmptyRows, stream, formulas: formulas, layout: layout,
-			mergedCells: merged);
+			new XmlScanner(new XmlWindow(stream, PartName, limits.MaxPartSize)) { RawSkips = rawSkips }, "Data", strings, StyleTable.Empty, skipEmptyRows, stream, formulas: formulas,
+			layout: layout, mergedCells: merged);
 		var captured = new Captured(int.MaxValue);
 		await FillAllAsync(sheet, captured, async);
 

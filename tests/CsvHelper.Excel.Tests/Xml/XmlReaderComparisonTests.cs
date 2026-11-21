@@ -78,6 +78,23 @@ public class XmlReaderComparisonTests
 		}
 	}
 
+	[Theory]
+	[InlineData("<a b=\"x<y\"/>")]
+	[InlineData("<a b='x<y'/>")]
+	[InlineData("<a b=\"x><c/></a>")]
+	[InlineData("<r><c r=\"A1><v>1</v></c></r>")]
+	public async Task RejectsALessThanInAnAttributeValueAsXmlReaderDoes(string xml)
+	{
+		var bytes = Encoding.UTF8.GetBytes(xml);
+
+		Assert.Throws<System.Xml.XmlException>(() => XmlScan.ReferenceEvents(bytes));
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			var e = await Assert.ThrowsAsync<InvalidDataException>(() => XmlScan.EventsAsync(bytes, mode));
+			Assert.EndsWith(": an attribute value has '<', which XML doesn't allow.", e.Message);
+		});
+	}
+
 	/// <summary>Writes a random document.</summary>
 	/// <param name="random">The source of the document's choices.</param>
 	/// <param name="encoding">The encoding of the document.</param>
