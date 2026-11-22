@@ -43,8 +43,9 @@ public class FastCellCorpusTests(ITestOutputHelper output)
 	private static readonly Dictionary<string, long> RecordedDeclines = new(StringComparer.Ordinal)
 	{
 		// Measured at Phase 9's step 3 (whole reads into a 64 KB window). Every count is the workbook's cells of other forms
-		// (formulas, t="d", xml:space, POI's and MiniExcel's "r t s" order, pandas's " />") and, in the sheets over 64 KB
+		// (formulas, t="d", xml:space, POI's and MiniExcel's "r t s" order) and, in the sheets over 64 KB
 		// (orders-1000, packageassets-1695), the cells a window's end cut.
+		["closedxml/basic.xlsx"] = 8,
 		["closedxml/messy.xlsx"] = 13,
 		["closedxml/typed.xlsx"] = 84,
 		["epplus/basic.xlsx"] = 8,
@@ -75,7 +76,7 @@ public class FastCellCorpusTests(ITestOutputHelper output)
 		["openpyxl/typed-isodates.xlsx"] = 91,
 		["openpyxl/typed.xlsx"] = 85,
 		["openxmlsdk/basic.xlsx"] = 8,
-		["pandas/openpyxl.xlsx"] = 106,
+		["pandas/openpyxl.xlsx"] = 1,
 		["pandas/xlsxwriter.xlsx"] = 0,
 		["poi/messy.xlsx"] = 119,
 		["poi/sxssf.xlsx"] = 9,
@@ -86,7 +87,6 @@ public class FastCellCorpusTests(ITestOutputHelper output)
 		["xlsxwriter/constant_memory.xlsx"] = 10,
 		["xlsxwriter/messy.xlsx"] = 13,
 		["xlsxwriter/typed.xlsx"] = 91,
-		["closedxml/basic.xlsx"] = 8,
 	};
 
 	[Theory]

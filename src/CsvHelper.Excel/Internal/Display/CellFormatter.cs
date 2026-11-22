@@ -43,7 +43,7 @@ internal sealed class CellFormatter : CsvCellFormatter
 	/// formats in a workbook, by its specifications. Only a hostile workbook has more, and its codes are compiled as fields
 	/// ask for them.
 	/// </summary>
-	internal const int MaxCompiledFormats = 4096;
+	internal const int MaxCompiledFormats = 1024;
 
 	/// <summary>A format whose text section changes text and booleans, learned past <see cref="MaxCompiledFormats"/>.</summary>
 	private const sbyte TextChanges = 1;

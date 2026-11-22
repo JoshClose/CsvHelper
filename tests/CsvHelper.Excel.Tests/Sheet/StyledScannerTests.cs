@@ -40,6 +40,12 @@ public class StyledScannerTests
 	/// </summary>
 	private static readonly Lazy<StyleTable> AtTheCap = new(() => StylesOf(ManyFormats(CellFormatter.MaxCompiledFormats - 1, true)));
 
+	/// <summary>
+	/// The places of the many formats' tables at which a format changes text (and, from half of it, a format with a literal):
+	/// an eighth of the cap, so that the tables have the same shape whatever the cap is.
+	/// </summary>
+	private const int Period = CellFormatter.MaxCompiledFormats / 8;
+
 	/// <summary>Styles of exactly <see cref="CellFormatter.MaxCompiledFormats"/> distinct number formats, none of which changes text.</summary>
 	private static readonly Lazy<StyleTable> AtTheCapPlain = new(() => StylesOf(ManyFormats(CellFormatter.MaxCompiledFormats - 1, false)));
 
@@ -90,19 +96,19 @@ public class StyledScannerTests
 		TestPackage.Workbook("Data").Set("xl/styles.xml", StylesPart(formats)).LoadStylesAsync(false).GetAwaiter().GetResult();
 
 	/// <summary>
-	/// General, then distinct custom formats: a number with a literal of its place; every 512th place, a format whose text
-	/// section changes text (or, without text sections, the number with a literal); and every 512th place from 256, a
-	/// format whose text section is <c>@</c> alone.
+	/// General, then distinct custom formats: a number with a literal of its place; at every <see cref="Period"/>th place, a
+	/// format whose text section changes text (or, without text sections, the number with a literal); and at every
+	/// <see cref="Period"/>th place from half of it, a format whose text section is <c>@</c> alone.
 	/// </summary>
 	/// <param name="custom">The number of custom formats.</param>
-	/// <param name="textSections">Whether every 512th format has a text section that changes text.</param>
+	/// <param name="textSections">Whether every <see cref="Period"/>th format has a text section that changes text.</param>
 	/// <returns>The formats, General first.</returns>
 	internal static List<string> ManyFormats(int custom, bool textSections)
 	{
 		var formats = new List<string> { "0" };
 		for (var i = 1; i <= custom; i++)
 		{
-			formats.Add(i % 512 == 0 && textSections ? $"0;-0;0;\"t{i}: \"@" : i % 512 == 256 ? $"0\" a{i}\";-0;0;@" : $"#,##0\" u{i}\"");
+			formats.Add(i % Period == 0 && textSections ? $"0;-0;0;\"t{i}: \"@" : i % Period == Period / 2 ? $"0\" a{i}\";-0;0;@" : $"#,##0\" u{i}\"");
 		}
 
 		return formats;
@@ -112,7 +118,7 @@ public class StyledScannerTests
 	/// <param name="place">The format's place: General is 0.</param>
 	/// <param name="textSections">Whether the formats have text sections that change text.</param>
 	/// <returns>Whether it does.</returns>
-	private static bool ChangesTextAt(int place, bool textSections) => textSections && place > 0 && place % 512 == 0;
+	private static bool ChangesTextAt(int place, bool textSections) => textSections && place > 0 && place % Period == 0;
 
 	/// <summary>A table of many formats, by its name in <see cref="ManyFormatTables"/>.</summary>
 	/// <param name="name">The name.</param>
@@ -337,15 +343,17 @@ public class StyledScannerTests
 	{
 		var (styles, custom, textSections) = ManyFormatTable(table);
 		var rows =
-			$"<row r=\"1\">{N("A1", "1", 0)}{N("B1", "2", 1)}<c r=\"C1\" t=\"inlineStr\" s=\"512\"><is><t>abc</t></is></c>" +
-			"<c r=\"D1\" t=\"inlineStr\" s=\"768\"><is><t>def</t></is></c><c r=\"E1\" t=\"b\" s=\"1024\"><v>1</v></c><c r=\"F1\" t=\"b\" s=\"1025\"><v>0</v></c>" +
-			$"{N("G1", "3", custom)}<c r=\"H1\" t=\"str\" s=\"{custom}\"><v>x</v></c><c r=\"I1\" t=\"s\" s=\"4096\"><v>0</v></c>{N("J1", "4", 99999)}</row>";
+			$"<row r=\"1\">{N("A1", "1", 0)}{N("B1", "2", 1)}<c r=\"C1\" t=\"inlineStr\" s=\"{Period}\"><is><t>abc</t></is></c>" +
+			$"<c r=\"D1\" t=\"inlineStr\" s=\"{Period * 3 / 2}\"><is><t>def</t></is></c><c r=\"E1\" t=\"b\" s=\"{Period * 2}\"><v>1</v></c>" +
+			$"<c r=\"F1\" t=\"b\" s=\"{(Period * 2) + 1}\"><v>0</v></c>" +
+			$"{N("G1", "3", custom)}<c r=\"H1\" t=\"str\" s=\"{custom}\"><v>x</v></c><c r=\"I1\" t=\"s\" s=\"{CellFormatter.MaxCompiledFormats}\"><v>0</v></c>{N("J1", "4", 99999)}</row>";
 
-		// s="4096" is past the cell formats at the cap (the first one's, General), and a text section's past it.
-		var pear = custom >= 4096 && ChangesTextAt(4096, textSections) ? "pear@4096" : "pear";
+		// s at the cap is past the cell formats at the cap (the first one's, General), and a text section's past it.
+		var cap = CellFormatter.MaxCompiledFormats;
+		var pear = custom >= cap && ChangesTextAt(cap, textSections) ? $"pear@{cap}" : "pear";
 		var expected =
-			$"1: number:1@0 | number:2@1 | {(ChangesTextAt(512, textSections) ? "abc@512" : "abc")} | def | " +
-			$"{(ChangesTextAt(1024, textSections) ? "bool:1@1024" : "bool:1")} | bool:0 | number:3@{custom} | " +
+			$"1: number:1@0 | number:2@1 | {(ChangesTextAt(Period, textSections) ? $"abc@{Period}" : "abc")} | def | " +
+			$"{(ChangesTextAt(Period * 2, textSections) ? $"bool:1@{Period * 2}" : "bool:1")} | bool:0 | number:3@{custom} | " +
 			$"{(ChangesTextAt(custom, textSections) ? $"x@{custom}" : "x")} | {pear} | number:4@0";
 		var reading = new CellReading(styles, formatter: new CellFormatter(styles, DisplayCulture.Invariant, false));
 

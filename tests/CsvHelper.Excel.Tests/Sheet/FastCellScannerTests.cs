@@ -34,7 +34,7 @@ public class FastCellScannerTests
 	/// </summary>
 	private static readonly string CanonicalRows =
 		"<row r=\"1\"><c r=\"A1\"/><c r=\"B1\" s=\"1\"/><c r=\"C1\" t=\"s\"></c><c><v>4</v></c><c r=\"E1\" s=\"2\" t=\"n\"><v>1.5</v></c>" +
-		"<c r=\"F1\" t=\"s\"><v>0</v></c><c t=\"s\"><v> 2 </v></c><c r=\"H1\" t=\"s\"><v>1</v></c><c r=\"I1\" t=\"s\"><v></v></c></row>\r\n" +
+		"<c r=\"F1\" t=\"s\"><v>0</v></c><c t=\"s\"><v> 2 </v></c><c r=\"H1\" t=\"s\"><v>1</v></c><c r=\"I1\" t=\"s\"><v></v></c><c r=\"J1\" t=\"inlineStr\" /></row>\r\n" +
 		"<row r=\"2\">\r\n\t<c r=\"A2\" t=\"b\"><v>1</v></c>\r\n\t<c r=\"B2\" t=\"b\"><v>true</v></c> <c r=\"C2\" t=\"b\"><v>TRUE</v></c>" +
 		"<c r=\"D2\" t=\"b\"><v> 1 </v></c><c r=\"E2\" t=\"b\"><v>yes</v></c><c t=\"b\"><v>False</v></c>\n</row>\n" +
 		"<row><c t=\"e\"><v>#N/A</v></c><c r=\"B3\" t=\"e\"><v> #REF! </v></c><c t=\"str\"><v>text</v></c><c t=\"str\"><v> padded </v></c>" +
@@ -70,7 +70,8 @@ public class FastCellScannerTests
 		{ "single quotes", "<c r='B2'><v>2</v></c>" },
 		{ "white space around =", "<c r = \"B2\"><v>2</v></c>" },
 		{ "white space before >", "<c r=\"B2\" ><v>2</v></c>" },
-		{ "white space before />", "<c r=\"B2\" s=\"1\" />" },
+		{ "two spaces before />", "<c r=\"B2\" s=\"1\"  />" },
+		{ "a tab before />", "<c r=\"B2\" s=\"1\"\t/>" },
 		{ "two spaces before an attribute", "<c  r=\"B2\"><v>2</v></c>" },
 		{ "a tab between attributes", "<c r=\"B2\"\ts=\"1\"><v>2</v></c>" },
 		{ "a line feed between attributes", "<c r=\"B2\"\ns=\"1\"><v>2</v></c>" },

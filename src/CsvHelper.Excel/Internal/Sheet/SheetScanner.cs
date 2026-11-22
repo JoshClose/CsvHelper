@@ -1501,7 +1501,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <summary>
 	/// Reads the syntax of a cell of the forms producers write, for the fast path, if the window holds all of it: <c>&lt;c</c>,
 	/// then <c> r="</c>R<c>"</c>, <c> s="</c>S<c>"</c> and <c> t="</c>T<c>"</c>, each optional, in that order, each after
-	/// one space; then <c>/&gt;</c>, <c>&gt;&lt;/c&gt;</c>, <c>&gt;&lt;v&gt;</c> a value <c>&lt;/v&gt;&lt;/c&gt;</c>, or
+	/// one space; then <c>/&gt;</c> (or <c> /&gt;</c>), <c>&gt;&lt;/c&gt;</c>, <c>&gt;&lt;v&gt;</c> a value <c>&lt;/v&gt;&lt;/c&gt;</c>, or
 	/// with <c>t="inlineStr"</c> <c>&gt;&lt;is&gt;&lt;t&gt;</c> a value <c>&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;</c>; every name
 	/// with <c>sheetData</c>'s prefix. R is what <see cref="CellReference.TryParse"/> takes, S 1 to 9 digits, T one of
 	/// <c>s</c>, <c>n</c>, <c>b</c>, <c>e</c>, <c>str</c> and <c>inlineStr</c>, and a value anything but <c>&lt;</c>.
@@ -1570,7 +1570,13 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 			}
 		}
 
+		// An empty cell, as most producers write it, or with a space before its end, as openpyxl's pandas writer does.
 		var empty = Past(xml, at, "/>"u8);
+		if (empty < 0)
+		{
+			empty = Past(xml, at, " />"u8);
+		}
+
 		if (empty >= 0)
 		{
 			return empty;
