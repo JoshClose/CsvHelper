@@ -72,8 +72,8 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	/// <summary>The options of <see cref="CsvHelper_StringsFormatted"/>: the defaults, with the text Excel shows.</summary>
 	private static readonly ExcelReaderOptions Formatted = new() { Text = ExcelText.Formatted };
 
-	/// <summary>The options of the <c>*Pooled</c> methods: the defaults, with <see cref="CsvReaderOptions.PoolStrings"/> on.</summary>
-	private static readonly ExcelReaderOptions Pooled = new() { Csv = CsvReaderOptions.Default with { PoolStrings = true } };
+	/// <summary>The options of the <c>*Unpooled</c> methods: the defaults, with <see cref="ExcelReaderOptions.PoolStrings"/> off.</summary>
+	private static readonly ExcelReaderOptions Unpooled = new() { PoolStrings = false };
 
 	/// <summary>The workbook every library reads, for the current <see cref="Strings"/>.</summary>
 	private byte[] workbook = [];
@@ -219,7 +219,10 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 		return total;
 	}
 
-	/// <summary>CsvHelper.Excel: every field as a string.</summary>
+	/// <summary>
+	/// CsvHelper.Excel: every field as a string, with the defaults, which pool strings
+	/// (<see cref="ExcelReaderOptions.PoolStrings"/>): a value seen before in its column is the same string.
+	/// </summary>
 	/// <returns>The total length of the strings.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Strings")]
@@ -239,15 +242,15 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: every field as a string, with <see cref="CsvReaderOptions.PoolStrings"/> on, so that a value seen
-	/// before in its column is the same string: the strings that die at once, made or looked up.
+	/// CsvHelper.Excel: every field as a string, with <see cref="ExcelReaderOptions.PoolStrings"/> off, so that each field
+	/// is a new string: with <see cref="CsvHelper_Strings"/>, what pooling costs or saves where the strings die at once.
 	/// </summary>
 	/// <returns>The total length of the strings.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Strings")]
-	public long CsvHelper_StringsPooled()
+	public long CsvHelper_StringsUnpooled()
 	{
-		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Unpooled);
 		var total = 0L;
 		while (reader.Read())
 		{
@@ -377,7 +380,11 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 		return list;
 	}
 
-	/// <summary>CsvHelper.Excel: the records, through the mapper generated for <see cref="PackageAsset"/>.</summary>
+	/// <summary>
+	/// CsvHelper.Excel: the records, through the mapper generated for <see cref="PackageAsset"/>, with the defaults, which
+	/// pool strings (<see cref="ExcelReaderOptions.PoolStrings"/>). The records keep their strings, and the data repeats its
+	/// 1,695 rows, so the pool keeps one string of each value instead of a million.
+	/// </summary>
 	/// <returns>The records.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Records")]
@@ -389,16 +396,16 @@ public class ExcelPackageAssetsRead : ReadBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: the records, with <see cref="CsvReaderOptions.PoolStrings"/> on. The records keep their strings, and
-	/// the data repeats its 1,695 rows, so the pool keeps one string of each value instead of a million: the cost of making
-	/// and keeping strings, and the garbage collections it causes, against a lookup's.
+	/// CsvHelper.Excel: the records, with <see cref="ExcelReaderOptions.PoolStrings"/> off, so that each record keeps strings
+	/// of its own: with <see cref="CsvHelper_Records"/>, what making and keeping a million rows' strings costs, with the
+	/// garbage collections it causes, against the pool's lookups.
 	/// </summary>
 	/// <returns>The records.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Records")]
-	public List<PackageAsset> CsvHelper_RecordsPooled()
+	public List<PackageAsset> CsvHelper_RecordsUnpooled()
 	{
-		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Unpooled);
 
 		return reader.GetRecords<PackageAsset>().ToList();
 	}

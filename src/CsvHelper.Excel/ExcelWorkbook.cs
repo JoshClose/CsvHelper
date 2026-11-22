@@ -521,7 +521,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 		try
 		{
-			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, cellOptions), settings.Csv);
+			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, cellOptions), settings.ReaderCsv());
 		}
 		catch
 		{

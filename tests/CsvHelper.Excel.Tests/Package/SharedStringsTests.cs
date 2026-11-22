@@ -4,12 +4,19 @@ using CsvHelper.Excel.Tests.Xml;
 namespace CsvHelper.Excel.Tests.Package;
 
 /// <summary>
-/// The shared strings part: the text of each string, rich text and phonetic runs, decoding, and the table's limits. The
-/// tests of the part's XML run in every <see cref="ScanMode"/>; the tests through a package load synchronously and
-/// asynchronously.
+/// The shared strings part: the text of each string, rich text and phonetic runs, decoding, the table's chunks, and its
+/// limits. The tests of the part's XML run in every <see cref="ScanMode"/>, those of strings of mebibytes in each mode that
+/// reads more than a byte at a time, and many with chunks of a few bytes, which put the chunks' ends where a test needs
+/// them; the tests through a package load synchronously and asynchronously.
 /// </summary>
 public class SharedStringsTests
 {
+	/// <summary>4 MiB: a stretch of the offsets, and the largest chunk of several strings.</summary>
+	private const int MiB4 = 4 << 20;
+
+	/// <summary><c>Array.MaxLength</c>, which .NET Framework lacks: the most bytes the table holds.</summary>
+	private const int ArrayMaxLength = 0x7FFFFFC7;
+
 	/// <summary>U+FFFD, which a surrogate escape that is not part of a pair becomes.</summary>
 	private static readonly string Replacement = ((char)0xFFFD).ToString();
 
@@ -257,6 +264,322 @@ public class SharedStringsTests
 	}
 
 	[Fact]
+	public async Task EndsAStringAtItsChunksEnd()
+	{
+		// Chunks of 16 bytes. The first string fills the first chunk, and the empty string after it starts at the chunk's end.
+		// The next string moves to a new chunk with nothing, which the string after it fills; the last moves to a third.
+		var expected = new[] { "0123456789abcdef", "", "ghij", "klmnopqrstuv", "", "w" };
+		var xml = Sst(string.Concat(expected.Select(s => s.Length == 0 ? "<si/>" : $"<si><t>{s}</t></si>")));
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode, maxChunk: 16);
+
+			Assert.Equal(expected, Packages.Strings(table));
+
+			// Two full chunks and the last trimmed to its string, and the starts.
+			Assert.Equal(16 + 16 + 1 + (4 * 7), table.MemorySize);
+		});
+	}
+
+	[Fact]
+	public async Task StartsEmptyStringsAtAChunksStart()
+	{
+		// Chunks of 16 bytes. Before the first text, and after a string longer than a chunk, which has one of its own: the
+		// strings after it, empty or not, start at the next stretch, where the next chunk starts, or none does. A chunk a
+		// long string moves out of is trimmed to what it holds.
+		var x = new string('x', 40);
+		var y = new string('y', 17);
+		var cases = new (string Xml, string[] Expected, long MemorySize)[]
+		{
+			("<si/><si><t/></si><si><t>abc</t></si>", new[] { "", "", "abc" }, 3 + (4 * 4)),
+			($"<si><t>abc</t></si><si><t>{x}</t></si><si/><si><t></t></si><si><t>def</t></si>", new[] { "abc", x, "", "", "def" }, 3 + 40 + 3 + (4 * 6)),
+			($"<si><t>{x}</t></si><si/>", new[] { x, "" }, 40 + (4 * 3)),
+			($"<si><t>{x}</t></si><si><t>{y}</t></si><si/>", new[] { x, y, "" }, 40 + 17 + (4 * 4)),
+			($"<si><t>{x}</t></si><si><t>  </t></si><si><r><t>{y}</t></r></si>", new[] { x, "", y }, 40 + 17 + (4 * 4)),
+		};
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			foreach (var (xml, expected, memorySize) in cases)
+			{
+				var table = await ReadAsync(Sst(xml), mode, maxChunk: 16);
+
+				Assert.Equal(expected, Packages.Strings(table));
+				Assert.Equal(memorySize, table.MemorySize);
+			}
+		});
+	}
+
+	[Fact]
+	public async Task StartsAnEmptyStringAfterAFullChunkOfFourMebibytes()
+	{
+		// A first chunk of 4 MiB, which 65,536 strings of 64 bytes fill: the empty string after them starts at the next
+		// stretch's first offset, where the chunk of the string after it starts. EndsAStringAtItsChunksEnd reaches the same
+		// edge in every mode, at the end of a chunk of 16 bytes, which is not a stretch's end.
+		var strings = Enumerable.Range(0, 1 << 16).Select(i => i.ToString("D6") + new string((char)('a' + (i % 26)), 58)).ToList();
+		var expected = strings.Concat(new[] { "", "after", "" }).ToList();
+		var xml = Sst(string.Concat(expected.Select(s => s.Length == 0 ? "<si/>" : $"<si><t>{s}</t></si>")), $" uniqueCount=\"{expected.Count}\"");
+
+		await InWholeModesAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode, declaredSize: 1L << 40);
+
+			Assert.True(expected.SequenceEqual(Packages.Strings(table)), "The strings differ.");
+			Assert.Equal(MiB4 + 5 + (4L * (expected.Count + 1)), table.MemorySize);
+		});
+	}
+
+	[Fact]
+	public async Task StartsTheStringAfterALongStringAtTheNextStretch()
+	{
+		// Chunks of 16 bytes, and strings of 4 MiB in runs of 1 KB, each in a chunk of its own that grows by doubling: each
+		// ends at the end of its stretch, and the empty strings after them start at the next, the last where no chunk does.
+		// The chunks the long strings moved from are trimmed to their strings.
+		var run = Letters(1024, 1);
+		var four = string.Concat(Enumerable.Repeat(run, 4096));
+		var runs = $"<si>{string.Concat(Enumerable.Repeat($"<r><t>{run}</t></r>", 4096))}</si>";
+		var xml = Sst($"<si><t>abc</t></si>{runs}<si/><si><t>z</t></si>{runs}<si/>");
+
+		await InWholeModesAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode, maxChunk: 16);
+
+			Assert.True(new[] { "abc", four, "", "z", four, "" }.SequenceEqual(Packages.Strings(table)), "The strings differ.");
+			Assert.Equal(3 + MiB4 + 1 + MiB4 + (4 * 7), table.MemorySize);
+		});
+	}
+
+	[Fact]
+	public async Task MovesAStringWithWhatItHas()
+	{
+		// Chunks of 32 bytes, after a string of 10. The second string moves in its third run, at the escapes after its CDATA,
+		// so the start of its t moves with it; its first run was trimmed, and its second has a reference. The third string
+		// moves at its start.
+		var xml = Sst(
+			"<si><t>0123456789</t></si>" +
+			"<si><r><t>  ab  </t></r><r><rPr><b/></rPr><t xml:space=\"preserve\"> c&amp;d </t></r><r><t><![CDATA[e<f]]>_x0041__x00e9_</t></r></si>" +
+			"<si><t>  0123456789abcdefghij  </t></si>");
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode, maxChunk: 32);
+
+			Assert.Equal(["0123456789", "ab c&d e<fAé", "0123456789abcdefghij"], Packages.Strings(table));
+
+			// Each chunk is trimmed to its string: the first two when a string moves out, the last at the end.
+			Assert.Equal(10 + 13 + 20 + (4 * 4), table.MemorySize);
+		});
+	}
+
+	[Fact]
+	public async Task GivesAStringLongerThanAChunkAChunkOfItsOwn()
+	{
+		// Chunks of 16 bytes: a string of 100 bytes has a chunk of its own, and the first chunk, which it moved out of, is
+		// trimmed to its 3 bytes; one of ten runs of 10 starts in a chunk of 16, which grows to 20, 40, 80 and 160 bytes, and
+		// is trimmed to 100 at its end; the string after them starts a chunk of 16, trimmed to 1 at the end.
+		var x = new string('x', 100);
+		var y = string.Concat(Enumerable.Range(0, 10).Select(i => i.ToString("D10")));
+		var xml = Sst($"<si><t>abc</t></si><si><t>{x}</t></si><si>{string.Concat(Enumerable.Range(0, 10).Select(i => $"<r><t>{i:D10}</t></r>"))}</si><si><t>z</t></si>");
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode, maxChunk: 16);
+
+			Assert.Equal(["abc", x, y, "z"], Packages.Strings(table));
+			Assert.Equal(3 + 100 + 100 + 1 + (4 * 5), table.MemorySize);
+		});
+	}
+
+	[Fact]
+	public async Task ReadsTheSameStringsWhateverTheChunksSizes()
+	{
+		// Chunks of 1 to 64 bytes put their ends everywhere in these strings: in a run and between runs, in CDATA,
+		// references, escapes and white space that is trimmed, and in strings longer than a chunk, which move with what
+		// they have, grow a chunk they have to themselves, or have one of their own.
+		var cases = new (string Xml, string Expected)[]
+		{
+			("<si><t>0123456789</t></si>", "0123456789"),
+			("<si><r><t>  ab  </t></r><r><rPr><b/></rPr><t xml:space=\"preserve\"> c&amp;d </t></r><r><t><![CDATA[e<f]]>_x0041__x00e9_</t></r></si>", "ab c&d e<fAé"),
+			("<si><t>   </t></si>", ""),
+			("<si/>", ""),
+			("<si><t>xy</t><rPh sb=\"0\" eb=\"1\"><t>no</t></rPh><r><t>_x005F_x0041_</t></r></si>", "xy_x0041_"),
+			("<si><t>東京</t><r><t>" + Grinning + "</t></r></si>", "東京" + Grinning),
+			("<si><t>" + Letters(70, 2) + "</t></si>", Letters(70, 2)),
+			("<si>" + string.Concat(Enumerable.Repeat("<r><t>0123456</t></r>", 10)) + "</si>", string.Concat(Enumerable.Repeat("0123456", 10))),
+			("<si><t>" + string.Concat(Enumerable.Repeat("_x0041_", 12)) + "</t></si>", new string('A', 12)),
+			("<si><t>" + new string(' ', 80) + "</t></si>", ""),
+			("<si></si>", ""),
+			("<si><t>&#x1F600;&lt;&gt;</t><t xml:space=\"preserve\">  </t></si>", Grinning + "<>  "),
+			("<si><t>end</t></si>", "end"),
+		};
+		var xml = Sst(string.Concat(cases.Select(c => c.Xml)));
+		var expected = cases.Select(c => c.Expected).ToList();
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			for (var chunk = 1; chunk <= 64; chunk++)
+			{
+				var strings = Packages.Strings(await ReadAsync(xml, mode, maxChunk: chunk));
+
+				Assert.True(expected.SequenceEqual(strings), $"Chunks of {chunk} bytes: {string.Join("|", strings)}");
+			}
+		});
+	}
+
+	[Fact]
+	public async Task SizesEachChunkFromWhatThePartHasLeft()
+	{
+		// Chunks of 1 KB at most, and 25 strings of 100 bytes. An estimate 50 bytes over the text makes chunks of 1,024,
+		// 1,024 and 550, the last holding the last 500 bytes and kept. One far too large makes three of 1,024, the last
+		// trimmed to 500. One far too small (no room for the markup) makes a first of 256 (trimmed to its 2 strings when
+		// the third moves), then doubles: 512, 1,024, 1,024, the last trimmed to 800.
+		var strings = Enumerable.Range(0, 25).Select(i => Letters(100, 10 + i)).ToList();
+		var xml = Sst(string.Concat(strings.Select(t => $"<si><t>{t}</t></si>")), " uniqueCount=\"25\"");
+		var cases = new (long DeclaredSize, long MemorySize)[]
+		{
+			(2500 + (16 * 25) + 50, 1024 + 1024 + 550 + (4 * 26)),
+			(1L << 40, 1024 + 1024 + 500 + (4 * 26)),
+			(0, 200 + 512 + 1024 + 800 + (4 * 26)),
+		};
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			foreach (var (declaredSize, memorySize) in cases)
+			{
+				var table = await ReadAsync(xml, mode, declaredSize: declaredSize, maxChunk: 1024);
+
+				Assert.Equal(strings, Packages.Strings(table));
+				Assert.Equal(memorySize, table.MemorySize);
+			}
+		});
+	}
+
+	[Fact]
+	public async Task DoublesAChunkOnceTheEstimateHasLessLeftThanAStringNeeds()
+	{
+		// An estimate of 300 bytes, and one string of six runs: 100 bytes five times, then 80. The first chunk is the 300
+		// the estimate has left; the fourth run needs 400, more than it says is left, so the chunk doubles to 600, which
+		// the last two runs fit, and its 20 spare bytes are kept. Sized from the estimate alone, it would grow by each run
+		// (400, 500, 580), one copy a run.
+		var runs = new[] { 100, 100, 100, 100, 100, 80 }.Select((n, i) => Letters(n, 40 + i)).ToList();
+		var xml = Sst($"<si>{string.Concat(runs.Select(t => $"<r><t>{t}</t></r>"))}</si>");
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode, declaredSize: 300);
+
+			Assert.Equal([string.Concat(runs)], Packages.Strings(table));
+			Assert.Equal(600 + (4 * 2), table.MemorySize);
+		});
+	}
+
+	[Fact]
+	public async Task ReadsManyStringsWhateverTheSizeDeclared()
+	{
+		// 150,000 strings of up to 80 bytes, about 6 MB: chunks from the estimate, all of 4 MiB from one far too large,
+		// and doubling from 256 bytes for one far too small; each table holds its text and starts, and at most an eighth more.
+		var random = new Random(5);
+		var expected = Enumerable.Range(0, 150_000).Select(i => Letters(random.Next(0, 81), i)).ToList();
+		var xml = Sst(string.Concat(expected.Select(t => $"<si><t>{t}</t></si>")), $" uniqueCount=\"{expected.Count}\"");
+		var needed = expected.Sum(t => (long)t.Length) + (4L * (expected.Count + 1));
+
+		await InWholeModesAsync(async mode =>
+		{
+			foreach (var declaredSize in new long?[] { null, 1L << 40, 0 })
+			{
+				var table = await ReadAsync(xml, mode, declaredSize: declaredSize);
+
+				Assert.True(expected.SequenceEqual(Packages.Strings(table)), $"Declared {declaredSize}: the strings differ.");
+				Assert.InRange(table.MemorySize, needed, needed * 9 / 8);
+			}
+		});
+	}
+
+	[Fact]
+	public async Task ThrowsPastWhatTheTableCanHoldInSmallChunks()
+	{
+		// Chunks of 4 bytes and a table of 12 at most: strings that fill their chunks, move, or have a chunk of their own, and
+		// XML longer than the room left whose text fits, or doesn't. Escapes and white space count until the end of their t
+		// decodes or trims them.
+		var fits = new (string Xml, string[] Expected)[]
+		{
+			("<si><t>abcd</t></si><si><t>efgh</t></si><si><t>ijkl</t></si>", new[] { "abcd", "efgh", "ijkl" }),
+			("<si><t>abcd</t></si><si><t>efg</t></si>", new[] { "abcd", "efg" }),
+			("<si><t>abcd</t></si><si><t>efgh</t></si><si><t>&amp;&amp;&amp;&amp;</t></si>", new[] { "abcd", "efgh", "&&&&" }),
+			($"<si><t>{string.Concat(Enumerable.Repeat("&amp;", 12))}</t></si>", new[] { new string('&', 12) }),
+			("<si><t>ab</t></si><si><r><t>cd</t></r><r><t>efghijkl</t></r></si>", new[] { "ab", "cdefghijkl" }),
+			("<si><t>ab</t></si><si><t>_x0041_</t></si><si><t>cdefghijk</t></si>", new[] { "ab", "A", "cdefghijk" }),
+		};
+		var over = new (string Xml, string At)[]
+		{
+			("<si><t>abcd</t></si><si><t>efgh</t></si><si><t>ijklm</t></si>", "ijklm"),
+			("<si><t>abcd</t></si><si><t>efgh</t></si><si><t>&amp;&amp;&amp;&amp;&amp;</t></si>", "&amp;"),
+			($"<si><t>{string.Concat(Enumerable.Repeat("&amp;", 13))}</t></si>", "&amp;"),
+			("<si><t>ab</t></si><si><r><t>cd</t></r><r><t>efghijklm</t></r></si>", "efghijklm"),
+			("<si><t>  abcdefghijkl  </t></si>", "  abcdefghijkl"),
+		};
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			foreach (var (xml, expected) in fits)
+			{
+				Assert.Equal(expected, Packages.Strings(await ReadAsync(Sst(xml), mode, 12, maxChunk: 4)));
+			}
+
+			foreach (var (content, at) in over)
+			{
+				var xml = Sst(content);
+				var e = await Assert.ThrowsAsync<InvalidDataException>(() => ReadAsync(xml, mode, 12, maxChunk: 4));
+				Assert.Equal($"The XML of test.xml can't be read at byte {xml.IndexOf(at)}: its strings come to more than 12 bytes, the most the table can hold.", e.Message);
+			}
+		});
+	}
+
+	[Fact]
+	public async Task ThrowsPastTheLastStretch()
+	{
+		// Chunks of 16 bytes and strings of 10: each string has a chunk, and so a stretch, of its own. The 512th is at the
+		// last stretch; a 513th would start past the last offset, as would the string after one longer than a chunk there.
+		var strings = Enumerable.Range(0, 513).Select(i => i.ToString("D10")).ToList();
+		var fits = Sst(string.Concat(strings.Take(512).Select(s => $"<si><t>{s}</t></si>")));
+		var over = Sst(string.Concat(strings.Select(s => $"<si><t>{s}</t></si>")));
+		var longLast = Sst(string.Concat(strings.Take(511).Select(s => $"<si><t>{s}</t></si>")) + $"<si><t>{new string('x', 20)}</t></si>");
+		var message = $"its strings come to more than {ArrayMaxLength} bytes, the most the table can hold.";
+
+		await XmlScan.InEveryModeAsync(async mode =>
+		{
+			Assert.Equal(strings.Take(512), Packages.Strings(await ReadAsync(fits, mode, maxChunk: 16)));
+
+			var e = await Assert.ThrowsAsync<InvalidDataException>(() => ReadAsync(over, mode, maxChunk: 16));
+			Assert.Equal($"The XML of test.xml can't be read at byte {over.IndexOf(strings[512])}: {message}", e.Message);
+
+			e = await Assert.ThrowsAsync<InvalidDataException>(() => ReadAsync(longLast, mode, maxChunk: 16));
+			Assert.Equal($"The XML of test.xml can't be read at byte {longLast.LastIndexOf("</si>")}: {message}", e.Message);
+		});
+	}
+
+	[Fact]
+	public async Task ReadsStringsOverFourMebibytes()
+	{
+		// A string of 5 MiB in one t, and one of 4.5 MiB in runs of 64 KB, between strings: each has a chunk of its own,
+		// and the strings after them start at the next stretch.
+		var one = Letters(5 << 20, 3) + "é東" + Grinning;
+		var runs = Enumerable.Range(0, 72).Select(i => Letters(64 << 10, 4 + i)).ToList();
+		var expected = new[] { "before", one, "", "between", string.Concat(runs), "after" };
+		var xml = Sst($"<si><t>before</t></si><si><t>{one}</t></si><si/><si><t>between</t></si><si>{string.Concat(runs.Select(r => $"<r><t>{r}</t></r>"))}</si><si><t>after</t></si>");
+		var needed = expected.Sum(s => (long)Encoding.UTF8.GetByteCount(s)) + (4L * (expected.Length + 1));
+
+		await InWholeModesAsync(async mode =>
+		{
+			var table = await ReadAsync(xml, mode);
+
+			Assert.True(expected.SequenceEqual(Packages.Strings(table)), "The strings differ.");
+			Assert.InRange(table.MemorySize, needed, needed * 9 / 8);
+		});
+	}
+
+	[Fact]
 	public async Task ThrowsForXmlThatIsNotAStringTable()
 	{
 		await XmlScan.InEveryModeAsync(async mode =>
@@ -369,15 +692,55 @@ public class SharedStringsTests
 	/// <param name="mode">How to read it.</param>
 	/// <param name="maxLength">The most bytes the table holds, or <see langword="null"/> for an array's limit.</param>
 	/// <param name="declaredSize">The size the zip declares, or <see langword="null"/> for the part's real size.</param>
+	/// <param name="maxChunk">The most bytes a chunk of several strings has, or <see langword="null"/> for 4 MiB.</param>
 	/// <returns>The shared strings.</returns>
-	private static async Task<SharedStrings> ReadAsync(string xml, ScanMode mode, int? maxLength = null, long? declaredSize = null)
+	private static async Task<SharedStrings> ReadAsync(string xml, ScanMode mode, int? maxLength = null, long? declaredSize = null, int? maxChunk = null)
 	{
 		var bytes = Encoding.UTF8.GetBytes(xml);
-		using var scanner = XmlScan.Open(bytes, mode);
+
+		// A window that can hold the whole part, for a text of several mebibytes.
+		using var scanner = XmlScan.Open(bytes, mode, Math.Max(1L << 20, bytes.Length));
 		var size = declaredSize ?? bytes.Length;
 
 		return mode.Async
-			? await SharedStrings.ReadAsync(scanner, size, true, CancellationToken.None, maxLength)
-			: SyncOrAsync.Result(SharedStrings.ReadAsync(scanner, size, false, CancellationToken.None, maxLength));
+			? await SharedStrings.ReadAsync(scanner, size, true, CancellationToken.None, maxLength, maxChunk)
+			: SyncOrAsync.Result(SharedStrings.ReadAsync(scanner, size, false, CancellationToken.None, maxLength, maxChunk));
+	}
+
+	/// <summary>
+	/// Runs a test of mebibytes in each mode that reads more than a byte at a time, and says which mode failed: a read of a
+	/// byte at a time looks for the end of a long text again for each byte that arrives.
+	/// </summary>
+	/// <param name="test">The test, for one mode.</param>
+	/// <returns>A task that completes when every such mode has passed.</returns>
+	private static async Task InWholeModesAsync(Func<ScanMode, Task> test)
+	{
+		foreach (var mode in ScanMode.All.Where(m => !m.Trickle))
+		{
+			try
+			{
+				await test(mode);
+			}
+			catch (Exception e)
+			{
+				throw new Xunit.Sdk.XunitException($"In mode '{mode}': {e.Message}", e);
+			}
+		}
+	}
+
+	/// <summary>Random lowercase letters: a string that a copy from the wrong place doesn't match by chance.</summary>
+	/// <param name="length">The number of letters.</param>
+	/// <param name="seed">The seed of the letters.</param>
+	/// <returns>The letters.</returns>
+	private static string Letters(int length, int seed)
+	{
+		var random = new Random(seed);
+		var letters = new char[length];
+		for (var i = 0; i < length; i++)
+		{
+			letters[i] = (char)('a' + random.Next(26));
+		}
+
+		return new string(letters);
 	}
 }

@@ -164,9 +164,26 @@ public sealed record ExcelReaderOptions
 	/// trimming, null values, header matching, <see cref="CsvReaderOptions.OnRecordError"/> and the rest apply as for CSV.
 	/// <see cref="CsvReaderOptions.FormatProvider"/>, <see cref="CsvReaderOptions.TrueValues"/> and
 	/// <see cref="CsvReaderOptions.FalseValues"/> apply to text cells only: numbers and booleans are stored in invariant
-	/// form. CSV's dialect (the separator, quotes, comments, fixed widths) is ignored.
+	/// form. CSV's dialect (the separator, quotes, comments, fixed widths) is ignored, and so is
+	/// <see cref="CsvReaderOptions.PoolStrings"/>, which <see cref="PoolStrings"/> sets.
 	/// </summary>
 	public CsvReaderOptions Csv { get; init; } = CsvReaderOptions.Default;
+
+	/// <summary>
+	/// Whether a column's repeated strings are one instance, so that records kept in memory hold one string for each
+	/// repeated value of a column, not one for each cell. <see langword="true"/> by default, where a CSV reader's
+	/// <see cref="CsvReaderOptions.PoolStrings"/> is <see langword="false"/>: measured on sheets, records read faster pooled,
+	/// since their strings are made once and collected less often, and strings used and dropped no slower. It sets the
+	/// readers' <see cref="CsvReaderOptions.PoolStrings"/>, in place of <see cref="Csv"/>'s.
+	/// </summary>
+	/// <remarks>
+	/// A read of text (<see cref="CsvReader.GetString(int)"/>, the string members of records, <see cref="CsvDataReader"/>)
+	/// may return the same instance for equal values of a column, as <see cref="CsvReaderOptions.PoolStrings"/> documents,
+	/// so code that relies on distinct instances must turn it off. A column whose values rarely repeat (ids, timestamps)
+	/// switches pooling off by itself, and values over 128 bytes are not pooled. Reads that make no string never pool:
+	/// typed reads, and the conversion to CSV (<see cref="ExcelConvert"/>), which writes each field's text as UTF-8.
+	/// </remarks>
+	public bool PoolStrings { get; init; } = true;
 
 	/// <summary>
 	/// The most bytes a part held in memory may inflate to (the content types, relationships, workbook, styles and shared
@@ -212,6 +229,13 @@ public sealed record ExcelReaderOptions
 
 	/// <summary>The limits as the package layer takes them; the options must be valid (<see cref="Validate"/>).</summary>
 	internal PartLimits Limits => new(MaxPartSize, MaxUncompressedSize);
+
+	/// <summary>
+	/// The options of a sheet's reader: <see cref="Csv"/>, with <see cref="PoolStrings"/> in place of its own
+	/// <see cref="CsvReaderOptions.PoolStrings"/>. The options must be valid (<see cref="Validate"/>).
+	/// </summary>
+	/// <returns><see cref="Csv"/> itself when its <see cref="CsvReaderOptions.PoolStrings"/> agrees, else a copy that does.</returns>
+	internal CsvReaderOptions ReaderCsv() => Csv.PoolStrings == PoolStrings ? Csv : Csv with { PoolStrings = PoolStrings };
 
 	/// <summary>The options of a reader's typed cells; the options must be valid (<see cref="Validate"/>).</summary>
 	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>

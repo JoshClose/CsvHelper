@@ -186,8 +186,8 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	/// <summary>The options of <see cref="CsvHelper_StringsFormatted"/>: the defaults, with the text Excel shows.</summary>
 	private static readonly ExcelReaderOptions Formatted = new() { Text = ExcelText.Formatted };
 
-	/// <summary>The options of the <c>*Pooled</c> methods: the defaults, with <see cref="CsvReaderOptions.PoolStrings"/> on.</summary>
-	private static readonly ExcelReaderOptions Pooled = new() { Csv = CsvReaderOptions.Default with { PoolStrings = true } };
+	/// <summary>The options of the <c>*Unpooled</c> methods: the defaults, with <see cref="ExcelReaderOptions.PoolStrings"/> off.</summary>
+	private static readonly ExcelReaderOptions Unpooled = new() { PoolStrings = false };
 
 	/// <summary>The workbook every library reads.</summary>
 	private byte[] workbook = [];
@@ -226,7 +226,11 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 		return list;
 	}
 
-	/// <summary>CsvHelper.Excel: the orders, through the mapper generated for <see cref="OrderRecord"/>.</summary>
+	/// <summary>
+	/// CsvHelper.Excel: the orders, through the mapper generated for <see cref="OrderRecord"/>, with the defaults, which pool
+	/// strings (<see cref="ExcelReaderOptions.PoolStrings"/>): the kept <c>Customer</c>, <c>Status</c> and <c>Notes</c>
+	/// strings are pooled per column.
+	/// </summary>
 	/// <returns>The orders.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Records")]
@@ -238,15 +242,16 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: the orders, with <see cref="CsvReaderOptions.PoolStrings"/> on: the kept <c>Customer</c>,
-	/// <c>Status</c> and <c>Notes</c> strings pooled per column, against the cost of looking them up.
+	/// CsvHelper.Excel: the orders, with <see cref="ExcelReaderOptions.PoolStrings"/> off, so that each order keeps strings
+	/// of its own: with <see cref="CsvHelper_Records"/>, what making and keeping the <c>Customer</c>, <c>Status</c> and
+	/// <c>Notes</c> strings costs against looking them up.
 	/// </summary>
 	/// <returns>The orders.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Records")]
-	public List<OrderRecord> CsvHelper_RecordsPooled()
+	public List<OrderRecord> CsvHelper_RecordsUnpooled()
 	{
-		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Unpooled);
 
 		return reader.GetRecords<OrderRecord>().ToList();
 	}
@@ -300,7 +305,10 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 		return checksum;
 	}
 
-	/// <summary>CsvHelper.Excel: every field through <see cref="CsvReader.Parse{T}(int)"/>, the strings through <c>GetString</c>.</summary>
+	/// <summary>
+	/// CsvHelper.Excel: every field through <see cref="CsvReader.Parse{T}(int)"/>, the strings through <c>GetString</c>,
+	/// with the defaults, which pool strings (<see cref="ExcelReaderOptions.PoolStrings"/>).
+	/// </summary>
 	/// <returns>The checksum of the values.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Values")]
@@ -318,15 +326,15 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: <see cref="CsvHelper_Values"/> with <see cref="CsvReaderOptions.PoolStrings"/> on, which changes only
-	/// how its three string columns are made: what pooling costs or saves where the strings aren't kept.
+	/// CsvHelper.Excel: <see cref="CsvHelper_Values"/> with <see cref="ExcelReaderOptions.PoolStrings"/> off, which changes
+	/// only how its three string columns are made: what pooling costs or saves where the strings aren't kept.
 	/// </summary>
 	/// <returns>The checksum of the values.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Values")]
-	public long CsvHelper_ValuesPooled()
+	public long CsvHelper_ValuesUnpooled()
 	{
-		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Unpooled);
 		var checksum = 0L;
 		var source = new CsvOrderSource(reader);
 		while (reader.Read())
@@ -377,8 +385,9 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 
 	/// <summary>
 	/// CsvHelper.Excel: every field of every order as text, through <see cref="CsvReader.GetString(int)"/>, whose date and
-	/// boolean cells have text of their own (ISO 8601, <c>TRUE</c> and <c>FALSE</c>). Phase 6's core gate measures it, since
-	/// that text is formatted as UTF-8 from then on.
+	/// boolean cells have text of their own (ISO 8601, <c>TRUE</c> and <c>FALSE</c>), with the defaults, which pool strings
+	/// (<see cref="ExcelReaderOptions.PoolStrings"/>). Phase 6's core gate measures it, since that text is formatted as
+	/// UTF-8 from then on.
 	/// </summary>
 	/// <returns>The total length of the texts.</returns>
 	[Benchmark]
@@ -399,16 +408,16 @@ public class ExcelOrdersRead : ReadBenchmarkBase
 	}
 
 	/// <summary>
-	/// CsvHelper.Excel: <see cref="CsvHelper_Strings"/> with <see cref="CsvReaderOptions.PoolStrings"/> on, every field's
-	/// text through the pool: the <c>CustomerId</c> column's million distinct values test the pool's switching itself off
-	/// for a column whose values don't repeat.
+	/// CsvHelper.Excel: <see cref="CsvHelper_Strings"/> with <see cref="ExcelReaderOptions.PoolStrings"/> off, every field's
+	/// text a new string: with <see cref="CsvHelper_Strings"/>, where the <c>CustomerId</c> column's million distinct values
+	/// test the pool's switching itself off for a column whose values don't repeat, what pooling costs or saves.
 	/// </summary>
 	/// <returns>The total length of the texts.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Strings")]
-	public long CsvHelper_StringsPooled()
+	public long CsvHelper_StringsUnpooled()
 	{
-		using var reader = ExcelReader.Create(NewWorkbookStream(), Pooled);
+		using var reader = ExcelReader.Create(NewWorkbookStream(), Unpooled);
 		var length = 0L;
 		while (reader.Read())
 		{

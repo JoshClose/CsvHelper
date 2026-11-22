@@ -8,9 +8,9 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// The shared strings of a workbook, from its shared strings part: the text of each <c>si</c> element, in order, which a
-/// cell of type <c>s</c> indexes. The text is UTF-8 in one byte array (the arena), with the start of each string in an
-/// <see cref="int"/> array, so that a cell copies its string with one copy and no <see cref="string"/>. It is immutable
-/// once loaded, so the readers of a workbook share it.
+/// cell of type <c>s</c> indexes. The text is UTF-8 in byte arrays (the chunks), each string in one, with the start of
+/// each string in an <see cref="int"/> array, so that a cell copies its string with one copy and no <see cref="string"/>.
+/// It is immutable once loaded, so the readers of a workbook share it.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -24,50 +24,88 @@ namespace CsvHelper.Excel;
 /// string, which keeps its place.
 /// </para>
 /// <para>
-/// The part is read through its window, never whole. The arrays start at capacities from the part's declared size and
-/// <c>uniqueCount</c>, each capped, since either can be wrong; they grow as needed, and are trimmed at the end, so that
-/// the table takes the UTF-8 size of its strings plus 4 bytes each. A table past what an array holds
-/// (<c>Array.MaxLength</c> bytes, or as many strings) throws <see cref="InvalidDataException"/>.
+/// A string's start is an offset in stretches of 4 MiB, and each chunk starts at a stretch's first offset: an offset's
+/// chunk is at <c>offset &gt;&gt; 22</c>, and its place there is <c>offset &amp; (4 MiB - 1)</c>. A string never crosses
+/// two chunks; when the next string starts in a later stretch, a string ends where its chunk's text does, which the table
+/// keeps for each chunk. A chunk of several strings takes one stretch. It is sized from the text still to come, as the
+/// part's declared size less the markup of the strings <c>uniqueCount</c> declares estimates it, from 256 bytes to 4 MiB,
+/// so that a part that declares both honestly fills its chunks; since either can be wrong, once the estimate is used up
+/// each chunk is twice the one before. A string that outgrows its chunk while its text arrives moves, with what it has,
+/// to a new chunk, or grows the chunk when it has it to itself. A string longer than 4 MiB has a chunk of its own, which
+/// grows by doubling, over as many stretches as it needs; the string after it starts at the next.
+/// </para>
+/// <para>
+/// The part is read through its window, never whole. Growing the text copies only the strings that move, and the starts
+/// grow from a capacity for <c>uniqueCount</c>, capped. A chunk is trimmed when it closes (when a string moves out of it,
+/// when the long string it holds ends, and at the end of the part) if more than an eighth of it is spare, and the starts
+/// at the end by the same rule: the table takes the UTF-8 size of its strings plus 4 bytes each, and at most an eighth
+/// more. An estimate too large allocates at most one chunk of 4 MiB more, which the trim gives back. A table past what an
+/// array holds (<c>Array.MaxLength</c> bytes, or as many strings), or whose offsets would pass <see cref="int.MaxValue"/>
+/// (past about 2 GB), throws <see cref="InvalidDataException"/>.
 /// </para>
 /// </remarks>
 internal sealed class SharedStrings
 {
+	/// <summary>The bits of an offset that are its place in its stretch: a stretch is 4 MiB of offsets.</summary>
+	private const int SlotBits = 22;
+
+	/// <summary>The place of an offset in its stretch, and so in its chunk: <c>offset &amp; SlotMask</c>.</summary>
+	private const int SlotMask = (1 << SlotBits) - 1;
+
+	/// <summary>The most bytes a chunk of several strings has: one stretch.</summary>
+	private const int MaxChunk = 1 << SlotBits;
+
+	/// <summary>The stretches an <see cref="int"/> offset can be in.</summary>
+	private const int MaxSlots = 1 << (31 - SlotBits);
+
+	/// <summary>The fewest bytes a chunk of several strings has.</summary>
+	private const int MinChunk = 256;
+
 	/// <summary>The most strings the first capacity is for, whatever <c>uniqueCount</c> says.</summary>
 	private const int MaxInitialCount = 1 << 20;
-
-	/// <summary>The most bytes the arena's first capacity has, whatever the part's declared size says.</summary>
-	private const int MaxInitialArena = 16 << 20;
 
 	/// <summary>The fewest strings the table makes room for.</summary>
 	private const int MinCount = 16;
 
-	/// <summary>The fewest bytes the arena makes room for.</summary>
-	private const int MinArena = 256;
-
 	/// <summary>
-	/// The markup of a plain string, <c>&lt;si&gt;&lt;t&gt;&lt;/t&gt;&lt;/si&gt;</c>, which the arena's first capacity takes off
+	/// The markup of a plain string, <c>&lt;si&gt;&lt;t&gt;&lt;/t&gt;&lt;/si&gt;</c>, which the estimate of the text takes off
 	/// the part's declared size for each string <c>uniqueCount</c> declares.
 	/// </summary>
 	private const int MarkupPerString = 16;
 
-	private readonly byte[] arena;
+	// The chunks at the stretch each starts at (null at the others), and the offset where each chunk's text ends.
+	private readonly byte[]?[] chunks;
+	private readonly int[] ends;
 	private readonly int[] starts;
 
 	/// <summary>Creates the table.</summary>
-	/// <param name="arena">The text of the strings, one after another; its length may be past the last string's end.</param>
-	/// <param name="starts">The start of each string in the arena, and then the end of the last: at least <paramref name="count"/> + 1 entries.</param>
+	/// <param name="chunks">
+	/// The chunks of text, each at the stretch it starts at and <see langword="null"/> at a stretch none starts at: as many
+	/// as the stretch of the last string's end needs.
+	/// </param>
+	/// <param name="ends">The offset where each chunk's text ends, at the same index as the chunk.</param>
+	/// <param name="starts">The offset of each string, and then the end of the last: at least <paramref name="count"/> + 1 entries.</param>
 	/// <param name="count">The number of strings.</param>
 	/// <param name="partName">The part the strings are from, or <see langword="null"/> for <see cref="Empty"/>.</param>
-	private SharedStrings(byte[] arena, int[] starts, int count, string? partName)
+	private SharedStrings(byte[]?[] chunks, int[] ends, int[] starts, int count, string? partName)
 	{
-		this.arena = arena;
+		this.chunks = chunks;
+		this.ends = ends;
 		this.starts = starts;
 		Count = count;
 		PartName = partName;
+
+		var size = 4L * starts.Length;
+		foreach (var chunk in chunks)
+		{
+			size += chunk?.Length ?? 0;
+		}
+
+		MemorySize = size;
 	}
 
 	/// <summary>The shared strings of a workbook without a shared strings part: none.</summary>
-	public static SharedStrings Empty { get; } = new([], [0], 0, null);
+	public static SharedStrings Empty { get; } = new([null], [0], [0], 0, null);
 
 	/// <summary>The number of strings.</summary>
 	public int Count { get; }
@@ -78,8 +116,11 @@ internal sealed class SharedStrings
 	/// </summary>
 	public string? PartName { get; }
 
-	/// <summary>The bytes the table holds on to: the arena's capacity, and 4 bytes for each entry of the starts.</summary>
-	public long MemorySize => arena.Length + 4L * starts.Length;
+	/// <summary>
+	/// The bytes the table holds on to: the lengths of its chunks, and 4 bytes for each entry of the starts. The arrays that
+	/// find a chunk (under 6 KB) aren't counted.
+	/// </summary>
+	public long MemorySize { get; }
 
 	/// <summary>Gets a string's text.</summary>
 	/// <param name="index">The string's 0-based index: a cell's <c>&lt;v&gt;</c>.</param>
@@ -95,7 +136,16 @@ internal sealed class SharedStrings
 		}
 
 		var start = starts[index];
-		text = arena.AsSpan(start, starts[index + 1] - start);
+		var end = starts[index + 1];
+		var slot = start >> SlotBits;
+		if (((start ^ end) >> SlotBits) != 0)
+		{
+			// The next string starts in a later chunk: this one ends where its chunk's text does.
+			end = ends[slot];
+		}
+
+		// A string starts in the stretch its chunk starts at; an empty one can start where no chunk does.
+		text = chunks[slot].AsSpan(start & SlotMask, end - start);
 
 		return true;
 	}
@@ -133,15 +183,20 @@ internal sealed class SharedStrings
 	/// holds, and only the refills read the part's stream, synchronously or not as <paramref name="async"/> says.
 	/// </summary>
 	/// <param name="scanner">The scanner, which the caller disposes.</param>
-	/// <param name="declaredSize">The part's size as its zip declares it: a hint for the arena's first capacity.</param>
+	/// <param name="declaredSize">The part's size as its zip declares it: a hint for the chunks' sizes.</param>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous read.</param>
 	/// <param name="maxLength">The most bytes, and one more than the most strings, the table holds: <c>Array.MaxLength</c> unless a test says otherwise.</param>
+	/// <param name="maxChunk">
+	/// The most bytes a chunk of several strings has: 4 MiB unless a test says less, so that small parts reach a chunk's
+	/// edges. Each chunk still takes a stretch of 4 MiB, and under 256 bytes every chunk of several strings has this size.
+	/// </param>
 	/// <returns>A task whose result is the shared strings.</returns>
 	/// <exception cref="InvalidDataException">The part can't be read, passes a limit, or holds more than <paramref name="maxLength"/> allows.</exception>
-	internal static async ValueTask<SharedStrings> ReadAsync(XmlScanner scanner, long declaredSize, bool async, CancellationToken cancellationToken, int? maxLength = null)
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="maxChunk"/> is not from 1 byte to 4 MiB.</exception>
+	internal static async ValueTask<SharedStrings> ReadAsync(XmlScanner scanner, long declaredSize, bool async, CancellationToken cancellationToken, int? maxLength = null, int? maxChunk = null)
 	{
-		var parser = new Parser(scanner, declaredSize, maxLength ?? Array.MaxLength);
+		var parser = new Parser(scanner, declaredSize, maxLength ?? Array.MaxLength, maxChunk ?? MaxChunk);
 		while (!parser.TryParse())
 		{
 			if (async)
@@ -181,15 +236,29 @@ internal sealed class SharedStrings
 
 	/// <summary>
 	/// Parses the part token by token, from what the window holds. Its state is kept between calls, so that a refill can
-	/// come between any two tokens: the text already decoded is in the arena, not the window.
+	/// come between any two tokens: the text already decoded is in the chunks, not the window.
 	/// </summary>
 	private sealed class Parser
 	{
 		private readonly XmlScanner scanner;
 		private readonly long declaredSize;
 		private readonly int maxLength;
-		private byte[] arena = [];
+		private readonly int maxChunk;
+		// The chunks at the stretch each starts at, and the offset where each one's text ends, once it has an end.
+		private byte[]?[] chunks = [];
+		private int[] ends = [];
+		// The chunk text goes in, its stretch, and whether it is an oversized string's own: no chunk before the first text,
+		// nor after an oversized string until the next text.
+		private byte[]? chunk;
+		private int slot;
+		private bool oversized;
+		// The bytes of text the part's declared size suggests, from the root, and the size of the last chunk of several
+		// strings, which the next doubles once the estimate is used up.
+		private long estimate;
+		private int lastSize;
+		// The offset the next text goes at, and the bytes of the strings before the current one.
 		private int length;
+		private int done;
 		private int[] starts = [0];
 		private int count;
 		private Mode mode;
@@ -208,11 +277,19 @@ internal sealed class SharedStrings
 		/// <param name="scanner">The scanner, at the start of the part.</param>
 		/// <param name="declaredSize">The part's size as its zip declares it.</param>
 		/// <param name="maxLength">The most bytes, and one more than the most strings, the table holds.</param>
-		public Parser(XmlScanner scanner, long declaredSize, int maxLength)
+		/// <param name="maxChunk">The most bytes a chunk of several strings has: from 1 byte to 4 MiB.</param>
+		/// <exception cref="ArgumentOutOfRangeException"><paramref name="maxChunk"/> is out of its range.</exception>
+		public Parser(XmlScanner scanner, long declaredSize, int maxLength, int maxChunk)
 		{
+			if (maxChunk is < 1 or > MaxChunk)
+			{
+				throw new ArgumentOutOfRangeException(nameof(maxChunk));
+			}
+
 			this.scanner = scanner;
 			this.declaredSize = declaredSize;
 			this.maxLength = maxLength;
+			this.maxChunk = maxChunk;
 		}
 
 		/// <summary>Parses the tokens the window holds.</summary>
@@ -262,13 +339,17 @@ internal sealed class SharedStrings
 			}
 		}
 
-		/// <summary>Makes the table, trimming arrays that have more than an eighth to spare.</summary>
+		/// <summary>
+		/// Makes the table: the current chunk's text ends at the last string's end, the last chunk and the starts are trimmed
+		/// when more than an eighth of them is spare, and the chunks reach the stretch of the last string's end, where an
+		/// empty string can start.
+		/// </summary>
 		/// <returns>The shared strings.</returns>
 		public SharedStrings ToTable()
 		{
-			if (arena.Length - length > length / 8)
+			if (chunk is not null)
 			{
-				Array.Resize(ref arena, length);
+				Close(length);
 			}
 
 			var used = count + 1;
@@ -277,7 +358,14 @@ internal sealed class SharedStrings
 				Array.Resize(ref starts, used);
 			}
 
-			return new SharedStrings(arena, starts, count, scanner.Window.PartName);
+			var slots = (starts[count] >> SlotBits) + 1;
+			if (chunks.Length != slots)
+			{
+				Array.Resize(ref chunks, slots);
+				Array.Resize(ref ends, slots);
+			}
+
+			return new SharedStrings(chunks, ends, starts, count, scanner.Window.PartName);
 		}
 
 		/// <summary>Handles a start tag: the root, a string, a run or a text, or an element to skip.</summary>
@@ -361,12 +449,18 @@ internal sealed class SharedStrings
 			switch (mode)
 			{
 				case Mode.Text:
-					if (trimText)
+					// A t with text has it in the chunk, from textStart: a string moves whole.
+					if (length > textStart)
 					{
-						length = textStart + XmlText.TrimWhitespace(arena.AsSpan(textStart, length - textStart));
+						var place = textStart - (slot << SlotBits);
+						if (trimText)
+						{
+							length = textStart + XmlText.TrimWhitespace(chunk.AsSpan(place, length - textStart));
+						}
+
+						length = textStart + XmlText.DecodeEscapes(chunk.AsSpan(place, length - textStart));
 					}
 
-					length = textStart + XmlText.DecodeEscapes(arena.AsSpan(textStart, length - textStart));
 					mode = textParent;
 
 					break;
@@ -397,19 +491,21 @@ internal sealed class SharedStrings
 		}
 
 		/// <summary>Adds the decoded XML of a text or CDATA token to the string; the escapes wait for the end of its <c>t</c>.</summary>
-		/// <exception cref="InvalidDataException">The text has a bad reference, or the arena would pass <see cref="maxLength"/>.</exception>
+		/// <exception cref="InvalidDataException">The text has a bad reference, or the strings would pass <see cref="maxLength"/> bytes or the last offset.</exception>
 		private void Append()
 		{
 			var raw = scanner.Content.Length;
-			if (arena.Length - length < raw && arena.Length < maxLength)
+			if (raw == 0)
 			{
-				var size = Math.Max(Math.Max(2L * arena.Length, (long)length + raw), MinArena);
-				Array.Resize(ref arena, (int)Math.Min(size, maxLength));
+				return;
 			}
 
-			if (arena.Length - length >= raw)
+			// The bytes the strings can still take: the text of each, a moved string's counted once.
+			var room = maxLength - done - (length - starts[count]);
+			if (raw <= room)
 			{
-				length += scanner.DecodeContent(arena.AsSpan(length));
+				MakeRoom(raw);
+				length += scanner.DecodeContent(chunk.AsSpan(length - (slot << SlotBits)));
 
 				return;
 			}
@@ -417,17 +513,87 @@ internal sealed class SharedStrings
 			// At the limit, the XML can be longer than the room left while its decoded text still fits.
 			var decoded = new byte[raw];
 			var written = scanner.DecodeContent(decoded);
-			if (written > arena.Length - length)
+			if (written > room)
 			{
-				throw scanner.Error($"its strings come to more than {maxLength} bytes, the most the table can hold");
+				throw TooLong();
 			}
 
-			decoded.AsSpan(0, written).CopyTo(arena.AsSpan(length));
+			MakeRoom(written);
+			decoded.AsSpan(0, written).CopyTo(chunk.AsSpan(length - (slot << SlotBits)));
 			length += written;
 		}
 
-		/// <summary>Ends a string at the arena's length.</summary>
-		/// <exception cref="InvalidDataException">The table would pass <see cref="maxLength"/> entries.</exception>
+		/// <summary>
+		/// Makes room in the chunk for more of the current string. A string that has its chunk to itself (it starts at the
+		/// chunk's start) grows it; else it moves, with what it has, to a new chunk at the next stretch, and the old chunk is
+		/// closed where the string began. A chunk of several strings takes what the estimate says is still to come, from 256
+		/// bytes to <see cref="maxChunk"/>; once the estimate is used up, or has less left than the string needs, it is twice
+		/// the last. A string that needs more than <see cref="maxChunk"/> has a chunk of its own, at least twice what it
+		/// holds. Either way a string of many runs grows by doubling, never by one copy a run.
+		/// </summary>
+		/// <param name="bytes">The bytes to make room for: no more than the strings can still take.</param>
+		/// <exception cref="InvalidDataException">The chunk would pass the last offset.</exception>
+		private void MakeRoom(int bytes)
+		{
+			var first = slot << SlotBits;
+			if (chunk is not null && first + chunk.Length - length >= bytes)
+			{
+				return;
+			}
+
+			var start = starts[count];
+			var held = length - start;
+			var need = held + bytes;
+
+			// Without a chunk, the next text goes at a stretch's first offset: the first, or the one after an oversized string.
+			var next = chunk is null ? length >> SlotBits : start == first ? slot : slot + 1;
+			var nextFirst = (long)next << SlotBits;
+			if (next >= MaxSlots || need > int.MaxValue - nextFirst)
+			{
+				throw TooLong();
+			}
+
+			// What the estimate says is still to come includes the string's bytes. Sized only by it, a string that needs more
+			// would grow by what it needs, one copy a run.
+			var own = need > maxChunk;
+			var left = estimate - done;
+			var size = own ? 2L * held : Math.Min(Math.Max(left >= need ? left : 2L * lastSize, MinChunk), maxChunk);
+			size = Math.Min(Math.Max(size, need), Math.Min(int.MaxValue - nextFirst, maxLength - done));
+			var grown = new byte[(int)size];
+			if (held > 0)
+			{
+				chunk.AsSpan(start - first, held).CopyTo(grown);
+			}
+
+			if (chunk is not null && next != slot)
+			{
+				Close(start);
+			}
+
+			if (next >= chunks.Length)
+			{
+				var slots = Math.Min(Math.Max(Math.Max(2 * chunks.Length, next + 1), 4), MaxSlots);
+				Array.Resize(ref chunks, slots);
+				Array.Resize(ref ends, slots);
+			}
+
+			chunks[next] = grown;
+			chunk = grown;
+			slot = next;
+			oversized = own;
+			if (!own)
+			{
+				lastSize = grown.Length;
+			}
+
+			// The string's start, and its t's, move with its text.
+			textStart = (int)nextFirst + (textStart - start);
+			starts[count] = (int)nextFirst;
+			length = (int)nextFirst + held;
+		}
+
+		/// <summary>Ends a string at the length; after an oversized string, the next starts at the next stretch.</summary>
+		/// <exception cref="InvalidDataException">The table would pass <see cref="maxLength"/> entries, or the last offset.</exception>
 		private void EndString()
 		{
 			if (count + 1 == starts.Length)
@@ -441,8 +607,45 @@ internal sealed class SharedStrings
 				Array.Resize(ref starts, (int)Math.Min(size, maxLength));
 			}
 
+			done += length - starts[count];
+			if (oversized)
+			{
+				// No text follows it in its chunk.
+				Close(length);
+				oversized = false;
+				var next = ((long)length + SlotMask) & ~(long)SlotMask;
+				if (next > int.MaxValue)
+				{
+					throw TooLong();
+				}
+
+				length = (int)next;
+			}
+
 			starts[++count] = length;
 		}
+
+		/// <summary>
+		/// Closes the chunk: no text goes in it after <paramref name="end"/>, and it is trimmed when more than an eighth of it is
+		/// spare, as a chunk a long string moves out of can be nearly all.
+		/// </summary>
+		/// <param name="end">The offset where its text ends.</param>
+		private void Close(int end)
+		{
+			ends[slot] = end;
+			var used = end - (slot << SlotBits);
+			if (chunk!.Length - used > used / 8)
+			{
+				Array.Resize(ref chunk, used);
+				chunks[slot] = chunk;
+			}
+
+			chunk = null;
+		}
+
+		/// <summary>The error for strings past <see cref="maxLength"/> bytes, or past the last offset.</summary>
+		/// <returns>The exception, at the current token.</returns>
+		private InvalidDataException TooLong() => scanner.Error($"its strings come to more than {maxLength} bytes, the most the table can hold");
 
 		/// <summary>The root's <c>uniqueCount</c>, the number of strings it declares.</summary>
 		/// <returns>The count, or 0 when it has none, or one that is not a count: it is only a hint.</returns>
@@ -463,8 +666,9 @@ internal sealed class SharedStrings
 		}
 
 		/// <summary>
-		/// Makes the first room: for the strings <c>uniqueCount</c> declares, and for the part's declared size less their
-		/// markup, each capped.
+		/// Makes the first room for the strings <c>uniqueCount</c> declares, capped, and estimates their text: the part's
+		/// declared size less their markup, or 256 bytes when the markup is more. Either can be wrong, and the estimate only
+		/// sizes chunks, each at most 4 MiB; the first waits for the first text, so that a table without text has none.
 		/// </summary>
 		/// <param name="uniqueCount">The strings the root declares; 0 when it declares none.</param>
 		private void Reserve(int uniqueCount)
@@ -472,8 +676,7 @@ internal sealed class SharedStrings
 			var strings = Math.Min(Math.Max(uniqueCount, MinCount), MaxInitialCount);
 			starts = new int[Math.Min(strings + 1, maxLength)];
 			var markup = (long)MarkupPerString * uniqueCount;
-			var text = markup < declaredSize ? declaredSize - markup : MinArena;
-			arena = new byte[(int)Math.Min(Math.Min(Math.Max(text, MinArena), MaxInitialArena), maxLength)];
+			estimate = markup < declaredSize ? declaredSize - markup : MinChunk;
 		}
 	}
 }

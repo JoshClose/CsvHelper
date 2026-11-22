@@ -6,8 +6,9 @@ using CsvHelper.Excel.Tests.Xml;
 namespace CsvHelper.Excel.Tests.Package;
 
 /// <summary>
-/// Generated shared strings parts, read in every <see cref="ScanMode"/> and compared with a reference built on
-/// <see cref="XmlReader"/>, which decodes the <c>_xHHHH_</c> escapes with its own regular expression.
+/// Generated shared strings parts, read in every <see cref="ScanMode"/>, with the table's chunks as they are and with
+/// chunks of a few bytes, and compared with a reference built on <see cref="XmlReader"/>, which decodes the
+/// <c>_xHHHH_</c> escapes with its own regular expression.
 /// </summary>
 public class SharedStringsComparisonTests
 {
@@ -35,6 +36,29 @@ public class SharedStringsComparisonTests
 				var table = await ReadAsync(xml, mode);
 
 				Assert.True(expected.SequenceEqual(Packages.Strings(table)), $"Seed {seed}: the strings differ from XmlReader's.\n{xml}");
+			});
+		}
+	}
+
+	[Theory]
+	[InlineData(1)]
+	[InlineData(7)]
+	[InlineData(16)]
+	[InlineData(64)]
+	public async Task MatchesXmlReaderInSmallChunks(int maxChunk)
+	{
+		// Chunks this small end everywhere in the generated strings: in runs, CDATA, references and escapes, and most strings
+		// outgrow them, moving with what they have or having a chunk of their own.
+		for (var seed = 0; seed < 200; seed++)
+		{
+			var xml = Generate(new Random(seed), out _);
+			var expected = Reference(xml);
+
+			await XmlScan.InEveryModeAsync(async mode =>
+			{
+				var table = await ReadAsync(Encoding.UTF8.GetBytes(xml), mode, maxChunk);
+
+				Assert.True(expected.SequenceEqual(Packages.Strings(table)), $"Seed {seed}, chunks of {maxChunk} bytes: the strings differ from XmlReader's.\n{xml}");
 			});
 		}
 	}
@@ -302,13 +326,14 @@ public class SharedStringsComparisonTests
 	/// <summary>Reads shared strings from the bytes of a part, as <paramref name="mode"/> says.</summary>
 	/// <param name="bytes">The part.</param>
 	/// <param name="mode">How to read it.</param>
+	/// <param name="maxChunk">The most bytes a chunk of several strings has, or <see langword="null"/> for 4 MiB.</param>
 	/// <returns>The shared strings.</returns>
-	private static async Task<SharedStrings> ReadAsync(byte[] bytes, ScanMode mode)
+	private static async Task<SharedStrings> ReadAsync(byte[] bytes, ScanMode mode, int? maxChunk = null)
 	{
 		using var scanner = XmlScan.Open(bytes, mode);
 
 		return mode.Async
-			? await SharedStrings.ReadAsync(scanner, bytes.Length, true, CancellationToken.None)
-			: SyncOrAsync.Result(SharedStrings.ReadAsync(scanner, bytes.Length, false, CancellationToken.None));
+			? await SharedStrings.ReadAsync(scanner, bytes.Length, true, CancellationToken.None, maxChunk: maxChunk)
+			: SyncOrAsync.Result(SharedStrings.ReadAsync(scanner, bytes.Length, false, CancellationToken.None, maxChunk: maxChunk));
 	}
 }
