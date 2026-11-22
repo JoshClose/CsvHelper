@@ -113,11 +113,20 @@ public class ExcelAnswersTests
 
 	[Theory]
 	[MemberData(nameof(AnsweredWorkbooks))]
-	public void ReadsEveryCellAsExcelDoes(string file)
+	public void ReadsEveryCellAsExcelDoes(string file) => AssertReadsAsExcelDoes(file, fastCells: true);
+
+	/// <summary>
+	/// Checks that CsvHelper.Excel reads every cell of a workbook as Excel does, but the cells <see cref="Differences"/>
+	/// lists: its kind and value, the text of its booleans, errors and serials, and its formula as text. The sheet scanner
+	/// reads with its fast path on (as by default), or with every cell read by its fallback (<c>FastCellCorpusTests</c>).
+	/// </summary>
+	/// <param name="file">The workbook, relative to <see cref="CorpusFiles.Folder"/>.</param>
+	/// <param name="fastCells">Whether the scanner reads the cells it can through its fast path, rather than every cell token by token.</param>
+	internal static void AssertReadsAsExcelDoes(string file, bool fastCells)
 	{
 		var answers = ExcelAnswers.Load(file)!;
-		var ours = CorpusFiles.Read(file, out var date1904);
-		var formulas = CorpusFiles.Read(file, out _, ExcelFormulas.FormulaText);
+		var ours = CorpusFiles.Read(file, out var date1904, fastCells: fastCells);
+		var formulas = CorpusFiles.Read(file, out _, ExcelFormulas.FormulaText, fastCells);
 		Assert.Equal(answers.Date1904, date1904);
 		Assert.Equal(answers.Sheets.Keys.OrderBy(k => k, StringComparer.Ordinal), ours.Keys.OrderBy(k => k, StringComparer.Ordinal));
 
@@ -164,7 +173,9 @@ public class ExcelAnswersTests
 		var listed = Differences.Where(d => d.File == file).ToList();
 		var unexplained = differences.Where(d => !listed.Any(l => d.StartsWith(l.Cell.EndsWith("!", StringComparison.Ordinal) ? l.Cell : l.Cell + ":", StringComparison.Ordinal))).ToList();
 		var unseen = listed.Where(l => !differences.Any(d => d.StartsWith(l.Cell.EndsWith("!", StringComparison.Ordinal) ? l.Cell : l.Cell + ":", StringComparison.Ordinal))).Select(l => l.Cell).ToList();
-		Assert.True(unexplained.Count == 0 && unseen.Count == 0, $"{file}: not listed:\n{string.Join("\n", unexplained)}\nlisted but not found: [{string.Join(", ", unseen)}]");
+		Assert.True(
+			unexplained.Count == 0 && unseen.Count == 0,
+			$"{file}, fast cells {(fastCells ? "on" : "off")}: not listed:\n{string.Join("\n", unexplained)}\nlisted but not found: [{string.Join(", ", unseen)}]");
 	}
 
 	/// <summary>What Excel's answer says a cell holds, in <see cref="CellValue"/> form, or <see langword="null"/> for valueless.</summary>

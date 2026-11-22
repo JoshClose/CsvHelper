@@ -75,6 +75,7 @@ internal sealed class SheetRecordSource : CsvRecordSource
 	/// <summary>Disposes the sheet's stream, and the workbook when the source owns it.</summary>
 	public override void Dispose()
 	{
+		workbook.fallbackCells += scanner.FallbackCells;
 		scanner.Dispose();
 		if (ownsWorkbook)
 		{
@@ -86,6 +87,7 @@ internal sealed class SheetRecordSource : CsvRecordSource
 	/// <returns>A task that completes when they are disposed.</returns>
 	public override async ValueTask DisposeAsync()
 	{
+		workbook.fallbackCells += scanner.FallbackCells;
 		await scanner.DisposeAsync().ConfigureAwait(false);
 		if (ownsWorkbook)
 		{

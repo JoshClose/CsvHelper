@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -9,7 +10,10 @@ namespace CsvHelper.Excel;
 /// <summary>What <see cref="XmlScanner"/> has read.</summary>
 internal enum XmlTokenKind : byte
 {
-	/// <summary>No token: before the first read, and after a refill or a restore, which leave nothing to point at.</summary>
+	/// <summary>
+	/// No token: before the first read, and after a refill, a restore or a move past bytes read by the caller
+	/// (<see cref="XmlScanner.SetPosition"/>), which leave nothing to point at.
+	/// </summary>
 	None = 0,
 
 	/// <summary>A start tag, <c>&lt;x:c r="A1"&gt;</c>, or an empty element, <c>&lt;c r="A1"/&gt;</c> (<see cref="XmlScanner.IsEmptyElement"/>).</summary>
@@ -78,7 +82,9 @@ internal readonly struct XmlScannerState
 /// <para>
 /// <see cref="TryRead"/> reads a whole token, or returns <see langword="false"/> at the start of one that the window
 /// doesn't hold yet; <see cref="Refill"/> then keeps it and reads more. Each call consumes input or asks for more, so
-/// it can't loop forever. Tokens point into the window, so they are valid until the next refill.
+/// it can't loop forever. Tokens point into the window, so they are valid until the next refill. A start tag's
+/// <see cref="Attributes"/> are valid until the next start tag or refill: reading the tag, the scanner records where its
+/// first values' quotes are, which the next start tag records over.
 /// </para>
 /// <para>
 /// It is not a validating parser. It throws <see cref="InvalidDataException"/> when something stops it from reading: a
@@ -107,6 +113,14 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	private bool rawSkipping;
 	private RawMarkup rawMarkup;
 	private long rawMarkupOffset;
+	// The quotes of the last start tag's first values, for its attributes (XmlAttributes): each value's opening and
+	// closing quote, from after the tag's name. quoteCount is how many of them are the tag's: 0 once a read of a start tag
+	// has begun, which may write over them, until that tag is read.
+	private readonly int[] quotes = new int[2 * RecordedValues];
+	private int quoteCount;
+	// The start tags read and the refills: attributes made before the count moved would read another tag's quotes, or
+	// bytes a refill moved.
+	private int tags;
 
 	/// <summary>Creates a scanner over a window, which it owns: disposing the scanner disposes the window.</summary>
 	/// <param name="window">The window over the part.</param>
@@ -188,8 +202,32 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	/// </summary>
 	public int ContentStart => Kind is XmlTokenKind.Text or XmlTokenKind.CData ? contentStart : position;
 
-	/// <summary>The attributes of a start tag; none for other tokens.</summary>
-	public XmlAttributes Attributes => Kind == XmlTokenKind.StartTag ? new XmlAttributes(this, contentStart, contentLength) : default;
+	/// <summary>The attributes of a start tag; none for other tokens. Valid until the scanner reads another start tag or refills.</summary>
+	public XmlAttributes Attributes => Kind == XmlTokenKind.StartTag ? new XmlAttributes(this, contentStart, contentLength, tags) : default;
+
+	/// <summary>The number of a start tag's values whose quotes the scanner records as it reads the tag, for its <see cref="Attributes"/>.</summary>
+	internal const int RecordedValues = 16;
+
+	/// <summary>
+	/// The quotes of the first values of the last start tag read, as positions from after its name (where its
+	/// <see cref="Attributes"/> start): the opening and the closing quote of each, in pairs. Only the first
+	/// <see cref="QuoteCount"/> are the tag's.
+	/// </summary>
+	internal int[] Quotes => quotes;
+
+	/// <summary>
+	/// How many of <see cref="Quotes"/> are the last start tag's: two for each value recorded, of at most
+	/// <see cref="RecordedValues"/>. 0 once a read of another start tag has begun, which may have written over them, and
+	/// stopped before the tag was read: the window cut it short, or it can't be read.
+	/// </summary>
+	internal int QuoteCount => quoteCount;
+
+	/// <summary>
+	/// The number of start tags read (by any read, a raw skip's nested tags too) and of refills, which a start tag's
+	/// attributes check as they are read (<see cref="XmlAttributes.MoveNext"/>): once it has moved, their tag's quotes, or
+	/// its bytes, may be gone.
+	/// </summary>
+	internal int Tags => tags;
 
 	/// <summary>Whether the token is a start tag with the local name <paramref name="localName"/>.</summary>
 	/// <param name="localName">The local name, as UTF-8.</param>
@@ -764,6 +802,25 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Moves the scanner to <paramref name="position"/> in the window, past bytes the caller has read itself, such as a
+	/// sheet's cell read straight from the window. No token is left (<see cref="Kind"/> is <see cref="XmlTokenKind.None"/>),
+	/// and <see cref="TokenStart"/> is the position, where an error now is. The depth, the root element's state and the
+	/// refills are as they were, so the bytes passed over must leave them so: whole elements, or text.
+	/// </summary>
+	/// <remarks>
+	/// For a hot path: the position is checked only in debug builds. No start tag is read, so the last one's
+	/// <see cref="Attributes"/> stay valid.
+	/// </remarks>
+	/// <param name="position">The position: from <see cref="Position"/> to the end of the window's bytes.</param>
+	internal void SetPosition(int position)
+	{
+		Debug.Assert(position >= this.position && position <= window.End, "The position must be from the scanner's to the end of the window's bytes.");
+		this.position = position;
+		tokenStart = position;
+		Kind = XmlTokenKind.None;
+	}
+
+	/// <summary>
 	/// Decodes the content of a text or CDATA token into UTF-8 (<see cref="XmlText.DecodeText"/>,
 	/// <see cref="XmlText.DecodeCData"/>). The <c>_xHHHH_</c> escapes are left for the caller, over the joined text of a value.
 	/// </summary>
@@ -854,6 +911,7 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 		// The token is gone; an error now is at the next one.
 		tokenStart = 0;
 		refills++;
+		tags++;
 		Kind = XmlTokenKind.None;
 	}
 
@@ -883,7 +941,10 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 		return true;
 	}
 
-	/// <summary>Reads a start tag, from its <c>&lt;</c> on.</summary>
+	/// <summary>
+	/// Reads a start tag, from its <c>&lt;</c> on, and records the quotes of its first <see cref="RecordedValues"/> values
+	/// as it finds them, so that its attributes needn't search for them again (<see cref="XmlAttributes.MoveNext"/>).
+	/// </summary>
 	/// <param name="markup">The bytes from the <c>&lt;</c> to the end of the window.</param>
 	/// <param name="pos">The position of the <c>&lt;</c>.</param>
 	/// <returns>Whether the window holds the whole tag.</returns>
@@ -907,6 +968,11 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 		}
 
 		var nameEnd = i;
+		// The first values' quotes, for the attributes (XmlAttributes), recorded over the last tag's: none are the last
+		// tag's from here, and a tag the window cuts short, or one that can't be read, leaves none.
+		var quotes = this.quotes;
+		var recorded = 0;
+		quoteCount = 0;
 		// The '>' that ends the tag, past attribute values, which can hold '>'.
 		while (true)
 		{
@@ -933,6 +999,13 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 			if (markup[i + 1 + close] == (byte)'<')
 			{
 				throw window.Error(pos + i + 1 + close, LessThanInValue);
+			}
+
+			if ((uint)recorded < (uint)quotes.Length)
+			{
+				quotes[recorded] = i - nameEnd;
+				quotes[recorded + 1] = i + 1 + close - nameEnd;
+				recorded += 2;
 			}
 
 			i += close + 2;
@@ -963,6 +1036,8 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 		SetName(pos + 1, pos + nameEnd);
 		contentStart = pos + nameEnd;
 		contentLength = (empty ? i - 1 : i) - nameEnd;
+		quoteCount = recorded;
+		tags++;
 		Kind = XmlTokenKind.StartTag;
 		IsEmptyElement = empty;
 		position = pos + i + 1;

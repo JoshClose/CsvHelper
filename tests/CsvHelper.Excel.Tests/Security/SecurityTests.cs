@@ -13,7 +13,11 @@ namespace CsvHelper.Excel.Tests.Security;
 /// megabyte's value, a million merged ranges, a million <c>col</c> elements, a million defined names, a table of a million
 /// columns, and a header search over a million missing rows. The cases that skip rows or <c>sheetData</c> (merged cells
 /// filled, hidden rows, areas and header searches) run with the workbook's raw skips on and off (<c>rawSkips</c>, Phase 9's
-/// step 2), and trip at the same places. Each parser's own tests check the same rules part by part.
+/// step 2), and trip at the same places; the cases whose cells the sheet scanner's fast path can take (white space in a
+/// row, gaps, a huge value, references, a repeated shared string, hidden columns) run with the workbook's fast cells on
+/// and off (<c>fastCells</c>, Phase 9's step 3), and trip at the same places, with the same exception, message and records
+/// before it; those that skip rows too pair the two switches, on together and off together. Each parser's own tests check
+/// the same rules part by part.
 /// </summary>
 public class SecurityTests
 {
@@ -46,18 +50,29 @@ public class SecurityTests
 		WriteRows(stream, 1_000_000, n => $"<row r=\"{n}\"><c r=\"A{n}\"><f t=\"shared\" ref=\"A{n}:B{n}\" si=\"{n - 1}\">B1</f><v>1</v></c></row>")).ToArray());
 
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task StopsASheetThatInflatesPastTheLimit(bool async)
+	[InlineData("between rows", false, true)]
+	[InlineData("between rows", true, true)]
+	[InlineData("between rows", false, false)]
+	[InlineData("between rows", true, false)]
+	[InlineData("between cells", false, true)]
+	[InlineData("between cells", true, true)]
+	[InlineData("between cells", false, false)]
+	[InlineData("between cells", true, false)]
+	public async Task StopsASheetThatInflatesPastTheLimit(string where, bool async, bool fastCells)
 	{
-		// 64 MB of white space between two rows, which deflate makes about 64 KB, read under a 16 MB limit. The part limit
-		// is 64 KB, which the white space would pass first if the window held it rather than skipping it.
-		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream => WriteSheet(stream, FirstRow, 64L * MiB, "<row r=\"2\"><c r=\"A2\"><v>2</v></c></row>"));
+		// 64 MB of white space between two rows, or between two cells of a row (which the fast path passes over, up to the
+		// window's end), which deflate makes about 64 KB, read under a 16 MB limit. The part limit is 64 KB, which the white
+		// space would pass first if the window held it rather than skipping it.
+		var (before, after) = where == "between rows"
+			? (FirstRow, "<row r=\"2\"><c r=\"A2\"><v>2</v></c></row>")
+			: ("<row r=\"1\"><c r=\"A1\"><v>1</v></c>", "<c r=\"B1\"><v>2</v></c></row><row r=\"2\"><c r=\"A2\"><v>2</v></c></row>");
+		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream => WriteSheet(stream, before, 64L * MiB, after));
 		var zip = package.ToArray();
 		var input = new ReadTrackingStream(zip);
 		var options = NoHeader(maxPartSize: 64 * 1024, maxUncompressedSize: 16L * MiB);
 
 		using var workbook = async ? await ExcelWorkbook.OpenAsync(input, options) : ExcelWorkbook.Open(input, options);
+		workbook.fastCells = fastCells;
 		input.Forget();
 		using var reader = await workbook.OpenReaderAsync(async);
 		var e = await Assert.ThrowsAsync<InvalidDataException>(() => reader.ReadAllAsync(async));
@@ -212,33 +227,48 @@ public class SecurityTests
 	public async Task CountsGapFieldsSoThatAMillionCellsInTheLastColumnStop(bool async)
 	{
 		// A million rows of one cell in XFD: about 40 MB of XML that would make 16 billion empty fields. Each counts as a
-		// byte (decision 5), so a 16 MB limit stops the reader at about the thousandth row.
-		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream => WriteRows(stream, 1_000_000, n => $"<row r=\"{n}\"><c r=\"XFD{n}\"><v>1</v></c></row>"));
+		// byte (decision 5), so a 16 MB limit stops the reader at about the thousandth row: the same row with the fast path,
+		// which takes the cells, and without, each in a workbook of its own, whose total starts at 0.
+		var zip = Workbooks.Data("").SetStreamed(Sheets.PartName, stream => WriteRows(stream, 1_000_000, n => $"<row r=\"{n}\"><c r=\"XFD{n}\"><v>1</v></c></row>")).ToArray();
 		var options = NoHeader(maxUncompressedSize: 16L * MiB);
 
-		using var workbook = await Workbooks.OpenAsync(package, async, options);
-		using var reader = await workbook.OpenReaderAsync(async);
-		var rows = 0;
-		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
+		var stops = new List<(int Rows, string Message)>();
+		foreach (var fastCells in new[] { true, false })
 		{
-			while (async ? await reader.ReadAsync() : reader.Read())
+			using var workbook = async ? await ExcelWorkbook.OpenAsync(new MemoryStream(zip), options) : ExcelWorkbook.Open(new MemoryStream(zip), options);
+			workbook.fastCells = fastCells;
+			using var reader = await workbook.OpenReaderAsync(async);
+			var rows = 0;
+			var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
 			{
-				rows++;
-			}
-		});
+				while (async ? await reader.ReadAsync() : reader.Read())
+				{
+					rows++;
+				}
+			});
 
-		Assert.StartsWith($"Reading {Sheets.PartName} takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
-		Assert.InRange(rows, 1, (int)(16L * MiB / (CellReference.MaxColumns - 1)));
+			Assert.StartsWith($"Reading {Sheets.PartName} takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
+			Assert.InRange(rows, 1, (int)(16L * MiB / (CellReference.MaxColumns - 1)));
+			stops.Add((rows, e.Message));
+		}
+
+		Assert.Equal(stops[0], stops[1]);
 	}
 
 	[Theory]
-	[InlineData("value", false)]
-	[InlineData("value", true)]
-	[InlineData("attributes", false)]
-	[InlineData("attributes", true)]
-	public async Task StopsASingleTokenAtThePartLimit(string token, bool async)
+	[InlineData("value", false, true)]
+	[InlineData("value", true, true)]
+	[InlineData("attributes", false, true)]
+	[InlineData("attributes", true, true)]
+	[InlineData("value", false, false)]
+	[InlineData("value", true, false)]
+	[InlineData("attributes", false, false)]
+	[InlineData("attributes", true, false)]
+	public async Task StopsASingleTokenAtThePartLimit(string token, bool async, bool fastCells)
 	{
-		// A 300 MB value, or a cell with a million attributes, under a 4 MB part limit: the window stops growing there.
+		// A 300 MB value, or a cell with a million attributes, under a 4 MB part limit: the window stops growing there. The
+		// value's cell is canonical, but never whole in the window, so the fast path leaves it to the fallback, which grows
+		// the window as it does without the fast path.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
 		{
 			if (token == "value")
@@ -257,6 +287,7 @@ public class SecurityTests
 		var options = NoHeader(maxPartSize: 4L * MiB);
 
 		using var workbook = async ? await ExcelWorkbook.OpenAsync(input, options) : ExcelWorkbook.Open(input, options);
+		workbook.fastCells = fastCells;
 		input.Forget();
 		using var reader = await workbook.OpenReaderAsync(async);
 		var e = await Assert.ThrowsAsync<InvalidDataException>(() => reader.ReadAllAsync(async));
@@ -266,23 +297,27 @@ public class SecurityTests
 	}
 
 	[Theory]
-	[InlineData("cell", false, true)]
-	[InlineData("cell", true, true)]
-	[InlineData("sheetData", false, true)]
-	[InlineData("sheetData", true, true)]
-	[InlineData("sheetData", false, false)]
-	[InlineData("sheetData", true, false)]
-	[InlineData("hidden row", false, true)]
-	[InlineData("hidden row", true, true)]
-	[InlineData("hidden row", false, false)]
-	[InlineData("hidden row", true, false)]
-	[InlineData("string", false, true)]
-	[InlineData("string", true, true)]
-	public async Task SkipsAMillionNestedElements(string where, bool async, bool rawSkips)
+	[InlineData("cell", false, true, true)]
+	[InlineData("cell", true, true, true)]
+	[InlineData("cell", false, true, false)]
+	[InlineData("cell", true, true, false)]
+	[InlineData("sheetData", false, true, true)]
+	[InlineData("sheetData", true, true, true)]
+	[InlineData("sheetData", false, false, true)]
+	[InlineData("sheetData", true, false, true)]
+	[InlineData("hidden row", false, true, true)]
+	[InlineData("hidden row", true, true, true)]
+	[InlineData("hidden row", false, false, true)]
+	[InlineData("hidden row", true, false, true)]
+	[InlineData("string", false, true, true)]
+	[InlineData("string", true, true, true)]
+	public async Task SkipsAMillionNestedElements(string where, bool async, bool rawSkips, bool fastCells)
 	{
 		// A million unknown elements nested in a cell, in sheetData, in a hidden row after the value, or in a shared string:
 		// skipped by depth, without recursion, and the value read. In sheetData, merged cells are filled, so that the read
-		// that finds their ranges skips sheetData; a hidden row is skipped whole; each raw, or token by token.
+		// that finds their ranges skips sheetData; a hidden row is skipped whole; each raw, or token by token. The cell that
+		// holds them is one the fast path declines, at its first unknown element, so the fallback reads it with the fast path
+		// on, as with it off.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
 		{
 			Write(stream, SheetStart);
@@ -320,6 +355,7 @@ public class SecurityTests
 
 		using var workbook = await Workbooks.OpenAsync(package, async, options);
 		workbook.rawSkips = rawSkips;
+		workbook.fastCells = fastCells;
 		using var reader = await workbook.OpenReaderAsync(async);
 		Assert.Equal([where == "string" ? "seven" : "7"], await reader.ReadAllAsync(async));
 	}
@@ -369,13 +405,26 @@ public class SecurityTests
 	[InlineData("&undefined;", true)]
 	public async Task RejectsReferencesThatArentCharacters(string reference, bool async)
 	{
-		var package = Workbooks.Data($"<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>a{reference}b</t></is></c></row>");
+		// In an inline string's t, which the fast path takes, and in a v, which it takes for every type: the same error,
+		// at the same byte, with the fast path and without.
+		foreach (var cell in new[] { $"<c r=\"A1\" t=\"inlineStr\"><is><t>a{reference}b</t></is></c>", $"<c r=\"A1\" t=\"str\"><v>a{reference}b</v></c>" })
+		{
+			var package = Workbooks.Data($"<row r=\"1\">{cell}</row>");
+			var messages = new List<string>();
+			foreach (var fastCells in new[] { true, false })
+			{
+				using var workbook = await Workbooks.OpenAsync(package, async, NoHeader());
+				workbook.fastCells = fastCells;
+				using var reader = await workbook.OpenReaderAsync(async);
+				var e = await Assert.ThrowsAsync<CsvFormatException>(() => reader.ReadAllAsync(async));
+				Assert.Equal("Data!A1", e.Location);
+				Assert.Equal(1, e.LineNumber);
+				Assert.Contains($"'{reference}'", e.Message);
+				messages.Add(e.Message);
+			}
 
-		using var workbook = await Workbooks.OpenAsync(package, async, NoHeader());
-		using var reader = await workbook.OpenReaderAsync(async);
-		var e = await Assert.ThrowsAsync<CsvFormatException>(() => reader.ReadAllAsync(async));
-		Assert.Equal("Data!A1", e.Location);
-		Assert.Contains($"'{reference}'", e.Message);
+			Assert.Equal(messages[0], messages[1]);
+		}
 	}
 
 	[Theory]
@@ -476,8 +525,10 @@ public class SecurityTests
 	{
 		// One shared string of a megabyte, read by a million rows (40 MB of XML), or by a row of 16,384 cells: each cell
 		// counts the string's bytes beyond its own XML, so a 16 MB limit stops the reader within 16 of them, rather than after
-		// a terabyte of fields, or a record of 16 GB.
-		var package = Workbooks.Data("").SharedStrings($"<t>{new string('x', MiB)}</t>").SetStreamed(Sheets.PartName, stream =>
+		// a terabyte of fields, or a record of 16 GB. The cells, with r and without, are ones the fast path takes, and it
+		// counts them as the fallback does: the reader stops at the same row, each read in a workbook of its own, whose total
+		// starts at 0.
+		var zip = Workbooks.Data("").SharedStrings($"<t>{new string('x', MiB)}</t>").SetStreamed(Sheets.PartName, stream =>
 		{
 			if (where == "rows")
 			{
@@ -489,22 +540,30 @@ public class SecurityTests
 				WriteRows(stream, CellReference.MaxColumns, _ => "<c t=\"s\"><v>0</v></c>", false);
 				Write(stream, "</row>" + SheetEnd);
 			}
-		});
+		}).ToArray();
 		var options = NoHeader(maxPartSize: 4L * MiB, maxUncompressedSize: 16L * MiB);
 
-		using var workbook = await Workbooks.OpenAsync(package, async, options);
-		using var reader = await workbook.OpenReaderAsync(async);
-		var rows = 0;
-		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
+		var stops = new List<(int Rows, string Message)>();
+		foreach (var fastCells in new[] { true, false })
 		{
-			while (async ? await reader.ReadAsync() : reader.Read())
+			using var workbook = async ? await ExcelWorkbook.OpenAsync(new MemoryStream(zip), options) : ExcelWorkbook.Open(new MemoryStream(zip), options);
+			workbook.fastCells = fastCells;
+			using var reader = await workbook.OpenReaderAsync(async);
+			var rows = 0;
+			var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
 			{
-				rows++;
-			}
-		});
+				while (async ? await reader.ReadAsync() : reader.Read())
+				{
+					rows++;
+				}
+			});
 
-		Assert.StartsWith($"Reading {Sheets.PartName} takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
-		Assert.InRange(rows, where == "rows" ? 1 : 0, where == "rows" ? 16 : 0);
+			Assert.StartsWith($"Reading {Sheets.PartName} takes the workbook past ExcelReaderOptions.MaxUncompressedSize", e.Message);
+			Assert.InRange(rows, where == "rows" ? 1 : 0, where == "rows" ? 16 : 0);
+			stops.Add((rows, e.Message));
+		}
+
+		Assert.Equal(stops[0], stops[1]);
 	}
 
 	[Theory]
@@ -613,7 +672,8 @@ public class SecurityTests
 		// bytes before it is written. The whole sheet stops in its first row, before the 16,383 fills it would add, rather
 		// than after 16 GB. The range's column B, which the top-left cell is left of, stops within 16 rows, which are rows the
 		// file lacks, filled: after its last row, or before a row at the grid's end. The same, whether the read that finds the
-		// ranges skips the rows raw or token by token.
+		// ranges skips the rows raw or token by token, and the reader reads the cells through the fast path or not (the two
+		// switches on together, or off together).
 		var value = new string('x', MiB);
 		var last = read == "column before a row" ? "<row r=\"1048576\"><c r=\"C1048576\"><v>2</v></c></row>" : "";
 		var sheet = MergedSheet($"<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>{value}</t></is></c></row>{last}", 1, _ => "A1:XFD1048576");
@@ -622,6 +682,7 @@ public class SecurityTests
 
 		using var workbook = await Workbooks.OpenAsync(package, async, options);
 		workbook.rawSkips = rawSkips;
+		workbook.fastCells = rawSkips;
 		using var reader = await workbook.OpenReaderAsync(async);
 		var rows = 0;
 		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
@@ -668,8 +729,9 @@ public class SecurityTests
 		// first and its last: their top-left cells have no value, so they fill nothing, and their rows are missing rows, read
 		// in one pass. Skipping empty rows, the records are the file's two rows; keeping them, the 1,048,574 rows between are
 		// empty records too, each counted as a byte, as missing rows are: a limit with room for 100,000 of them stops the
-		// reader soon after. The same, whether the read that finds the ranges skips the rows raw or token by token (two of
-		// the four cases token by token, since each takes seconds).
+		// reader soon after. The same, whether the read that finds the ranges skips the rows raw or token by token, and the
+		// reader reads the cells through the fast path or not, the two switches together (two of the six cases with both
+		// off, since each takes seconds).
 		var sheet = MergedSheet(FirstRow + "<row r=\"1048576\"><c r=\"A1048576\"><v>2</v></c></row>", 1_000_000, n => wide ? $"A{n + 1}:XFD{n + 1}" : $"A{n + 1}:B{n + 1}");
 		var package = Workbooks.Data("").Set(Sheets.PartName, sheet);
 		var options = NoHeader(maxPartSize: 64L * MiB) with { FillMergedCells = true };
@@ -678,6 +740,7 @@ public class SecurityTests
 		using (var workbook = await Workbooks.OpenAsync(package, async, options))
 		{
 			workbook.rawSkips = rawSkips;
+			workbook.fastCells = rawSkips;
 			Assert.Equal(["1", "2"], await InLinearTimeAsync(async () =>
 			{
 				using var reader = await workbook.OpenReaderAsync(async);
@@ -702,6 +765,7 @@ public class SecurityTests
 		var counted = OtherParts(package) + sheet.Length + 128 * 1024;
 		using var limited = await Workbooks.OpenAsync(package, async, keeping with { MaxUncompressedSize = counted + 100_000 });
 		limited.rawSkips = rawSkips;
+		limited.fastCells = rawSkips;
 		using var stopped = await limited.OpenReaderAsync(async);
 		var rows = 0;
 		var e = await Assert.ThrowsAsync<InvalidDataException>(async () =>
@@ -725,7 +789,8 @@ public class SecurityTests
 	{
 		// A million col elements (35 or 37 MB) under a 64 KB part limit: read a tag at a time, so the window never holds them, each
 		// setting its columns in a few words. Wide: each over every column, hiding them and showing them in turn, and then one
-		// hiding B. Narrow: each one column, cycling over the grid, hiding the even ones.
+		// hiding B. Narrow: each one column, cycling over the grid, hiding the even ones. The row's cells in hidden columns are
+		// passed over by the fast path, and by the fallback: the same record with the workbook's fast cells on and off.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
 		{
 			var start = Sheets.Worksheet("", "<col/>", "");
@@ -739,12 +804,16 @@ public class SecurityTests
 		var options = NoHeader(maxPartSize: 64 * 1024) with { SkipHiddenColumns = true };
 
 		using var workbook = await Workbooks.OpenAsync(package, async, options);
-		Assert.Equal([cols == "wide" ? "1|3|4" : "1|3"], await InLinearTimeAsync(async () =>
+		foreach (var fastCells in new[] { true, false })
 		{
-			using var reader = await workbook.OpenReaderAsync(async);
+			workbook.fastCells = fastCells;
+			Assert.Equal([cols == "wide" ? "1|3|4" : "1|3"], await InLinearTimeAsync(async () =>
+			{
+				using var reader = await workbook.OpenReaderAsync(async);
 
-			return await reader.ReadAllAsync(async);
-		}));
+				return await reader.ReadAllAsync(async);
+			}));
+		}
 	}
 
 	[Theory]
@@ -835,8 +904,10 @@ public class SecurityTests
 	{
 		// A sheet whose one row, the grid's last, holds the header after 64 MB of white space, which deflate makes about
 		// 64 KB. A search of the first 20 rows stops at that row's tag, past the million rows the file lacks, and fails,
-		// having read little of the sheet's compressed data. A search of every row finds it, trying no missing row. The same
-		// with the search's and the reader's scanners skipping raw or token by token.
+		// having read little of the sheet's compressed data. A search of every row finds it, trying no missing row, past the
+		// white space before the cell, which the fast path passes over up to each window's end. The same with the search's
+		// and the reader's scanners skipping raw or token by token, and reading cells through the fast path or not, the two
+		// switches together.
 		var package = Workbooks.Data("").SetStreamed(Sheets.PartName, stream =>
 			WriteSheet(stream, "<row r=\"1048576\">", 64L * MiB, "<c r=\"A1048576\" t=\"inlineStr\"><is><t>Name</t></is></c></row>"));
 		var zip = package.ToArray();
@@ -845,6 +916,7 @@ public class SecurityTests
 
 		using var workbook = async ? await ExcelWorkbook.OpenAsync(input, options) : ExcelWorkbook.Open(input, options);
 		workbook.rawSkips = rawSkips;
+		workbook.fastCells = rawSkips;
 		input.Forget();
 		if (maxRows == CellReference.MaxRow)
 		{

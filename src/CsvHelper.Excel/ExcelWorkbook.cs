@@ -51,6 +51,12 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	// Whether readers skip sheetData's and rows' content they don't need by a raw search (XmlScanner.RawSkips): on, but
 	// for tests that read both ways, as core's CsvReader.vectorWidth.
 	internal bool rawSkips = true;
+	// Whether the sheets' scanners read the cells of the forms producers write by their fast path (SheetScanner.ReadCells):
+	// on, but for tests and benchmarks that read both ways, as rawSkips.
+	internal bool fastCells = true;
+	// The cells the scanners this workbook opened read by the tokenizer's path (SheetScanner.FallbackCells), added as each
+	// is disposed: the sheet's, and the header search's. For tests.
+	internal long fallbackCells;
 
 	/// <summary>Creates the workbook.</summary>
 	/// <param name="archive">The package.</param>
@@ -550,7 +556,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 			return new SheetScanner(
 				xml, sheetName, strings!, styles!, skipEmptyRows, stream, Date1904, options.ErrorCells, options.Formulas, layout, skipHiddenRows, options.SkipHiddenColumns,
-				mergedCells, formatter);
+				mergedCells, formatter, fastCells);
 		}
 		catch
 		{
@@ -592,6 +598,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 		}
 		finally
 		{
+			fallbackCells += search.FallbackCells;
 			if (async)
 			{
 				await search.DisposeAsync().ConfigureAwait(false);

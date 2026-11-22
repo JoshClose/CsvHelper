@@ -109,8 +109,9 @@ internal static class CorpusFiles
 	/// <param name="file">The workbook, relative to <see cref="Folder"/>.</param>
 	/// <param name="date1904">Whether the workbook uses the 1904 date system.</param>
 	/// <param name="formulas">What cells with a formula read as: their cached values, or their formulas.</param>
+	/// <param name="fastCells">Whether the scanner reads the cells it can through its fast path, rather than every cell token by token.</param>
 	/// <returns>The cells with a value of each worksheet.</returns>
-	public static SheetCells Read(string file, out bool date1904, ExcelFormulas formulas = ExcelFormulas.CachedValue)
+	public static SheetCells Read(string file, out bool date1904, ExcelFormulas formulas = ExcelFormulas.CachedValue, bool fastCells = true)
 	{
 		using var archive = SyncOrAsync.Result(PackageArchive.OpenAsync(PathOf(file), Packages.Limits, false, CancellationToken.None));
 		var workbook = SyncOrAsync.Result(WorkbookPart.LoadAsync(archive, Packages.Limits, false, CancellationToken.None));
@@ -122,7 +123,7 @@ internal static class CorpusFiles
 		{
 			var stream = SyncOrAsync.Result(archive.OpenPartAsync(sheet.PartName!, false, Packages.Limits, false, CancellationToken.None));
 			var xml = new XmlScanner(new XmlWindow(stream, sheet.PartName!, Packages.Limits.MaxPartSize));
-			using var scanner = new SheetScanner(xml, sheet.Name, strings, styles, true, stream, workbook.Date1904, ExcelErrorCells.Text, formulas);
+			using var scanner = new SheetScanner(xml, sheet.Name, strings, styles, true, stream, workbook.Date1904, ExcelErrorCells.Text, formulas, fastCells: fastCells);
 			var captured = new Captured(int.MaxValue);
 			Sheets.FillAllAsync(scanner, captured, false).GetAwaiter().GetResult();
 			var cells = new Dictionary<(long, int), CellValue>();
@@ -150,8 +151,9 @@ internal static class CorpusFiles
 	/// skips hidden columns leaves out; and the ranges <see cref="MergedCells"/> finds.
 	/// </summary>
 	/// <param name="file">The workbook, relative to <see cref="Folder"/>.</param>
+	/// <param name="fastCells">Whether the scanners read the cells they can through their fast path, rather than every cell token by token.</param>
 	/// <returns>Each worksheet's structure, by name.</returns>
-	public static Dictionary<string, SheetStructure> Structures(string file)
+	public static Dictionary<string, SheetStructure> Structures(string file, bool fastCells = true)
 	{
 		using var archive = SyncOrAsync.Result(PackageArchive.OpenAsync(PathOf(file), Packages.Limits, false, CancellationToken.None));
 		var workbook = SyncOrAsync.Result(WorkbookPart.LoadAsync(archive, Packages.Limits, false, CancellationToken.None));
@@ -166,7 +168,7 @@ internal static class CorpusFiles
 				var xml = new XmlScanner(new XmlWindow(stream, sheet.PartName!, Packages.Limits.MaxPartSize));
 				using var scanner = new SheetScanner(
 					xml, sheet.Name, strings, styles, false, stream, workbook.Date1904, layout: skipHidden ? SheetLayout.Sheet : null, skipHiddenRows: skipHidden,
-					skipHiddenColumns: skipHidden);
+					skipHiddenColumns: skipHidden, fastCells: fastCells);
 				var captured = new Captured(int.MaxValue);
 				Sheets.FillAllAsync(scanner, captured, false).GetAwaiter().GetResult();
 				layout = scanner.Layout;
@@ -190,6 +192,40 @@ internal static class CorpusFiles
 		}
 
 		return result;
+	}
+
+	/// <summary>
+	/// The cells the sheet scanner's fallback began reading in each worksheet of a workbook, with the fast path on
+	/// (<see cref="SheetScanner.FallbackCells"/>): the cells the fast path declined. Each part is inflated into memory first,
+	/// and read whole into a 64 KB window, as <c>ScanMode.All[0]</c> reads, so that the window's only cuts are at its
+	/// 64 KB boundaries, wherever the inflater's reads would end; the whole sheet, with the defaults (formulas as their
+	/// values, error cells as text, no formatter, empty rows skipped).
+	/// </summary>
+	/// <param name="file">The workbook, relative to <see cref="Folder"/>.</param>
+	/// <returns>The count of each worksheet, by name, in the workbook's order.</returns>
+	public static List<(string Sheet, long Cells)> FallbackCells(string file)
+	{
+		using var archive = SyncOrAsync.Result(PackageArchive.OpenAsync(PathOf(file), Packages.Limits, false, CancellationToken.None));
+		var workbook = SyncOrAsync.Result(WorkbookPart.LoadAsync(archive, Packages.Limits, false, CancellationToken.None));
+		var styles = SyncOrAsync.Result(StyleTable.LoadAsync(archive, workbook.StylesPart, Packages.Limits, false, CancellationToken.None));
+		var strings = SyncOrAsync.Result(SharedStrings.LoadAsync(archive, workbook.SharedStringsPart, Packages.Limits, false, CancellationToken.None));
+		var counts = new List<(string Sheet, long Cells)>();
+		foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet && s.PartName is not null))
+		{
+			var part = new MemoryStream();
+			using (var stream = SyncOrAsync.Result(archive.OpenPartAsync(sheet.PartName!, false, Packages.Limits, false, CancellationToken.None)))
+			{
+				stream.CopyTo(part);
+			}
+
+			var xml = new XmlScanner(new XmlWindow(new MemoryStream(part.ToArray(), false), sheet.PartName!, Packages.Limits.MaxPartSize));
+			using var scanner = new SheetScanner(xml, sheet.Name, strings, styles, true, null, workbook.Date1904, fastCells: true);
+			var captured = new Captured(int.MaxValue);
+			Sheets.FillAllAsync(scanner, captured, false).GetAwaiter().GetResult();
+			counts.Add((sheet.Name, scanner.FallbackCells));
+		}
+
+		return counts;
 	}
 
 	/// <summary>A workbook's tables as CsvHelper.Excel reads them, each as <see cref="TableText"/> writes it, in order.</summary>

@@ -99,6 +99,14 @@ namespace CsvHelper.Excel;
 /// synchronously (<see cref="Fill"/>) or not (<see cref="FillAsync"/>).
 /// </para>
 /// <para>
+/// <b>The fast path.</b> In a row, the cells of the forms producers write are read straight from the window, without
+/// the tokenizer (<see cref="ReadCells"/>): <c>&lt;c</c> with <c>r</c>, <c>s</c> and <c>t</c>, each optional, in that
+/// order, then an empty cell, a <c>v</c>, or an inline string's single <c>t</c>, with <c>sheetData</c>'s prefix on every
+/// name; the text, comments and processing instructions between them are passed over, as the token loop passes over them.
+/// Anything else, and a cell the window cuts, is declined to the tokenizer's path for that cell, which reads every cell
+/// the same; the fast path only declines, so the two read alike in every way, errors included.
+/// </para>
+/// <para>
 /// <b>Errors.</b> The sheet's content that can't be read (its XML, a cell reference, cells or rows out of order, a shared
 /// string index) throws <see cref="CsvFormatException"/> with the cell, or the row, in its location and message, and the
 /// part and byte offset in its message. So does an end tag that ends the rows but isn't <c>sheetData</c>'s, which is how
@@ -196,6 +204,16 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private bool rowNamed;
 	// Whether the skip in progress is a raw one, of a row.
 	private bool skipsRaw;
+	// Whether a row's cells of the forms producers write are read by the fast path (ReadCells): on, but for tests and
+	// benchmarks that read both ways. Declared after the fields above, for the same reason.
+	private readonly bool fastCells;
+	// The names the fast path compares with sheetData's prefix on them; null for a sheetData without a prefix, whose
+	// names are compared as literals.
+	private CellNames? cellNames;
+	// Whether a text or a boolean field can take a style: a formatter whose formats change text (CellFormatter.ChangesText).
+	private readonly bool textStyles;
+	// The cells the tokenizer's path began reading (ReadCell): with the fast path, the ones it declined.
+	private long fallbackCells;
 
 	/// <summary>Creates the scanner of a worksheet part.</summary>
 	/// <param name="scanner">The part's XML, at its start; the sheet scanner owns it, and disposes it.</param>
@@ -215,6 +233,10 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// The formatter of the cells' styles under <see cref="ExcelText.Formatted"/>, which gives the fields whose text their
 	/// format can change a style; <see langword="null"/> under <see cref="ExcelText.Raw"/>.
 	/// </param>
+	/// <param name="fastCells">
+	/// Whether a row's cells of the forms producers write are read by the fast path (<see cref="ReadCells"/>), which reads
+	/// them as the tokenizer's path does; off only in tests and benchmarks.
+	/// </param>
 	/// <exception cref="ArgumentNullException">
 	/// An argument other than <paramref name="budget"/>, <paramref name="layout"/>, <paramref name="mergedCells"/> and
 	/// <paramref name="formatter"/> is <see langword="null"/>.
@@ -222,7 +244,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	public SheetScanner(
 		XmlScanner scanner, string sheetName, SharedStrings strings, StyleTable styles, bool skipEmptyRows, LimitedReadStream? budget,
 		bool date1904 = false, ExcelErrorCells errorCells = ExcelErrorCells.Text, ExcelFormulas formulas = ExcelFormulas.CachedValue, SheetLayout? layout = null,
-		bool skipHiddenRows = false, bool skipHiddenColumns = false, MergedCells? mergedCells = null, CellFormatter? formatter = null)
+		bool skipHiddenRows = false, bool skipHiddenColumns = false, MergedCells? mergedCells = null, CellFormatter? formatter = null, bool fastCells = true)
 	{
 		ArgumentNullException.ThrowIfNull(scanner);
 		ArgumentNullException.ThrowIfNull(strings);
@@ -242,6 +264,8 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		this.skipHiddenRows = skipHiddenRows;
 		this.formatter = formatter;
+		textStyles = formatter is not null && formatter.ChangesText;
+		this.fastCells = fastCells;
 		keepsMissingRows = !skipEmptyRows;
 		if (skipHiddenColumns)
 		{
@@ -269,6 +293,12 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 	/// <summary>The part's name.</summary>
 	public string PartName => scanner.Window.PartName;
+
+	/// <summary>
+	/// The number of times the tokenizer's path began reading a cell: with the fast path on, the cells it declined (a cell
+	/// the window cut counts again each time it is read); off, every cell read. For tests.
+	/// </summary>
+	internal long FallbackCells => fallbackCells;
 
 	/// <summary>Writes the next records into <paramref name="target"/>, reading the part synchronously.</summary>
 	/// <typeparam name="TTarget">The target's type: a struct, so that the scanner is specialized for it.</typeparam>
@@ -479,6 +509,22 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					return Tail(target);
 				case Mode.Done:
 					return Step.Done;
+			}
+
+			// A row's cells of the forms producers write, and its end tag, are read straight from the window; the token loop
+			// below reads what the fast path declines, a token at a time, and the fast path goes on after it.
+			if (mode == Mode.Row && fastCells)
+			{
+				var fast = ReadCells(target);
+				if (fast != Step.Read)
+				{
+					return fast;
+				}
+
+				if (mode != Mode.Row)
+				{
+					continue;
+				}
 			}
 
 			// Text between the elements read, mostly white space between rows and cells, is ignored, so it is skipped as it
@@ -744,6 +790,21 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		rowName = name;
 	}
 
+	/// <summary>
+	/// Notes the names the fast path compares, at <c>sheetData</c>'s start tag, when its name has a prefix: the cells' and
+	/// their elements' names with it (<c>x:c</c> for <c>x:sheetData</c>). Without one, the fast path compares literals.
+	/// </summary>
+	private void NoteCellNames()
+	{
+		var data = scanner.QualifiedName;
+		if (!fastCells || data.Length == "sheetData".Length)
+		{
+			return;
+		}
+
+		cellNames = new CellNames(data.Slice(0, data.Length - "sheetData".Length));
+	}
+
 	/// <summary>Whether the tag read, a row's, has the rows' name, so that the row can be skipped by a raw search.</summary>
 	/// <returns>Whether it has.</returns>
 	private bool IsRowName() => rowName is not null && scanner.QualifiedName.SequenceEqual(rowName);
@@ -790,6 +851,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					dataPreserves = scanner.SpaceOf() ?? rootPreserves;
 					mode = scanner.IsEmptyElement ? Mode.Done : Mode.SheetData;
 					NoteRowName();
+					NoteCellNames();
 
 					return BeginRows(target);
 				}
@@ -1030,6 +1092,31 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Numbers a row without <c>r</c> at its first cell, from the cell's <c>r</c> or the row before's, and leaves it when it
+	/// isn't in the area (<see cref="LeaveRow"/>), unless it is read for its shared formulas' definitions or its merged
+	/// ranges' top-left cells. Both paths that read a first cell call it: the tokenizer's and the fast path.
+	/// </summary>
+	/// <param name="number">The row's number.</param>
+	/// <param name="left">What to do next when the row is left; otherwise <see cref="Step.Read"/>.</param>
+	/// <returns>Whether the row is left: nothing of it has been written.</returns>
+	/// <exception cref="CsvFormatException">The number is not a sheet's, or not after the row before.</exception>
+	private bool NumberRow(long number, out Step left)
+	{
+		SetRow(number);
+		if (layout is not null && layout.Place(row) is var place && place != RowPlace.In && (place == RowPlace.Below || !ReadsUnwritten()))
+		{
+			// The row's first cell gave its number: nothing of the row has been written.
+			left = LeaveRow(place);
+
+			return true;
+		}
+
+		left = Step.Read;
+
+		return false;
+	}
+
+	/// <summary>
 	/// Writes the empty records of the rows missing before the current one, while the target has room, or, when merged
 	/// cells are filled, the records of their fills. They come before the row's first field, so a fill can end after them.
 	/// </summary>
@@ -1232,6 +1319,610 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		return target.IsFull ? Step.Full : Step.Read;
 	}
 
+	/// <summary>
+	/// The fast path: reads a row's cells of the forms producers write straight from the window, one after another, and the
+	/// row's end tag, until it meets anything else, which it declines to the token loop (<see cref="ParseCell"/> says which
+	/// cells it reads). The token loop reads what it declined, a token at a time, and the fast path goes on after it.
+	/// </summary>
+	/// <remarks>
+	/// A cell is checked whole before anything is done with it. It is declined when the tokenizer's path would throw for its
+	/// column (not after the row's last, or past XFD), when its row is read only for its shared formulas' definitions or
+	/// merged ranges' top-left cells, and when it is a merged range's top-left cell; the steps taken before those checks
+	/// (numbering the row, writing the rows missing before it, moving the merged fills to the row) are ones the tokenizer's
+	/// path then finds done. So it never throws an error of its own: the errors of a cell it reads (its row's number, a
+	/// shared string index, a reference in its value, a limit) are thrown by the code the tokenizer's path runs, at the same
+	/// places.
+	/// </remarks>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <returns>
+	/// What ending the row gave (<see cref="EndRow"/>), or leaving it; <see cref="Step.Full"/> when the rows missing before
+	/// a cell fill the target first, with the scanner at the cell; otherwise <see cref="Step.Read"/>, with the scanner at
+	/// what it declined.
+	/// </returns>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private Step ReadCells<TTarget>(TTarget target)
+		where TTarget : struct, IRecordTarget
+	{
+		// A row read only for its shared formulas or merged ranges: every cell is the tokenizer's path's.
+		if (unwritten)
+		{
+			return Step.Read;
+		}
+
+		var xml = new ReadOnlySpan<byte>(scanner.Window.Buffer, 0, scanner.Window.End);
+		var names = cellNames;
+		var pos = scanner.Position;
+		while (true)
+		{
+			// Text between cells, mostly white space, is passed over unread, as the token loop skips it.
+			while (pos < xml.Length && xml[pos] != (byte)'<')
+			{
+				pos++;
+			}
+
+			var cellEnd = ParseCell(xml, pos, names, out var cell);
+			if (cellEnd < 0)
+			{
+				// Comments and processing instructions are passed over unread to their ends, as the tokenizer skips them.
+				var markupEnd = PastMarkup(xml, pos);
+				if (markupEnd >= 0)
+				{
+					pos = markupEnd;
+
+					continue;
+				}
+
+				scanner.SetPosition(pos);
+				var rowEnd = names is null ? Past(xml, pos, "</row>"u8) : Past(xml, pos, names.RowEnd);
+				if (rowEnd < 0 || !scanner.TryRead())
+				{
+					return Step.Read;
+				}
+
+				// The row's end tag, read as a token, which closes the row's element.
+				return EndRow(target);
+			}
+
+			// The checks of the tokenizer's path, before anything is done: it throws where they fail.
+			var column = cell.Column;
+			if (column >= 0)
+			{
+				if (column <= lastColumn)
+				{
+					return Decline(pos);
+				}
+			}
+			else
+			{
+				column = lastColumn + 1;
+				if (column >= CellReference.MaxColumns)
+				{
+					return Decline(pos);
+				}
+			}
+
+			if (!rowKnown)
+			{
+				// A row without r: its number's errors (out of order, past the last row) are SetRow's, at the cell's tag, where
+				// the scanner's token now starts, as the tokenizer's path throws them.
+				cellColumn = column;
+				scanner.SetPosition(pos);
+				if (NumberRow(cell.Column >= 0 ? cell.ReferenceRow : lastRow + 1, out var left))
+				{
+					return left;
+				}
+			}
+
+			if (gapNext < gapEnd)
+			{
+				// The cell waits for the next fill, after the empty records before it, as the tokenizer's path leaves it.
+				cellColumn = column;
+				scanner.SetPosition(pos);
+				if (!FlushGaps(target))
+				{
+					return Step.Full;
+				}
+			}
+
+			var field = column;
+			if (layout is not null)
+			{
+				// A hidden row without r, once its first cell gave its number and the missing rows before it are written.
+				if (rowHidden && !unwritten && !ReadsUnwritten())
+				{
+					scanner.SetPosition(pos);
+
+					return SkipRow();
+				}
+
+				if (unwritten)
+				{
+					return Decline(pos);
+				}
+
+				field = layout.FieldOf(column);
+				if (merged is not null)
+				{
+					merged.Advance(row);
+					if (merged.IsTopLeft(column))
+					{
+						return Decline(pos);
+					}
+
+					if (field >= 0)
+					{
+						if (merged.Covers(field))
+						{
+							field = -1;
+						}
+						else
+						{
+							cellColumn = column;
+							AddFills(target, field, row);
+						}
+					}
+				}
+			}
+
+			// A cell that is no field (outside the area, in a hidden column, or covered by a merged range) is passed over: a
+			// cell of these forms has no formula to keep.
+			lastColumn = column;
+			if (field >= 0 && cell.HasValue)
+			{
+				cellColumn = column;
+				cellField = field;
+				if (cell.Plain)
+				{
+					AddPlain(target, in cell, column, pos);
+				}
+				else
+				{
+					AddDecoded(target, in cell, column, pos);
+				}
+			}
+
+			cellColumn = -1;
+			pos = cellEnd;
+		}
+	}
+
+	/// <summary>Declines a cell to the token loop: the scanner at the cell, and no cell being read.</summary>
+	/// <param name="pos">The position of the cell's tag.</param>
+	/// <returns><see cref="Step.Read"/>.</returns>
+	private Step Decline(int pos)
+	{
+		cellColumn = -1;
+		scanner.SetPosition(pos);
+
+		return Step.Read;
+	}
+
+	/// <summary>
+	/// Reads the syntax of a cell of the forms producers write, for the fast path, if the window holds all of it: <c>&lt;c</c>,
+	/// then <c> r="</c>R<c>"</c>, <c> s="</c>S<c>"</c> and <c> t="</c>T<c>"</c>, each optional, in that order, each after
+	/// one space; then <c>/&gt;</c>, <c>&gt;&lt;/c&gt;</c>, <c>&gt;&lt;v&gt;</c> a value <c>&lt;/v&gt;&lt;/c&gt;</c>, or
+	/// with <c>t="inlineStr"</c> <c>&gt;&lt;is&gt;&lt;t&gt;</c> a value <c>&lt;/t&gt;&lt;/is&gt;&lt;/c&gt;</c>; every name
+	/// with <c>sheetData</c>'s prefix. R is what <see cref="CellReference.TryParse"/> takes, S 1 to 9 digits, T one of
+	/// <c>s</c>, <c>n</c>, <c>b</c>, <c>e</c>, <c>str</c> and <c>inlineStr</c>, and a value anything but <c>&lt;</c>.
+	/// </summary>
+	/// <param name="xml">The window's bytes.</param>
+	/// <param name="pos">The position of the cell's <c>&lt;</c>.</param>
+	/// <param name="names">The names with <c>sheetData</c>'s prefix, or <see langword="null"/> for none.</param>
+	/// <param name="cell">The cell's reference, style, type and value.</param>
+	/// <returns>The position after the cell; -1 when it isn't a cell of these forms, or the window doesn't hold all of it.</returns>
+	private static int ParseCell(ReadOnlySpan<byte> xml, int pos, CellNames? names, out CellSyntax cell)
+	{
+		cell = default;
+		cell.Column = -1;
+		var at = names is null ? Past(xml, pos, "<c"u8) : Past(xml, pos, names.Cell);
+		if (at < 0)
+		{
+			return -1;
+		}
+
+		var next = Past(xml, at, " r=\""u8);
+		if (next >= 0)
+		{
+			// At most XFD1048576: three letters and seven digits.
+			var close = next;
+			var limit = Math.Min(xml.Length, next + 11);
+			while (close < limit && xml[close] != (byte)'"')
+			{
+				close++;
+			}
+
+			if (close == limit || !CellReference.TryParse(xml.Slice(next, close - next), out cell.Column, out cell.ReferenceRow))
+			{
+				return -1;
+			}
+
+			at = close + 1;
+		}
+
+		next = Past(xml, at, " s=\""u8);
+		if (next >= 0)
+		{
+			var i = next;
+			var style = 0;
+			while (i < xml.Length && i - next < 9 && (uint)(xml[i] - '0') <= 9)
+			{
+				style = style * 10 + (xml[i] - '0');
+				i++;
+			}
+
+			if (i == next || i == xml.Length || xml[i] != (byte)'"')
+			{
+				return -1;
+			}
+
+			cell.Style = style;
+			at = i + 1;
+		}
+
+		next = Past(xml, at, " t=\""u8);
+		if (next >= 0)
+		{
+			at = ParseType(xml, next, out cell.Type);
+			if (at < 0)
+			{
+				return -1;
+			}
+		}
+
+		var empty = Past(xml, at, "/>"u8);
+		if (empty >= 0)
+		{
+			return empty;
+		}
+
+		next = Past(xml, at, ">"u8);
+		if (next < 0)
+		{
+			return -1;
+		}
+
+		at = next;
+		next = names is null ? Past(xml, at, "</c>"u8) : Past(xml, at, names.CellEnd);
+		if (next >= 0)
+		{
+			return next;
+		}
+
+		// An inline string's text, or a value, which any type reads, as the tokenizer's path reads them.
+		var inlineText = cell.Type == CellType.InlineString;
+		next = inlineText ? (names is null ? Past(xml, at, "<is><t>"u8) : Past(xml, at, names.InlineStart)) : -1;
+		if (next < 0)
+		{
+			inlineText = false;
+			next = names is null ? Past(xml, at, "<v>"u8) : Past(xml, at, names.ValueStart);
+			if (next < 0)
+			{
+				return -1;
+			}
+		}
+
+		var length = ValueLength(xml, next, out cell.Plain);
+		if (length < 0)
+		{
+			return -1;
+		}
+
+		cell.HasValue = true;
+		cell.ValueStart = next;
+		cell.ValueLength = length;
+		at = next + length;
+		next = inlineText
+			? (names is null ? Past(xml, at, "</t></is>"u8) : Past(xml, at, names.InlineEnd))
+			: (names is null ? Past(xml, at, "</v>"u8) : Past(xml, at, names.ValueEnd));
+		if (next < 0)
+		{
+			return -1;
+		}
+
+		cell.ValueEnd = next;
+
+		return names is null ? Past(xml, next, "</c>"u8) : Past(xml, next, names.CellEnd);
+	}
+
+	/// <summary>
+	/// Reads a cell's type for the fast path: <c>s</c>, <c>n</c>, <c>b</c>, <c>e</c>, <c>str</c> or <c>inlineStr</c> and its
+	/// closing quote. A date (<c>d</c>) and the types Excel doesn't have are left to the tokenizer's path.
+	/// </summary>
+	/// <param name="xml">The window's bytes.</param>
+	/// <param name="pos">The position of the type, after its opening quote.</param>
+	/// <param name="type">How the cell's value is read.</param>
+	/// <returns>The position after the closing quote; -1 for another type, or when the window ends first.</returns>
+	private static int ParseType(ReadOnlySpan<byte> xml, int pos, out CellType type)
+	{
+		type = CellType.Number;
+		if (pos < xml.Length && Past(xml, pos + 1, "\""u8) >= 0)
+		{
+			switch (xml[pos])
+			{
+				case (byte)'s':
+					type = CellType.SharedString;
+
+					return pos + 2;
+				case (byte)'n':
+					return pos + 2;
+				case (byte)'b':
+					type = CellType.Boolean;
+
+					return pos + 2;
+				case (byte)'e':
+					type = CellType.Error;
+
+					return pos + 2;
+				default:
+					return -1;
+			}
+		}
+
+		var text = Past(xml, pos, "str\""u8);
+		if (text >= 0)
+		{
+			type = CellType.Text;
+
+			return text;
+		}
+
+		type = CellType.InlineString;
+
+		return Past(xml, pos, "inlineStr\""u8);
+	}
+
+	/// <summary>
+	/// The position after a comment or a processing instruction at <paramref name="pos"/>, which the window holds whole, for
+	/// the fast path: found as <see cref="XmlScanner.TryRead"/> finds their ends, and nothing in them read.
+	/// </summary>
+	/// <param name="xml">The window's bytes.</param>
+	/// <param name="pos">The position of a <c>&lt;</c>, or the window's end.</param>
+	/// <returns>The position after it; -1 when the bytes there are neither, or the window doesn't hold the end.</returns>
+	private static int PastMarkup(ReadOnlySpan<byte> xml, int pos)
+	{
+		var comment = Past(xml, pos, "<!--"u8);
+		if (comment >= 0)
+		{
+			var close = xml.Slice(comment).IndexOf("-->"u8);
+
+			return close < 0 ? -1 : comment + close + 3;
+		}
+
+		var instruction = Past(xml, pos, "<?"u8);
+		if (instruction >= 0)
+		{
+			var close = xml.Slice(instruction).IndexOf("?>"u8);
+
+			return close < 0 ? -1 : instruction + close + 2;
+		}
+
+		return -1;
+	}
+
+	/// <summary>The position after <paramref name="literal"/> when the bytes at <paramref name="pos"/> are it.</summary>
+	/// <param name="xml">The window's bytes.</param>
+	/// <param name="pos">The position, at most the window's end.</param>
+	/// <param name="literal">The bytes to match.</param>
+	/// <returns>The position after them; -1 when the bytes there aren't them, or the window ends first.</returns>
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	private static int Past(ReadOnlySpan<byte> xml, int pos, ReadOnlySpan<byte> literal) =>
+		xml.Slice(pos).StartsWith(literal) ? pos + literal.Length : -1;
+
+	/// <summary>
+	/// The length of a value from <paramref name="start"/>, up to the next <c>&lt;</c>, and whether its text needs no
+	/// decoding: it has no reference (<c>&amp;</c>), no CR and no <c>_xHHHH_</c> escape (<c>_</c>).
+	/// </summary>
+	/// <param name="xml">The window's bytes.</param>
+	/// <param name="start">The position of the value.</param>
+	/// <param name="plain">Whether the value needs no decoding.</param>
+	/// <returns>The value's length; -1 when the window holds no <c>&lt;</c> after it.</returns>
+	private static int ValueLength(ReadOnlySpan<byte> xml, int start, out bool plain)
+	{
+		// Most values are a few bytes: a loop over them costs less than a search's call.
+		plain = true;
+		var i = start;
+		var scanned = Math.Min(xml.Length, start + 16);
+		while (i < scanned)
+		{
+			var b = xml[i];
+			if (b == (byte)'<')
+			{
+				return i - start;
+			}
+
+			if (b is (byte)'&' or (byte)'\r' or (byte)'_')
+			{
+				plain = false;
+			}
+
+			i++;
+		}
+
+		var rest = xml.Slice(i);
+		var lt = rest.IndexOf((byte)'<');
+		if (lt < 0)
+		{
+			return -1;
+		}
+
+		if (plain && rest.Slice(0, lt).IndexOfAny((byte)'&', (byte)'\r', (byte)'_') >= 0)
+		{
+			plain = false;
+		}
+
+		return i - start + lt;
+	}
+
+	/// <summary>
+	/// Writes the value of a cell the fast path read, whose text needs no decoding, from the window, as
+	/// <see cref="AddValue"/> writes it: blank values are no field, numbers and indexes are trimmed, texts as
+	/// <c>xml:space</c> says. An index that isn't plain digits or not the table's is left to <see cref="AddValue"/>, which
+	/// throws its error.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <param name="cell">The cell.</param>
+	/// <param name="column">The cell's column, for errors.</param>
+	/// <param name="cellStart">The position of the cell's tag, for the bytes a shared string has beyond its cell's XML.</param>
+	/// <exception cref="CsvFormatException">The shared string index is not a number, or out of range.</exception>
+	/// <exception cref="InvalidDataException">A shared string or a gap takes the workbook past its uncompressed size.</exception>
+	private void AddPlain<TTarget>(TTarget target, in CellSyntax cell, int column, int cellStart)
+		where TTarget : struct, IRecordTarget
+	{
+		var buffer = scanner.Window.Buffer;
+		var start = cell.ValueStart;
+		var end = start + cell.ValueLength;
+		var first = start;
+		var last = end;
+		while (first < last && XmlScanner.IsWhitespace(buffer[first]))
+		{
+			first++;
+		}
+
+		while (last > first && XmlScanner.IsWhitespace(buffer[last - 1]))
+		{
+			last--;
+		}
+
+		switch (cell.Type)
+		{
+			case CellType.SharedString:
+			{
+				if (first == last)
+				{
+					return;
+				}
+
+				if (!TryReadDigits(buffer, first, last - first, out var index) || !strings.TryGet(index, out var text))
+				{
+					AddDecoded(target, in cell, column, cellStart);
+
+					return;
+				}
+
+				if (text.IsEmpty)
+				{
+					return;
+				}
+
+				AddGap(target, cellField);
+
+				// Up to the end of </v>, where the tokenizer's path counts from.
+				Charge(text.Length - (cell.ValueEnd - cellStart));
+				if (!textStyles)
+				{
+					target.AddField(text, SheetCellKind.Text);
+				}
+				else
+				{
+					AddStyled(target, text, SheetCellKind.Text, cell.Style);
+				}
+
+				break;
+			}
+			case CellType.Number:
+			case CellType.Boolean:
+			{
+				if (first == last)
+				{
+					return;
+				}
+
+				AddGap(target, cellField);
+				var span = target.GetFieldSpan(cell.ValueLength);
+				var length = last - first;
+				buffer.AsSpan(first, length).CopyTo(span);
+				SheetCellKind kind;
+				if (cell.Type == CellType.Number)
+				{
+					kind = styles.NumberKind(cell.Style);
+					if (formatter is null)
+					{
+						target.CommitField(length, kind);
+					}
+					else
+					{
+						CommitStyled(target, length, kind, cell.Style);
+					}
+				}
+				else
+				{
+					length = ToBoolean(span, length, out kind);
+					if (!textStyles)
+					{
+						target.CommitField(length, kind);
+					}
+					else
+					{
+						CommitStyled(target, length, kind, cell.Style);
+					}
+				}
+
+				break;
+			}
+			default:
+			{
+				// Text and errors keep their white space where xml:space="preserve" applies.
+				if (!rowPreserves)
+				{
+					start = first;
+					end = last;
+				}
+
+				if (start == end || (cell.Type == CellType.Error && nullErrors))
+				{
+					return;
+				}
+
+				AddGap(target, cellField);
+				var span = target.GetFieldSpan(cell.ValueLength);
+				var length = end - start;
+				buffer.AsSpan(start, length).CopyTo(span);
+				var kind = cell.Type == CellType.Error ? SheetCellKind.Error : SheetCellKind.Text;
+				if (!textStyles)
+				{
+					target.CommitField(length, kind);
+				}
+				else
+				{
+					CommitStyled(target, length, kind, cell.Style);
+				}
+
+				break;
+			}
+		}
+
+		fields = cellField + 1;
+	}
+
+	/// <summary>
+	/// Writes the value of a cell the fast path read through <see cref="AddValue"/>, as the tokenizer's path writes it: its
+	/// text as one segment, trimmed unless <c>xml:space="preserve"</c> applies, with the scanner at the end of the value's
+	/// element, where a shared string's bytes beyond its cell's XML are counted from.
+	/// </summary>
+	/// <typeparam name="TTarget">The target's type.</typeparam>
+	/// <param name="target">Takes the records.</param>
+	/// <param name="cell">The cell.</param>
+	/// <param name="column">The cell's column, for errors.</param>
+	/// <param name="cellStart">The position of the cell's tag, for errors.</param>
+	/// <exception cref="CsvFormatException">The shared string index is not a number, or out of range.</exception>
+	/// <exception cref="InvalidDataException">A reference can't be decoded, or a limit is passed.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void AddDecoded<TTarget>(TTarget target, in CellSyntax cell, int column, int cellStart)
+		where TTarget : struct, IRecordTarget
+	{
+		segments[0] = new Segment(cell.ValueStart, cell.ValueLength, false)
+		{
+			Trim = !rowPreserves,
+			EndsText = true,
+		};
+		segmentCount = 1;
+		rawLength = cell.ValueLength;
+		scanner.SetPosition(cell.ValueEnd);
+		AddValue(target, cell.Type, cell.Style, column, cellStart);
+	}
+
 	/// <summary>Reads a cell: its reference, type and style, and its value once the window holds all of it.</summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="target">Takes the records.</param>
@@ -1240,6 +1931,7 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private Step ReadCell<TTarget>(TTarget target, XmlScannerState before)
 		where TTarget : struct, IRecordTarget
 	{
+		fallbackCells++;
 		var cellStart = scanner.TokenStart;
 		var hasReference = false;
 		ReadOnlySpan<byte> reference = default;
@@ -1294,14 +1986,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		}
 
 		cellColumn = column;
-		if (!rowKnown)
+		if (!rowKnown && NumberRow(hasReference ? referenceRow : lastRow + 1, out var left))
 		{
-			SetRow(hasReference ? referenceRow : lastRow + 1);
-			if (layout is not null && layout.Place(row) is var place && place != RowPlace.In && (place == RowPlace.Below || !ReadsUnwritten()))
-			{
-				// The row's first cell gave its number: nothing of the row has been written.
-				return LeaveRow(place);
-			}
+			return left;
 		}
 
 		// Also when the cell is read again after the missing rows before it filled a fill: the rest of them come first.
@@ -1934,7 +2621,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 				AddGap(target, cellField);
 				ChargeBeyondCell(text.Length, cellStart);
-				if (formatter is null)
+
+				// Text takes a style only from a format that changes text: without one, as without a formatter.
+				if (!textStyles)
 				{
 					target.AddField(text, SheetCellKind.Text);
 				}
@@ -1962,8 +2651,9 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 					length = ToBoolean(span, length, out kind);
 				}
 
-				// Only references can decode to blank text: an empty field, then.
-				if (formatter is null)
+				// Only references can decode to blank text: an empty field, then. A boolean (or the text a boolean cell holds)
+				// takes a style only from a format that changes text.
+				if (formatter is null || (type == CellType.Boolean && !textStyles))
 				{
 					target.CommitField(length, length == 0 ? SheetCellKind.Empty : kind);
 				}
@@ -1998,9 +2688,10 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 				var span = target.GetFieldSpan(rawLength);
 				var length = Decode(span);
 
-				// Only references can decode to blank text: an empty field, then, as for numbers.
+				// Only references can decode to blank text: an empty field, then, as for numbers. Only text takes a style, from a
+				// format that changes text.
 				var kind = length == 0 ? SheetCellKind.Empty : type == CellType.Error ? SheetCellKind.Error : SheetCellKind.Text;
-				if (formatter is null)
+				if (!textStyles)
 				{
 					target.CommitField(length, kind);
 				}
@@ -2296,6 +2987,69 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <exception cref="CsvFormatException">The value is not an index.</exception>
 	private int ReadIndex(int cellStart, int column)
 	{
+		// One text of digits, as producers write an index, is read where it is; anything else is decoded first.
+		var first = segments[0];
+		if (segmentCount == 1 && !first.CData && TryReadDigits(scanner.Window.Buffer, first.Start, first.Length, out var index))
+		{
+			return index;
+		}
+
+		return ReadDecodedIndex(cellStart, column);
+	}
+
+	/// <summary>
+	/// Reads XML white space around 1 to 9 ASCII digits as a number, as a shared string index is written: what decoding,
+	/// trimming and <see cref="Utf8Parser"/> read such a value as. Anything else, signs and references included, is left to them.
+	/// </summary>
+	/// <param name="buffer">The window's bytes.</param>
+	/// <param name="start">The position of the value.</param>
+	/// <param name="length">The length of the value.</param>
+	/// <param name="value">The number; 0 when the value isn't such digits.</param>
+	/// <returns>Whether the value is such digits.</returns>
+	private static bool TryReadDigits(byte[] buffer, int start, int length, out int value)
+	{
+		value = 0;
+		var end = start + length;
+		while (start < end && XmlScanner.IsWhitespace(buffer[start]))
+		{
+			start++;
+		}
+
+		while (end > start && XmlScanner.IsWhitespace(buffer[end - 1]))
+		{
+			end--;
+		}
+
+		if (start == end || end - start > 9)
+		{
+			return false;
+		}
+
+		var number = 0;
+		for (var i = start; i < end; i++)
+		{
+			var digit = buffer[i] - '0';
+			if ((uint)digit > 9)
+			{
+				return false;
+			}
+
+			number = number * 10 + digit;
+		}
+
+		value = number;
+
+		return true;
+	}
+
+	/// <summary>Reads the value being read as a shared string index once it is decoded, as <see cref="ReadIndex"/> does for any value.</summary>
+	/// <param name="cellStart">The position of the cell's tag, for errors.</param>
+	/// <param name="column">The cell's column, for errors.</param>
+	/// <returns>The index: 0 or more.</returns>
+	/// <exception cref="CsvFormatException">The value is not an index.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private int ReadDecodedIndex(int cellStart, int column)
+	{
 		Span<byte> scratch = rawLength <= ScratchSize ? stackalloc byte[ScratchSize] : new byte[rawLength];
 		var text = Trim(scratch.Slice(0, Decode(scratch)));
 		if (!Utf8Parser.TryParse(text, out int index, out var consumed) || consumed != text.Length || index < 0)
@@ -2513,5 +3267,92 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		/// <summary>Whether its text is trimmed of the XML white space around it: <c>xml:space="preserve"</c> doesn't apply to it.</summary>
 		public bool Trim { get; set; }
+	}
+
+	/// <summary>A cell the fast path read (<see cref="ParseCell"/>): its reference, style, type and value, in the window.</summary>
+	private struct CellSyntax
+	{
+		/// <summary>The column of its <c>r</c>; -1 without one.</summary>
+		public int Column;
+
+		/// <summary>The row of its <c>r</c>; 0 without one.</summary>
+		public int ReferenceRow;
+
+		/// <summary>Its <c>s</c>; 0 without one.</summary>
+		public int Style;
+
+		/// <summary>How its value is read, from its <c>t</c>.</summary>
+		public CellType Type;
+
+		/// <summary>Whether it has a <c>v</c>, or an inline string's <c>t</c>; an empty cell has neither.</summary>
+		public bool HasValue;
+
+		/// <summary>Whether its value's text needs no decoding: no reference, CR or <c>_xHHHH_</c> escape.</summary>
+		public bool Plain;
+
+		/// <summary>The position of its value's text.</summary>
+		public int ValueStart;
+
+		/// <summary>The length of its value's text.</summary>
+		public int ValueLength;
+
+		/// <summary>The position after its value's element: <c>&lt;/v&gt;</c>, or the inline string's <c>&lt;/is&gt;</c>.</summary>
+		public int ValueEnd;
+	}
+
+	/// <summary>
+	/// The names the fast path compares in a sheet whose <c>sheetData</c> has a prefix: the cells' and their elements' tags,
+	/// and the row's end tag, with the prefix (<c>&lt;x:c</c>, <c>&lt;/x:row&gt;</c>).
+	/// </summary>
+	private sealed class CellNames
+	{
+		/// <summary>Creates the names of a prefix.</summary>
+		/// <param name="prefix">The prefix with its colon, such as <c>x:</c>.</param>
+		public CellNames(ReadOnlySpan<byte> prefix)
+		{
+			Cell = Join("<"u8, prefix, "c"u8);
+			CellEnd = Join("</"u8, prefix, "c>"u8);
+			ValueStart = Join("<"u8, prefix, "v>"u8);
+			ValueEnd = Join("</"u8, prefix, "v>"u8);
+			InlineStart = Join(Join("<"u8, prefix, "is>"u8), Join("<"u8, prefix, "t>"u8), default);
+			InlineEnd = Join(Join("</"u8, prefix, "t>"u8), Join("</"u8, prefix, "is>"u8), default);
+			RowEnd = Join("</"u8, prefix, "row>"u8);
+		}
+
+		/// <summary>A cell's start tag's name: <c>&lt;x:c</c>.</summary>
+		public byte[] Cell { get; }
+
+		/// <summary>A cell's end tag: <c>&lt;/x:c&gt;</c>.</summary>
+		public byte[] CellEnd { get; }
+
+		/// <summary>A value's start tag: <c>&lt;x:v&gt;</c>.</summary>
+		public byte[] ValueStart { get; }
+
+		/// <summary>A value's end tag: <c>&lt;/x:v&gt;</c>.</summary>
+		public byte[] ValueEnd { get; }
+
+		/// <summary>An inline string's start tags: <c>&lt;x:is&gt;&lt;x:t&gt;</c>.</summary>
+		public byte[] InlineStart { get; }
+
+		/// <summary>An inline string's end tags: <c>&lt;/x:t&gt;&lt;/x:is&gt;</c>.</summary>
+		public byte[] InlineEnd { get; }
+
+		/// <summary>A row's end tag: <c>&lt;/x:row&gt;</c>.</summary>
+		public byte[] RowEnd { get; }
+
+		/// <summary>Joins three runs of bytes.</summary>
+		/// <param name="first">The first.</param>
+		/// <param name="second">The second.</param>
+		/// <param name="third">The third.</param>
+		/// <returns>The bytes.</returns>
+		private static byte[] Join(ReadOnlySpan<byte> first, ReadOnlySpan<byte> second, ReadOnlySpan<byte> third)
+		{
+			var bytes = new byte[first.Length + second.Length + third.Length];
+			first.CopyTo(bytes);
+			second.CopyTo(bytes.AsSpan(first.Length));
+			third.CopyTo(bytes.AsSpan(first.Length + second.Length));
+
+			return bytes;
+		}
 	}
 }

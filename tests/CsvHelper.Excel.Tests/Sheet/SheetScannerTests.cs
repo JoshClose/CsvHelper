@@ -5,7 +5,8 @@ namespace CsvHelper.Excel.Tests.Sheet;
 /// <summary>
 /// The sheet scanner: cell types and values, placement by reference, padding, empty rows, structure, errors and the gap
 /// fields' count. Each test of a sheet's XML runs in every <see cref="SheetMode"/>: whole and one-byte streams, 64 KB and
-/// 16-byte windows, sync and async, with fills that take every record and fills that take one.
+/// 16-byte windows, sync and async, with the fast paths (raw skips and fast cells) on and off, with fills that take every
+/// record and fills that take one.
 /// </summary>
 public class SheetScannerTests
 {
@@ -247,14 +248,14 @@ public class SheetScannerTests
 		});
 
 		// And it isn't inflated: a stream of one byte per read is read no further than the window's first refill after it,
-		// with raw skips and without.
+		// with the fast paths (raw skips and fast cells) and without.
 		var tail = Sheets.Worksheet("<row r=\"1\"><c r=\"A1\"><v>1</v></c></row>").Replace("<pageMargins", string.Concat(Enumerable.Repeat("<extLst/>", 1000)) + "<pageMargins");
 		var bytes = System.Text.Encoding.UTF8.GetBytes(tail);
-		foreach (var raw in new[] { true, false })
+		foreach (var fast in new[] { true, false })
 		{
 			var stream = new TrickleStream(bytes);
-			var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = raw };
-			using (var sheet = new SheetScanner(scanner, "Data", SharedStrings.Empty, StyleTable.Empty, true, null))
+			var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = fast };
+			using (var sheet = new SheetScanner(scanner, "Data", SharedStrings.Empty, StyleTable.Empty, true, null, fastCells: fast))
 			{
 				var captured = new Captured(int.MaxValue);
 				await Sheets.FillAllAsync(sheet, captured, false);
@@ -414,6 +415,12 @@ public class SheetScannerTests
 			("x", Sheets.Strings("a"), "its value, \"x\", is not a shared string index"),
 			("-1", Sheets.Strings("a"), "its value, \"-1\", is not a shared string index"),
 			("1.0", Sheets.Strings("a", "b"), "its value, \"1.0\", is not a shared string index"),
+
+			// Nine digits always fit 32 bits and are read where they are; ten are left to the parser, which takes those that fit.
+			("999999999", Sheets.Strings("a"), "it is shared string 999999999, past the last of test.xml, 0"),
+			("1000000000", Sheets.Strings("a"), "it is shared string 1000000000, past the last of test.xml, 0"),
+			("2147483648", Sheets.Strings("a"), "its value, \"2147483648\", is not a shared string index"),
+			("12345678901", Sheets.Strings("a"), "its value, \"12345678901\", is not a shared string index"),
 		};
 
 		foreach (var (value, strings, detail) in cases)

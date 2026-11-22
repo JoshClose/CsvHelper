@@ -7,7 +7,8 @@ namespace CsvHelper.Excel.Tests.Security;
 /// The raw skips against large content (Phase 9's step 2): a megabyte comment, and a megabyte attribute value, in a hidden
 /// row, read under a window that can't grow past 64 KB, as <c>ExcelReaderOptions.MaxPartSize</c> at 64 KB makes it. The
 /// merged cells' pre-read skips <c>sheetData</c>, and the sheet's reader the row, keeping only the last bytes of what they
-/// pass over, so neither grows the window; a token skip holds each token whole, and stops at the window's limit.
+/// pass over, so neither grows the window; a token skip holds each token whole, and stops at the window's limit. Each with
+/// the sheet scanner's fast cells on and off (Phase 9's step 3), which read the shown rows' cells either way.
 /// </summary>
 public class RawSkipSecurityTests
 {
@@ -38,7 +39,7 @@ public class RawSkipSecurityTests
 			("an area below the row", CellReading.Area("A3:B3"), new[] { "3: number:3" }),
 		};
 
-		foreach (var scan in Modes)
+		foreach (var scan in Modes.SelectMany(m => new[] { m, m.WithFastCells(false) }))
 		{
 			foreach (var (name, reading, records) in readings)
 			{

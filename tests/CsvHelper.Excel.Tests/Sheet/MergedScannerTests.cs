@@ -327,7 +327,7 @@ public class MergedScannerTests
 	public async Task CountsFillsTowardTheUncompressedSize(bool async, bool rawSkips)
 	{
 		// Each fill but the top-left cell's own counts its bytes, and each filled missing row 1; the second read of the part
-		// counts too, whether it skips the rows raw or token by token.
+		// counts too, whether it skips the rows raw or token by token, and with the fast cells of the main read on or off.
 		var abcde = Worksheet("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>abcde</t></is></c></row>", "A1:D3");
 		await AssertChargesAsync(abcde, (3 * 5) + (2 * (1 + (4 * 5))), ["1: abcde | abcde | abcde | abcde", "2: abcde | abcde | abcde | abcde", "3: abcde | abcde | abcde | abcde"], async, rawSkips);
 
@@ -352,12 +352,12 @@ public class MergedScannerTests
 		var package = TestPackage.Workbook(new TestSheet("Data", xml: xml));
 		var charges = (3 * 5) + (2 * (1 + (4 * 5)));
 
-		var (records, total) = await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges), fillMergedCells: true, rawSkips: rawSkips);
+		var (records, total) = await Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges), fillMergedCells: true, rawSkips: rawSkips, fastCells: rawSkips);
 		Assert.Equal(3, records.Count);
 		Assert.Equal((2 * part) + charges, total);
 
 		var e = await Assert.ThrowsAsync<InvalidDataException>(
-			() => Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges - 1), fillMergedCells: true, rawSkips: rawSkips));
+			() => Sheets.ReadPackageAsync(package, async, new PartLimits(1 << 20, (2 * part) + charges - 1), fillMergedCells: true, rawSkips: rawSkips, fastCells: rawSkips));
 		Assert.Contains("ExcelReaderOptions.MaxUncompressedSize", e.Message);
 	}
 
@@ -369,7 +369,10 @@ public class MergedScannerTests
 	/// <param name="charges">The bytes the fills count.</param>
 	/// <param name="expected">The records with fills.</param>
 	/// <param name="async">Whether to read asynchronously.</param>
-	/// <param name="rawSkips">Whether the reads skip by a raw search, rather than token by token.</param>
+	/// <param name="rawSkips">
+	/// Whether the reads skip by a raw search, rather than token by token, and the main reads read the cells they can through
+	/// the fast path, rather than all of them token by token.
+	/// </param>
 	/// <param name="sharedStrings">Whether the package has the shared string <c>0123456789</c>, loaded first.</param>
 	/// <returns>A task that completes when the checks pass.</returns>
 	private static async Task AssertChargesAsync(string xml, long charges, string[] expected, bool async, bool rawSkips, bool sharedStrings = false)
@@ -381,8 +384,8 @@ public class MergedScannerTests
 		}
 
 		var limits = new PartLimits(1 << 20, 1 << 20);
-		var (plain, plainTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, rawSkips: rawSkips);
-		var (filled, filledTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, fillMergedCells: true, rawSkips: rawSkips);
+		var (plain, plainTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, rawSkips: rawSkips, fastCells: rawSkips);
+		var (filled, filledTotal) = await Sheets.ReadPackageAsync(package, async, limits, sharedStrings: sharedStrings, fillMergedCells: true, rawSkips: rawSkips, fastCells: rawSkips);
 
 		Assert.Equal(expected, filled.Select(r => r.ToString()));
 		Assert.Single(plain);

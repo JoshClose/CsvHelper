@@ -4,8 +4,8 @@ using System.Xml;
 namespace CsvHelper.Excel.Tests.Xml;
 
 /// <summary>
-/// A way of reading a part: the stream, the window's starting size, sync or async, and whether the sheet readers skip by a
-/// raw search.
+/// A way of reading a part: the stream, the window's starting size, sync or async, whether the sheet readers skip by a
+/// raw search, and whether the sheet scanner reads canonical cells through its fast path.
 /// </summary>
 /// <param name="name">The name of the mode, for failures.</param>
 /// <param name="trickle">Whether the stream returns one byte per read, rather than all it can.</param>
@@ -15,11 +15,16 @@ namespace CsvHelper.Excel.Tests.Xml;
 /// Whether the sheet readers skip the rows they skip whole, and the merged cells' read skips <c>sheetData</c>, by a raw
 /// search for the end tag (<see cref="XmlScanner.RawSkips"/>), rather than token by token.
 /// </param>
-public sealed class ScanMode(string name, bool trickle, int windowSize, bool async, bool rawSkips = true)
+/// <param name="fastCells">
+/// Whether the sheet scanner reads the cells it can straight from the window (its fast path, Phase 9's step 3), rather than
+/// every cell token by token (its fallback).
+/// </param>
+public sealed class ScanMode(string name, bool trickle, int windowSize, bool async, bool rawSkips = true, bool fastCells = true)
 {
 	/// <summary>
-	/// Every mode: whole and one-byte reads, a 64 KB and a 16-byte window, sync and async, all with raw skips (which only the
-	/// sheet readers use: <see cref="WithRawSkips"/> gives each mode's twin without them).
+	/// Every mode: whole and one-byte reads, a 64 KB and a 16-byte window, sync and async, all with raw skips and fast cells
+	/// (which only the sheet readers use: <see cref="WithRawSkips"/> and <see cref="WithFastCells"/> give each mode's twins
+	/// without them).
 	/// </summary>
 	public static IReadOnlyList<ScanMode> All { get; } =
 	[
@@ -51,13 +56,30 @@ public sealed class ScanMode(string name, bool trickle, int windowSize, bool asy
 	/// </summary>
 	public bool RawSkips => rawSkips;
 
-	/// <summary>The same mode with raw skips on or off: its twin, or itself when it already has that setting.</summary>
+	/// <summary>
+	/// Whether the sheet scanner reads the cells it can straight from the window (its fast path, Phase 9's step 3), rather than
+	/// every cell token by token (its fallback).
+	/// </summary>
+	public bool FastCells => fastCells;
+
+	/// <summary>
+	/// The same mode with raw skips on or off, and fast cells as they are: its twin, or itself when it already has that
+	/// setting.
+	/// </summary>
 	/// <param name="raw">Whether the sheet readers skip by a raw search.</param>
 	/// <returns>The mode.</returns>
-	public ScanMode WithRawSkips(bool raw) => raw == rawSkips ? this : new(name, trickle, windowSize, async, raw);
+	public ScanMode WithRawSkips(bool raw) => raw == rawSkips ? this : new(name, trickle, windowSize, async, raw, fastCells);
+
+	/// <summary>
+	/// The same mode with fast cells on or off, and raw skips as they are: its twin, or itself when it already has that
+	/// setting.
+	/// </summary>
+	/// <param name="fast">Whether the sheet scanner reads the cells it can through its fast path.</param>
+	/// <returns>The mode.</returns>
+	public ScanMode WithFastCells(bool fast) => fast == fastCells ? this : new(name, trickle, windowSize, async, rawSkips, fast);
 
 	/// <inheritdoc/>
-	public override string ToString() => rawSkips ? name : $"{name}, raw skips off";
+	public override string ToString() => name + (rawSkips ? "" : ", raw skips off") + (fastCells ? "" : ", fast cells off");
 }
 
 /// <summary>Reads parts with <see cref="XmlScanner"/>, and with <see cref="XmlReader"/> to compare.</summary>

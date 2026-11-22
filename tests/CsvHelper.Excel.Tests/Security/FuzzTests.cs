@@ -77,7 +77,9 @@ public partial class FuzzRecord
 /// seconds, and either read or throw <see cref="InvalidDataException"/>, <see cref="CsvFormatException"/> or
 /// <see cref="NotSupportedException"/>; a field may only fail to parse, with <see cref="FormatException"/> or
 /// <see cref="OverflowException"/>, and an error cell fail to read when error cells fail every read. What a seed reads
-/// comes from the workbook, so choosing it never fails: a table, a name or a sheet it has, and a header row it has.
+/// comes from the workbook, so choosing it never fails: a table, a name or a sheet it has, and a header row it has. One
+/// seed in four reads every cell with the sheet scanner's fallback (<c>ExcelWorkbook.fastCells</c> off, Phase 9's step 3);
+/// the rest with its fast path, as readers read.
 /// <c>CSVHELPER_EXCEL_FUZZ_INPUTS</c> sets the number of inputs, and <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the first seed, so
 /// that a failure can be replayed alone. The test runs alone (<see cref="TimedCollection"/>), so that its limit measures
 /// the input and not the tests beside it; an input out of time says how long it waited for a thread.
@@ -257,6 +259,7 @@ public class FuzzTests(ITestOutputHelper output)
 		try
 		{
 			using var workbook = async ? await ExcelWorkbook.OpenAsync(new MemoryStream(zip), settings.Options) : ExcelWorkbook.Open(new MemoryStream(zip), settings.Options);
+			workbook.fastCells = settings.FastCells;
 			var outcome = "read";
 			foreach (var sheet in workbook.Sheets.Where(s => s.Kind == ExcelSheetKind.Worksheet))
 			{
@@ -1326,9 +1329,10 @@ public class FuzzTests(ITestOutputHelper output)
 	}
 
 	/// <summary>
-	/// How a seed reads its input: synchronously or not, with which CSV options (alternating with the seed, as before), and
-	/// with which formulas, error cells, significant digits and reading (chosen by numbers of the seed's own); and, two
-	/// seeds in three, which area, header row and switches, with a seed for the choices that depend on the workbook.
+	/// How a seed reads its input: synchronously or not, and with the scanner's fast cells or its fallback, with which CSV
+	/// options (alternating with the seed, as before), and with which formulas, error cells, significant digits and reading
+	/// (chosen by numbers of the seed's own); and, two seeds in three, which area, header row and switches, with a seed for
+	/// the choices that depend on the workbook.
 	/// </summary>
 	/// <param name="async">Whether to read asynchronously.</param>
 	/// <param name="options">The options, under small limits.</param>
@@ -1336,10 +1340,14 @@ public class FuzzTests(ITestOutputHelper output)
 	/// <param name="area">What to read besides every worksheet whole.</param>
 	/// <param name="header">How to give the header row.</param>
 	/// <param name="choices">The seed of the choices made once the workbook is open.</param>
-	private sealed class Settings(bool async, ExcelReaderOptions options, ReadMode mode, AreaMode area, HeaderMode header, int choices)
+	/// <param name="fastCells">Whether the workbook's readers read the cells they can through the fast path (<c>ExcelWorkbook.fastCells</c>).</param>
+	private sealed class Settings(bool async, ExcelReaderOptions options, ReadMode mode, AreaMode area, HeaderMode header, int choices, bool fastCells)
 	{
 		/// <summary>Whether to read asynchronously.</summary>
 		public bool Async { get; } = async;
+
+		/// <summary>Whether the workbook's readers read the cells they can through the fast path, rather than all of them by the fallback.</summary>
+		public bool FastCells { get; } = fastCells;
 
 		/// <summary>The options.</summary>
 		public ExcelReaderOptions Options { get; } = options;
@@ -1383,7 +1391,9 @@ public class FuzzTests(ITestOutputHelper output)
 				options = options with { SkipHiddenRows = random.Next(2) == 0, SkipHiddenColumns = random.Next(2) == 0, FillMergedCells = random.Next(2) == 0 };
 			}
 
-			return new Settings(seed % 2 == 1, options, mode, area, header, random.Next());
+			// From the seed alone, so that the other settings stay as they were for a seed: one pair of seeds in four, one sync
+			// and one async, reads with the fallback.
+			return new Settings(seed % 2 == 1, options, mode, area, header, random.Next(), seed / 2 % 4 != 1);
 		}
 
 		/// <summary>
@@ -1407,7 +1417,7 @@ public class FuzzTests(ITestOutputHelper output)
 
 		/// <inheritdoc/>
 		public override string ToString() =>
-			$"{(Async ? "async" : "sync")}, {Mode}, formulas {Options.Formulas}, error cells {Options.ErrorCells}, digits {Options.SignificantDigits?.ToString() ?? "null"}, " +
+			$"{(Async ? "async" : "sync")}, fast cells {(FastCells ? "on" : "off")}, {Mode}, formulas {Options.Formulas}, error cells {Options.ErrorCells}, digits {Options.SignificantDigits?.ToString() ?? "null"}, " +
 			$"header {Options.Csv.HasHeader}, skip empty {Options.Csv.SkipEmptyLines}, trim {Options.Csv.TrimWhitespace}, area {Area}, header row {Header}, " +
 			$"hidden rows {(Options.SkipHiddenRows ? "skipped" : "read")}, hidden columns {(Options.SkipHiddenColumns ? "skipped" : "read")}, " +
 			$"merged cells {(Options.FillMergedCells ? "filled" : "not filled")}";

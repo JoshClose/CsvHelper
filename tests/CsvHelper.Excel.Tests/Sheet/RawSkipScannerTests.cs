@@ -11,7 +11,8 @@ namespace CsvHelper.Excel.Tests.Sheet;
 /// holds end tags); the rows still read for what later cells need; what a raw skip no longer checks; the tripwires that
 /// catch a skip stopped inside an attribute value; the errors that move from the pre-read to the main read; and the
 /// probe's edge cases (<c>rless-probe.md</c>, section 3), written as XML. Each test runs in every <see cref="SheetMode"/>, with
-/// raw skips on and off.
+/// raw skips on and off (each with fast cells as <see cref="SheetMode.All"/> pairs them); what only a raw skip leaves
+/// unchecked is keyed on <see cref="ScanMode.RawSkips"/> alone.
 /// </summary>
 public class RawSkipScannerTests
 {

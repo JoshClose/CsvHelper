@@ -195,7 +195,9 @@ public class ExcelScanStages
 
 	/// <summary>
 	/// <see cref="Load"/>, then the sheet scanner's fills into a target that counts fields and copies nothing: the tokenizer
-	/// and the scanner's cell logic (attributes, reference, value, shared string lookup), without the reader's batch.
+	/// and the scanner's cell logic (attributes, reference, value, shared string lookup), without the reader's batch. Every
+	/// cell is read by the scanner's fallback, token by token, with its fast path off, so that this stays the measure of the
+	/// fallback (Phase 9's step 3); <see cref="CellsFast"/> is the same read with it on.
 	/// </summary>
 	/// <returns>The number of fields.</returns>
 	[Benchmark]
@@ -203,7 +205,20 @@ public class ExcelScanStages
 	{
 		var counter = new StageCounter();
 
-		return ScanCells(null, counter, new CountingTarget(counter));
+		return ScanCells(null, counter, new CountingTarget(counter), fastCells: false);
+	}
+
+	/// <summary>
+	/// <see cref="Cells"/> with the scanner's fast path on, as readers read: the cells it takes read straight from the
+	/// window, the rest by the fallback. The difference from <see cref="Cells"/> is what the fast path saves.
+	/// </summary>
+	/// <returns>The number of fields.</returns>
+	[Benchmark]
+	public long CellsFast()
+	{
+		var counter = new StageCounter();
+
+		return ScanCells(null, counter, new CountingTarget(counter), fastCells: true);
 	}
 
 	/// <summary>
@@ -231,20 +246,22 @@ public class ExcelScanStages
 		return ScanCells(Formatted, counter, new CountingTarget(counter));
 	}
 
-	/// <summary>The reader's records, as <c>CsvHelper_Rows</c> reads them: the scanner's fills into the reader's batch.</summary>
+	/// <summary>
+	/// The reader's records, as <c>CsvHelper_Rows</c> reads them: the scanner's fills into the reader's batch. The workbook's
+	/// fast cells are off (<c>ExcelWorkbook.fastCells</c>), so that every cell is read by the scanner's fallback and this
+	/// stays the measure of it (Phase 9's step 3); <see cref="RowsFast"/> is the same read with them on.
+	/// </summary>
 	/// <returns>The number of records.</returns>
 	[Benchmark]
-	public long Rows()
-	{
-		using var reader = ExcelReader.Create(NewStream());
-		var count = 0L;
-		while (reader.Read())
-		{
-			count++;
-		}
+	public long Rows() => ReadRows(fastCells: false);
 
-		return count;
-	}
+	/// <summary>
+	/// <see cref="Rows"/> with the workbook's fast cells on, as readers read by default: the difference from
+	/// <see cref="Rows"/> is what the scanner's fast path saves a reader.
+	/// </summary>
+	/// <returns>The number of records.</returns>
+	[Benchmark]
+	public long RowsFast() => ReadRows(fastCells: true);
 
 	/// <summary><see cref="Rows"/> under <see cref="ExcelText.Formatted"/>: each valued cell's style looked up, with the batch.</summary>
 	/// <returns>The number of records.</returns>
@@ -424,13 +441,34 @@ public class ExcelScanStages
 	/// <returns>The stream, read-only.</returns>
 	private MemoryStream NewStream() => new(workbook, writable: false);
 
+	/// <summary>
+	/// Reads the reader's records, as <see cref="Rows"/> and <see cref="RowsFast"/> do: the workbook opened, its fast cells
+	/// set, then its first sheet's reader.
+	/// </summary>
+	/// <param name="fastCells">Whether the sheet's scanner reads the cells it can through its fast path (<c>ExcelWorkbook.fastCells</c>).</param>
+	/// <returns>The number of records.</returns>
+	private long ReadRows(bool fastCells)
+	{
+		using var opened = ExcelWorkbook.Open(NewStream());
+		opened.fastCells = fastCells;
+		using var reader = opened.OpenReader();
+		var count = 0L;
+		while (reader.Read())
+		{
+			count++;
+		}
+
+		return count;
+	}
+
 	/// <summary>Scans the sheet's cells into a target, with the options' formatter.</summary>
 	/// <typeparam name="TTarget">The target's type.</typeparam>
 	/// <param name="options">The options, or <see langword="null"/> for the defaults.</param>
 	/// <param name="counter">What the target counts, reset after each fill as a reader's batch is.</param>
 	/// <param name="target">The target.</param>
+	/// <param name="fastCells">Whether the scanner reads the cells it can through its fast path, rather than every cell by its fallback.</param>
 	/// <returns>The number of fields.</returns>
-	private long ScanCells<TTarget>(ExcelReaderOptions? options, StageCounter counter, TTarget target)
+	private long ScanCells<TTarget>(ExcelReaderOptions? options, StageCounter counter, TTarget target, bool fastCells = true)
 		where TTarget : struct, IRecordTarget
 	{
 		using var archive = OpenArchive();
@@ -440,7 +478,7 @@ public class ExcelScanStages
 		var formatter = options?.Text == ExcelText.Formatted ? new CellFormatter(styles, DisplayCulture.For(options.Csv.FormatProvider), part.Date1904) : null;
 		var stream = archive.OpenPartAsync(sheetPart, false, Limits, false, default).GetAwaiter().GetResult();
 		using var scanner = new SheetScanner(
-			new XmlScanner(new XmlWindow(stream, sheetPart, Limits.MaxPartSize)), "Sheet", strings, styles, true, stream, part.Date1904, formatter: formatter);
+			new XmlScanner(new XmlWindow(stream, sheetPart, Limits.MaxPartSize)), "Sheet", strings, styles, true, stream, part.Date1904, formatter: formatter, fastCells: fastCells);
 		while (scanner.Fill(target))
 		{
 			counter.Bytes = 0;

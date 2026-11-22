@@ -105,15 +105,15 @@ public class AreaScannerTests
 		});
 
 		// And it isn't inflated: a stream of one byte per read is read no further than the first refill after that row's tag,
-		// with raw skips and without.
+		// with the fast paths (raw skips and fast cells) and without.
 		var tail = Sheets.Worksheet(Row(1, "A") + Row(5, "A") + string.Concat(Enumerable.Range(6, 1000).Select(r => Row(r, "AB"))));
 		var bytes = Encoding.UTF8.GetBytes(tail);
 		var reading = CellReading.Area("A1:A4");
-		foreach (var raw in new[] { true, false })
+		foreach (var fast in new[] { true, false })
 		{
 			var stream = new TrickleStream(bytes);
-			var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = raw };
-			using (var sheet = new SheetScanner(scanner, "Data", SharedStrings.Empty, StyleTable.Empty, true, null, layout: reading.Layout))
+			var scanner = new XmlScanner(new XmlWindow(stream, Sheets.PartName, 1 << 20, 16)) { RawSkips = fast };
+			using (var sheet = new SheetScanner(scanner, "Data", SharedStrings.Empty, StyleTable.Empty, true, null, layout: reading.Layout, fastCells: fast))
 			{
 				var captured = new Captured(int.MaxValue);
 				await Sheets.FillAllAsync(sheet, captured, false);
