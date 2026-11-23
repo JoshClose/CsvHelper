@@ -209,7 +209,7 @@ public class ShownCorpusTests(ITestOutputHelper output)
 			return;
 		}
 
-		var bytes = Written.Write(written);
+		var bytes = Writing.Written.Checked(Written.Write(written));
 		var exports = ExcelExport.Load("excel-written/" + name) ?? throw new InvalidOperationException($"{name} has no CSV exports: run the corpus tool's exports command.");
 		Assert.True(exports.Sha256 == Written.PartsHash(bytes), $"{name}: the workbook isn't the one Excel exported; run the corpus tool's exports command.");
 		using var workbook = ExcelWorkbook.Open(new MemoryStream(bytes, false));

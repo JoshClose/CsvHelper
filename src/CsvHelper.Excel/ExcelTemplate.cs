@@ -32,7 +32,7 @@ namespace CsvHelper.Excel;
 /// <para>
 /// <b>Files and streams.</b> A path overload creates or overwrites its file, and deletes it when writing fails, so that
 /// none is left half written. A stream overload writes from the stream's position and leaves it open. Every write of an
-/// asynchronous overload is asynchronous, with the workbook writer's caveat before .NET 10 (<see cref="ExcelWorkbookWriter"/>).
+/// asynchronous overload is asynchronous, on every target.
 /// </para>
 /// </remarks>
 public static class ExcelTemplate

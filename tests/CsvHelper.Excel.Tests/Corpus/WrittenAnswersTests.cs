@@ -214,10 +214,10 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		}
 
 		Assert.True(
-			answers.Sha256 == Written.PartsHash(Written.Write(workbook)),
+			answers.Sha256 == Written.PartsHash(Writing.Written.Checked(Written.Write(workbook))),
 			$"{name} isn't the workbook Excel answered about: the writer or the content set changed. Run the corpus tool's written command "
 			+ "(dotnet run --project tools/CsvHelper.Excel.Corpus -c Release -- written) and review what changed in Files/excel-written.");
-		Assert.Equal(answers.Sha256, Written.PartsHash(await Written.WriteAsync(workbook)));
+		Assert.Equal(answers.Sha256, Written.PartsHash(Writing.Written.Checked(await Written.WriteAsync(workbook))));
 	}
 
 	[Theory]
@@ -227,7 +227,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		// Every workbook of the set, its look's and the converted ones too (Phase 6's gate), not only the writing tests' own.
 		var workbook = Written.Workbooks.Single(w => w.Name == name);
 
-		Assert.Empty(Writing.Written.ValidationErrors(Written.Write(workbook)));
+		Assert.Empty(Writing.Written.ValidationErrors(Writing.Written.Checked(Written.Write(workbook))));
 	}
 
 	[Theory]
@@ -241,7 +241,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		}
 
 		var expected = WrittenOracle.Cells(workbook);
-		var parts = WrittenOracle.Parts(Written.Write(workbook));
+		var parts = WrittenOracle.Parts(Writing.Written.Checked(Written.Write(workbook)));
 		Assert.Equal(expected.Select(s => s.Sheet), answers.Sheets.Select(s => s.Name));
 		var differences = new List<string>();
 		foreach (var ((sheet, cells), excel) in expected.Zip(answers.Sheets, (e, a) => (e, a)))
@@ -276,7 +276,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 			return;
 		}
 
-		var parts = WrittenOracle.Parts(Written.Write(workbook));
+		var parts = WrittenOracle.Parts(Writing.Written.Checked(Written.Write(workbook)));
 		foreach (var sheet in answers.Sheets)
 		{
 			// A hidden column's width is 0.
@@ -301,7 +301,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		// may be wider, never narrower: Excel's default width at least (Phase 7's step 5); and on a sheet that validates its
 		// members, a date's, time's or duration's column as wide as its widest value (Phase 7's step 3), which neither a header
 		// alone nor the values written need.
-		var parts = WrittenOracle.Parts(Written.Write(workbook));
+		var parts = WrittenOracle.Parts(Writing.Written.Checked(Written.Write(workbook)));
 		var differences = new List<string>();
 		var (fitted, narrower) = (0, 0);
 		foreach (var sheet in answers.Sheets)
@@ -377,7 +377,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 			return;
 		}
 
-		var looks = ClosedXmlLook.Read(Written.Write(workbook), [.. answers.Sheets.Select(s => s.Used)]);
+		var looks = ClosedXmlLook.Read(Writing.Written.Checked(Written.Write(workbook)), [.. answers.Sheets.Select(s => s.Used)]);
 		Assert.Equal(answers.Sheets.Count, looks.Count);
 		var differences = new List<string>();
 		foreach (var (sheet, look) in answers.Sheets.Zip(looks, (s, l) => (s, l)))
@@ -487,8 +487,8 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 		// The hash covers each entry's name and bytes, inflated, and their lengths: the same parts deflated otherwise hash
 		// the same, and a part that differs by a byte doesn't.
 		var workbook = Written.Workbooks.Single(w => w.Name == "types.xlsx");
-		var fastest = Written.Write(workbook);
-		var stored = Written.Write(new WrittenWorkbook(workbook.Name, workbook.Description, workbook.Options with { CompressionLevel = CompressionLevel.NoCompression }, workbook.Sheets));
+		var fastest = Writing.Written.Checked(Written.Write(workbook));
+		var stored = Writing.Written.Checked(Written.Write(new WrittenWorkbook(workbook.Name, workbook.Description, workbook.Options with { CompressionLevel = CompressionLevel.NoCompression }, workbook.Sheets)));
 		Assert.NotEqual(fastest, stored);
 		Assert.Equal(Written.PartsHash(fastest), Written.PartsHash(stored));
 
@@ -508,7 +508,7 @@ public class WrittenAnswersTests(ITestOutputHelper output)
 			Assert.Equal(string.Concat(sha.ComputeHash(layout).Select(b => b.ToString("x2", CultureInfo.InvariantCulture))), Written.PartsHash(stream.ToArray()));
 		}
 
-		var changed = Written.Write(new WrittenWorkbook(workbook.Name, workbook.Description, workbook.Options, [.. workbook.Sheets.Take(1)]));
+		var changed = Writing.Written.Checked(Written.Write(new WrittenWorkbook(workbook.Name, workbook.Description, workbook.Options, [.. workbook.Sheets.Take(1)])));
 		Assert.NotEqual(Written.PartsHash(fastest), Written.PartsHash(changed));
 	}
 

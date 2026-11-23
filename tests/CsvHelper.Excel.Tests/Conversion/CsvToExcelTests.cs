@@ -40,7 +40,7 @@ public class CsvToExcelTests
 
 	public static TheoryData<bool> Modes => new() { false, true };
 
-	/// <summary>Converts CSV through the stream overloads.</summary>
+	/// <summary>Converts CSV through the stream overloads, and checks the workbook's zip (<see cref="Written.Checked(byte[])"/>).</summary>
 	private static async Task<byte[]> ConvertAsync(string csv, bool async, CsvToExcelOptions? options = null)
 	{
 		using var input = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -54,7 +54,7 @@ public class CsvToExcelTests
 			ExcelConvert.ToExcel(input, output, options);
 		}
 
-		return output.ToArray();
+		return Written.Checked(output.ToArray());
 	}
 
 	/// <summary>A workbook's first sheet's cells with a value, as ClosedXML reads their types and values: <c>B2=Number:3</c>.</summary>
@@ -420,7 +420,7 @@ public class CsvToExcelTests
 		Assert.True(csv.CanRead);
 		Assert.True(excel.CanWrite);
 		Assert.Equal([1, 2, 3], memory.ToArray().Take(3));
-		Assert.Equal(Written.Sheets(await ConvertAsync(TypedCsv, async)), Written.Sheets(memory.ToArray().Skip(3).ToArray()));
+		Assert.Equal(Written.Sheets(await ConvertAsync(TypedCsv, async)), Written.Sheets(Written.Checked(memory.ToArray().Skip(3).ToArray())));
 		Assert.Empty(Written.ValidationErrors(memory.ToArray().Skip(3).ToArray()));
 
 		// A failure leaves them open too.
@@ -493,7 +493,7 @@ public class CsvToExcelTests
 
 		using var output = new MemoryStream();
 		await ExcelConvert.ToExcelAsync(new AsyncOnlyStream(bytes), output);
-		Assert.Equal(["A1=Text:a", "B1=Text:b", "A2=Number:1", "B2=Number:2"], Values(output.ToArray()));
+		Assert.Equal(["A1=Text:a", "B1=Text:b", "A2=Number:1", "B2=Number:2"], Values(Written.Checked(output.ToArray())));
 	}
 
 	[Theory]
@@ -604,7 +604,7 @@ public class CsvToExcelTests
 				ExcelConvert.ToExcel<ConvertedOrder>(csvPath, excelPath);
 			}
 
-			Assert.Equal("orders: Name|Quantity|Price|Ordered|Paid / apple|3|1.50|2024-01-15T10:30:00|TRUE", Assert.Single(Written.Sheets(File.ReadAllBytes(excelPath))));
+			Assert.Equal("orders: Name|Quantity|Price|Ordered|Paid / apple|3|1.50|2024-01-15T10:30:00|TRUE", Assert.Single(Written.Sheets(File.ReadAllBytes(Written.CheckedFile(excelPath)))));
 
 			// A record that can't be read fails the conversion, which deletes its workbook.
 			File.WriteAllText(csvPath, "Name,Quantity,Price,Ordered,Paid\r\napple,many,1,2024-01-15,true\r\n");
@@ -650,7 +650,7 @@ public class CsvToExcelTests
 		Assert.Equal(["Sheet1: "], Written.Sheets(workbook));
 	}
 
-	/// <summary>Converts a CSV file to a workbook as the mode says.</summary>
+	/// <summary>Converts a CSV file to a workbook as the mode says, and checks the workbook's zip (<see cref="Written.CheckedFile(string)"/>).</summary>
 	private static async Task ToExcelAsync(string csvPath, string excelPath, bool async, CsvToExcelOptions? options = null)
 	{
 		if (async)
@@ -661,6 +661,8 @@ public class CsvToExcelTests
 		{
 			ExcelConvert.ToExcel(csvPath, excelPath, options);
 		}
+
+		Written.CheckedFile(excelPath);
 	}
 
 	/// <summary>Converts CSV in a stream to a workbook in another as the mode says.</summary>
@@ -676,7 +678,7 @@ public class CsvToExcelTests
 		}
 	}
 
-	/// <summary>Converts CSV to a workbook of orders through the stream overloads, as the mode says.</summary>
+	/// <summary>Converts CSV to a workbook of orders through the stream overloads, as the mode says, and checks the workbook's zip (<see cref="Written.Checked(byte[])"/>).</summary>
 	private static async Task<byte[]> OrdersAsync(string csv, bool async, CsvToExcelOptions? options = null)
 	{
 		using var input = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -690,6 +692,6 @@ public class CsvToExcelTests
 			ExcelConvert.ToExcel<ConvertedOrder>(input, output, options);
 		}
 
-		return output.ToArray();
+		return Written.Checked(output.ToArray());
 	}
 }

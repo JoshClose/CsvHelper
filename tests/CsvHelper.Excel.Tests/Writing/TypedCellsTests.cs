@@ -1,5 +1,6 @@
 using System.Data;
 using System.Globalization;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 
 namespace CsvHelper.Excel.Tests.Writing;
@@ -240,7 +241,7 @@ public class TypedCellsTests
 	public void ThrowsForLongNumbersWhenTheOptionsSay()
 	{
 		var options = new ExcelWriterOptions { LongNumbers = ExcelLongNumbers.Throw };
-		using var workbook = ExcelWorkbookWriter.Create(new MemoryStream(), options);
+		using var workbook = ExcelWorkbookWriter.Create(Written.CheckedOnClose(), options);
 		using var writer = workbook.AddSheet("Orders");
 		var records = new[] { new TypedRecord { Name = "ok", Id = 123456789012345 }, new TypedRecord { Name = "long", Id = 1234567890123456789 } };
 
@@ -403,7 +404,7 @@ public class TypedCellsTests
 		}
 
 		// The field that threw left no cell, and the workbook completed.
-		Assert.Equal(field == 0 ? ["1900-01-01"] : ["1900-01-01", "1900-01-01"], Written.ReadOne(stream.ToArray()));
+		Assert.Equal(field == 0 ? ["1900-01-01"] : ["1900-01-01", "1900-01-01"], Written.ReadOne(Written.Checked(stream.ToArray())));
 	}
 
 	[Fact]
@@ -425,7 +426,7 @@ public class TypedCellsTests
 			writer.EndRecord();
 		}
 
-		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
+		var sheet = Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml");
 		Assert.Contains(
 			"<sheetData><row><c><v>-1234.5</v></c><c><v>1.5E+20</v></c><c><v>42</v></c><c t=\"inlineStr\"><is><t>1.234,50</t></is></c>" +
 			"<c t=\"inlineStr\"><is><t>0042</t></is></c><c t=\"inlineStr\"><is><t>1234.5</t></is></c><c t=\"b\"><v>1</v></c></row></sheetData>",
@@ -452,7 +453,7 @@ public class TypedCellsTests
 			writer.EndRecord();
 		}
 
-		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
+		var sheet = Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml");
 		Assert.Contains(
 			"<sheetData><row><c t=\"inlineStr\"><is><t>2024-01-15</t></is></c><c t=\"inlineStr\"><is><t>1:00:00</t></is></c><c t=\"inlineStr\"><is><t>1,234.50</t></is></c>" +
 			"<c t=\"inlineStr\"><is><t>00000000-0000-0000-0000-000000000000</t></is></c><c t=\"inlineStr\"><is><t>Monday</t></is></c>" +
@@ -477,7 +478,7 @@ public class TypedCellsTests
 		}
 
 		// The null's record is empty: a row of its own before the next record's.
-		var cells = Regex.Matches(Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"), "<row/>|<c(?: [^>]*)?>").Cast<Match>().Select(m => m.Value);
+		var cells = Regex.Matches(Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml"), "<row/>|<c(?: [^>]*)?>").Cast<Match>().Select(m => m.Value);
 		Assert.Equal(["<c>", "<c t=\"inlineStr\">", "<c>", "<c t=\"b\">", "<row/>", "<c s=\"1\">", "<c>"], cells);
 	}
 
@@ -513,7 +514,7 @@ public class TypedCellsTests
 			writer.EndRecord();
 		}
 
-		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
+		var sheet = Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml");
 		Assert.Contains(
 			$"<cols><col min=\"1\" max=\"1\" width=\"{W(ColumnWidths.DateTime)}\" customWidth=\"1\"/><col min=\"2\" max=\"2\" width=\"{W(ColumnWidths.DateTimeMilliseconds)}\" customWidth=\"1\"/>" +
 			$"<col min=\"4\" max=\"4\" width=\"{W(ColumnWidths.Of("24000:00:00.005".AsSpan()))}\" customWidth=\"1\"/></cols>",
@@ -535,7 +536,7 @@ public class TypedCellsTests
 			writer.WriteRecord(new Dictionary<string, object?> { ["A"] = new DateTime(2024, 1, 15), ["B"] = "b" });
 		}
 
-		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
+		var sheet = Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml");
 		Assert.Contains($"<cols><col min=\"1\" max=\"1\" width=\"{W(ColumnWidths.DateTime)}\" customWidth=\"1\"/></cols>", sheet);
 		Assert.Equal(["2024-01-15T01:02:03.004", "2024-01-15|b"], Written.ReadOne(stream.ToArray()));
 	}
@@ -556,7 +557,7 @@ public class TypedCellsTests
 			writer.EndRecord();
 		}
 
-		var workbookBytes = stream.ToArray();
+		var workbookBytes = Written.Checked(stream.ToArray());
 		Assert.Contains($"<cols><col min=\"1\" max=\"1\" width=\"{W(ColumnWidths.DateTime)}\" customWidth=\"1\"/></cols>", Written.Entry(workbookBytes, "xl/worksheets/sheet1.xml"));
 		Assert.Empty(Written.ValidationErrors(workbookBytes));
 	}
@@ -565,9 +566,9 @@ public class TypedCellsTests
 	public void HoldsRecordsUntilTheWidthsAreKnown()
 	{
 		// Without auto-fit, a header bigger than the flush size, and a flush asked for, write nothing until the first data
-		// record ends.
+		// record ends. Stored, so that the header's 100 KB pass the zip's 64 KB buffer and reach the stream once let go.
 		var stream = new MemoryStream();
-		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Phase4(Written.Ragged()), leaveOpen: true))
+		using (var workbook = ExcelWorkbookWriter.Create(stream, Written.Phase4(Written.Ragged()) with { CompressionLevel = CompressionLevel.NoCompression }, leaveOpen: true))
 		{
 			using var writer = workbook.AddSheet("Held");
 			for (var i = 0; i < 20; i++)
@@ -583,7 +584,7 @@ public class TypedCellsTests
 			Assert.True(stream.Length > 0);
 		}
 
-		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
+		var sheet = Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml");
 		Assert.Contains($"<cols><col min=\"1\" max=\"1\" width=\"{W(ColumnWidths.DateTime)}\" customWidth=\"1\"/></cols><sheetData><row><c t=\"inlineStr\">", sheet);
 	}
 
@@ -625,7 +626,7 @@ public class TypedCellsTests
 			writer.WriteRecord(new WrittenText { Name = "b" });
 		}
 
-		Assert.DoesNotContain("ignoredErrors", Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"));
+		Assert.DoesNotContain("ignoredErrors", Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml"));
 	}
 
 	[Theory]

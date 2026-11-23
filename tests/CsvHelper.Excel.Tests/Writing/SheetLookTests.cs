@@ -208,7 +208,7 @@ public class SheetLookTests
 			}
 		}
 
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		if (pane is null)
 		{
@@ -400,7 +400,7 @@ public class SheetLookTests
 		book.Dispose();
 
 		Assert.Equal("ExcelSheetOptions.Columns names columns that the header doesn't have: \"Totla\". Names match the header's ordinally.", e.Message);
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		Assert.Contains("<sheetData></sheetData>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}

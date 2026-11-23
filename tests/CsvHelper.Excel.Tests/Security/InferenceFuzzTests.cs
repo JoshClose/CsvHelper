@@ -177,7 +177,7 @@ public class InferenceFuzzTests(ITestOutputHelper output)
 			return $"expected a failure at {failure.Value.Cell} for {failure.Value.Option}, and the conversion succeeded";
 		}
 
-		var bytes = workbook.ToArray();
+		var bytes = Written.Checked(workbook.ToArray());
 		var errors = Written.ValidationErrors(bytes);
 		if (errors.Count > 0)
 		{

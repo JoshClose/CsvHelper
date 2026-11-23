@@ -454,7 +454,7 @@ public class ImportTests
 		using var stream = new MemoryStream();
 		ExcelTemplate.Create<ValidatedOrder>(stream);
 
-		var result = await ImportAsync<ValidatedOrder>(stream.ToArray(), "stream", async);
+		var result = await ImportAsync<ValidatedOrder>(Written.Checked(stream.ToArray()), "stream", async);
 
 		Assert.Empty(result.Records);
 		Assert.Empty(result.Errors);
@@ -477,7 +477,7 @@ public class ImportTests
 		}
 
 		var options = new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.At(2) };
-		var prefilled = await ImportAsync<ValidatedOrder>(stream.ToArray(), "stream", async, options);
+		var prefilled = await ImportAsync<ValidatedOrder>(Written.Checked(stream.ToArray()), "stream", async, options);
 		Assert.Equal(orders.Select(Describe), prefilled.Records.Select(Describe));
 		Assert.Empty(prefilled.Errors);
 

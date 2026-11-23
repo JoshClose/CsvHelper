@@ -93,7 +93,7 @@ public class SerialTests
 			}
 		}
 
-		using var book = ExcelWorkbook.Open(new MemoryStream(stream.ToArray()));
+		using var book = ExcelWorkbook.Open(new MemoryStream(Written.Checked(stream.ToArray())));
 		using var reader = book.OpenReader(book.Sheets[0], Written.AllRows);
 		foreach (var value in values)
 		{

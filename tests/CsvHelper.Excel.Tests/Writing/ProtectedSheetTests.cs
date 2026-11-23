@@ -230,7 +230,7 @@ public class ProtectedSheetTests
 			ExcelConvert.ToExcel(new MemoryStream(csv), untyped, options);
 		}
 
-		foreach (var workbook in new[] { typed.ToArray(), untyped.ToArray() })
+		foreach (var workbook in new[] { Written.Checked(typed.ToArray()), Written.Checked(untyped.ToArray()) })
 		{
 			Assert.Contains("</sheetData>" + Protection, Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 			Assert.Equal("A1:locked E1:locked A2:unlocked E2:unlocked A3:unlocked F2:locked", Locks(workbook, 1, "A1", "E1", "A2", "E2", "A3", "F2"));
@@ -263,7 +263,7 @@ public class ProtectedSheetTests
 			book.WriteSheet("Orders", Orders, new ExcelSheetOptions { Validate = true });
 		}
 
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		Assert.DoesNotContain("<sheetProtection", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.DoesNotContain("<protection", Written.Entry(workbook, "xl/styles.xml"));
 	}

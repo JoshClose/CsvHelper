@@ -29,9 +29,9 @@ namespace CsvHelper.Excel;
 /// completed into a file Excel opens. An exception from the stream leaves the file incomplete.
 /// </para>
 /// <para>
-/// Not thread-safe, as <see cref="CsvWriter"/> isn't. Before .NET 10, closing a sheet's entry and the package writes to
-/// the stream synchronously, even from <see cref="DisposeAsync"/>, so a stream that forbids synchronous writes throws;
-/// write to a file or a buffer there.
+/// Not thread-safe, as <see cref="CsvWriter"/> isn't. Every write to the stream that an asynchronous call makes,
+/// <see cref="DisposeAsync"/>'s included, is asynchronous, on every target, so a stream that forbids synchronous writes
+/// takes a workbook written with them.
 /// </para>
 /// </remarks>
 public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
@@ -910,8 +910,9 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		}
 		catch
 		{
-			// The package is closed, and the stream unless left open, but the first failure is the one that says why: closing
-			// a package that failed to write fails too.
+			// The package is closed, and the stream unless left open, and the first failure is the one that says why. After
+			// the stream has failed, closing writes nothing and throws nothing, and the file stays incomplete; after any other
+			// failure it completes the package with the parts written so far, and a failure of the stream then is dropped.
 			try
 			{
 				await package.DisposeAsync(async).ConfigureAwait(false);

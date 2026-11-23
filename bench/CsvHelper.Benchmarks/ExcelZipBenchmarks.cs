@@ -16,8 +16,9 @@ public enum ZipSheet
 
 /// <summary>
 /// A write's zip stage alone: the sheet XML that CsvHelper.Excel's writer makes for the package assets or the orders,
-/// zipped and deflated as a write does it today, and deflated in 1 MB chunks on several threads, as Phase 9's parallel
-/// deflate will (its decisions 31 to 33), to a stream that counts and drops the bytes.
+/// zipped and deflated as a write does it, by the library's own zip writer, and by <see cref="ZipArchive"/>, and deflated
+/// in 1 MB chunks on several threads, as Phase 9's parallel deflate will (its decisions 31 to 33), to a stream that counts
+/// and drops the bytes.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -31,20 +32,29 @@ public enum ZipSheet
 /// <para>
 /// Every method writes the XML in 64 KB pieces, as the sheet's writer flushes it, into a <see cref="CountingStream"/> that
 /// can't seek, as a response body can't, and returns the bytes written: the compressed size, with the zip's headers for
-/// the <see cref="ZipArchive"/> methods. <c>verify ExcelZipBenchmarks</c> prints each method's size (they differ by
-/// design, so it flags them as different).
+/// the <see cref="PackageWriter"/> and <see cref="ZipArchive"/> methods. <c>verify ExcelZipBenchmarks</c> prints each
+/// method's size (they differ by design, so it flags them as different).
 /// </para>
 /// <list type="bullet">
 /// <item><description>
 /// <see cref="ZipArchive_Fastest"/> (the baseline): a <see cref="ZipArchive"/> entry at
-/// <see cref="CompressionLevel.Fastest"/>, what a write's zip stage is today.
+/// <see cref="CompressionLevel.Fastest"/>, which the library's own zip writer is measured against.
 /// </description></item>
 /// <item><description>
 /// <see cref="ZipArchive_NoCompression"/>: a stored entry, so CRC-32 and the entry's own work without deflate.
 /// </description></item>
 /// <item><description>
+/// <see cref="PackageWriter_Fastest"/>: the same entry through the library's own zip writer, the internal
+/// <see cref="PackageWriter"/>, what a write's zip stage is: one entry, <c>xl/worksheets/sheet1.xml</c>, and the package
+/// disposed.
+/// </description></item>
+/// <item><description>
+/// <see cref="PackageWriter_NoCompression"/>: its stored entry, so CRC-32 and the writer's own work without deflate.
+/// </description></item>
+/// <item><description>
 /// <see cref="DeflateStream_Fastest"/>: a bare <see cref="DeflateStream"/> at the same level, so deflate alone; the
-/// baseline's time less this one's is what <see cref="ZipArchive"/> adds.
+/// baseline's time less this one's is what <see cref="ZipArchive"/> adds, and <see cref="PackageWriter_Fastest"/>'s
+/// less it what the own writer adds.
 /// </description></item>
 /// <item><description>
 /// <see cref="DeflateStream_Level2"/>: zlib's level 2 through <see cref="ZLibCompressionOptions"/>, the level decision 33
@@ -152,7 +162,7 @@ public class ExcelZipBenchmarks
 		}
 	}
 
-	/// <summary>A <see cref="ZipArchive"/> entry at <see cref="CompressionLevel.Fastest"/>: a write's zip stage today.</summary>
+	/// <summary>A <see cref="ZipArchive"/> entry at <see cref="CompressionLevel.Fastest"/>, the baseline.</summary>
 	/// <returns>The bytes written.</returns>
 	[Benchmark(Baseline = true)]
 	public long ZipArchive_Fastest() => Archive(CompressionLevel.Fastest);
@@ -161,6 +171,19 @@ public class ExcelZipBenchmarks
 	/// <returns>The bytes written.</returns>
 	[Benchmark]
 	public long ZipArchive_NoCompression() => Archive(CompressionLevel.NoCompression);
+
+	/// <summary>
+	/// An entry of the library's own zip writer (<see cref="PackageWriter"/>) at <see cref="CompressionLevel.Fastest"/>: a
+	/// write's zip stage.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	public long PackageWriter_Fastest() => Package(CompressionLevel.Fastest);
+
+	/// <summary>A stored entry of the library's own zip writer: CRC-32 and the writer's own work, without deflate.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	public long PackageWriter_NoCompression() => Package(CompressionLevel.NoCompression);
 
 	/// <summary>A bare <see cref="DeflateStream"/> at <see cref="CompressionLevel.Fastest"/>: deflate alone.</summary>
 	/// <returns>The bytes written.</returns>
@@ -336,6 +359,24 @@ public class ExcelZipBenchmarks
 			using var stream = entry.Open();
 			WriteInPieces(stream, 0, xml.Length);
 		}
+
+		return output.Count;
+	}
+
+	/// <summary>
+	/// Writes the XML into an entry of the library's own zip writer (<see cref="PackageWriter"/>), synchronously, as the
+	/// sheet's writer does, to a stream that can't seek, and disposes the package, which writes its central directory.
+	/// </summary>
+	/// <param name="level">The entry's level.</param>
+	/// <returns>The bytes written.</returns>
+	private long Package(CompressionLevel level)
+	{
+		var output = new CountingStream(keep: false);
+		var package = new PackageWriter(output, leaveOpen: true, level);
+		var entry = SyncOrAsync.Result(package.OpenPartAsync(SheetPart, false, CancellationToken.None));
+		WriteInPieces(entry, 0, xml.Length);
+		SyncOrAsync.Wait(PackageWriter.CloseAsync(entry, false));
+		SyncOrAsync.Wait(package.DisposeAsync(false));
 
 		return output.Count;
 	}

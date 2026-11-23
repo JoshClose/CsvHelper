@@ -206,7 +206,7 @@ public class ConversionSecurityTests(ITestOutputHelper output)
 			ExcelConvert.ToExcel(input, workbook);
 		}
 
-		return workbook.ToArray();
+		return Written.Checked(workbook.ToArray());
 	}
 
 	/// <summary>

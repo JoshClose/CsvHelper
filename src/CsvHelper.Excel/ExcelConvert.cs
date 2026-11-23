@@ -55,7 +55,7 @@ namespace CsvHelper.Excel;
 /// the other as it was, and refuses to write the file it reads. A stream overload reads a workbook as
 /// <see cref="ExcelWorkbook.Open(Stream, ExcelReaderOptions?, bool)"/> reads a stream, reads a CSV and writes either from
 /// the stream's position, and leaves both streams open. Every read and write of an asynchronous overload is asynchronous,
-/// with the workbook writer's caveat before .NET 10 (<see cref="ExcelWorkbookWriter"/>).
+/// on every target.
 /// </para>
 /// </remarks>
 public static class ExcelConvert

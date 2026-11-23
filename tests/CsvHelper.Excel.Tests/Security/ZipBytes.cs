@@ -5,8 +5,9 @@ namespace CsvHelper.Excel.Tests.Security;
 
 /// <summary>
 /// Patches the headers of a zip archive's bytes, so that tests can make them lie: sizes in the central directory and the
-/// local headers, and entries whose records point at another entry's data. It reads the archives
-/// <see cref="TestPackage.ToArray"/> writes: no Zip64, no data descriptors, and no archive comment.
+/// local headers, and entries whose records point at another entry's data. It patches the archives
+/// <see cref="TestPackage.ToArray"/> writes: no Zip64, no data descriptors, and no archive comment. It also finds an
+/// entry's data and sizes in a workbook the writer writes, without Zip64, whose streamed entries have descriptors.
 /// </summary>
 internal static class ZipBytes
 {
@@ -28,7 +29,7 @@ internal static class ZipBytes
 	/// <param name="size">The size to declare.</param>
 	public static void SetUncompressedSize(byte[] zip, string name, uint size)
 	{
-		var (central, local) = Find(zip, name);
+		var (central, local) = Find(zip, name, true);
 		BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(central + 24), size);
 		BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(local + 22), size);
 	}
@@ -39,7 +40,7 @@ internal static class ZipBytes
 	/// <param name="size">The size to declare.</param>
 	public static void SetCompressedSize(byte[] zip, string name, uint size)
 	{
-		var (central, local) = Find(zip, name);
+		var (central, local) = Find(zip, name, true);
 		BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(central + 20), size);
 		BinaryPrimitives.WriteUInt32LittleEndian(zip.AsSpan(local + 18), size);
 	}
@@ -49,7 +50,7 @@ internal static class ZipBytes
 	/// <param name="name">The entry's name.</param>
 	/// <param name="length">The length to declare.</param>
 	public static void SetCentralExtraLength(byte[] zip, string name, ushort length) =>
-		BinaryPrimitives.WriteUInt16LittleEndian(zip.AsSpan(Find(zip, name).Central + 30), length);
+		BinaryPrimitives.WriteUInt16LittleEndian(zip.AsSpan(Find(zip, name, true).Central + 30), length);
 
 	/// <summary>Renames an entry in its central directory record only, to a name of the same length in bytes.</summary>
 	/// <param name="zip">The archive's bytes, changed in place.</param>
@@ -59,7 +60,7 @@ internal static class ZipBytes
 	{
 		var bytes = Encoding.UTF8.GetBytes(newName);
 		Assert.Equal(Encoding.UTF8.GetByteCount(name), bytes.Length);
-		bytes.CopyTo(zip.AsSpan(Find(zip, name).Central + 46));
+		bytes.CopyTo(zip.AsSpan(Find(zip, name, true).Central + 46));
 	}
 
 	/// <summary>Where an entry's compressed data is: after its local header, for the compressed size it declares.</summary>
@@ -68,7 +69,7 @@ internal static class ZipBytes
 	/// <returns>The data's offset and length.</returns>
 	public static (long Start, long Length) DataRange(byte[] zip, string name)
 	{
-		var (central, local) = Find(zip, name);
+		var (central, local) = Find(zip, name, false);
 		var nameLength = BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(local + 26));
 		var extraLength = BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(local + 28));
 
@@ -79,13 +80,13 @@ internal static class ZipBytes
 	/// <param name="zip">The archive's bytes.</param>
 	/// <param name="name">The entry's name.</param>
 	/// <returns>The size.</returns>
-	public static uint UncompressedSize(byte[] zip, string name) => BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(Find(zip, name).Central + 24));
+	public static uint UncompressedSize(byte[] zip, string name) => BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(Find(zip, name, false).Central + 24));
 
 	/// <summary>The compressed size an entry's central directory record declares.</summary>
 	/// <param name="zip">The archive's bytes.</param>
 	/// <param name="name">The entry's name.</param>
 	/// <returns>The size.</returns>
-	public static uint CompressedSize(byte[] zip, string name) => BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(Find(zip, name).Central + 20));
+	public static uint CompressedSize(byte[] zip, string name) => BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(Find(zip, name, false).Central + 20));
 
 	/// <summary>
 	/// Points an entry's central directory record at another entry's data: its compression method, CRC, sizes and local
@@ -96,8 +97,8 @@ internal static class ZipBytes
 	/// <param name="target">The entry whose data it gets.</param>
 	public static void PointAt(byte[] zip, string name, string target)
 	{
-		var central = Find(zip, name).Central;
-		var source = Find(zip, target).Central;
+		var central = Find(zip, name, true).Central;
+		var source = Find(zip, target, true).Central;
 
 		// The compression method at 10, then the time and date, the CRC (16), the sizes (20, 24) and, at 42, the offset.
 		zip.AsSpan(source + 10, 2).CopyTo(zip.AsSpan(central + 10));
@@ -108,8 +109,12 @@ internal static class ZipBytes
 	/// <summary>The offsets of an entry's central directory record and local header.</summary>
 	/// <param name="zip">The archive's bytes.</param>
 	/// <param name="name">The entry's name.</param>
+	/// <param name="patching">
+	/// Whether the entry's headers will be patched, so that it must have no data descriptor: its local header holds its
+	/// sizes. Its data and central sizes are found either way.
+	/// </param>
 	/// <returns>The two offsets.</returns>
-	private static (int Central, int Local) Find(byte[] zip, string name)
+	private static (int Central, int Local) Find(byte[] zip, string name, bool patching)
 	{
 		var end = zip.Length - EndSize;
 		Assert.Equal(EndSignature, BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(end)));
@@ -125,7 +130,10 @@ internal static class ZipBytes
 			{
 				var local = (int)BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(offset + 42));
 				Assert.Equal(LocalSignature, BinaryPrimitives.ReadUInt32LittleEndian(zip.AsSpan(local)));
-				Assert.Equal(0, BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(local + 6)) & 8);
+				if (patching)
+				{
+					Assert.Equal(0, BinaryPrimitives.ReadUInt16LittleEndian(zip.AsSpan(local + 6)) & 8);
+				}
 
 				return (offset, local);
 			}

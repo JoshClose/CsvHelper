@@ -26,9 +26,10 @@ public sealed class Zip64TheoryAttribute : TheoryAttribute
 /// <summary>
 /// A sheet whose XML is past 4 GiB, so that its entry needs Zip64 sizes, written through
 /// <see cref="ExcelWorkbookWriter.ToFile"/> (a stream that seeks) and to a stream that can't seek, synchronously and
-/// asynchronously: Phase 4's "Risks" (<see cref="ZipArchive"/>'s support differs between targets). The package is read
-/// back with <see cref="ZipArchive"/>, whole, and with CsvHelper.Excel's reader. Each case writes about 4.6 GB of XML and
-/// reads it twice, so the tests run on demand (<see cref="Zip64TheoryAttribute"/>).
+/// asynchronously: Phase 4's "Risks" (readers' support of Zip64 differs between targets). The package's zip is checked
+/// record by record, and on .NET Framework read whole by WindowsBase's packaging (<see cref="Written.CheckedFile"/>); it
+/// is read back with <see cref="ZipArchive"/>, whole, and with CsvHelper.Excel's reader. Each case writes about 4.6 GB of
+/// XML and reads it twice (three times on .NET Framework), so the tests run on demand (<see cref="Zip64TheoryAttribute"/>).
 /// </summary>
 /// <param name="output">Shows the sizes and times of each case.</param>
 public class Zip64Tests(ITestOutputHelper output)
@@ -50,7 +51,8 @@ public class Zip64Tests(ITestOutputHelper output)
 
 	/// <summary>
 	/// Writes a million rows of four 1,100-character cells, then checks that the sheet's entry is past 4 GiB, that it
-	/// inflates to its stated length, and that CsvHelper.Excel reads every row back.
+	/// inflates to its stated length, that the zip's records follow the writer's rules and WindowsBase reads every part on
+	/// .NET Framework, and that CsvHelper.Excel reads every row back.
 	/// </summary>
 	/// <param name="seekable">Whether the workbook is written through <see cref="ExcelWorkbookWriter.ToFile"/>, rather than to a stream that can't seek.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
@@ -92,6 +94,10 @@ public class Zip64Tests(ITestOutputHelper output)
 				Assert.Equal(sheet.Length, Inflate(sheet));
 				output.WriteLine($"The sheet's XML is {sheet.Length:N0} bytes, deflated to {sheet.CompressedLength:N0}, in a file of {new FileInfo(path).Length:N0}; written in {written.TotalSeconds:F1} s.");
 			}
+
+			clock.Restart();
+			Written.CheckedFile(path);
+			output.WriteLine($"The zip's records checked, and on .NET Framework every part read by WindowsBase, in {clock.Elapsed.TotalSeconds:F1} s.");
 
 			clock.Restart();
 

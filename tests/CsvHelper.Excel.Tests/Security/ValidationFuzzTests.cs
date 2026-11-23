@@ -140,7 +140,7 @@ public class ValidationFuzzTests(ITestOutputHelper output)
 			}
 		}
 
-		var bytes = stream.ToArray();
+		var bytes = Writing.Written.Checked(stream.ToArray());
 		if (save is not null)
 		{
 			Directory.CreateDirectory(save);

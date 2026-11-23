@@ -104,6 +104,6 @@ public class ImportSecurityTests(ITestOutputHelper output)
 			}
 		}
 
-		return stream.ToArray();
+		return Writing.Written.Checked(stream.ToArray());
 	}
 }

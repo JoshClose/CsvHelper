@@ -1,9 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<!-- net10.0 runs the net10.0 builds of CsvHelper and CsvHelper.Excel (ZipArchive's async API), net8.0 the net8.0
-		     builds (the sync fallback), and net48 the net47 builds, on .NET Framework's ZipArchive. The netstandard builds
-		     are compiled but not run; their zip code is the same as net8.0's. -->
+		<!-- net10.0 runs the net10.0 builds of CsvHelper and CsvHelper.Excel, net8.0 the net8.0 builds, and net48 the net47
+		     builds, where the zip writer deflates with DeflateStream and computes every CRC with its own slice-by-8 rather
+		     than the GZip trailer and PCLMULQDQ, and where WindowsBase opens the packages written. The netstandard builds
+		     are compiled but not run; their zip code is the same as net47's. -->
 		<TargetFrameworks>net10.0;net8.0;net48</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -28,9 +29,11 @@
 		<None Remove="App.config" />
 	</ItemGroup>
 
-	<!-- ZipArchive, for TestPackage, which .NET has in its shared framework. -->
+	<!-- ZipArchive, for TestPackage, which .NET has in its shared framework; and System.IO.Packaging's Package, which
+	     ZipStructure opens every written package with on .NET Framework, as the Open XML SDK and ClosedXML do there. -->
 	<ItemGroup Condition="'$(TargetFramework)' == 'net48'">
 		<Reference Include="System.IO.Compression" />
+		<Reference Include="WindowsBase" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -45,6 +48,11 @@
 		<PackageReference Include="ClosedXML" Version="0.105.1" />
 		<PackageReference Include="DocumentFormat.OpenXml" Version="3.5.1" />
 		<PackageReference Include="ExcelDataReader" Version="3.9.0" />
+	</ItemGroup>
+
+	<!-- The CRC-32 the zip writer's own is checked against: a reference in the tests only, not the library. -->
+	<ItemGroup>
+		<PackageReference Include="System.IO.Hashing" Version="10.0.5" />
 	</ItemGroup>
 
 	<!-- The corpus (see Files/README.md), read from the output folder. -->

@@ -294,7 +294,7 @@ public class FormattedCellsTests
 			writer.EndRecord();
 		}
 
-		Assert.Contains("</row><row><c><v>1234.5</v></c></row>", Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"));
+		Assert.Contains("</row><row><c><v>1234.5</v></c></row>", Written.Entry(Written.Checked(stream.ToArray()), "xl/worksheets/sheet1.xml"));
 	}
 
 	[Fact]

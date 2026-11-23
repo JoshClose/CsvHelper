@@ -4,6 +4,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using ClosedXML.Excel;
+using CsvHelper.Excel.Tests.Package;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 using ExcelDataReader;
@@ -47,10 +48,10 @@ internal sealed record WrittenCell(long Row, int Column, XElement Element)
 }
 
 /// <summary>
-/// Workbooks written by <see cref="ExcelWorkbookWriter"/> for the writer's tests, synchronously or asynchronously, and
-/// the readers they are read back with: CsvHelper.Excel's own, and the oracles (the Open XML SDK's validator, ClosedXML
-/// and ExcelDataReader); and their sheets' rows and cells found at their places, with or without <c>r</c>
-/// (<see cref="Rows(XDocument)"/>).
+/// Workbooks written by <see cref="ExcelWorkbookWriter"/> for the writer's tests, synchronously or asynchronously, each
+/// package's zip checked as it comes (<see cref="Checked(byte[])"/>), and the readers they are read back with:
+/// CsvHelper.Excel's own, and the oracles (the Open XML SDK's validator, ClosedXML and ExcelDataReader); and their sheets'
+/// rows and cells found at their places, with or without <c>r</c> (<see cref="Rows(XDocument)"/>).
 /// </summary>
 internal static class Written
 {
@@ -95,7 +96,7 @@ internal static class Written
 #endif
 	}
 
-	/// <summary>Writes a workbook into memory, and disposes the writer as the mode says.</summary>
+	/// <summary>Writes a workbook into memory, disposes the writer as the mode says, and checks the package's zip (<see cref="Checked(byte[])"/>).</summary>
 	/// <param name="write">Writes the sheets; its flag says whether to write asynchronously.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="options">The options, or <see langword="null"/>.</param>
@@ -114,8 +115,46 @@ internal static class Written
 			workbook.Dispose();
 		}
 
-		return stream.ToArray();
+		return Checked(stream.ToArray());
 	}
+
+	/// <summary>
+	/// Checks a package that CsvHelper.Excel wrote, before a test reads it: every header, descriptor and record of its zip
+	/// against the writer's rules (<see cref="ZipStructure.AssertValid(byte[])"/>), and on .NET Framework, every part read
+	/// through by WindowsBase's packaging (<see cref="ZipStructure.AssertPackagingReads(byte[])"/>).
+	/// </summary>
+	/// <param name="package">The package's bytes, the zip from its first byte.</param>
+	/// <returns><paramref name="package"/>.</returns>
+	public static byte[] Checked(byte[] package)
+	{
+		ZipStructure.AssertValid(package);
+		ZipStructure.AssertPackagingReads(package);
+
+		return package;
+	}
+
+	/// <summary>Checks a package file that CsvHelper.Excel wrote, as <see cref="Checked(byte[])"/> checks a package's bytes.</summary>
+	/// <param name="path">The file's path.</param>
+	/// <returns><paramref name="path"/>.</returns>
+	public static string CheckedFile(string path)
+	{
+		using (var file = File.OpenRead(path))
+		{
+			ZipStructure.AssertValid(file);
+		}
+
+		ZipStructure.AssertPackagingReads(path);
+
+		return path;
+	}
+
+	/// <summary>
+	/// A stream for a workbook that a test writes but doesn't read back, such as one whose writer only refuses something:
+	/// the workbook writer disposes it as it closes the package, and disposing it checks the package
+	/// (<see cref="Checked(byte[])"/>).
+	/// </summary>
+	/// <returns>The stream, empty.</returns>
+	public static MemoryStream CheckedOnClose() => new CheckingStream();
 
 	/// <summary>Writes rows of fields by hand into one sheet, a field per <see cref="CsvWriter.WriteField(string?)"/>.</summary>
 	/// <param name="rows">The rows.</param>
@@ -494,4 +533,23 @@ internal static class Written
 	/// <param name="xml">The XML.</param>
 	/// <returns>The XML without them.</returns>
 	private static string WithoutReferences(string xml) => Reference.Replace(xml, "$1");
+
+	/// <summary>A stream in memory that checks the package written to it when it is first disposed (<see cref="CheckedOnClose"/>).</summary>
+	private sealed class CheckingStream : MemoryStream
+	{
+		/// <summary>Whether the package has been checked: a stream may be disposed more than once.</summary>
+		private bool done;
+
+		/// <inheritdoc/>
+		protected override void Dispose(bool disposing)
+		{
+			if (disposing && !done)
+			{
+				done = true;
+				Checked(ToArray());
+			}
+
+			base.Dispose(disposing);
+		}
+	}
 }

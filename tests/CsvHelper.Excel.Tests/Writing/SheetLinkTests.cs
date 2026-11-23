@@ -265,7 +265,7 @@ public class SheetLinkTests
 		await Written.DisposeAsync(writer, async);
 		book.Dispose();
 
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		Assert.Contains("<hyperlinks><hyperlink ref=\"A2\" r:id=\"rId1\"/></hyperlinks>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.EndsWith(Relationships(Relationship("rId1", "https://kept.example/")), Written.Entry(workbook, "xl/worksheets/_rels/sheet1.xml.rels"));
 		Assert.Equal(["Site|Note", "https://kept.example/|n"], Written.ReadOne(workbook));

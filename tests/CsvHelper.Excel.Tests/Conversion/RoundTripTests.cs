@@ -232,7 +232,7 @@ public class RoundTripTests
 	private static async Task<string> RoundTripAsync(string csv, bool async, CsvToExcelOptions? options = null) =>
 		await ToCsvAsync(await ToExcelAsync(csv, async, options), async);
 
-	/// <summary>Converts CSV to a workbook through the stream overloads, as the mode says.</summary>
+	/// <summary>Converts CSV to a workbook through the stream overloads, as the mode says, and checks the workbook's zip (<see cref="Written.Checked(byte[])"/>).</summary>
 	private static async Task<byte[]> ToExcelAsync(string csv, bool async, CsvToExcelOptions? options = null)
 	{
 		using var input = new MemoryStream(Encoding.UTF8.GetBytes(csv));
@@ -246,7 +246,7 @@ public class RoundTripTests
 			ExcelConvert.ToExcel(input, output, options);
 		}
 
-		return output.ToArray();
+		return Written.Checked(output.ToArray());
 	}
 
 	/// <summary>Converts a workbook's first sheet to CSV through the stream overloads, as the mode says.</summary>

@@ -59,7 +59,7 @@ public class HeldRecordsTests(ITestOutputHelper output)
 {
 	/// <summary>
 	/// The most the 10,000 rows' write may allocate beyond the 100 rows': nothing grows with the rows, so this is room
-	/// for the runtime's own allocations. They allocated 14,720 and 14,808 bytes on .NET 10 (2026-11-22); and 150,320
+	/// for the runtime's own allocations. They allocated 13,032 and 13,120 bytes on .NET 10 (2026-11-22); and 150,320
 	/// and 150,408 bytes before the held records were pooled, since auto-fit holds 100 records whatever the rows.
 	/// </summary>
 	private const long RowsSlack = 1024;
@@ -78,8 +78,8 @@ public class HeldRecordsTests(ITestOutputHelper output)
 	private const int WideRows = 200;
 
 	/// <summary>
-	/// The most the wide sheet's write may allocate: 52,008 bytes on .NET 10 (2026-11-22), of which 25,096 are the
-	/// widths' arrays of 1,000 columns, with a margin of 13,528 bytes (26%) for the runtime's own allocations. Before
+	/// The most the wide sheet's write may allocate: 49,864 bytes on .NET 10 (2026-11-22), of which 25,096 are the
+	/// widths' arrays of 1,000 columns, with a margin of 15,672 bytes (31%) for the runtime's own allocations. Before
 	/// the held records were pooled, it allocated 8,438,856 bytes, most of them the doublings of an array of 131,072
 	/// cells.
 	/// </summary>

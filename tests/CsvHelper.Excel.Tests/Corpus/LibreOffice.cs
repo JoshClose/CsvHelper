@@ -36,17 +36,17 @@ internal static class LibreOffice
 	private static readonly Lazy<string> Converted = new(() => Convert(CorpusFiles.Workbooks.Select(f => (Flat(f) + Path.GetExtension(f), File.ReadAllBytes(CorpusFiles.PathOf(f)))), CsvFilter));
 
 	/// <summary>The written set's workbooks with every sheet's name a file name, converted to CSV.</summary>
-	private static readonly Lazy<string> WrittenCsv = new(() => Convert(Written.Workbooks.Where(CanExport).Select(w => (w.Name, Written.Write(w))), CsvFilter));
+	private static readonly Lazy<string> WrittenCsv = new(() => Convert(Written.Workbooks.Where(CanExport).Select(w => (w.Name, Writing.Written.Checked(Written.Write(w)))), CsvFilter));
 
 	/// <summary>The written set's other workbooks, converted to <c>.xlsx</c>.</summary>
-	private static readonly Lazy<string> WrittenXlsx = new(() => Convert(Written.Workbooks.Where(w => !CanExport(w)).Select(w => (w.Name, Written.Write(w))), XlsxFilter));
+	private static readonly Lazy<string> WrittenXlsx = new(() => Convert(Written.Workbooks.Where(w => !CanExport(w)).Select(w => (w.Name, Writing.Written.Checked(Written.Write(w)))), XlsxFilter));
 
 	/// <summary>Excel's filled copies of the written set's templates (<c>excel-written/filled/</c>), saved again by LibreOffice as <c>.xlsx</c>.</summary>
 	private static readonly Lazy<string> FilledXlsx = new(() => Convert(
 		Directory.EnumerateFiles(CorpusFiles.PathOf("excel-written/filled"), "*.xlsx").Select(p => (Path.GetFileName(p), File.ReadAllBytes(p))), XlsxFilter));
 
 	/// <summary>Every workbook of the written set, converted to <c>.xlsx</c>, for what LibreOffice keeps of its look.</summary>
-	private static readonly Lazy<string> WrittenLooks = new(() => Convert(Written.Workbooks.Select(w => (w.Name, Written.Write(w))), XlsxFilter));
+	private static readonly Lazy<string> WrittenLooks = new(() => Convert(Written.Workbooks.Select(w => (w.Name, Writing.Written.Checked(Written.Write(w)))), XlsxFilter));
 
 	/// <summary>The display set's workbooks converted to CSV in a locale, by locale, each made once for every test.</summary>
 	private static readonly ConcurrentDictionary<string, Lazy<string>> DisplayInLocale = new(StringComparer.Ordinal);

@@ -640,7 +640,7 @@ public class SheetShapeTests
 
 	/// <summary>Writes the orders' template.</summary>
 	/// <param name="async">Whether to write asynchronously.</param>
-	/// <returns>The workbook.</returns>
+	/// <returns>The workbook, its zip checked (<see cref="Written.Checked(byte[])"/>).</returns>
 	private static async Task<byte[]> TemplateAsync(bool async)
 	{
 		using var stream = new MemoryStream();
@@ -653,7 +653,7 @@ public class SheetShapeTests
 			ExcelTemplate.Create<ShapeOrder>(stream);
 		}
 
-		return stream.ToArray();
+		return Written.Checked(stream.ToArray());
 	}
 
 	/// <summary>A workbook's parts by the first 12 hexadecimal digits of their SHA-256, in name order.</summary>

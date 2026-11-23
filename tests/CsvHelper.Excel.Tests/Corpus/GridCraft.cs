@@ -32,7 +32,7 @@ internal static class GridCraft
 		var folder = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Tests.GridCraft." + Guid.NewGuid().ToString("N"))).FullName;
 		foreach (var workbook in Written.Workbooks)
 		{
-			File.WriteAllBytes(Path.Combine(folder, workbook.Name), Written.Write(workbook));
+			File.WriteAllBytes(Path.Combine(folder, workbook.Name), Writing.Written.Checked(Written.Write(workbook)));
 		}
 
 		return folder;

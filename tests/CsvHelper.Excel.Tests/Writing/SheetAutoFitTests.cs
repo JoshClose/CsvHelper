@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
+using System.IO.Compression;
 using System.Text.RegularExpressions;
 
 
@@ -87,9 +88,11 @@ public class SheetAutoFitTests
 	[MemberData(nameof(Modes))]
 	public async Task HoldsTheRecordsUntilTheirWidthsAreKnown(bool async)
 	{
-		// Nothing reaches the stream, even when a flush is asked for, until the last record auto-fit measures ends.
+		// Nothing reaches the stream, even when a flush is asked for, until the last record auto-fit measures ends. Stored, so
+		// that the records let go pass the zip's 64 KB buffer and reach the stream: deflated, they would be a few hundred
+		// bytes, which the zip holds until the entry closes.
 		var stream = new MemoryStream();
-		var book = ExcelWorkbookWriter.Create(stream, new ExcelWriterOptions { Sheets = new ExcelSheetOptions { AutoFit = 3 } }, leaveOpen: true);
+		var book = ExcelWorkbookWriter.Create(stream, new ExcelWriterOptions { Sheets = new ExcelSheetOptions { AutoFit = 3 }, CompressionLevel = CompressionLevel.NoCompression }, leaveOpen: true);
 		var writer = book.AddSheet("Held");
 		var lengths = new List<long>();
 		for (var i = 0; i < 6; i++)
@@ -110,8 +113,9 @@ public class SheetAutoFitTests
 
 		await Written.DisposeAsync(writer, async);
 		book.Dispose();
+		Written.Checked(stream.ToArray());
 
-		// The header and three records held; the zip writes its local header with the first bytes.
+		// The header and three records held, then the four records' 120 KB.
 		Assert.Equal([0, 0, 0], lengths.Take(3));
 		Assert.All(lengths.Skip(3), l => Assert.True(l > 0));
 	}
@@ -132,7 +136,7 @@ public class SheetAutoFitTests
 		await Written.DisposeAsync(writer, async);
 		book.Dispose();
 
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		Assert.Equal(Fit(Text("Name", bold: true), Text("kept")), Width(workbook, 1));
 		Assert.Equal(["Name|Note", "kept|n"], Written.ReadOne(workbook));
 		Assert.Empty(Written.ValidationErrors(workbook));

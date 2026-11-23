@@ -72,7 +72,7 @@ public class MergeCellsTests
 			writer.MergeCells("C3:D4");
 		}
 
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		Assert.Contains("<mergeCells count=\"2\"><mergeCell ref=\"A1:B2\"/><mergeCell ref=\"C3:D4\"/></mergeCells>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
@@ -80,7 +80,7 @@ public class MergeCellsTests
 	[Fact]
 	public void RefusesRowOneUnderATitle()
 	{
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 		using var writer = book.AddSheet("Data", new ExcelSheetOptions { Title = "Report" });
 
 		var e = Assert.Throws<ArgumentException>(() => writer.MergeCells("D1:E1"));
@@ -135,7 +135,7 @@ public class MergeCellsTests
 		var e = Assert.Throws<InvalidOperationException>(() => csv.MergeCells("A1:B2"));
 		Assert.Equal("MergeCells merges a sheet's cells, and this CsvWriter writes CSV: use a writer from ExcelWorkbookWriter.AddSheet.", e.Message);
 
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 		var writer = book.AddSheet("Data");
 		writer.Dispose();
 		Assert.Throws<ObjectDisposedException>(() => writer.MergeCells("A1:B2"));

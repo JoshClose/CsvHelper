@@ -330,7 +330,7 @@ public class RowLimitTests
 		}
 
 		// The writer's open record has a field, which Dispose ended without a cell.
-		using var workbook = ExcelWorkbook.Open(new MemoryStream(stream.ToArray()));
+		using var workbook = ExcelWorkbook.Open(new MemoryStream(Written.Checked(stream.ToArray())));
 		using var reader = workbook.OpenReader(Written.AllRows);
 		var rows = 0;
 		var last = 0;

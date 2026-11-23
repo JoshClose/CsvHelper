@@ -612,7 +612,7 @@ public class WorkbookWriterTests
 			Assert.True(stream.Disposed);
 		}
 
-		var workbook = memory.ToArray();
+		var workbook = Written.Checked(memory.ToArray());
 
 		Assert.Equal(2001, Written.ReadOne(workbook).Count);
 		Assert.Empty(Written.ValidationErrors(workbook));
@@ -643,7 +643,7 @@ public class WorkbookWriterTests
 				book.Dispose();
 			}
 
-			Assert.Equal(["Name|Note", "fruit 0|note 0", "fruit 1|note 1", "fruit 2|note 2"], Written.ReadOne(File.ReadAllBytes(path)));
+			Assert.Equal(["Name|Note", "fruit 0|note 0", "fruit 1|note 1", "fruit 2|note 2"], Written.ReadOne(File.ReadAllBytes(Written.CheckedFile(path))));
 			Assert.True(Api.Workbooks.IsClosed(path));
 		}
 		finally
@@ -663,12 +663,14 @@ public class WorkbookWriterTests
 
 		Assert.True(open.CanWrite);
 		Assert.False(closed.CanWrite);
+		Written.Checked(open.ToArray());
+		Written.Checked(closed.ToArray());
 	}
 
 	[Fact]
 	public void WritesOneSheetAtATime()
 	{
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 		using var raw = book.AddSheet("Raw");
 
 		var e = Assert.Throws<InvalidOperationException>(() => book.AddSheet("Next"));
@@ -680,7 +682,7 @@ public class WorkbookWriterTests
 	[Fact]
 	public void RefusesNamesExcelTakesToBeTheSame()
 	{
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 		book.WriteSheet("Data", Array.Empty<WrittenText>());
 
 		var e = Assert.Throws<ArgumentException>(() => book.AddSheet("data"));
@@ -696,7 +698,7 @@ public class WorkbookWriterTests
 	[Fact]
 	public void RefusesToWriteAfterItIsDisposed()
 	{
-		var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 		book.Dispose();
 		book.Dispose();
 
@@ -707,7 +709,7 @@ public class WorkbookWriterTests
 	[Fact]
 	public void WritesNoComments()
 	{
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 		using var writer = book.AddSheet("Comments");
 
 		Assert.Throws<NotSupportedException>(() => writer.WriteComment("no"));
@@ -725,7 +727,7 @@ public class WorkbookWriterTests
 			book.WriteSheet("After", Array.Empty<WrittenText>());
 		}
 
-		Assert.Equal(["Ints: ", "Ints 2: ", "After: Name|Note"], Written.Sheets(stream.ToArray()));
+		Assert.Equal(["Ints: ", "Ints 2: ", "After: Name|Note"], Written.Sheets(Written.Checked(stream.ToArray())));
 	}
 
 	[Fact]

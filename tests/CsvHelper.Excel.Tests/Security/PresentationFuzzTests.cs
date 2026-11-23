@@ -355,7 +355,7 @@ public class PresentationFuzzTests(ITestOutputHelper output)
 			book.Dispose();
 		}
 
-		return stream.ToArray();
+		return Written.Checked(stream.ToArray());
 	}
 
 	/// <summary>Merges the ranges of a slot (after as many records), and checks each against the model's rules.</summary>

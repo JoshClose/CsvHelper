@@ -110,7 +110,7 @@ public class ExcelTemplateTests
 
 		// A short name's column is Excel's default width, where the same sheet written by hand is as wide as the name; a
 		// long name's is as wide as it.
-		var sheet = SheetValidations.Widths(stream.ToArray());
+		var sheet = SheetValidations.Widths(Written.Checked(stream.ToArray()));
 		var widths = SheetValidations.Widths(template);
 		Assert.True(sheet["Name"] < ColumnWidths.Default);
 		Assert.Equal(ColumnWidths.Default, widths["Name"]);
@@ -215,7 +215,7 @@ public class ExcelTemplateTests
 		Assert.True(stream.CanWrite);
 		var bytes = memory.ToArray();
 		Assert.Equal([1, 2, 3], bytes.Take(3));
-		Assert.Equal(["Id|Status|When|Region|Note"], Written.Read([.. bytes.Skip(3)])[0].Rows);
+		Assert.Equal(["Id|Status|When|Region|Note"], Written.Read(Written.Checked([.. bytes.Skip(3)]))[0].Rows);
 	}
 
 	[Fact]
@@ -247,7 +247,7 @@ public class ExcelTemplateTests
 		return [.. book.Sheets.Select(s => s.Name)];
 	}
 
-	/// <summary>Writes a template to a file, as the mode says.</summary>
+	/// <summary>Writes a template to a file, as the mode says, and checks the file's zip (<see cref="Written.CheckedFile(string)"/>).</summary>
 	/// <typeparam name="T">The record type.</typeparam>
 	/// <param name="path">The file's path.</param>
 	/// <param name="options">The options, or <see langword="null"/>.</param>
@@ -263,9 +263,11 @@ public class ExcelTemplateTests
 		{
 			ExcelTemplate.Create<T>(path, options);
 		}
+
+		Written.CheckedFile(path);
 	}
 
-	/// <summary>Writes a template, as the modes say, and returns its bytes.</summary>
+	/// <summary>Writes a template, as the modes say, and returns its bytes, its zip checked (<see cref="Written.Checked(byte[])"/>).</summary>
 	/// <typeparam name="T">The record type.</typeparam>
 	/// <param name="options">The options, or <see langword="null"/>.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
@@ -299,6 +301,6 @@ public class ExcelTemplateTests
 			ExcelTemplate.Create<T>(stream, options);
 		}
 
-		return stream.ToArray();
+		return Written.Checked(stream.ToArray());
 	}
 }

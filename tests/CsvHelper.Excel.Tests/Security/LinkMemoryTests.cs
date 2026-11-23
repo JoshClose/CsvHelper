@@ -79,7 +79,7 @@ public class LinkMemoryTests(ITestOutputHelper output)
 		output.WriteLine($"{failed:N0} records discarded, each with a link to a target of its own of {SheetLinks.MaxTargetLength:N0} code units: {held:N0} bytes held.");
 		Assert.True(held < MiB, $"{held:N0} bytes held");
 
-		var written = stream.ToArray();
+		var written = Written.Checked(stream.ToArray());
 		Assert.Equal(["https://example.com/first|kept", "https://example.com/last|kept"], Written.ReadOne(written));
 		Assert.Equal(2, Regex.Matches(Written.Entry(written, "xl/worksheets/_rels/sheet1.xml.rels"), "<Relationship ").Count);
 	}

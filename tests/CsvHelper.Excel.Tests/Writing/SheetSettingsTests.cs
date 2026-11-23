@@ -606,7 +606,7 @@ public class SheetSettingsTests
 		Assert.StartsWith("ExcelWriterOptions.Sheets' columns were changed after the writer was created: The column \"Name\" has a format Excel doesn't open.", error.Message);
 		// The empty sheet of a workbook without sheets shows nothing, whatever the workbook's options say.
 		book.Dispose();
-		Assert.Equal(["Sheet1: "], Written.Sheets(stream.ToArray()));
+		Assert.Equal(["Sheet1: "], Written.Sheets(Written.Checked(stream.ToArray())));
 		Assert.Empty(Written.ValidationErrors(stream.ToArray()));
 	}
 
@@ -685,7 +685,7 @@ public class SheetSettingsTests
 		Assert.Same(Given, seen[3]);
 
 		await book.DisposeAsync();
-		var workbook = stream.ToArray();
+		var workbook = Written.Checked(stream.ToArray());
 		Assert.Empty(Written.ValidationErrors(workbook));
 		Assert.Equal(6, Written.Read(workbook).Count);
 	}
@@ -708,7 +708,7 @@ public class SheetSettingsTests
 		}
 
 		book.Dispose();
-		Assert.Equal(["Data: a"], Written.Sheets(stream.ToArray()));
+		Assert.Equal(["Data: a"], Written.Sheets(Written.Checked(stream.ToArray())));
 	}
 
 	/// <summary>Options with one column's options, named <c>Amount</c>.</summary>
@@ -727,7 +727,7 @@ public class SheetSettingsTests
 	/// <returns>The exception's message.</returns>
 	private static string AttributeProblem<[System.Diagnostics.CodeAnalysis.DynamicallyAccessedMembers(MemberFormats.Members)] T>()
 	{
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 
 		return Assert.Throws<InvalidOperationException>(() => book.AddSheet<T>("Data")).Message;
 	}

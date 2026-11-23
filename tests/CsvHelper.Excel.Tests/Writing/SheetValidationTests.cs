@@ -143,7 +143,7 @@ public class SheetValidationTests
 			ExcelConvert.ToExcel<ValidatedOrder>(csv, excel, options);
 		}
 
-		var workbook = excel.ToArray();
+		var workbook = Written.Checked(excel.ToArray());
 
 		// Below the title, from the row below the header.
 		Assert.Equal("whole -2147483648 2147483647 | General", SheetValidations.Describe(workbook, headerRow: 2)["Id"]);
@@ -240,7 +240,7 @@ public class SheetValidationTests
 		}
 
 		Assert.Equal(["Orders"], book.SheetNames);
-		using var written = ExcelWorkbook.Open(new MemoryStream(stream.ToArray()));
+		using var written = ExcelWorkbook.Open(new MemoryStream(Written.Checked(stream.ToArray())));
 		Assert.Equal("Lists", Assert.Single(written.Sheets, s => s.Visibility == ExcelSheetVisibility.VeryHidden).Name);
 	}
 
@@ -361,14 +361,14 @@ public class SheetValidationTests
 		}
 
 		book.Dispose();
-		Assert.Contains("name=\"_CsvHelperList12\"", Written.Entry(stream.ToArray(), "xl/tables/table1.xml"));
+		Assert.Contains("name=\"_CsvHelperList12\"", Written.Entry(Written.Checked(stream.ToArray()), "xl/tables/table1.xml"));
 	}
 
 	[Fact]
 	public void RefusesAListLongerThanAColumn()
 	{
 		var options = new ExcelSheetOptions { Columns = new Dictionary<string, ExcelColumnOptions> { ["Note"] = new() { List = [.. Enumerable.Repeat("a", 1_048_577)] } } };
-		using var book = ExcelWorkbookWriter.Create(new MemoryStream());
+		using var book = ExcelWorkbookWriter.Create(Written.CheckedOnClose());
 
 		var e = Assert.Throws<ArgumentException>(() => book.AddSheet("Orders", options));
 
