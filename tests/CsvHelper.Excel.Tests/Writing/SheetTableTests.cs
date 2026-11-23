@@ -116,7 +116,7 @@ public class SheetTableTests
 		Assert.Contains("name=\"Q1_Orders\" displayName=\"Q1_Orders\" ref=\"A1:E3\"", Written.Entry(workbook, "xl/tables/table1.xml"));
 
 		// A styled table's header isn't bold: its style sets it. No sheet filter, and no name for one.
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>Name</t></is></c>", sheet);
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>Name</t></is></c>", sheet);
 		Assert.DoesNotContain("<autoFilter", sheet);
 		Assert.DoesNotContain("definedNames", Written.Entry(workbook, "xl/workbook.xml"));
 
@@ -154,7 +154,7 @@ public class SheetTableTests
 
 		// A table without a style keeps the bold header.
 		Assert.Contains("<tableStyleInfo showFirstColumn=\"0\"", Written.Entry(plain, "xl/tables/table1.xml"));
-		Assert.Contains("<c r=\"A1\" s=\"1\" t=\"inlineStr\"><is><t>Name</t></is></c>", Written.Entry(plain, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row><c s=\"1\" t=\"inlineStr\"><is><t>Name</t></is></c>", Written.Entry(plain, "xl/worksheets/sheet1.xml"));
 
 		using (var book = new XLWorkbook(new MemoryStream(workbook)))
 		{
@@ -195,8 +195,9 @@ public class SheetTableTests
 
 		string[] names = ["Name", "Name3", "Name2", "Column4", "2024", "True", "Two\nLines", "NAME5"];
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"B1\" t=\"inlineStr\"><is><t>Name3</t></is></c>", sheet);
-		Assert.Contains("<c r=\"E1\" t=\"inlineStr\"><is><t>2024</t></is></c>", sheet);
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>Name</t></is></c><c t=\"inlineStr\"><is><t>Name3</t></is></c>", sheet);
+		Assert.Equal("<c t=\"inlineStr\"><is><t>Name3</t></is></c>", Written.CellXml(sheet, "B1"));
+		Assert.Equal("<c t=\"inlineStr\"><is><t>2024</t></is></c>", Written.CellXml(sheet, "E1"));
 		Assert.Contains("<tableColumn id=\"7\" name=\"Two_x000A_Lines\"/>", Written.Entry(workbook, "xl/tables/table1.xml"));
 		using (var book = ExcelWorkbook.Open(new MemoryStream(workbook)))
 		{
@@ -238,8 +239,9 @@ public class SheetTableTests
 	{
 		var workbook = await Write(Array.Empty<LookOrder>(), async, new ExcelSheetOptions { Table = new() });
 
+		// The table's empty row isn't in the sheet: its one row is the header's.
 		Assert.Contains("ref=\"A1:E2\"", Written.Entry(workbook, "xl/tables/table1.xml"));
-		Assert.DoesNotContain("<row r=\"2\"", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Equal([1L], Written.Rows(Written.Entry(workbook, "xl/worksheets/sheet1.xml")).Select(r => r.Number));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
 

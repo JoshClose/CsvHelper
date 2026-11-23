@@ -95,9 +95,10 @@ public class TypedCellsTests
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 
 		// Booleans, numbers as their invariant text, dates as serials in the writer's formats.
-		Assert.Contains("<c r=\"B2\" t=\"b\"><v>1</v></c><c r=\"C2\"><v>42</v></c><c r=\"D2\"><v>123456789012345</v></c><c r=\"E2\"><v>0.10</v></c><c r=\"F2\"><v>0.30000000000000004</v></c><c r=\"G2\"><v>0.1</v></c><c r=\"H2\" s=\"1\"><v>45306.4375</v></c><c r=\"I2\" s=\"2\"><v>1.5</v></c><c r=\"J2\" t=\"inlineStr\">", sheet);
-		Assert.Contains("<c r=\"B3\" t=\"b\"><v>0</v></c><c r=\"C3\"><v>-7</v></c><c r=\"D3\"><v>-5</v></c><c r=\"E3\"><v>-1234.5</v></c><c r=\"F3\"><v>1E-05</v></c><c r=\"G3\"><v>1.5E+20</v></c><c r=\"H3\" s=\"3\"><v>61.00000001157407</v></c><c r=\"I3\" s=\"4\"><v>1.736111111111111E-05</v></c>", sheet);
-		Assert.Contains("<c r=\"K3\"><v>3</v></c></row>", sheet);
+		Assert.Contains("<row><c t=\"inlineStr\"><is><t>apple</t></is></c><c t=\"b\"><v>1</v></c><c><v>42</v></c><c><v>123456789012345</v></c><c><v>0.10</v></c><c><v>0.30000000000000004</v></c><c><v>0.1</v></c><c s=\"1\"><v>45306.4375</v></c><c s=\"2\"><v>1.5</v></c><c t=\"inlineStr\">", sheet);
+		Assert.Contains("<row><c t=\"inlineStr\"><is><t>pear</t></is></c><c t=\"b\"><v>0</v></c><c><v>-7</v></c><c><v>-5</v></c><c><v>-1234.5</v></c><c><v>1E-05</v></c><c><v>1.5E+20</v></c><c s=\"3\"><v>61.00000001157407</v></c><c s=\"4\"><v>1.736111111111111E-05</v></c>", sheet);
+		Assert.Equal("<c><v>3</v></c>", Written.CellXml(sheet, "K3"));
+		Assert.EndsWith("<c><v>3</v></c></row>", Written.RowXml(sheet, 3));
 		var styles = Written.Entry(workbook, "xl/styles.xml");
 		Assert.Contains("<numFmts count=\"3\"><numFmt numFmtId=\"164\" formatCode=\"yyyy-mm-dd hh:mm:ss\"/><numFmt numFmtId=\"165\" formatCode=\"yyyy-mm-dd hh:mm:ss.000\"/><numFmt numFmtId=\"166\" formatCode=\"[h]:mm:ss.000\"/></numFmts>", styles);
 		Assert.Contains("<cellXfs count=\"5\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><xf numFmtId=\"164\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyNumberFormat=\"1\"/><xf numFmtId=\"46\" ", styles);
@@ -193,8 +194,10 @@ public class TypedCellsTests
 		var workbook = await Write(records, async);
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"A2\" s=\"1\"><v>45306</v></c><c r=\"B2\" s=\"2\"><v>0.43767361111111114</v></c><c r=\"C2\"><v>0.1</v></c><c r=\"D2\"><v>123456789012345</v></c>", sheet);
-		Assert.Contains("<c r=\"A3\" s=\"1\"><v>1</v></c><c r=\"B3\" s=\"3\"><v>0.999999988425926</v></c><c r=\"C3\"><v>65500</v></c><c r=\"D3\" t=\"inlineStr\"><is><t>1234567890123456789012345</t></is></c>", sheet);
+		Assert.Contains(
+			"</row><row><c s=\"1\"><v>45306</v></c><c s=\"2\"><v>0.43767361111111114</v></c><c><v>0.1</v></c><c><v>123456789012345</v></c></row>" +
+			"<row><c s=\"1\"><v>1</v></c><c s=\"3\"><v>0.999999988425926</v></c><c><v>65500</v></c><c t=\"inlineStr\"><is><t>1234567890123456789012345</t></is></c></row></sheetData>",
+			sheet);
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader();
 		var read = reader.GetRecords<ModernRecord>().ToList();
@@ -204,8 +207,8 @@ public class TypedCellsTests
 #endif
 
 	[Theory]
-	[InlineData(ExcelLongNumbers.Text, "<c r=\"A1\" t=\"inlineStr\"><is><t>12345678901234567</t></is></c><c r=\"B1\" t=\"inlineStr\"><is><t>-0.1234567890123456</t></is></c>")]
-	[InlineData(ExcelLongNumbers.Number, "<c r=\"A1\"><v>12345678901234567</v></c><c r=\"B1\"><v>-0.1234567890123456</v></c>")]
+	[InlineData(ExcelLongNumbers.Text, "<c t=\"inlineStr\"><is><t>12345678901234567</t></is></c><c t=\"inlineStr\"><is><t>-0.1234567890123456</t></is></c>")]
+	[InlineData(ExcelLongNumbers.Number, "<c><v>12345678901234567</v></c><c><v>-0.1234567890123456</v></c>")]
 	public async Task WritesLongNumbersAsTheOptionsSay(ExcelLongNumbers longNumbers, string cells)
 	{
 		var options = new ExcelWriterOptions { LongNumbers = longNumbers, Csv = new CsvWriterOptions { HasHeader = false } };
@@ -224,7 +227,7 @@ public class TypedCellsTests
 		}, false, options);
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<row r=\"1\">" + cells + "<c r=\"C1\"><v>123456789012345000</v></c><c r=\"D1\"><v>10000000000000000000</v></c><c r=\"E1\"><v>1.2345678901234567</v></c></row>", sheet);
+		Assert.Contains("<sheetData><row>" + cells + "<c><v>123456789012345000</v></c><c><v>10000000000000000000</v></c><c><v>1.2345678901234567</v></c></row></sheetData>", sheet);
 		// The text keeps every digit, and so does the number's text, which Excel rounds to 15.
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader(new ExcelReaderOptions { Csv = new CsvReaderOptions { HasHeader = false } });
@@ -275,7 +278,7 @@ public class TypedCellsTests
 		}, async, new ExcelWriterOptions { Csv = new CsvWriterOptions { HasHeader = false } });
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"A1\" t=\"inlineStr\"><is><t>NaN</t></is></c><c r=\"B1\" t=\"inlineStr\"><is><t>Infinity</t></is></c><c r=\"C1\" t=\"inlineStr\"><is><t>-Infinity</t></is></c><c r=\"D1\"><v>-0</v></c><c r=\"E1\"><v>5E-324</v></c>", sheet);
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>NaN</t></is></c><c t=\"inlineStr\"><is><t>Infinity</t></is></c><c t=\"inlineStr\"><is><t>-Infinity</t></is></c><c><v>-0</v></c><c><v>5E-324</v></c></row></sheetData>", sheet);
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader(new ExcelReaderOptions { Csv = new CsvReaderOptions { HasHeader = false } });
 		Assert.True(reader.Read());
@@ -286,9 +289,9 @@ public class TypedCellsTests
 	}
 
 	[Theory]
-	[InlineData(ExcelDateTimeOffsets.Text, "<c r=\"A1\" t=\"inlineStr\"><is><t>2024-01-15T10:30:00.0000000+02:00</t></is></c>")]
-	[InlineData(ExcelDateTimeOffsets.Utc, "<c r=\"A1\" s=\"1\"><v>45306.354166666664</v></c>")]
-	[InlineData(ExcelDateTimeOffsets.ClockTime, "<c r=\"A1\" s=\"1\"><v>45306.4375</v></c>")]
+	[InlineData(ExcelDateTimeOffsets.Text, "<c t=\"inlineStr\"><is><t>2024-01-15T10:30:00.0000000+02:00</t></is></c>")]
+	[InlineData(ExcelDateTimeOffsets.Utc, "<c s=\"1\"><v>45306.354166666664</v></c>")]
+	[InlineData(ExcelDateTimeOffsets.ClockTime, "<c s=\"1\"><v>45306.4375</v></c>")]
 	public async Task WritesDateTimeOffsetsAsTheOptionsSay(ExcelDateTimeOffsets offsets, string cell)
 	{
 		var value = new DateTimeOffset(2024, 1, 15, 10, 30, 0, TimeSpan.FromHours(2));
@@ -302,7 +305,7 @@ public class TypedCellsTests
 			await Written.DisposeAsync(writer, a);
 		}, false, options);
 
-		Assert.Contains("<row r=\"1\">" + cell + "</row>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row>" + cell + "</row></sheetData>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader(new ExcelReaderOptions { Csv = new CsvReaderOptions { HasHeader = false } });
 		Assert.True(reader.Read());
@@ -345,12 +348,12 @@ public class TypedCellsTests
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.Contains(
-			"<c r=\"A1\" t=\"inlineStr\"><is><t>1899-12-31T23:59:59.0000000</t></is></c><c r=\"B1\" t=\"inlineStr\"><is><t>-01:00:00</t></is></c>" +
-			"<c r=\"C1\" t=\"inlineStr\"><is><t>1900-01-01T00:30:00.0000000+01:00</t></is></c><c r=\"D1\" t=\"inlineStr\"><is><t>0001-01-01T00:00:00.0000000</t></is></c>" +
-			"<c r=\"E1\" s=\"1\"><v>1</v></c><c r=\"F1\" s=\"2\"><v>0</v></c>" +
-			"<c r=\"G1\" t=\"inlineStr\"><is><t>10675199.02:48:05.4775807</t></is></c><c r=\"H1\" t=\"inlineStr\"><is><t>2958466.00:00:00</t></is></c>",
+			"<sheetData><row><c t=\"inlineStr\"><is><t>1899-12-31T23:59:59.0000000</t></is></c><c t=\"inlineStr\"><is><t>-01:00:00</t></is></c>" +
+			"<c t=\"inlineStr\"><is><t>1900-01-01T00:30:00.0000000+01:00</t></is></c><c t=\"inlineStr\"><is><t>0001-01-01T00:00:00.0000000</t></is></c>" +
+			"<c s=\"1\"><v>1</v></c><c s=\"2\"><v>0</v></c>" +
+			"<c t=\"inlineStr\"><is><t>10675199.02:48:05.4775807</t></is></c><c t=\"inlineStr\"><is><t>2958466.00:00:00</t></is></c>",
 			sheet);
-		Assert.Contains("<c r=\"J1\" t=\"inlineStr\"><is><t>2958465.23:59:59.9995000</t></is></c><c r=\"K1\" s=\"2\"><v>2958465.999988426</v></c>", sheet);
+		Assert.Contains("<c t=\"inlineStr\"><is><t>2958465.23:59:59.9995000</t></is></c><c s=\"2\"><v>2958465.999988426</v></c></row></sheetData>", sheet);
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader(new ExcelReaderOptions { Csv = new CsvReaderOptions { HasHeader = false } });
 		Assert.True(reader.Read());
@@ -424,8 +427,8 @@ public class TypedCellsTests
 
 		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
 		Assert.Contains(
-			"<c r=\"A1\"><v>-1234.5</v></c><c r=\"B1\"><v>1.5E+20</v></c><c r=\"C1\"><v>42</v></c><c r=\"D1\" t=\"inlineStr\"><is><t>1.234,50</t></is></c>" +
-			"<c r=\"E1\" t=\"inlineStr\"><is><t>0042</t></is></c><c r=\"F1\" t=\"inlineStr\"><is><t>1234.5</t></is></c><c r=\"G1\" t=\"b\"><v>1</v></c>",
+			"<sheetData><row><c><v>-1234.5</v></c><c><v>1.5E+20</v></c><c><v>42</v></c><c t=\"inlineStr\"><is><t>1.234,50</t></is></c>" +
+			"<c t=\"inlineStr\"><is><t>0042</t></is></c><c t=\"inlineStr\"><is><t>1234.5</t></is></c><c t=\"b\"><v>1</v></c></row></sheetData>",
 			sheet);
 	}
 
@@ -451,9 +454,9 @@ public class TypedCellsTests
 
 		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
 		Assert.Contains(
-			"<c r=\"A1\" t=\"inlineStr\"><is><t>2024-01-15</t></is></c><c r=\"B1\" t=\"inlineStr\"><is><t>1:00:00</t></is></c><c r=\"C1\" t=\"inlineStr\"><is><t>1,234.50</t></is></c>" +
-			"<c r=\"D1\" t=\"inlineStr\"><is><t>00000000-0000-0000-0000-000000000000</t></is></c><c r=\"E1\" t=\"inlineStr\"><is><t>Monday</t></is></c>" +
-			"<c r=\"F1\" t=\"inlineStr\"><is><t>https://example.com/a</t></is></c><c r=\"G1\" t=\"b\"><v>0</v></c>",
+			"<sheetData><row><c t=\"inlineStr\"><is><t>2024-01-15</t></is></c><c t=\"inlineStr\"><is><t>1:00:00</t></is></c><c t=\"inlineStr\"><is><t>1,234.50</t></is></c>" +
+			"<c t=\"inlineStr\"><is><t>00000000-0000-0000-0000-000000000000</t></is></c><c t=\"inlineStr\"><is><t>Monday</t></is></c>" +
+			"<c t=\"inlineStr\"><is><t>https://example.com/a</t></is></c><c t=\"b\"><v>0</v></c></row></sheetData>",
 			sheet);
 	}
 
@@ -473,8 +476,9 @@ public class TypedCellsTests
 			}
 		}
 
-		var cells = Regex.Matches(Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"), "<c [^>]*>").Cast<Match>().Select(m => m.Value);
-		Assert.Equal(["<c r=\"A1\">", "<c r=\"A2\" t=\"inlineStr\">", "<c r=\"A3\">", "<c r=\"A4\" t=\"b\">", "<c r=\"A6\" s=\"1\">", "<c r=\"A7\">"], cells);
+		// The null's record is empty: a row of its own before the next record's.
+		var cells = Regex.Matches(Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"), "<row/>|<c(?: [^>]*)?>").Cast<Match>().Select(m => m.Value);
+		Assert.Equal(["<c>", "<c t=\"inlineStr\">", "<c>", "<c t=\"b\">", "<row/>", "<c s=\"1\">", "<c>"], cells);
 	}
 
 	[Theory]
@@ -580,7 +584,7 @@ public class TypedCellsTests
 		}
 
 		var sheet = Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml");
-		Assert.Contains($"<cols><col min=\"1\" max=\"1\" width=\"{W(ColumnWidths.DateTime)}\" customWidth=\"1\"/></cols><sheetData><row r=\"1\">", sheet);
+		Assert.Contains($"<cols><col min=\"1\" max=\"1\" width=\"{W(ColumnWidths.DateTime)}\" customWidth=\"1\"/></cols><sheetData><row><c t=\"inlineStr\">", sheet);
 	}
 
 	[Theory]

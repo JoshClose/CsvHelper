@@ -17,6 +17,7 @@ internal static class Program
 	private const string Usage =
 		"""
 		Usage: CsvHelper.Excel.Corpus <command> [--files <folder>] [--csv <PackageAssets.csv>] [--java <java.exe or JDK>]
+		       CsvHelper.Excel.Corpus exports [--set <all|corpus|written>] [--files <folder>]
 		       CsvHelper.Excel.Corpus fuzzed <folder>
 		       CsvHelper.Excel.Corpus fuzzed-text <folder>
 
@@ -39,7 +40,8 @@ internal static class Program
 		  display        Python and Excel through COM: display/, the workbooks of Phase 8's probes of number formats
 		                 (python/display.py), and excel-display.json, the text Excel shows in each case and its CSV export's
 		  exports        Excel through COM: excel-csv/, Excel's own CSV UTF-8 export of every worksheet of the corpus workbooks
-		                 the oracle answers about, and of the written set
+		                 the oracle answers about, and of the written set; --set corpus or --set written makes one set's
+		                 again (excel-csv/excel-written/ is the written set's) and keeps the other's
 		  fuzzed         Excel through COM: opens each workbook the writer's fuzzers saved in a folder (their
 		                 CSVHELPER_EXCEL_FUZZ_SAVE), and reports which Excel repairs or refuses, and the numbers it shows
 		                 as ########, to standard output and the folder's fuzzed.txt; nothing is committed
@@ -145,7 +147,28 @@ internal static class Program
 
 				break;
 			case "exports":
-				ExcelExports.Write(files);
+				ExportSet set;
+				switch (Option(args, "--set"))
+				{
+					case null or "all":
+						set = ExportSet.All;
+
+						break;
+					case "corpus":
+						set = ExportSet.Corpus;
+
+						break;
+					case "written":
+						set = ExportSet.Written;
+
+						break;
+					default:
+						Console.Error.WriteLine(Usage);
+
+						return 1;
+				}
+
+				ExcelExports.Write(files, set);
 
 				break;
 			case "spec":

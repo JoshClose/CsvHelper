@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.Text;
 
 namespace CsvHelper.Excel;
 
@@ -184,6 +186,17 @@ internal static class DotNetText
 
 		return IsInvariantNumber(destination.Slice(0, length), out significant) ? length : -1;
 	}
+
+	/// <summary>
+	/// The double of a number's invariant text (<see cref="ToInvariantNumber"/>'s), exactly rounded, as
+	/// <c>double.Parse</c> reads it in the invariant culture on .NET: through <see cref="FastFloat"/>, without a string, and
+	/// through <c>double.Parse</c> for the few texts it leaves to it (more than 19 significant digits on a rounding
+	/// boundary).
+	/// </summary>
+	/// <param name="invariant">The invariant text.</param>
+	/// <returns>The double.</returns>
+	public static double NumberValue(ReadOnlySpan<byte> invariant) =>
+		FastFloat.TryParseDouble(invariant, out var value) ? value : double.Parse(Encoding.ASCII.GetString(invariant), NumberStyles.Float, CultureInfo.InvariantCulture);
 
 	/// <summary>
 	/// Whether text is a number in the invariant grammar, <c>-?(0|[1-9][0-9]*)(\.[0-9]+)?(E[+-]?[0-9]+)?</c>, and its

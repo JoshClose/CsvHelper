@@ -1,7 +1,7 @@
 {
   "file": "newsheet.xlsx",
   "description": "RowLimit = NewSheet, a sheet's rows limited to 3 (the header and two records), with shared strings",
-  "sha256": "34c0bbb54bfabd49b99c3a7eac27cd40c0b08c357078b64e973141fcd3eb2d86",
+  "sha256": "ade8deef8e6f1886af00ee3d43ddb1f5391e2053d24eed034b7f101090ad7240",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

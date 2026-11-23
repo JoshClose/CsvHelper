@@ -120,11 +120,14 @@ public class FormattedCellsTests
 		Amount = 1234.5m, Stamped = new DateTimeOffset(When, TimeSpan.FromHours(2)),
 	};
 
-	/// <summary>Row 2's cells, as the writer writes them by default.</summary>
+	/// <summary>
+	/// The record's cells B to J and its row's end, as the writer writes them by default: row 2 under a header, row 1
+	/// without.
+	/// </summary>
 	private static readonly string Row2 =
-		"<c r=\"B2\" s=\"1\"><v>45306</v></c><c r=\"C2\" s=\"2\"><v>45306.4375</v></c><c r=\"D2\" s=\"3\"><v>45292</v></c><c r=\"E2\" s=\"4\"><v>0.4375</v></c>" +
-		"<c r=\"F2\" t=\"inlineStr\"><is><t>15 January</t></is></c><c r=\"G2\" t=\"inlineStr\"><is><t>01:30</t></is></c><c r=\"H2\" s=\"5\"><v>0.0625</v></c>" +
-		"<c r=\"I2\"><v>1234.5</v></c><c r=\"J2\" t=\"inlineStr\"><is><t>2024-01-15 10:30</t></is></c></row>";
+		"<c s=\"1\"><v>45306</v></c><c s=\"2\"><v>45306.4375</v></c><c s=\"3\"><v>45292</v></c><c s=\"4\"><v>0.4375</v></c>" +
+		"<c t=\"inlineStr\"><is><t>15 January</t></is></c><c t=\"inlineStr\"><is><t>01:30</t></is></c><c s=\"5\"><v>0.0625</v></c>" +
+		"<c><v>1234.5</v></c><c t=\"inlineStr\"><is><t>2024-01-15 10:30</t></is></c></row>";
 
 	[Theory]
 	[MemberData(nameof(Modes))]
@@ -133,7 +136,7 @@ public class FormattedCellsTests
 		var workbook = await Write([Record], async);
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains(Row2, sheet);
+		Assert.Contains("<row><c t=\"inlineStr\"><is><t>apple</t></is></c>" + Row2, sheet);
 		var styles = Written.Entry(workbook, "xl/styles.xml");
 		Assert.Contains(
 			"<numFmts count=\"4\"><numFmt numFmtId=\"164\" formatCode=\"dd&quot;.&quot;mm&quot;.&quot;yyyy\"/>" +
@@ -208,7 +211,8 @@ public class FormattedCellsTests
 			await Written.DisposeAsync(writer, a);
 		}, async, options);
 
-		Assert.Contains(System.Text.RegularExpressions.Regex.Replace(Row2, "r=\"([A-J])2\"", "r=\"${1}1\""), Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		// The same cells, in row 1: the sheet's first.
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>apple</t></is></c>" + Row2, Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
 
@@ -235,8 +239,8 @@ public class FormattedCellsTests
 
 		// Amount and Day are members, under their names exactly; Other and day aren't, and their texts stay text.
 		Assert.Contains(
-			"<c r=\"A2\"><v>1234.5</v></c><c r=\"B2\" t=\"inlineStr\"><is><t>15.01.2024</t></is></c><c r=\"C2\" s=\"1\"><v>45306</v></c>" +
-			"<c r=\"D2\" t=\"inlineStr\"><is><t>15.01.2024</t></is></c></row>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+			"</row><row><c><v>1234.5</v></c><c t=\"inlineStr\"><is><t>15.01.2024</t></is></c><c s=\"1\"><v>45306</v></c>" +
+			"<c t=\"inlineStr\"><is><t>15.01.2024</t></is></c></row>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 	}
 
 	[Theory]
@@ -257,8 +261,7 @@ public class FormattedCellsTests
 		}, async, Written.Ragged());
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"A2\" t=\"inlineStr\"><is><t>2024-01-15</t></is></c>", sheet);
-		Assert.Contains("<c r=\"A3\" t=\"inlineStr\"><is><t>2024-01-15T10:30:05.1230000</t></is></c>", sheet);
+		Assert.Contains("</row><row><c t=\"inlineStr\"><is><t>2024-01-15</t></is></c></row><row><c t=\"inlineStr\"><is><t>2024-01-15T10:30:05.1230000</t></is></c></row></sheetData>", sheet);
 	}
 
 	[Theory]
@@ -271,8 +274,8 @@ public class FormattedCellsTests
 
 		// O and an empty format are typed as .NET's default text is; a custom duration format is text, even in c's layout.
 		Assert.Contains(
-			"<c r=\"A2\" s=\"1\"><v>45306.43755929398</v></c><c r=\"B2\" s=\"1\"><v>45306.43755929398</v></c><c r=\"C2\" t=\"inlineStr\"><is><t>01:30:00</t></is></c>" +
-			"<c r=\"D2\" s=\"2\"><v>2.0625</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+			"</row><row><c s=\"1\"><v>45306.43755929398</v></c><c s=\"1\"><v>45306.43755929398</v></c><c t=\"inlineStr\"><is><t>01:30:00</t></is></c>" +
+			"<c s=\"2\"><v>2.0625</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 	}
 
 	[Fact]
@@ -291,7 +294,7 @@ public class FormattedCellsTests
 			writer.EndRecord();
 		}
 
-		Assert.Contains("<c r=\"A2\"><v>1234.5</v></c>", Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"));
+		Assert.Contains("</row><row><c><v>1234.5</v></c></row>", Written.Entry(stream.ToArray(), "xl/worksheets/sheet1.xml"));
 	}
 
 	[Fact]
@@ -330,21 +333,22 @@ public class FormattedCellsTests
 
 		// AddSheet without T knows no member's format: only the duration in .NET's default format is typed.
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"B2\" t=\"inlineStr\"><is><t>15.01.2024</t></is></c>", sheet);
-		Assert.Contains("<c r=\"E2\" t=\"inlineStr\"><is><t>10:30</t></is></c>", sheet);
-		Assert.Contains("<c r=\"H2\" s=\"1\"><v>0.0625</v></c><c r=\"I2\" t=\"inlineStr\"><is><t>1234,5</t></is></c>", sheet);
+		Assert.Equal("<c t=\"inlineStr\"><is><t>15.01.2024</t></is></c>", Written.CellXml(sheet, "B2"));
+		Assert.Equal("<c t=\"inlineStr\"><is><t>10:30</t></is></c>", Written.CellXml(sheet, "E2"));
+		Assert.Contains("<c s=\"1\"><v>0.0625</v></c><c t=\"inlineStr\"><is><t>1234,5</t></is></c>", sheet);
+		Assert.Equal("<c s=\"1\"><v>0.0625</v></c>", Written.CellXml(sheet, "H2"));
 	}
 
 	[Theory]
-	[InlineData(ExcelDateTimeOffsets.Text, "<c r=\"J2\" t=\"inlineStr\"><is><t>2024-01-15 10:30</t></is></c>")]
-	[InlineData(ExcelDateTimeOffsets.Utc, "<c r=\"J2\" t=\"inlineStr\"><is><t>2024-01-15 10:30</t></is></c>")]
-	[InlineData(ExcelDateTimeOffsets.ClockTime, "<c r=\"J2\" s=\"6\"><v>45306.4375</v></c>")]
+	[InlineData(ExcelDateTimeOffsets.Text, "<c t=\"inlineStr\"><is><t>2024-01-15 10:30</t></is></c>")]
+	[InlineData(ExcelDateTimeOffsets.Utc, "<c t=\"inlineStr\"><is><t>2024-01-15 10:30</t></is></c>")]
+	[InlineData(ExcelDateTimeOffsets.ClockTime, "<c s=\"6\"><v>45306.4375</v></c>")]
 	public async Task FollowsTheOptionsForAnOffsetsFormat(ExcelDateTimeOffsets offsets, string cell)
 	{
 		// The text shows the clock time without its offset, which is no UTC time.
 		var workbook = await Write([Record], async: false, new ExcelWriterOptions { DateTimeOffsets = offsets });
 
-		Assert.Contains(cell, Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Equal(cell, Written.CellXml(Written.Entry(workbook, "xl/worksheets/sheet1.xml"), "J2"));
 		if (offsets == ExcelDateTimeOffsets.ClockTime)
 		{
 			Assert.Contains("<numFmt numFmtId=\"168\" formatCode=\"yyyy&quot;-&quot;mm&quot;-&quot;dd&quot; &quot;hh&quot;:&quot;mm\"/>", Written.Entry(workbook, "xl/styles.xml"));
@@ -367,7 +371,7 @@ public class FormattedCellsTests
 			return;
 		}
 
-		Assert.Contains("<c r=\"B2\" t=\"inlineStr\"><is><t>31.12.1899</t></is></c>", Written.Entry(await Write([old], async: false, options), "xl/worksheets/sheet1.xml"));
+		Assert.Equal("<c t=\"inlineStr\"><is><t>31.12.1899</t></is></c>", Written.CellXml(Written.Entry(await Write([old], async: false, options), "xl/worksheets/sheet1.xml"), "B2"));
 	}
 
 	[Theory]
@@ -381,7 +385,7 @@ public class FormattedCellsTests
 			(book, a) => a ? book.WriteSheetAsync("Data", [new InvariantNumber { Value = 1234.5, Other = 1234.5 }]).AsTask() : Sync(() => book.WriteSheet("Data", [new InvariantNumber { Value = 1234.5, Other = 1234.5 }])),
 			async, options);
 
-		Assert.Contains("<c r=\"A2\"><v>1234.5</v></c><c r=\"B2\"><v>1234.5</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("</row><row><c><v>1234.5</v></c><c><v>1234.5</v></c></row>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
 		using var reader = book.OpenReader();
 		var read = Assert.Single(reader.GetRecords<InvariantNumber>().ToList());
@@ -407,9 +411,9 @@ public class FormattedCellsTests
 			}
 		}, async, Written.Phase4(new ExcelWriterOptions { RowLimit = ExcelRowLimit.NewSheet }));
 
-		Assert.Contains("<c r=\"B3\" s=\"1\"><v>45307</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
-		Assert.Contains("<c r=\"B2\" s=\"1\"><v>45308</v></c>", Written.Entry(workbook, "xl/worksheets/sheet2.xml"));
-		Assert.Contains("<c r=\"B3\" s=\"1\"><v>45309</v></c>", Written.Entry(workbook, "xl/worksheets/sheet2.xml"));
+		Assert.Equal("<c s=\"1\"><v>45307</v></c>", Written.CellXml(Written.Entry(workbook, "xl/worksheets/sheet1.xml"), "B3"));
+		Assert.Equal("<c s=\"1\"><v>45308</v></c>", Written.CellXml(Written.Entry(workbook, "xl/worksheets/sheet2.xml"), "B2"));
+		Assert.Equal("<c s=\"1\"><v>45309</v></c>", Written.CellXml(Written.Entry(workbook, "xl/worksheets/sheet2.xml"), "B3"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
 
@@ -424,7 +428,7 @@ public class FormattedCellsTests
 
 		// The time shows no seconds, and the cell holds none.
 		var time = ((22 * 60) + 5) / 1440.0;
-		Assert.Contains($"<c r=\"A2\" s=\"1\"><v>45306</v></c><c r=\"B2\" s=\"2\"><v>{time.ToString("R", CultureInfo.InvariantCulture)}</v></c><c r=\"C2\" s=\"3\"><v>45306</v></c>",
+		Assert.Contains($"</row><row><c s=\"1\"><v>45306</v></c><c s=\"2\"><v>{time.ToString("R", CultureInfo.InvariantCulture)}</v></c><c s=\"3\"><v>45306</v></c></row>",
 			Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Contains("formatCode=\"[$-409]hh&quot;:&quot;mm&quot; &quot;AM/PM\"", Written.Entry(workbook, "xl/styles.xml"));
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));

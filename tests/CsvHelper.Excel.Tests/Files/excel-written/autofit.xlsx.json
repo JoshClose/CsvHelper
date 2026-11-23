@@ -1,7 +1,7 @@
 {
   "file": "autofit.xlsx",
   "description": "auto-fit's widths: later values wider than the first, General numbers, text capped at 60 characters and on one line, a capped sheet that measures two records, a bold header wider than its cells, formulas, and dates at midnight",
-  "sha256": "201a3ae0e8ce440c103da7d803f5e4be6b60534f6d856346282fe80246c82a52",
+  "sha256": "4dddcdb9b745f0d8f97b6fb266d9e14c05deb377b49ce786a29b47f3fbb5412c",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

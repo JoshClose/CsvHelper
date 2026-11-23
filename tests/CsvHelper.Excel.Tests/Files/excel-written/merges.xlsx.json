@@ -1,7 +1,7 @@
 {
   "file": "merges.xlsx",
   "description": "merged cells: down a column before the header and while the rows are written, down and across columns after them, past the rows, under a title, and beside a table",
-  "sha256": "0c6ca59167eb069fcfe1572928e5eba2fac8a5d5865e1d9fbbf56f119a541b84",
+  "sha256": "08c54abf618d28060d94a3a32e9198d99b4e575fe7e512f1686acc38c2345343",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

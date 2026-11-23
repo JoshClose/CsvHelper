@@ -53,7 +53,7 @@ public class ExcelReportWorkbookTests
 
 	/// <summary>Each of the report benchmark's reads, sync and async, as theory data.</summary>
 	public static IEnumerable<object[]> Reads =>
-		new[] { "Range", "RangeFirstRows", "Table", "HeaderSearch", "SkipHiddenRows", "SkipHiddenColumns", "FillMergedCells" }
+		new[] { "Range", "RangeFirstRows", "Table", "HeaderSearch", "SkipHiddenRows", "SkipHiddenColumns", "FillMergedCells", "FormulaText" }
 			.SelectMany(read => new[] { new object[] { read, false }, new object[] { read, true } });
 
 	/// <summary>The data's header names, in order.</summary>
@@ -187,6 +187,7 @@ public class ExcelReportWorkbookTests
 			"SkipHiddenRows" => (new ExcelReaderOptions { Range = area, SkipHiddenRows = true }, withKeys, Rendered(all.Where(i => !ExcelReport.IsHidden(i)), lines, filled: false)),
 			"SkipHiddenColumns" => (new ExcelReaderOptions { Range = area, SkipHiddenColumns = true }, [ExcelReport.RegionHeader, .. Names], [.. all.Select(i => (ExcelReport.RegionOf(i) ?? "") + "|" + string.Join("|", lines[i]))]),
 			"FillMergedCells" => (new ExcelReaderOptions { Range = area, FillMergedCells = true }, withKeys, Rendered(all, lines, filled: true)),
+			"FormulaText" => (new ExcelReaderOptions { Range = area, Formulas = ExcelFormulas.FormulaText }, withKeys, Rendered(all, lines, filled: false)),
 			_ => throw new ArgumentOutOfRangeException(nameof(read), read, "No such read."),
 		};
 	}

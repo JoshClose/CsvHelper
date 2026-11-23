@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
@@ -105,11 +106,16 @@ public class ProtectedSheetTests
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		// The title's row in the title's style, which its merged cells take; the header's empty field a cell, in General.
-		Assert.Contains("<row r=\"1\" s=\"1\" customFormat=\"1\"><c r=\"A1\" s=\"1\" t=\"inlineStr\"><is><t>Notes</t></is></c></row>", sheet);
+		Assert.Contains(
+			"<sheetData><row s=\"1\" customFormat=\"1\"><c s=\"1\" t=\"inlineStr\"><is><t>Notes</t></is></c></row>" +
+			"<row><c s=\"0\" t=\"inlineStr\"><is><t>Name</t></is></c><c s=\"0\"/><c s=\"0\" t=\"inlineStr\"><is><t>Note</t></is></c></row>", sheet);
 		Assert.Contains("<mergeCell ref=\"A1:C1\"/>", sheet);
-		Assert.Contains("<c r=\"B2\" s=\"0\"/>", sheet);
-		// A record's empty field has no cell, as without Protect: its column's style unlocks it.
-		Assert.DoesNotContain("<c r=\"B3\"", sheet);
+		Assert.Equal("<c s=\"0\"/>", Written.CellXml(sheet, "B2"));
+		// A record's empty field before a value holds no value: a placeholder in its column's default style, which unlocks
+		// it, as it unlocks the cells users add there.
+		var columnB = (string?)XDocument.Parse(sheet).Descendants(Main + "col").Single(c => (string?)c.Attribute("min") == "2").Attribute("style");
+		Assert.NotNull(columnB);
+		Assert.Equal($"<c s=\"{columnB}\"/>", Written.CellXml(sheet, "B3"));
 		Assert.Equal(
 			"A1:locked B1:locked C1:locked D1:locked A2:locked B2:locked C2:locked A3:unlocked B3:unlocked C3:unlocked D3:locked B4:unlocked D4:locked",
 			Locks(workbook, 1, "A1", "B1", "C1", "D1", "A2", "B2", "C2", "A3", "B3", "C3", "D3", "B4", "D4"));
@@ -137,7 +143,7 @@ public class ProtectedSheetTests
 		}, async);
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" s=\"1\"/><c r=\"B1\" s=\"1\" t=\"inlineStr\"><is><t>Name</t></is></c><c r=\"C1\" s=\"1\"/></row>", sheet);
+		Assert.Contains("<sheetData><row><c s=\"1\"/><c s=\"1\" t=\"inlineStr\"><is><t>Name</t></is></c><c s=\"1\"/></row></sheetData>", sheet);
 		Assert.Equal("A1:locked C1:locked A2:unlocked C2:unlocked D2:locked", Locks(workbook, 1, "A1", "C1", "A2", "C2", "D2"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
@@ -271,8 +277,9 @@ public class ProtectedSheetTests
 		string.Join(" ", cells.Select(c => c + (Style(workbook, sheet, c).Locked ? ":locked" : ":unlocked")));
 
 	/// <summary>
-	/// A cell's style, as Excel resolves it: its own when the cell is in the file; else its row's, when the row has one
-	/// (<c>customFormat</c>); else its column's default style; else the workbook's default.
+	/// A cell's style, as Excel resolves it: its own when the cell is in the file, a gap's placeholder's included; else its
+	/// row's, when the row has one (<c>customFormat</c>); else its column's default style; else the workbook's default. The
+	/// cells and rows are found at their places (<see cref="Written.Rows(XDocument)"/>), with or without <c>r</c>.
 	/// </summary>
 	/// <param name="workbook">The workbook.</param>
 	/// <param name="sheet">The sheet's number, from 1.</param>
@@ -281,18 +288,18 @@ public class ProtectedSheetTests
 	private static (int NumberFormatId, bool Wrap, bool Locked) Style(byte[] workbook, int sheet, string cell)
 	{
 		var xfs = XDocument.Parse(Written.Entry(workbook, "xl/styles.xml")).Root!.Element(Main + "cellXfs")!.Elements(Main + "xf").ToList();
-		var xml = XDocument.Parse(Written.Entry(workbook, $"xl/worksheets/sheet{sheet}.xml"));
+		var xml = Written.Sheet(workbook, sheet);
 		var match = Regex.Match(cell, "^([A-Z]+)([0-9]+)$");
 		var column = match.Groups[1].Value.Aggregate(0, (n, c) => n * 26 + c - 'A' + 1);
-		var row = xml.Descendants(Main + "row").SingleOrDefault(r => (string)r.Attribute("r")! == match.Groups[2].Value);
+		var row = Written.Rows(xml).SingleOrDefault(r => r.Number == long.Parse(match.Groups[2].Value, CultureInfo.InvariantCulture));
 		int style;
-		if (row?.Elements(Main + "c").SingleOrDefault(c => (string)c.Attribute("r")! == cell) is { } written)
+		if (row?.Cells.SingleOrDefault(c => c.Column == column - 1) is { } written)
 		{
-			style = (int?)written.Attribute("s") ?? 0;
+			style = written.Style;
 		}
-		else if (row is not null && (string?)row.Attribute("customFormat") == "1")
+		else if (row is not null && (string?)row.Element.Attribute("customFormat") == "1")
 		{
-			style = (int)row.Attribute("s")!;
+			style = (int)row.Element.Attribute("s")!;
 		}
 		else
 		{

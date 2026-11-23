@@ -1,7 +1,7 @@
 {
   "file": "text.xlsx",
   "description": "texts that need escaping, numbers stored as text, and a cell of 32,767 code units, with Inline strings",
-  "sha256": "ab3ea9464bdb1d5926976051ce84f1b3fd4829a8541b08774dfe17e850c92ca4",
+  "sha256": "71a4c497d0c0ec40e319fa5e94e0b4298398e2b37ee8172ab35be26cc668eca8",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

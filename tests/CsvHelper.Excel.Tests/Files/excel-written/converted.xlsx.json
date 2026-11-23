@@ -1,7 +1,7 @@
 {
   "file": "converted.xlsx",
   "description": "CSV converted with each column's type inferred: infer.csv's forms a column each, infer.csv as it is, columns of several records, and columns two records decide",
-  "sha256": "d2859082a8b828b3c60825b8684081429ceb7316c06a56358a1cf2c526e6b73f",
+  "sha256": "cb2a336f28969aa21aca638b80de8759dbbc4fdcc9f65c0f501c35cad0edb834",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

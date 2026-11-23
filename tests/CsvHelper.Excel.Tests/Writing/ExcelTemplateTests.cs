@@ -76,7 +76,7 @@ public class ExcelTemplateTests
 		// The workbook's look, for a type without an attribute: a plain header, which says its style.
 		var workbook = await CreateAsync<ValidatedOrder>(new ExcelTemplateOptions { Excel = ExcelWriterOptions.Default with { Sheets = new ExcelSheetOptions { BoldHeader = false } } }, async);
 		sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" s=\"0\" t=\"inlineStr\"><is><t>Id</t></is></c>", sheet);
+		Assert.Contains("<sheetData><row><c s=\"0\" t=\"inlineStr\"><is><t>Id</t></is></c>", sheet);
 		Assert.Contains("</sheetData>" + Protection, sheet);
 		Assert.Empty(Written.ValidationErrors(given));
 		Assert.Empty(Written.ValidationErrors(attribute));

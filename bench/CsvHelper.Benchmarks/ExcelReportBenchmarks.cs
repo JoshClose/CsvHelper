@@ -97,6 +97,17 @@ public class ExcelReportRead : ReadBenchmarkBase
 	public List<PackageAsset> FillMergedCells() =>
 		Read(report, new ExcelReaderOptions { Range = ExcelReport.Area(ExcelDataGenerator.PackageAssetRows), FillMergedCells = true });
 
+	/// <summary>
+	/// The range, with formulas read as their text (<see cref="ExcelFormulas.FormulaText"/>): the report has none, so it
+	/// gives <see cref="Range"/>'s records. The rows above the range are read for the shared formulas their cells may
+	/// define, where <see cref="Range"/> skips them.
+	/// </summary>
+	/// <returns>The records.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Report")]
+	public List<PackageAsset> FormulaText() =>
+		Read(report, new ExcelReaderOptions { Range = ExcelReport.Area(ExcelDataGenerator.PackageAssetRows), Formulas = ExcelFormulas.FormulaText });
+
 	// ----- Plain -----
 
 	/// <summary>The plain workbook, as <c>ExcelPackageAssetsRead.CsvHelper_Records</c> reads it.</summary>

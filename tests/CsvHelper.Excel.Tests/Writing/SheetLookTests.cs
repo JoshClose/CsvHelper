@@ -84,8 +84,8 @@ public class SheetLookTests
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.Contains("<sheetViews><sheetView workbookViewId=\"0\"><pane ySplit=\"1\" topLeftCell=\"A2\" activePane=\"bottomLeft\" state=\"frozen\"/><selection pane=\"bottomLeft\"/></sheetView></sheetViews><cols>", sheet);
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" s=\"1\" t=\"inlineStr\"><is><t>Name</t></is></c><c r=\"B1\" s=\"1\" t=\"inlineStr\"><is><t>Amount</t></is></c>", sheet);
-		Assert.Contains("<row r=\"2\"><c r=\"A2\" t=\"inlineStr\"><is><t>apple</t></is></c><c r=\"B2\"><v>1234.5</v></c><c r=\"C2\" s=\"2\"><v>45306.4375</v></c>", sheet);
+		Assert.Contains("<sheetData><row><c s=\"1\" t=\"inlineStr\"><is><t>Name</t></is></c><c s=\"1\" t=\"inlineStr\"><is><t>Amount</t></is></c>", sheet);
+		Assert.Contains("</row><row><c t=\"inlineStr\"><is><t>apple</t></is></c><c><v>1234.5</v></c><c s=\"2\"><v>45306.4375</v></c>", sheet);
 		var styles = Written.Entry(workbook, "xl/styles.xml");
 		Assert.Contains($"<fonts count=\"2\">{Regular}{Bold}</fonts>", styles);
 		Assert.Contains("<cellXfs count=\"3\"><xf numFmtId=\"0\" fontId=\"0\" fillId=\"0\" borderId=\"0\" xfId=\"0\"/><xf numFmtId=\"0\" fontId=\"1\" fillId=\"0\" borderId=\"0\" xfId=\"0\" applyFont=\"1\"/>", styles);
@@ -110,7 +110,7 @@ public class SheetLookTests
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.DoesNotContain("sheetViews", sheet);
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\">", sheet);
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\">", sheet);
 		Assert.Contains($"<fonts count=\"1\">{Regular}</fonts>", Written.Entry(workbook, "xl/styles.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
@@ -123,8 +123,8 @@ public class SheetLookTests
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		// The title's font comes first, as it is the first cell written; the header's is bold, and the rows follow from row 3.
-		Assert.Contains("<sheetData><row r=\"1\"><c r=\"A1\" s=\"1\" t=\"inlineStr\"><is><t>Orders 2024</t></is></c></row><row r=\"2\"><c r=\"A2\" s=\"2\" t=\"inlineStr\"><is><t>Name</t></is></c>", sheet);
-		Assert.Contains("<row r=\"3\"><c r=\"A3\" t=\"inlineStr\"><is><t>apple</t></is></c>", sheet);
+		Assert.Contains("<sheetData><row><c s=\"1\" t=\"inlineStr\"><is><t>Orders 2024</t></is></c></row><row><c s=\"2\" t=\"inlineStr\"><is><t>Name</t></is></c>", sheet);
+		Assert.Equal("<c t=\"inlineStr\"><is><t>apple</t></is></c>", Written.CellXml(sheet, "A3"));
 		Assert.Contains("</sheetData><mergeCells count=\"1\"><mergeCell ref=\"A1:E1\"/></mergeCells><pageMargins ", sheet);
 		Assert.Contains("<pane ySplit=\"2\" topLeftCell=\"A3\" activePane=\"bottomLeft\" state=\"frozen\"/>", sheet);
 		Assert.Contains($"<fonts count=\"3\">{Regular}{TitleFont}{Bold}</fonts>", Written.Entry(workbook, "xl/styles.xml"));
@@ -161,9 +161,9 @@ public class SheetLookTests
 
 		var one = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.DoesNotContain("mergeCells", one);
-		Assert.Contains("<row r=\"3\"><c r=\"A3\" t=\"inlineStr\"><is><t>apple</t></is></c></row>", one);
+		Assert.Equal("<row><c t=\"inlineStr\"><is><t>apple</t></is></c></row>", Written.RowXml(one, 3));
 		var empty = Written.Entry(workbook, "xl/worksheets/sheet2.xml");
-		Assert.Contains("<sheetData><row r=\"1\"><c r=\"A1\" s=\"1\" t=\"inlineStr\"><is><t>Nothing yet</t></is></c></row></sheetData><pageMargins ", empty);
+		Assert.Contains("<sheetData><row><c s=\"1\" t=\"inlineStr\"><is><t>Nothing yet</t></is></c></row></sheetData><pageMargins ", empty);
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
 
@@ -178,7 +178,7 @@ public class SheetLookTests
 		// The title spans the first record's columns; nothing is bold or frozen without a header.
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.DoesNotContain("sheetViews", sheet);
-		Assert.Contains("<row r=\"2\"><c r=\"A2\" t=\"inlineStr\"><is><t>apple</t></is></c>", sheet);
+		Assert.Contains("<sheetData><row><c s=\"1\" t=\"inlineStr\"><is><t>Orders</t></is></c></row><row><c t=\"inlineStr\"><is><t>apple</t></is></c>", sheet);
 		Assert.Contains("<mergeCell ref=\"A1:E1\"/>", sheet);
 		Assert.Contains($"<fonts count=\"2\">{Regular}{TitleFont}</fonts>", Written.Entry(workbook, "xl/styles.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
@@ -276,9 +276,9 @@ public class SheetLookTests
 
 		// The header stays bold in General; below it, each column's cells carry its format or wrap, whatever their own.
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"B1\" s=\"1\" t=\"inlineStr\">", sheet);
-		Assert.Contains("<c r=\"A2\" t=\"inlineStr\"><is><t>apple</t></is></c><c r=\"B2\" s=\"2\"><v>1234.5</v></c><c r=\"C2\" s=\"3\"><v>45306.4375</v></c><c r=\"D2\" s=\"4\" t=\"inlineStr\">", sheet);
-		Assert.Contains("<c r=\"E2\" t=\"inlineStr\"><is><t>A1</t></is></c>", sheet);
+		Assert.StartsWith("<c s=\"1\" t=\"inlineStr\">", Written.CellXml(sheet, "B1"));
+		Assert.Contains("</row><row><c t=\"inlineStr\"><is><t>apple</t></is></c><c s=\"2\"><v>1234.5</v></c><c s=\"3\"><v>45306.4375</v></c><c s=\"4\" t=\"inlineStr\">", sheet);
+		Assert.Equal("<c t=\"inlineStr\"><is><t>A1</t></is></c>", Written.CellXml(sheet, "E2"));
 
 		// Auto-fit's widths, the numbers and dates in their columns' formats; Note's own width; Code's, hidden.
 		Assert.Contains(
@@ -323,13 +323,13 @@ public class SheetLookTests
 		// LibreOffice gives a written cell without a style its column's, where Excel gives it General: a header cell that
 		// isn't bold says s="0", in a plain header and in a styled table's, so that neither takes its column's format or
 		// wrap. Below it, cells keep their own; without columns' options, the header says nothing.
-		const string Header = "<row r=\"1\"><c r=\"A1\" s=\"0\" t=\"inlineStr\"><is><t>Name</t></is></c><c r=\"B1\" s=\"0\" t=\"inlineStr\"><is><t>Amount</t></is></c>";
+		const string Header = "<sheetData><row><c s=\"0\" t=\"inlineStr\"><is><t>Name</t></is></c><c s=\"0\" t=\"inlineStr\"><is><t>Amount</t></is></c>";
 		var sheet = Written.Entry(plain, "xl/worksheets/sheet1.xml");
 		Assert.Contains(Header, sheet);
-		Assert.Contains("<c r=\"E1\" s=\"0\" t=\"inlineStr\"><is><t>Code</t></is></c></row>", sheet);
-		Assert.Matches("<row r=\"2\"><c r=\"A2\" t=\"inlineStr\"><is><t>apple</t></is></c><c r=\"B2\" s=\"[1-9]\"><v>1234.5</v></c>", sheet);
+		Assert.Contains("<c s=\"0\" t=\"inlineStr\"><is><t>Code</t></is></c></row>", sheet);
+		Assert.Matches("</row><row><c t=\"inlineStr\"><is><t>apple</t></is></c><c s=\"[1-9]\"><v>1234.5</v></c>", sheet);
 		Assert.Contains(Header, Written.Entry(table, "xl/worksheets/sheet1.xml"));
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>Name</t></is></c>", Written.Entry(unstyled, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>Name</t></is></c>", Written.Entry(unstyled, "xl/worksheets/sheet1.xml"));
 		foreach (var workbook in new[] { plain, table, unstyled })
 		{
 			Assert.Empty(Written.ValidationErrors(workbook));
@@ -350,7 +350,7 @@ public class SheetLookTests
 		var replaced = await Write(records, async, new ExcelSheetOptions { Columns = new Dictionary<string, ExcelColumnOptions> { ["Rate"] = new() { Wrap = true } } });
 
 		var sheet = Written.Entry(attributes, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"B2\" s=\"2\"><v>0.125</v></c>", sheet);
+		Assert.Equal("<c s=\"2\"><v>0.125</v></c>", Written.CellXml(sheet, "B2"));
 		Assert.Contains(
 			$"<cols><col min=\"1\" max=\"1\" width=\"{W(Fit(Px("Name", bold: true), Px("a")))}\"{Fitted}/>" +
 			$"<col min=\"2\" max=\"2\" width=\"{W(Fit(Px("Rate", bold: true), Px("12.5%")))}\" style=\"2\"{Fitted}/>" +
@@ -359,7 +359,7 @@ public class SheetLookTests
 
 		// Columns' entry is taken whole, in place of the attribute: Rate wraps, in General; Code keeps its attribute.
 		sheet = Written.Entry(replaced, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"B2\" s=\"2\"><v>0.125</v></c>", sheet);
+		Assert.Equal("<c s=\"2\"><v>0.125</v></c>", Written.CellXml(sheet, "B2"));
 		Assert.Contains("<col min=\"3\" max=\"3\" width=\"12.7109375\" hidden=\"1\" customWidth=\"1\"/>", sheet);
 		var styles = Written.Entry(replaced, "xl/styles.xml");
 		Assert.DoesNotContain("0.0%", styles);
@@ -377,7 +377,7 @@ public class SheetLookTests
 		var workbook = await Write([new FormattedLookOrder { When = new DateTime(2024, 1, 15) }], async, options);
 
 		// The member's format still reads the text back; the cell shows the column's.
-		Assert.Contains("<c r=\"A2\" s=\"2\"><v>45306</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Equal("<c s=\"2\"><v>45306</v></c>", Written.CellXml(Written.Entry(workbook, "xl/worksheets/sheet1.xml"), "A2"));
 		var styles = Written.Entry(workbook, "xl/styles.xml");
 		Assert.Contains("<numFmts count=\"1\"><numFmt numFmtId=\"164\" formatCode=\"yyyy-mm-dd\"/></numFmts>", styles);
 		Assert.Empty(Written.ValidationErrors(workbook));
@@ -430,7 +430,7 @@ public class SheetLookTests
 			names = [.. book.SheetNames];
 		}, async, options);
 
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>apple</t></is></c><c r=\"B1\" s=\"1\"><v>1234.5</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>apple</t></is></c><c s=\"1\"><v>1234.5</v></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Equal("ExcelSheetOptions.Columns names columns, and the sheet has no header to find them by (CsvWriterOptions.HasHeader is off): \"Amount\".", e!.Message);
 		Assert.Equal(["Data"], names);
 		Assert.Empty(Written.ValidationErrors(workbook));
@@ -459,14 +459,19 @@ public class SheetLookTests
 
 		// Each sheet has the title, its merge, the bold header, the frozen panes and the columns, and two records.
 		var sheets = Enumerable.Range(1, 3).Select(n => Written.Entry(workbook, $"xl/worksheets/sheet{n}.xml")).ToList();
-		var top = Regex.Match(sheets[0], "<sheetViews>.*?<row r=\"3\">").Value;
+		// The top: the views, the columns, and the title's and the header's rows.
+		var top = Regex.Match(sheets[0], "<sheetViews>.*?</row>.*?</row>").Value;
 		var merge = "<mergeCells count=\"1\"><mergeCell ref=\"A1:E1\"/></mergeCells>";
 		Assert.Contains("<pane ySplit=\"2\" topLeftCell=\"A3\"", top);
 		Assert.All(sheets, s => Assert.Contains(top, s));
 		Assert.All(sheets, s => Assert.Contains(merge, s));
-		Assert.Contains("<c r=\"B3\" s=\"3\"><v>2</v></c>", sheets[1]);
-		Assert.Contains("<c r=\"B4\" s=\"3\"><v>3</v></c>", sheets[1]);
-		Assert.DoesNotContain("<row r=\"5\">", sheets[0]);
+		Assert.Equal("<c s=\"3\"><v>2</v></c>", Written.CellXml(sheets[1], "B3"));
+		Assert.Equal("<c s=\"3\"><v>3</v></c>", Written.CellXml(sheets[1], "B4"));
+
+		// Each sheet's rows are its title's, its header's and its records', two at most: none past the limit. A record's
+		// empty note, before its code, is a placeholder in General, as its column has no style.
+		Assert.Equal(["1 2 3 4", "1 2 3 4", "1 2 3"], sheets.Select(s => string.Join(" ", Written.Rows(s).Select(r => r.Number))));
+		Assert.All(sheets, s => Assert.All(Written.Rows(s).Where(r => r.Number > 2), r => Assert.Equal("<c/>", Written.CellXml(s, $"D{r.Number}"))));
 		Assert.Empty(Written.ValidationErrors(workbook));
 
 		var titled = new ExcelReaderOptions { HeaderRow = ExcelHeaderRow.At(2) };

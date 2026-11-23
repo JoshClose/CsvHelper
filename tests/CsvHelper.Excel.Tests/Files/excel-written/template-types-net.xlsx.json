@@ -1,7 +1,7 @@
 {
   "file": "template-types-net.xlsx",
   "description": "a template of DateOnly and TimeOnly: dates that take a time, read as their dates, and times of day; filled in Excel",
-  "sha256": "05e5f8ddfc3ea6330920c27207b9b1c92441a11c78f80372a2da9465e299c18a",
+  "sha256": "f0cc5ae51724462f06820e50f05b89ac49436f2fe5208fdcc017dced3c44d218",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

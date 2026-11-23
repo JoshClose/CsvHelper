@@ -1,7 +1,7 @@
 {
   "file": "text-shared.xlsx",
   "description": "texts that need escaping, numbers stored as text, and a cell of 32,767 code units, with Shared strings",
-  "sha256": "fa9766410089c949f63d100cdc6666d1cbc9000cc656591044b7c0cc43cf0b99",
+  "sha256": "e7b59b19b0bf953c6c01088e3bb327f0593eac5eb75e3643342a10747d49edbc",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

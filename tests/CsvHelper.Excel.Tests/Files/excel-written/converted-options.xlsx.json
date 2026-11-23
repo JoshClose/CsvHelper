@@ -1,7 +1,7 @@
 {
   "file": "converted-options.xlsx",
   "description": "CSV converted with LongNumbers = Number and DateTimeOffsets = Utc, and a date before 1900 in a column of dates",
-  "sha256": "87d974203a7d4c899bffef00a067f213185ae193c68c9e9770f18b266fdcafa3",
+  "sha256": "93f55299bd728e1fcdbeed120bdcde0f2f009a896d5c634e0fe8274b8b57aa69",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

@@ -756,8 +756,9 @@ internal static class WrittenOracle
 
 	/// <summary>
 	/// The number format code and the columns the writer gave each sheet, from the workbook's parts (through the Open XML
-	/// SDK): each cell's code by row and 0-based column, and each column's width, whether it is hidden, and whether auto-fit
-	/// sized it (<c>bestFit</c>), 0-based.
+	/// SDK): each cell's code by row and 0-based column, the cells at their places with or without <c>r</c>
+	/// (<see cref="Writing.Written.Rows(System.Xml.Linq.XDocument)"/>), and each column's width, whether it is hidden, and
+	/// whether auto-fit sized it (<c>bestFit</c>), 0-based.
 	/// </summary>
 	/// <param name="workbook">The workbook's bytes.</param>
 	/// <returns>Each sheet's parts, by name.</returns>
@@ -771,15 +772,16 @@ internal static class WrittenOracle
 		var result = new Dictionary<string, WrittenParts>();
 		foreach (var sheet in part.Workbook!.Sheets!.Elements<DocumentFormat.OpenXml.Spreadsheet.Sheet>())
 		{
-			var worksheet = ((WorksheetPart)part.GetPartById(sheet.Id!)).Worksheet!;
+			var worksheetPart = (WorksheetPart)part.GetPartById(sheet.Id!);
+			var worksheet = worksheetPart.Worksheet!;
 			var codes = new Dictionary<(long, int), string>();
-			foreach (var cell in worksheet.Descendants<Cell>())
+			using (var stream = worksheetPart.GetStream(FileMode.Open, FileAccess.Read))
 			{
-				var id = formats[(int)(cell.StyleIndex?.Value ?? 0)];
-				var reference = cell.CellReference!.Value!;
-				var letters = new string([.. reference.TakeWhile(char.IsLetter)]);
-				codes[(long.Parse(reference.Substring(letters.Length), CultureInfo.InvariantCulture), letters.Aggregate(0, (c, l) => c * 26 + (l - 'A' + 1)) - 1)] =
-					custom.TryGetValue(id, out var code) ? code : BuiltIn[id];
+				foreach (var cell in Writing.Written.Cells(System.Xml.Linq.XDocument.Load(stream)))
+				{
+					var id = formats[cell.Style];
+					codes[(cell.Row, cell.Column)] = custom.TryGetValue(id, out var code) ? code : BuiltIn[id];
+				}
 			}
 
 			var widths = new Dictionary<int, double>();

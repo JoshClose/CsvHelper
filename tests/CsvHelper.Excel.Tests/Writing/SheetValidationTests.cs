@@ -80,7 +80,7 @@ public class SheetValidationTests
 		}, SheetValidations.Describe(workbook));
 		// The cells written keep their own formats: General, and their dates'; and the records read back as written.
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<row r=\"2\"><c r=\"A2\"><v>1</v></c><c r=\"B2\" t=\"inlineStr\"><is><t>On hold</t></is></c><c r=\"C2\" s=\"", sheet);
+		Assert.Contains("</row><row><c><v>1</v></c><c t=\"inlineStr\"><is><t>On hold</t></is></c><c s=\"", sheet);
 		Assert.Equal(["Id|Status|When|Region|Note", "1|On hold|2024-01-15T10:30:00|North, East|00123", "2|Closed|2024-01-16|South, West|fine"], Written.Read(workbook)[0].Rows);
 		AssertTheListsSheet(workbook, "Lists", 2, ["North, East", "South, West"]);
 		Assert.Empty(Written.ValidationErrors(workbook));
@@ -111,7 +111,7 @@ public class SheetValidationTests
 			["When"] = "date 1 2958465.9999999884 | yyyy-mm-dd hh:mm:ss",
 		}, SheetValidations.Describe(workbook));
 		// Without bold, the header's cells say General's style, as LibreOffice would give them their columns' otherwise.
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" s=\"0\" t=\"inlineStr\"><is><t>Note</t></is></c><c r=\"B1\" s=\"0\" t=\"inlineStr\">", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row><c s=\"0\" t=\"inlineStr\"><is><t>Note</t></is></c><c s=\"0\" t=\"inlineStr\">", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}
 
@@ -123,8 +123,8 @@ public class SheetValidationTests
 		var validated = await Written.WorkbookAsync((book, a) => WriteSheet(book, "Orders", Array.Empty<LookOrder>(), a, new ExcelSheetOptions { Validate = true, BoldHeader = false }), async);
 		var plain = await Written.WorkbookAsync((book, a) => WriteSheet(book, "Orders", Array.Empty<LookOrder>(), a, new ExcelSheetOptions { BoldHeader = false }), async);
 
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" s=\"0\" t=\"inlineStr\"><is><t>Name</t></is></c><c r=\"B1\" s=\"0\" t=\"inlineStr\">", Written.Entry(validated, "xl/worksheets/sheet1.xml"));
-		Assert.Contains("<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t>Name</t></is></c><c r=\"B1\" t=\"inlineStr\">", Written.Entry(plain, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row><c s=\"0\" t=\"inlineStr\"><is><t>Name</t></is></c><c s=\"0\" t=\"inlineStr\">", Written.Entry(validated, "xl/worksheets/sheet1.xml"));
+		Assert.Contains("<sheetData><row><c t=\"inlineStr\"><is><t>Name</t></is></c><c t=\"inlineStr\">", Written.Entry(plain, "xl/worksheets/sheet1.xml"));
 	}
 
 	[Theory]

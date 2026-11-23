@@ -1,7 +1,7 @@
 {
   "file": "links.xlsx",
   "description": "links by the default policy, Web: http, https and mailto URIs are links in the Hyperlink style, one shared by two cells, and file, relative and urn URIs text; in a table, in a column's format and wrap, and a header's URI as text",
-  "sha256": "c239bccb4246d1fd764754a2d32ea78f4575d91df34b156b1ebf04344cfc9d31",
+  "sha256": "ee15b20eb808ab001086afdd9d6e645eda4d24057969f5543b59a47ca4e7a956",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

@@ -153,17 +153,19 @@ internal static class SheetValidations
 		return Header(workbook, sheet, headerRow).ToDictionary(h => h.Name, h => widths.TryGetValue(h.Column, out var width) ? width : 0);
 	}
 
-	/// <summary>The header's cells: each one's column letters and its text.</summary>
+	/// <summary>
+	/// The header's cells with a value, at their places (<see cref="Written.Rows(XDocument)"/>): each one's column letters
+	/// and its text. A cell without one, a gap's placeholder or a protected header's empty field, names no column.
+	/// </summary>
 	/// <param name="workbook">The workbook.</param>
 	/// <param name="sheet">The sheet's number, from 1.</param>
 	/// <param name="row">The header's row.</param>
 	/// <returns>The cells, in order.</returns>
 	public static List<(string Column, string Name)> Header(byte[] workbook, int sheet = 1, int row = 1)
 	{
-		var xml = XDocument.Parse(Written.Entry(workbook, $"xl/worksheets/sheet{sheet}.xml"));
-		var header = xml.Descendants(Main + "row").Single(r => (int)r.Attribute("r")! == row);
+		var header = Written.Rows(Written.Sheet(workbook, sheet)).Single(r => r.Number == row);
 
-		return [.. header.Elements(Main + "c").Select(c => (Regex.Match((string)c.Attribute("r")!, "^[A-Z]+").Value, string.Concat(c.Descendants(Main + "t").Select(t => t.Value))))];
+		return [.. header.Cells.Where(c => !c.IsEmpty).Select(c => (Letters(c.Column), string.Concat(c.Element.Descendants(Main + "t").Select(t => t.Value))))];
 	}
 
 	/// <summary>A column's letters.</summary>

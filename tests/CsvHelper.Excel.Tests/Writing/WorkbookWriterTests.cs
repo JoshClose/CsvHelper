@@ -1,6 +1,5 @@
 using System.IO.Compression;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace CsvHelper.Excel.Tests.Writing;
 
@@ -16,6 +15,15 @@ public class WorkbookWriterTests
 		from async in new[] { false, true }
 		from strings in new[] { ExcelStrings.Inline, ExcelStrings.Shared }
 		select new object[] { async, strings };
+
+	/// <summary>
+	/// Sync and async, with inline and shared strings, in each look a gap's placeholder takes: no style, its column's
+	/// (<see cref="ExcelSheetOptions.Columns"/>), or its column's unlocked (<see cref="ExcelSheetOptions.Protect"/>).
+	/// </summary>
+	public static IEnumerable<object[]> GapModes() =>
+		from mode in Modes()
+		from look in new[] { "none", "columns", "protect" }
+		select new object[] { mode[0], mode[1], look };
 
 	/// <summary>Texts that need escapes or care: entities, spaces at either end, line ends, controls, escapes' look-alikes.</summary>
 	private static readonly string[] Tricky =
@@ -193,8 +201,8 @@ public class WorkbookWriterTests
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 
 		Assert.Contains(
-			"<row r=\"1\"><c r=\"A1\" t=\"inlineStr\"><is><t xml:space=\"preserve\"> a</t></is></c><c r=\"B1\" t=\"inlineStr\"><is><t>cr_x000D_</t></is></c>" +
-			"<c r=\"C1\" t=\"inlineStr\"><is><t>_x005F_x0041_</t></is></c><c r=\"D1\" t=\"inlineStr\"><is><t>a&amp;b</t></is></c></row>",
+			"<sheetData><row><c t=\"inlineStr\"><is><t xml:space=\"preserve\"> a</t></is></c><c t=\"inlineStr\"><is><t>cr_x000D_</t></is></c>" +
+			"<c t=\"inlineStr\"><is><t>_x005F_x0041_</t></is></c><c t=\"inlineStr\"><is><t>a&amp;b</t></is></c></row></sheetData>",
 			sheet);
 	}
 
@@ -293,9 +301,84 @@ public class WorkbookWriterTests
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 
-		Assert.Equal(["1", "4"], Regex.Matches(sheet, "<row r=\"(\\d+)\"").Cast<Match>().Select(m => m.Groups[1].Value));
-		Assert.Contains("<c r=\"B4\"", sheet);
+		// The empty records before row 4 are a row each, and its empty field before its value a placeholder, in General
+		// since its column has no style.
+		var (a, b) = strings == ExcelStrings.Shared
+			? ("<c s=\"1\" t=\"s\"><v>0</v></c>", "<c t=\"s\"><v>1</v></c>")
+			: ("<c s=\"1\" t=\"inlineStr\"><is><t>a</t></is></c>", "<c t=\"inlineStr\"><is><t>b</t></is></c>");
+		Assert.Contains($"<sheetData><row>{a}</row><row/><row/><row><c/>{b}</row></sheetData>", sheet);
+		Assert.Equal(b, Written.CellXml(sheet, "B4"));
 		Assert.Equal(["a", "", "", "|b"], Written.ReadOne(workbook));
+	}
+
+	[Theory]
+	[MemberData(nameof(GapModes))]
+	public async Task OtherReadersReadGapsAndEmptyRecords(bool async, ExcelStrings strings, string look)
+	{
+		// A header with a gap; gaps in the first column, in runs, and before the last field but none after it; empty
+		// records between the others. Each gap is a placeholder in its column's style: none, a column's, or Protect's
+		// unlocked one below the protected header, whose gap is a locked cell.
+		string?[][] rows =
+		[
+			["Name", "Size", "", "Code"],
+			["", "b", "", "d"],
+			["a", "", "", "d"],
+			[null, null],
+			["", "", "", "d"],
+			[""],
+			[null],
+			["x", "y", "", ""],
+			["", "", "z"],
+		];
+		var sheet = look switch
+		{
+			"columns" => new ExcelSheetOptions { Columns = new Dictionary<string, ExcelColumnOptions> { ["Name"] = new() { Format = "@" }, ["Size"] = new() { Wrap = true } } },
+			"protect" => new ExcelSheetOptions { Protect = true },
+			_ => new ExcelSheetOptions(),
+		};
+
+		var workbook = await Written.RowsAsync(rows, async, Written.Ragged(strings) with { Sheets = sheet });
+
+		Assert.Empty(Written.ValidationErrors(workbook));
+		Assert.Equal(["Name|Size||Code", "|b||d", "a|||d", "", "|||d", "", "", "x|y||", "||z|"], Written.ReadOne(workbook));
+		Assert.Equal(["A1=Name", "B1=Size", "D1=Code", "B2=b", "D2=d", "A3=a", "D3=d", "D5=d", "A8=x", "B8=y", "C9=z"], Assert.Single(Written.ClosedXml(workbook)).Cells);
+		Assert.Equal(["Name|Size||Code", "|b||d", "a|||d", "|||", "|||d", "|||", "|||", "x|y||", "||z|"], Assert.Single(Written.ExcelDataReader(workbook)).Rows);
+	}
+
+	[Theory]
+	[MemberData(nameof(Modes))]
+	public async Task OtherReadersReadEmptyRecordsAcrossTheRowLimit(bool async, ExcelStrings strings)
+	{
+		// Three rows a sheet, each new one with the header: an empty record before a value in each of the first two sheets,
+		// and one alone in the last, which ends it.
+		string?[][] rows = [["Head"], [""], ["a"], [null], ["", "b"], [""]];
+		var options = Written.Ragged(strings) with { RowLimit = ExcelRowLimit.NewSheet };
+
+		var workbook = await Written.WorkbookAsync(async (book, a) =>
+		{
+			book.MaxRows = 3;
+			var writer = book.AddSheet("Data");
+			foreach (var row in rows)
+			{
+				foreach (var field in row)
+				{
+					writer.WriteField(field);
+				}
+
+				await Written.EndRecordAsync(writer, a);
+			}
+
+			await Written.DisposeAsync(writer, a);
+		}, async, options);
+
+		Assert.Empty(Written.ValidationErrors(workbook));
+		Assert.Equal(["Data: Head /  / a", "Data (2): Head /  / |b", "Data (3): Head"], Written.Sheets(workbook));
+		Assert.Equal(
+			[("Data", "A1=Head A3=a"), ("Data (2)", "A1=Head B3=b"), ("Data (3)", "A1=Head")],
+			Written.ClosedXml(workbook).Select(s => (s.Sheet, string.Join(" ", s.Cells))));
+		Assert.Equal(
+			[("Data", "Head /  / a"), ("Data (2)", "Head| / | / |b"), ("Data (3)", "Head")],
+			Written.ExcelDataReader(workbook).Select(s => (s.Sheet, string.Join(" / ", s.Rows))));
 	}
 
 	[Theory]

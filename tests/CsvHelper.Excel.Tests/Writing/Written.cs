@@ -1,5 +1,8 @@
+using System.Globalization;
 using System.IO.Compression;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
@@ -18,10 +21,36 @@ public partial class WrittenText
 	public string? Note { get; set; }
 }
 
+/// <summary>A row of a written sheet at its place (<see cref="Written.Rows(XDocument)"/>).</summary>
+/// <param name="Number">The row's number, from 1.</param>
+/// <param name="Element">Its <c>row</c> element.</param>
+/// <param name="Cells">Its cells, at their places, in order.</param>
+internal sealed record WrittenRow(long Number, XElement Element, List<WrittenCell> Cells);
+
+/// <summary>A cell of a written sheet at its place (<see cref="Written.Rows(XDocument)"/>).</summary>
+/// <param name="Row">The cell's row, from 1.</param>
+/// <param name="Column">Its column, from 0.</param>
+/// <param name="Element">Its <c>c</c> element.</param>
+internal sealed record WrittenCell(long Row, int Column, XElement Element)
+{
+	/// <summary>The cell's reference, such as <c>B4</c>.</summary>
+	public string Reference => CellReference.ColumnName(Column) + Row.ToString(CultureInfo.InvariantCulture);
+
+	/// <summary>The cell format it names, 0 without <c>s</c>.</summary>
+	public int Style => (int?)Element.Attribute("s") ?? 0;
+
+	/// <summary>
+	/// Whether the cell holds nothing: a gap's placeholder (<c>&lt;c/&gt;</c>, <c>&lt;c s="5"/&gt;</c>) or a protected
+	/// header's empty field, which only give their cell a style.
+	/// </summary>
+	public bool IsEmpty => !Element.HasElements;
+}
+
 /// <summary>
 /// Workbooks written by <see cref="ExcelWorkbookWriter"/> for the writer's tests, synchronously or asynchronously, and
 /// the readers they are read back with: CsvHelper.Excel's own, and the oracles (the Open XML SDK's validator, ClosedXML
-/// and ExcelDataReader).
+/// and ExcelDataReader); and their sheets' rows and cells found at their places, with or without <c>r</c>
+/// (<see cref="Rows(XDocument)"/>).
 /// </summary>
 internal static class Written
 {
@@ -33,6 +62,18 @@ internal static class Written
 	/// Phase 5's defaults leave it as it was.
 	/// </summary>
 	public static readonly ExcelSheetOptions Phase4Look = new() { BoldHeader = false, FreezeHeader = false, AutoFit = 0 };
+
+	/// <summary>SpreadsheetML's namespace.</summary>
+	private static readonly XNamespace Main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
+
+	/// <summary>A row's element in <c>sheetData</c>'s text: empty, or up to its end tag, which no text holds unescaped.</summary>
+	private static readonly Regex RowElement = new("<row(?=[\\s/>])[^>]*?(?:/>|>.*?</row>)", RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
+	/// <summary>A cell's element in a row's text: empty, or up to its end tag.</summary>
+	private static readonly Regex CellElement = new("<c(?=[\\s/>])[^>]*?(?:/>|>.*?</c>)", RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
+	/// <summary>The <c>r</c> attribute of a row's or a cell's start tag.</summary>
+	private static readonly Regex Reference = new("(<(?:row|c)(?=[\\s/>])[^>]*?) r=\"[^\"]*\"", RegexOptions.CultureInvariant);
 
 	/// <summary>Options with Phase 4's look (<see cref="Phase4Look"/>), and no links, so that a URI is the text it was.</summary>
 	/// <param name="options">The options, or <see langword="null"/> for the default ones.</param>
@@ -290,4 +331,167 @@ internal static class Written
 	/// <param name="name">The entry's name.</param>
 	/// <returns>Its text.</returns>
 	public static string Entry(byte[] package, string name) => Entries(package).Single(e => e.Name == name).Text;
+
+	/// <summary>A worksheet's XML.</summary>
+	/// <param name="workbook">The workbook's bytes.</param>
+	/// <param name="sheet">The worksheet's part's number, from 1.</param>
+	/// <returns>The XML.</returns>
+	public static XDocument Sheet(byte[] workbook, int sheet = 1) => XDocument.Parse(Entry(workbook, $"xl/worksheets/sheet{sheet}.xml"));
+
+	/// <summary>
+	/// A worksheet's rows and their cells at their places, as SpreadsheetML places them: a row at its <c>r</c> when it has
+	/// one, else in the row after the previous one (row 1 first); a cell at its <c>r</c>'s column when it has one, else in
+	/// the column after the previous cell of its row (A first). So it reads a sheet written with references and one
+	/// written without them (<c>&lt;row&gt;</c>, <c>&lt;c s="3"&gt;</c>, the gaps' <c>&lt;c/&gt;</c> and the empty records'
+	/// <c>&lt;row/&gt;</c>), as <c>Corpus/Oracles.cs</c> reads the corpus. It checks what both shapes hold: rows and their
+	/// cells in ascending order, a cell's <c>r</c> in its row, and no sheet that mixes rows, or cells, with and without
+	/// <c>r</c>.
+	/// </summary>
+	/// <param name="sheet">The worksheet's XML.</param>
+	/// <returns>The rows, in order.</returns>
+	public static List<WrittenRow> Rows(XDocument sheet)
+	{
+		var rows = new List<WrittenRow>();
+		var (rowsWith, rowsWithout, cellsWith, cellsWithout) = (0, 0, 0, 0);
+		long number = 0;
+		foreach (var row in sheet.Root!.Element(Main + "sheetData")?.Elements(Main + "row") ?? [])
+		{
+			var previous = number;
+			if ((string?)row.Attribute("r") is { } r)
+			{
+				number = long.Parse(r, NumberStyles.None, CultureInfo.InvariantCulture);
+				rowsWith++;
+			}
+			else
+			{
+				number++;
+				rowsWithout++;
+			}
+
+			Assert.True(number > previous, $"Row {number} follows row {previous}.");
+			var cells = new List<WrittenCell>();
+			var column = -1;
+			foreach (var cell in row.Elements(Main + "c"))
+			{
+				var before = column;
+				if ((string?)cell.Attribute("r") is { } reference)
+				{
+					Assert.True(CellReference.TryParse(Encoding.ASCII.GetBytes(reference), out column, out var cellRow), $"The cell {reference} has no reference.");
+					Assert.True(cellRow == number, $"The cell {reference} is in row {number}.");
+					cellsWith++;
+				}
+				else
+				{
+					column++;
+					cellsWithout++;
+				}
+
+				Assert.True(column > before, $"A cell in column {column} of row {number} follows one in column {before}.");
+				cells.Add(new WrittenCell(number, column, cell));
+			}
+
+			rows.Add(new WrittenRow(number, row, cells));
+		}
+
+		Assert.False(rowsWith > 0 && rowsWithout > 0, $"The sheet mixes {rowsWith} rows with r and {rowsWithout} without.");
+		Assert.False(cellsWith > 0 && cellsWithout > 0, $"The sheet mixes {cellsWith} cells with r and {cellsWithout} without.");
+
+		return rows;
+	}
+
+	/// <summary>A worksheet's rows and their cells at their places (<see cref="Rows(XDocument)"/>).</summary>
+	/// <param name="sheet">The worksheet's XML, as text.</param>
+	/// <returns>The rows, in order.</returns>
+	public static List<WrittenRow> Rows(string sheet) => Rows(XDocument.Parse(sheet));
+
+	/// <summary>A worksheet's cells at their places (<see cref="Rows(XDocument)"/>), row by row.</summary>
+	/// <param name="sheet">The worksheet's XML.</param>
+	/// <returns>The cells, in order.</returns>
+	public static List<WrittenCell> Cells(XDocument sheet) => [.. Rows(sheet).SelectMany(r => r.Cells)];
+
+	/// <summary>The cell at a reference (<see cref="Rows(XDocument)"/>).</summary>
+	/// <param name="sheet">The worksheet's XML.</param>
+	/// <param name="reference">The reference, such as <c>B4</c>.</param>
+	/// <returns>The cell's element, or <see langword="null"/> when the sheet has no cell there.</returns>
+	public static XElement? Cell(XDocument sheet, string reference) => Cells(sheet).SingleOrDefault(c => c.Reference == reference)?.Element;
+
+	/// <summary>The row at a number (<see cref="Rows(XDocument)"/>).</summary>
+	/// <param name="sheet">The worksheet's XML.</param>
+	/// <param name="number">The row's number, from 1.</param>
+	/// <returns>The row's element, or <see langword="null"/> when the sheet has no row there.</returns>
+	public static XElement? Row(XDocument sheet, long number) => Rows(sheet).SingleOrDefault(r => r.Number == number)?.Element;
+
+	/// <summary>Where the cell at a reference is in a worksheet's text (<see cref="Rows(XDocument)"/>).</summary>
+	/// <param name="sheet">The worksheet's XML, as text.</param>
+	/// <param name="reference">The reference, such as <c>B4</c>.</param>
+	/// <returns>The cell's element's first character and its length, or <see langword="null"/> when the sheet has no cell there.</returns>
+	public static (int Start, int Length)? CellSpan(string sheet, string reference)
+	{
+		foreach (var (row, _, cells) in Spans(sheet))
+		{
+			for (var i = 0; i < row.Cells.Count; i++)
+			{
+				if (row.Cells[i].Reference == reference)
+				{
+					return cells[i];
+				}
+			}
+		}
+
+		return null;
+	}
+
+	/// <summary>The cell at a reference as a worksheet's text has it, without its <c>r</c>, which a sheet may or may not write.</summary>
+	/// <param name="sheet">The worksheet's XML, as text.</param>
+	/// <param name="reference">The reference, such as <c>B4</c>.</param>
+	/// <returns>The cell's XML, such as <c>&lt;c s="1"&gt;&lt;v&gt;45306&lt;/v&gt;&lt;/c&gt;</c>, or <see langword="null"/> when the sheet has no cell there.</returns>
+	public static string? CellXml(string sheet, string reference) =>
+		CellSpan(sheet, reference) is { } span ? WithoutReferences(sheet.Substring(span.Start, span.Length)) : null;
+
+	/// <summary>The row at a number as a worksheet's text has it, without the <c>r</c> of the row and of its cells.</summary>
+	/// <param name="sheet">The worksheet's XML, as text.</param>
+	/// <param name="number">The row's number, from 1.</param>
+	/// <returns>The row's XML, such as <c>&lt;row/&gt;</c>, or <see langword="null"/> when the sheet has no row there.</returns>
+	public static string? RowXml(string sheet, long number)
+	{
+		foreach (var (row, (start, length), _) in Spans(sheet))
+		{
+			if (row.Number == number)
+			{
+				return WithoutReferences(sheet.Substring(start, length));
+			}
+		}
+
+		return null;
+	}
+
+	/// <summary>
+	/// Each row of a worksheet's text, at its place (<see cref="Rows(XDocument)"/>), with where its element is in the text
+	/// and where each of its cells' is.
+	/// </summary>
+	/// <param name="sheet">The worksheet's XML, as text.</param>
+	/// <returns>The rows, in order.</returns>
+	private static List<(WrittenRow Row, (int Start, int Length) Span, List<(int Start, int Length)> Cells)> Spans(string sheet)
+	{
+		var rows = Rows(XDocument.Parse(sheet));
+		var start = sheet.IndexOf("<sheetData>", StringComparison.Ordinal);
+		var end = start < 0 ? -1 : sheet.IndexOf("</sheetData>", start, StringComparison.Ordinal);
+		List<Match> elements = start < 0 ? [] : RowElement.Matches(sheet.Substring(0, end), start).Cast<Match>().ToList();
+		Assert.Equal(rows.Count, elements.Count);
+		var spans = new List<(WrittenRow, (int, int), List<(int, int)>)>();
+		for (var i = 0; i < rows.Count; i++)
+		{
+			var row = elements[i];
+			var cells = CellElement.Matches(row.Value).Cast<Match>().Select(c => (row.Index + c.Index, c.Length)).ToList();
+			Assert.Equal(rows[i].Cells.Count, cells.Count);
+			spans.Add((rows[i], (row.Index, row.Length), cells));
+		}
+
+		return spans;
+	}
+
+	/// <summary>A row's or a cell's XML without the <c>r</c> of its rows and cells.</summary>
+	/// <param name="xml">The XML.</param>
+	/// <returns>The XML without them.</returns>
+	private static string WithoutReferences(string xml) => Reference.Replace(xml, "$1");
 }

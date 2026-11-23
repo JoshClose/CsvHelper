@@ -1,7 +1,7 @@
 {
   "file": "template.xlsx",
   "description": "a template of an order (ExcelTemplate.Create): each column's validation from its member's type, an enum's dropdown, a list and a prompt by attribute, a [CsvValidate] Excel doesn't know, the header locked and the columns below it unlocked; filled in Excel with step 6's matrix",
-  "sha256": "93364b9d8428fdf42f705801a3a4be82e77be9373cf0c8704d7b1b09fb74949d",
+  "sha256": "fdfa770ce25be09fd83e3492b76807cce08f921eb43d1d32e64e0b45e513b606",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

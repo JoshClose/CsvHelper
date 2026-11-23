@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CsvHelper.Excel.Aot;
 
@@ -18,6 +19,12 @@ namespace CsvHelper.Excel.Aot;
 /// </summary>
 internal static class Program
 {
+	/// <summary>A row's element: its start tag's attributes, and its cells unless it is empty.</summary>
+	private static readonly Regex RowElement = new("<row(?<start>(?: [^>]*?)?)(?:/>|>(?<cells>.*?)</row>)", RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
+	/// <summary>A cell's element in a row: its start tag's attributes, and the rest.</summary>
+	private static readonly Regex CellElement = new("<c(?<start>(?: [^>]*?)?)(?:/>|>.*?</c>)", RegexOptions.Singleline | RegexOptions.CultureInvariant);
+
 	/// <summary>Writes, checks and reads back the orders.</summary>
 	/// <returns>0 when everything is as written, else 1.</returns>
 	private static int Main()
@@ -39,7 +46,12 @@ internal static class Program
 		var sheet = Entry(bytes, "xl/worksheets/sheet1.xml");
 		var styles = Entry(bytes, "xl/styles.xml");
 		var table = Entry(bytes, "xl/tables/table1.xml");
-		Expect(problems, sheet, "<c r=\"A1\" s=\"", "the title's cell");
+		var title = CellXml(sheet, "A1");
+		if (title is null || !title.StartsWith("<c s=\"", StringComparison.Ordinal))
+		{
+			problems.Add($"The workbook's title's cell, A1, has no style of its own: {title ?? "no cell"}.");
+		}
+
 		Expect(problems, sheet, "<mergeCell ref=\"A1:G1\"/>", "the title's merge");
 		Expect(problems, sheet, "<pane xSplit=\"1\" ySplit=\"2\"", "the frozen header and first column");
 		Expect(problems, sheet, "<col min=\"2\" max=\"2\" width=\"20.7109375\"", "the customer's width");
@@ -87,17 +99,22 @@ internal static class Program
 			"1,Ada,2024-01-15,1234.5,true,https://example.com/ada,first\r\n" +
 			"2,Grace,2024-02-29,0.25,FALSE,,\r\n";
 
-		// Inferred: numbers, dates, booleans and text, each column by its fields; an empty field is no cell.
+		// Inferred: numbers, dates, booleans and text, each column by its fields; an empty field at a record's end is no
+		// cell. Each cell is found at its place, whether or not the sheet writes its reference.
 		var inferred = ToExcel(csv, null);
 		var sheet = Entry(inferred, "xl/worksheets/sheet1.xml");
-		Expect(problems, sheet, "<c r=\"A2\"><v>1</v></c>", "the first id, a number");
-		Expect(problems, sheet, "<c r=\"D3\"><v>0.25</v></c>", "the second total, a number");
-		Expect(problems, sheet, "<c r=\"E2\" t=\"b\"><v>1</v></c>", "the first order's paid, a boolean");
-		Expect(problems, sheet, "<c r=\"B2\" t=\"inlineStr\"><is><t>Ada</t></is></c>", "the first customer, text");
-		Expect(problems, sheet, "<c r=\"C3\" s=\"2\"><v>45351</v></c>", "the second order's date, 2024-02-29");
-		if (sheet.Contains("<c r=\"F3\"", StringComparison.Ordinal))
+		ExpectCell(problems, sheet, "A2", "<c><v>1</v></c>", "the first id, a number");
+		ExpectCell(problems, sheet, "D3", "<c><v>0.25</v></c>", "the second total, a number");
+		ExpectCell(problems, sheet, "E2", "<c t=\"b\"><v>1</v></c>", "the first order's paid, a boolean");
+		ExpectCell(problems, sheet, "B2", "<c t=\"inlineStr\"><is><t>Ada</t></is></c>", "the first customer, text");
+		ExpectCell(problems, sheet, "C3", "<c s=\"2\"><v>45351</v></c>", "the second order's date, 2024-02-29");
+		ExpectCell(problems, sheet, "E3", "<c t=\"b\"><v>0</v></c>", "the second order's paid, the last with a value");
+		foreach (var empty in new[] { "F3", "G3" })
 		{
-			problems.Add("The inferred sheet has a cell for an empty field: F3.");
+			if (CellXml(sheet, empty) is { } cell)
+			{
+				problems.Add($"The inferred sheet has a cell for an empty field at a record's end: {empty}, {cell}.");
+			}
 		}
 
 		// Back to CSV: a boolean in capitals, as the reader gives typed cells.
@@ -277,6 +294,60 @@ internal static class Program
 		{
 			problems.Add($"The workbook lacks {what}: {text}");
 		}
+	}
+
+	/// <summary>Adds a problem when a sheet's cell at a reference isn't as expected.</summary>
+	/// <param name="problems">The problems.</param>
+	/// <param name="sheet">The sheet's XML.</param>
+	/// <param name="reference">The cell's reference, such as <c>A2</c>.</param>
+	/// <param name="xml">The cell's XML without its reference.</param>
+	/// <param name="what">What the cell is, for the problem.</param>
+	private static void ExpectCell(List<string> problems, string sheet, string reference, string xml, string what)
+	{
+		if (CellXml(sheet, reference) is var cell && cell != xml)
+		{
+			problems.Add($"The workbook's {what} at {reference} is {cell ?? "no cell"}, not {xml}.");
+		}
+	}
+
+	/// <summary>
+	/// The cell at a reference, found at its place as SpreadsheetML places it: a row at its <c>r</c> when it has one, else
+	/// the row after the previous one (row 1 first); a cell at its <c>r</c>'s column when it has one, else the column after
+	/// the previous cell of its row (A first). So it reads a sheet written with references and one written without them.
+	/// </summary>
+	/// <param name="sheet">The sheet's XML.</param>
+	/// <param name="reference">The reference, such as <c>A2</c>.</param>
+	/// <returns>The cell's XML without its reference, or <see langword="null"/> when the sheet has no cell there.</returns>
+	private static string? CellXml(string sheet, string reference)
+	{
+		var letters = new string(reference.TakeWhile(char.IsLetter).ToArray());
+		var wantedColumn = letters.Aggregate(0, (n, c) => n * 26 + c - 'A' + 1) - 1;
+		var wantedRow = long.Parse(reference.Substring(letters.Length), CultureInfo.InvariantCulture);
+		long row = 0;
+		foreach (Match rowElement in RowElement.Matches(sheet))
+		{
+			var rowReference = Regex.Match(rowElement.Groups["start"].Value, " r=\"([0-9]+)\"");
+			row = rowReference.Success ? long.Parse(rowReference.Groups[1].Value, CultureInfo.InvariantCulture) : row + 1;
+			if (row != wantedRow)
+			{
+				continue;
+			}
+
+			var column = -1;
+			foreach (Match cell in CellElement.Matches(rowElement.Groups["cells"].Value))
+			{
+				var cellReference = Regex.Match(cell.Groups["start"].Value, " r=\"([A-Z]+)[0-9]+\"");
+				column = cellReference.Success ? cellReference.Groups[1].Value.Aggregate(0, (n, c) => n * 26 + c - 'A' + 1) - 1 : column + 1;
+				if (column == wantedColumn)
+				{
+					return Regex.Replace(cell.Value, "^<c r=\"[^\"]*\"", "<c");
+				}
+			}
+
+			return null;
+		}
+
+		return null;
 	}
 
 	/// <summary>A package's entry, as text.</summary>

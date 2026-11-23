@@ -1,7 +1,7 @@
 {
   "file": "newsheet-look.xlsx",
   "description": "RowLimit = NewSheet, a sheet's rows limited to 4 (a title, the header and two records): each new sheet repeats the title and its merge, the bold, frozen header, the table or the filter, and the widths",
-  "sha256": "d6ce6e057080dc44858db5d745fc6c36588fafe6e5d289ce9b8abf812a2beeb6",
+  "sha256": "e88f8e6482aef7a2bb93dd193e4b139553813254698ca820f19294670577639f",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [

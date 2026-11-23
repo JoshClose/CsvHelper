@@ -1,7 +1,7 @@
 {
   "file": "types-net.xlsx",
   "description": ".NET's newer types (DateOnly, TimeOnly, Half, Int128, UInt128), and DateOnly's and TimeOnly's formats in the invariant culture",
-  "sha256": "e9bb49cbe4f86fa90f6fff37c7cae4eb0e2b9bbc76b0f1ff1bb070336833477b",
+  "sha256": "b5b5f147aac3cfb9d997ed6623b2209a2a20dd2c793d91c1b427477f50a16cf8",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

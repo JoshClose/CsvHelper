@@ -90,6 +90,27 @@ internal sealed class XmlOutput : IDisposable
 		buffer[length++] = value;
 	}
 
+	/// <summary>
+	/// Makes room for bytes and returns it, so that pieces can be written under one capacity check: the caller writes at
+	/// most <paramref name="count"/> bytes from the room's start, appends nothing else meanwhile, and then
+	/// <see cref="Advance"/>s past those it wrote.
+	/// </summary>
+	/// <param name="count">The most bytes the caller writes.</param>
+	/// <returns>
+	/// The room after the bytes written, of <paramref name="count"/> bytes exactly, so that a caller that writes more than it
+	/// asked for throws wherever the buffer ends.
+	/// </returns>
+	public Span<byte> GetSpan(int count)
+	{
+		Reserve(count);
+
+		return buffer.AsSpan(length, count);
+	}
+
+	/// <summary>Moves past the bytes written into the room <see cref="GetSpan"/> returned.</summary>
+	/// <param name="count">The bytes written, at most the room's.</param>
+	public void Advance(int count) => length += count;
+
 	/// <summary>Appends a number's invariant digits.</summary>
 	/// <param name="value">The number.</param>
 	public void AppendNumber(long value)

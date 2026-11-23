@@ -1,7 +1,7 @@
 {
   "file": "cultures.xlsx",
   "description": "[CsvFormat] and [CsvCulture] in en-US, de-DE, fr-FR, ja-JP and other cultures: standard and custom date formats, DateOnly, TimeOnly, offsets with DateTimeOffsets = ClockTime, and numbers",
-  "sha256": "21d15a2cddc18e8472a4fb83159f948ed0f8fb963df2800ce2d0a36536f06825",
+  "sha256": "1a02e7ca66a6e80c6faaebb3b044b553d01a47fdb6151e9f8eb43de64f14c9e7",
   "cultures": [
     "ar-SA",
     "de-DE",

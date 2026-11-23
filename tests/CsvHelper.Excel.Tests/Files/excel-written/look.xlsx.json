@@ -1,7 +1,7 @@
 {
   "file": "look.xlsx",
   "description": "the default options: a bold, frozen header, auto-fit over 100 rows and links for http, https and mailto; with a title over a frozen column, a title over one column, and columns frozen without the header",
-  "sha256": "8081ce7e9d13f50cddb24eeeb0c5fbfbe348e9b3e306c891dac7d8e02fa19285",
+  "sha256": "764d04785ec35bd1dea70f30eb839bdb8384261fdccda0a56694aa5c1d12beb9",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

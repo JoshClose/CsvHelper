@@ -259,7 +259,7 @@ public class CsvToExcelTests
 		Assert.Equal(["A1=Text:123", "B1=Text:2024-01-15", "A2=Number:1", "B2=DateTime:2024-01-16T00:00:00.000"], Values(header));
 		var xml = Written.Entry(header, "xl/worksheets/sheet1.xml");
 		Assert.Contains("<pane ySplit=\"1\"", xml, StringComparison.Ordinal);
-		Assert.Contains("<c r=\"A1\" s=\"", xml, StringComparison.Ordinal);
+		Assert.Contains("<sheetData><row><c s=\"", xml, StringComparison.Ordinal);
 
 		// None: the first record is data, typed, and nothing is frozen.
 		var none = await ConvertAsync(Csv, async, new CsvToExcelOptions { Csv = new CsvReaderOptions { HasHeader = false } });

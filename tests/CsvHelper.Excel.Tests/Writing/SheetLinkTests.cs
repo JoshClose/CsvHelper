@@ -291,8 +291,10 @@ public class SheetLinkTests
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
 		Assert.Equal(65_530, Regex.Matches(sheet, "<hyperlink ").Count);
 		Assert.Contains("<hyperlink ref=\"A65530\" r:id=\"rId65530\"/></hyperlinks>", sheet);
-		Assert.Contains("<c r=\"A65530\" s=\"1\" t=\"inlineStr\">", sheet);
-		Assert.Contains("<c r=\"A65531\" t=\"inlineStr\"><is><t>https://example.com/65530</t></is></c>", sheet);
+		Assert.Contains(
+			"<row><c s=\"1\" t=\"inlineStr\"><is><t>https://example.com/65529</t></is></c></row>" +
+			"<row><c t=\"inlineStr\"><is><t>https://example.com/65530</t></is></c></row></sheetData>",
+			sheet);
 		Assert.Equal(65_530, Regex.Matches(Written.Entry(workbook, "xl/worksheets/_rels/sheet1.xml.rels"), "<Relationship ").Count);
 		Assert.Empty(Written.ValidationErrors(workbook));
 	}

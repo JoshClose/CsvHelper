@@ -1,4 +1,5 @@
 using System;
+using System.Buffers.Text;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -14,9 +15,15 @@ namespace CsvHelper.Excel;
 /// </summary>
 /// <remarks>
 /// <para>
-/// Record <c>n</c> (from 0) is row <c>n + 1</c>, and field <c>i</c> is column <c>i</c> from <c>A</c>. Every row and cell
-/// has its <c>r</c>, as Excel writes them. A record without a value has no <c>row</c> element, and an empty field no
-/// <c>c</c>. There is no <c>dimension</c> and no <c>spans</c>: both need rows the sink hasn't seen yet.
+/// Record <c>n</c> (from 0) is row <c>n + 1</c>, and field <c>i</c> is column <c>i</c> from <c>A</c>. No row or cell has
+/// an <c>r</c>: a row is the one after the row before it, and a cell is in the column after the cell before it in its
+/// row, as Excel and the other readers place them. So an empty field before a later value in its record, a gap, is a
+/// placeholder: an empty cell in its column's default style, as Excel would show the cell not in the file
+/// (<c>&lt;c s="3"/&gt;</c>), or <c>&lt;c/&gt;</c> in a column without one; and a record without a value before a later
+/// record with one is an empty <c>&lt;row/&gt;</c>, written when that record's row starts. Empty fields after a record's
+/// last value, and records without a value after the last one, write nothing. One sheet never mixes rows or cells with
+/// and without <c>r</c>, which some readers misplace. There is no <c>dimension</c> and no <c>spans</c>: both need rows
+/// the sink hasn't seen yet.
 /// </para>
 /// <para>
 /// A field's cell comes from its type and text (<see cref="CellKinds"/>): numbers, booleans, dates, times and durations
@@ -83,9 +90,10 @@ namespace CsvHelper.Excel;
 /// With <see cref="ExcelSheetOptions.Protect"/>, the sheet is protected (<see cref="SheetProtection"/>, written after
 /// <c>sheetData</c>, its password hashed once for every sheet of <see cref="ExcelRowLimit.NewSheet"/>). Once the header
 /// ends, each cell below it in its columns takes its style's unlocked form, and so does each of those columns' default
-/// style, which the cells users add take: users change those cells only. The title's and the header's cells stay locked,
-/// since a cell not in the file takes its column's unlocked style: the title's row has the title's style, which its
-/// merged cells take, and the header's empty fields are written as empty cells. So do the columns past the header's.
+/// style, which the cells users add take, and the gaps' placeholders: users change those cells only. The title's and the
+/// header's cells stay locked, since a cell not in the file takes its column's unlocked style: the title's row has the
+/// title's style, which its merged cells take, and the header's empty fields, and the columns its failed fields skip,
+/// are written as empty cells in the header's style rather than as placeholders. So do the columns past the header's.
 /// </para>
 /// <para>
 /// A <see cref="Uri"/> field below the header is a text cell of its text, as for CSV, with a link to it in the
@@ -112,6 +120,9 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>The most significant digits Excel keeps of a number.</summary>
 	private const int MaxSignificantDigits = 15;
 
+	/// <summary>The most bytes of a cell's start: <c>&lt;c s="</c>, a cell format's index of up to 10 digits, and <c>"</c>.</summary>
+	private const int MaxCellStart = 17;
+
 	/// <summary>Why Excel can't show a date before 1900-01-01, for <see cref="WriteOutOfRange"/>'s message.</summary>
 	private const string BeforeFirstDate = "before 1900-01-01, Excel's first date";
 
@@ -131,6 +142,9 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>The letters of each column, made as they are first needed.</summary>
 	private static readonly byte[]?[] ColumnLetters = new byte[CellReference.MaxColumns][];
+
+	/// <summary>A gap's placeholder in a column without a default style.</summary>
+	private static readonly byte[] EmptyCell = "<c/>"u8.ToArray();
 
 	private readonly ExcelWorkbookWriter workbook;
 	private readonly PackageWriter package;
@@ -179,6 +193,12 @@ internal sealed class SheetSink : CsvCellSink
 	private ColumnStyle?[]? columnStyles;
 	// Each column's default style (col style), 0 for none; null when no column has one.
 	private int[]? columnDefaults;
+	// Each column's placeholder below the header, made when a gap in it is first written (the columns' default styles and
+	// unlocked columns are fixed by then, for every sheet of NewSheet); null until one is. And, in a sheet whose cells take
+	// styles, each column's start of a cell below the header without a style of its own, <c s="N" or <c, made when the
+	// first is written.
+	private byte[]?[]? placeholders;
+	private byte[]?[]? columnStarts;
 	// The columns' validations, in column order, once known; null for none. And, with Validate, each column's type's
 	// format (the default style of a column without a format of its own), and the pixels its dates' widest text needs (0
 	// for none); null when no column has one.
@@ -186,9 +206,11 @@ internal sealed class SheetSink : CsvCellSink
 	private string?[]? typeFormats;
 	private double[]? minimumPixels;
 	// The font of the current row's cells: the title's in its row, bold in the header's (BoldHeader), else regular. And
-	// whether a cell's style is more than its own number format: in those rows, and in a sheet whose columns have styles.
+	// whether a cell's style is more than its own number format: in those rows, and in a sheet whose columns have styles;
+	// and whether it is so below the header, where a cell without a style of its own takes its column's start.
 	private CellFont rowFont;
 	private bool styling;
+	private bool stylesColumns;
 	// In the header's row of a sheet whose columns may have styles: the header's cells say their style, General's (s="0")
 	// too, since LibreOffice gives a written cell without one its column's style, where Excel gives it General.
 	private bool headerSaysStyle;
@@ -232,8 +254,13 @@ internal sealed class SheetSink : CsvCellSink
 	// The current record's row, and the column of its next field.
 	private long row = 1;
 	private int column;
-	// Whether the current record's row element has been written, which its first cell with a value does.
+	// Whether the current record's row element has been written, which its first cell with a value does; and the column
+	// after its last cell, 0 before its first, where the gaps before its next cell start.
 	private bool rowOpen;
+	private int recordNextColumn;
+	// The header record's placeholders, each as its offset from the record's start and its column, until its columns'
+	// default styles are known; null without one.
+	private List<(int Offset, int Column)>? headerGaps;
 	// Where the current record starts in the buffer: what is before it is whole records.
 	private int recordStart;
 	// The cells of the current record that refer to a shared string.
@@ -374,8 +401,7 @@ internal sealed class SheetSink : CsvCellSink
 			{
 				// A cell not in the file takes its column's default style, which is unlocked: the header's empty cells are
 				// written, locked.
-				StartCell(at, 0);
-				output.Append("/>"u8);
+				StartCell(at, 0, "/>"u8);
 			}
 
 			return;
@@ -456,6 +482,11 @@ internal sealed class SheetSink : CsvCellSink
 			EndHeader(header);
 		}
 
+		if (headerGaps is not null)
+		{
+			StyleHeaderGaps();
+		}
+
 		if (row == headerRowNumber)
 		{
 			headerColumns = column;
@@ -532,17 +563,23 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		column = 0;
+		recordNextColumn = 0;
 		recordStart = output.Length;
 
 		return widthsKnown && (recordStart >= FlushSize || sheetEnd >= 0);
 	}
 
-	/// <summary>Drops the current record's cells, and the widths they set.</summary>
+	/// <summary>
+	/// Drops the current record's cells, the empty rows written before them, and the widths they set. The last row with a
+	/// cell stays as it was, since it moves only as a record ends.
+	/// </summary>
 	public override void DiscardRecord()
 	{
 		output.Truncate(recordStart);
 		rowOpen = false;
 		column = 0;
+		recordNextColumn = 0;
+		headerGaps = null;
 		recordReferences = 0;
 		recordNumberLikeText = false;
 		header?.Clear();
@@ -601,6 +638,7 @@ internal sealed class SheetSink : CsvCellSink
 		{
 			output.Dispose();
 			item?.Dispose();
+			measured.Dispose();
 			workbook.SheetCompleted(this);
 		}
 	}
@@ -638,16 +676,68 @@ internal sealed class SheetSink : CsvCellSink
 	internal static byte[] ColumnName(int column) =>
 		ColumnLetters[column] ??= Encoding.ASCII.GetBytes(CellReference.ColumnName(column));
 
-	/// <summary>A duration as <c>[h]:mm:ss</c> shows it, with <c>.000</c> when it has milliseconds, for its width.</summary>
-	/// <param name="milliseconds">The duration's milliseconds, not negative.</param>
-	/// <returns>The text.</returns>
-	private static string DurationText(long milliseconds)
-	{
-		var text = (milliseconds / 3_600_000).ToString(CultureInfo.InvariantCulture) + ":" +
-			(milliseconds / 60_000 % 60).ToString("00", CultureInfo.InvariantCulture) + ":" +
-			(milliseconds / 1000 % 60).ToString("00", CultureInfo.InvariantCulture);
+	/// <summary>
+	/// The longest text <see cref="DurationText"/> makes, in characters: the hours of any duration (13 digits at most),
+	/// and <c>:mm:ss.000</c>.
+	/// </summary>
+	internal const int MaxDurationLength = 32;
 
-		return milliseconds % 1000 == 0 ? text : text + "." + (milliseconds % 1000).ToString("000", CultureInfo.InvariantCulture);
+	/// <summary>The pixels of a duration as <c>[h]:mm:ss</c> shows it, with <c>.000</c> when it has milliseconds.</summary>
+	/// <param name="milliseconds">The duration's milliseconds, not negative.</param>
+	/// <returns>The pixels, without the padding.</returns>
+	private static double DurationPixels(long milliseconds)
+	{
+		Span<char> text = stackalloc char[MaxDurationLength];
+
+		return ColumnWidths.TextPixels(text.Slice(0, DurationText(milliseconds, text)));
+	}
+
+	/// <summary>
+	/// A duration as <c>[h]:mm:ss</c> shows it, with <c>.000</c> when it has milliseconds, for its width: the hours in as
+	/// many digits as they need, the minutes and seconds in two, and the milliseconds in three, as the invariant culture
+	/// formats them.
+	/// </summary>
+	/// <param name="milliseconds">The duration's milliseconds, not negative.</param>
+	/// <param name="text">Room for the text, <see cref="MaxDurationLength"/> characters.</param>
+	/// <returns>The text's length.</returns>
+	internal static int DurationText(long milliseconds, Span<char> text)
+	{
+		var hours = milliseconds / 3_600_000;
+		var hourDigits = 1;
+		for (var rest = hours; rest >= 10; rest /= 10)
+		{
+			hourDigits++;
+		}
+
+		var length = WriteDigits(hours, hourDigits, text, 0);
+		text[length++] = ':';
+		length = WriteDigits(milliseconds / 60_000 % 60, 2, text, length);
+		text[length++] = ':';
+		length = WriteDigits(milliseconds / 1000 % 60, 2, text, length);
+		if (milliseconds % 1000 != 0)
+		{
+			text[length++] = '.';
+			length = WriteDigits(milliseconds % 1000, 3, text, length);
+		}
+
+		return length;
+	}
+
+	/// <summary>Writes a number's last digits, with zeros before it to fill them.</summary>
+	/// <param name="value">The number, not negative.</param>
+	/// <param name="digits">The digits to write.</param>
+	/// <param name="text">The text.</param>
+	/// <param name="at">Where in the text the first digit goes.</param>
+	/// <returns>Where the text goes on after them.</returns>
+	private static int WriteDigits(long value, int digits, Span<char> text, int at)
+	{
+		for (var i = at + digits - 1; i >= at; i--)
+		{
+			text[i] = (char)('0' + (int)(value % 10));
+			value /= 10;
+		}
+
+		return at + digits;
 	}
 
 	/// <summary>
@@ -764,10 +854,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		StartCell(at, 0);
-		output.Append(" t=\"b\"><v>"u8);
-		output.Append(value);
-		output.Append("</v></c>"u8);
+		WriteCell(at, 0, " t=\"b\"><v>"u8, value == (byte)'1' ? "1"u8 : "0"u8);
 		if (measuring)
 		{
 			MeasureBool(at, value == (byte)'1');
@@ -811,10 +898,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		StartCell(at, 0);
-		output.Append("><v>"u8);
-		output.Append(invariant.Slice(0, length));
-		output.Append("</v></c>"u8);
+		WriteCell(at, 0, "><v>"u8, invariant.Slice(0, length));
 		if (measuring)
 		{
 			MeasureNumber(at, invariant.Slice(0, length));
@@ -985,7 +1069,7 @@ internal sealed class SheetSink : CsvCellSink
 		}
 
 		var format = milliseconds % 1000 == 0 ? FixedFormat.Duration : FixedFormat.DurationMilliseconds;
-		WriteSerial(at, milliseconds, format, measuring ? ColumnWidths.TextPixels(DurationText(milliseconds).AsSpan()) : 0);
+		WriteSerial(at, milliseconds, format, measuring ? DurationPixels(milliseconds) : 0);
 	}
 
 	/// <summary>
@@ -1079,7 +1163,7 @@ internal sealed class SheetSink : CsvCellSink
 			return;
 		}
 
-		var value = double.Parse(Encoding.ASCII.GetString(invariant.ToArray()), NumberStyles.Float, CultureInfo.InvariantCulture);
+		var value = DotNetText.NumberValue(invariant);
 		var pixels = format?.NumberPixels(value) ?? FormatWidth.GeneralPixels(value);
 		measured.Add(at, row, pixels, typed: true);
 	}
@@ -1151,7 +1235,10 @@ internal sealed class SheetSink : CsvCellSink
 	{
 		widthsKnown = true;
 		measuring = false;
+
+		// No cell is measured once the widths are known, so the cells' array goes back to the pool.
 		columnWidths = measured.Widths(fits, ColumnWidths.FromCharacters(Settings.MaxAutoFitWidth), merges);
+		measured.Dispose();
 		if (minimumPixels is { } minimums)
 		{
 			if (columnWidths is null || columnWidths.Length < minimums.Length)
@@ -1192,10 +1279,9 @@ internal sealed class SheetSink : CsvCellSink
 	/// <param name="pixels">The pixels of its widest text in its own format, or 0 when it isn't measured.</param>
 	private void WriteSerial(int at, long milliseconds, int style, double pixels)
 	{
-		StartCell(at, style);
-		output.Append("><v>"u8);
-		output.AppendDouble(Serial.Days(milliseconds));
-		output.Append("</v></c>"u8);
+		Span<byte> days = stackalloc byte[FloatFormatter.MaxDoubleLength];
+		FloatFormatter.TryFormat(Serial.Days(milliseconds), days, out var length);
+		WriteCell(at, style, "><v>"u8, days.Slice(0, length));
 		if (measuring)
 		{
 			MeasureSerial(at, milliseconds, pixels);
@@ -1214,8 +1300,7 @@ internal sealed class SheetSink : CsvCellSink
 	private void WriteFormula(ReadOnlySpan<byte> text, int at)
 	{
 		var formula = text[0] == (byte)'=' ? text.Slice(1) : text;
-		StartCell(at, 0);
-		output.Append(XmlOutput.NeedsPreserve(formula) ? "><f xml:space=\"preserve\">"u8 : "><f>"u8);
+		StartCell(at, 0, XmlOutput.NeedsPreserve(formula) ? "><f xml:space=\"preserve\">"u8 : "><f>"u8);
 		output.AppendText(formula);
 		output.Append("</f></c>"u8);
 		if (measuring && fits)
@@ -1258,12 +1343,12 @@ internal sealed class SheetSink : CsvCellSink
 	/// <exception cref="InvalidOperationException">The text has more than <see cref="XmlOutput.MaxCellLength"/> UTF-16 code units.</exception>
 	private void WriteText(ReadOnlySpan<byte> text, int at, int style = 0)
 	{
-		if (!XmlOutput.IsValidUtf8(text))
-		{
-			text = XmlOutput.ReplaceInvalidUtf8(text);
-		}
-
-		var units = XmlOutput.Utf16Length(text);
+#if NET8_0_OR_GREATER
+		// ASCII text is valid, and has as many UTF-16 code units as bytes: one pass, where other text takes two.
+		var units = Ascii.IsValid(text) ? text.Length : ValidUtf16Length(ref text);
+#else
+		var units = ValidUtf16Length(ref text);
+#endif
 		if (units > XmlOutput.MaxCellLength)
 		{
 			throw new InvalidOperationException(
@@ -1277,12 +1362,11 @@ internal sealed class SheetSink : CsvCellSink
 			MeasureText(at, text);
 		}
 
-		StartCell(at, style);
 		if (strings is null)
 		{
-			output.Append(" t=\"inlineStr\"><is>"u8);
-			AppendElement(output, text);
-			output.Append("</is></c>"u8);
+			StartCell(at, style, XmlOutput.NeedsPreserve(text) ? " t=\"inlineStr\"><is><t xml:space=\"preserve\">"u8 : " t=\"inlineStr\"><is><t>"u8);
+			output.AppendText(text);
+			output.Append("</t></is></c>"u8);
 
 			return;
 		}
@@ -1291,9 +1375,25 @@ internal sealed class SheetSink : CsvCellSink
 		AppendElement(item, text);
 		var index = strings.IndexOf(item.Written);
 		recordReferences++;
-		output.Append(" t=\"s\"><v>"u8);
-		output.AppendNumber(index);
-		output.Append("</v></c>"u8);
+		Span<byte> digits = stackalloc byte[10];
+		Utf8Formatter.TryFormat(index, digits, out var length);
+		WriteCell(at, style, " t=\"s\"><v>"u8, digits.Slice(0, length));
+	}
+
+	/// <summary>
+	/// Makes a cell's text valid UTF-8, as .NET decodes it (<see cref="XmlOutput.ReplaceInvalidUtf8"/>), and counts its UTF-16
+	/// code units, which is how Excel counts a cell's length.
+	/// </summary>
+	/// <param name="text">The text, replaced when it isn't valid.</param>
+	/// <returns>The number of code units.</returns>
+	private static int ValidUtf16Length(ref ReadOnlySpan<byte> text)
+	{
+		if (!XmlOutput.IsValidUtf8(text))
+		{
+			text = XmlOutput.ReplaceInvalidUtf8(text);
+		}
+
+		return XmlOutput.Utf16Length(text);
 	}
 
 	/// <summary>Writes a text's <c>t</c> element, with <c>xml:space="preserve"</c> when Excel would trim it otherwise.</summary>
@@ -1307,40 +1407,247 @@ internal sealed class SheetSink : CsvCellSink
 	}
 
 	/// <summary>
-	/// Writes the start of a cell, up to its attributes' end, with its style: its row first, when it is the record's first
-	/// cell.
+	/// Writes the start of a cell, up to its attributes' end, with its style, and its kind's markup after them, under one
+	/// capacity check: its row first, when it is the record's first cell, and the placeholders of the gaps before it in its
+	/// record.
 	/// </summary>
 	/// <param name="at">The cell's column.</param>
 	/// <param name="style">The cell format the cell has of its own: 0 (General) but for dates, times, durations and links.</param>
-	private void StartCell(int at, int style)
+	/// <param name="tail">The markup after the attributes, such as <c> t="inlineStr"&gt;&lt;is&gt;&lt;t&gt;</c>, or <c>/&gt;</c>.</param>
+	private void StartCell(int at, int style, ReadOnlySpan<byte> tail)
+	{
+		OpenCell(at);
+		AppendCellStart(at, style, tail);
+	}
+
+	/// <summary>
+	/// Writes a cell whose value is a number, a boolean or a shared string's index, whole, under one capacity check: its
+	/// start, as <see cref="StartCell"/> writes it, the value and the cell's end.
+	/// </summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="style">The cell format the cell has of its own.</param>
+	/// <param name="tail">The markup between the attributes and the value: <c>&gt;&lt;v&gt;</c> and the cell's type before it.</param>
+	/// <param name="value">The value's text, which needs no escaping.</param>
+	private void WriteCell(int at, int style, ReadOnlySpan<byte> tail, ReadOnlySpan<byte> value)
+	{
+		OpenCell(at);
+		var end = "</v></c>"u8;
+		var room = output.GetSpan(MaxCellStart + tail.Length + value.Length + end.Length);
+		var written = PutCellStart(room, at, style);
+		tail.CopyTo(room.Slice(written));
+		written += tail.Length;
+		value.CopyTo(room.Slice(written));
+		written += value.Length;
+		end.CopyTo(room.Slice(written));
+		output.Advance(written + end.Length);
+	}
+
+	/// <summary>
+	/// Opens a cell in the current record: its row first, when it is the record's first cell, and the placeholders of the
+	/// gaps before it in its record.
+	/// </summary>
+	/// <param name="at">The cell's column.</param>
+	private void OpenCell(int at)
 	{
 		if (!rowOpen)
 		{
-			output.Append("<row r=\""u8);
-			output.AppendNumber(row);
-			output.Append("\">"u8);
-			rowOpen = true;
+			OpenRow();
+		}
+
+		if (at != recordNextColumn)
+		{
+			AppendGaps(at);
 		}
 
 		recordLastColumn = at;
-		output.Append("<c r=\""u8);
-		output.AppendReference(ColumnName(at), row);
+		recordNextColumn = at + 1;
+	}
+
+	/// <summary>Writes a cell's start, with its style, and markup after it, under one capacity check.</summary>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="style">The cell format the cell has of its own.</param>
+	/// <param name="tail">The markup after the attributes.</param>
+	private void AppendCellStart(int at, int style, ReadOnlySpan<byte> tail)
+	{
+		var room = output.GetSpan(MaxCellStart + tail.Length);
+		var written = PutCellStart(room, at, style);
+		tail.CopyTo(room.Slice(written));
+		output.Advance(written + tail.Length);
+	}
+
+	/// <summary>
+	/// Puts a cell's element up to its attributes' end into the buffer's room: <c>&lt;c</c>, and its style when it has one.
+	/// A cell below the header without a style of its own, in a sheet whose cells take styles, takes its column's start.
+	/// </summary>
+	/// <param name="room">The room, of <see cref="MaxCellStart"/> bytes at least.</param>
+	/// <param name="at">The cell's column.</param>
+	/// <param name="style">The cell format the cell has of its own.</param>
+	/// <returns>The bytes put.</returns>
+	private int PutCellStart(Span<byte> room, int at, int style)
+	{
+		if (stylesColumns && style == 0)
+		{
+			var start = ColumnStart(at);
+			start.CopyTo(room);
+
+			return start.Length;
+		}
+
+		"<c"u8.CopyTo(room);
 		if (styling)
 		{
 			style = StyleOf(at, style);
 			if (style == 0 && headerSaysStyle)
 			{
-				output.Append("\" s=\"0"u8);
+				" s=\"0\""u8.CopyTo(room.Slice(2));
+
+				return 8;
 			}
 		}
 
-		if (style != 0)
+		if (style == 0)
 		{
-			output.Append("\" s=\""u8);
-			output.AppendNumber(style);
+			return 2;
 		}
 
-		output.Append((byte)'"');
+		" s=\""u8.CopyTo(room.Slice(2));
+		Utf8Formatter.TryFormat(style, room.Slice(6), out var digits);
+		room[6 + digits] = (byte)'"';
+
+		return 7 + digits;
+	}
+
+	/// <summary>
+	/// The start of a cell below the header that has no style of its own, in a sheet whose cells take styles: <c>&lt;c</c>
+	/// and its column's style (<see cref="StyleOf"/>), unlocked below a protected sheet's header, as
+	/// <see cref="PutCellStart"/> puts it. Made when the column's first such cell is written, which adds its style to the
+	/// workbook's cell formats when a cell's style lookup would.
+	/// </summary>
+	/// <param name="at">The cell's column.</param>
+	/// <returns>The start's bytes, at most <see cref="MaxCellStart"/>.</returns>
+	private byte[] ColumnStart(int at)
+	{
+		var starts = columnStarts;
+		if (starts is null || at >= starts.Length)
+		{
+			var grown = new byte[Math.Min(Math.Max(at + 1, (starts?.Length ?? 8) * 2), CellReference.MaxColumns)][];
+			starts?.CopyTo(grown, 0);
+			columnStarts = starts = grown;
+		}
+
+		if (starts[at] is { } start)
+		{
+			return start;
+		}
+
+		var style = StyleOf(at, 0);
+		start = style == 0 ? "<c"u8.ToArray() : Encoding.ASCII.GetBytes("<c s=\"" + style.ToString(CultureInfo.InvariantCulture) + "\"");
+		starts[at] = start;
+
+		return start;
+	}
+
+	/// <summary>
+	/// Starts the current record's row: an empty row first for each row without a cell between the last row with one and
+	/// this one, the records without a value before it.
+	/// </summary>
+	private void OpenRow()
+	{
+		for (var empty = row - lastRow - 1; empty > 0; empty--)
+		{
+			output.Append("<row/>"u8);
+		}
+
+		output.Append("<row>"u8);
+		rowOpen = true;
+	}
+
+	/// <summary>
+	/// Writes the current record's gaps before a cell: a placeholder for each column from the one after its last cell (or
+	/// the first) to the cell's, of its empty fields and of those that failed. In the header's row, a protected sheet's are
+	/// written as its empty fields are, locked; the others wait for their columns' default styles, which are known when
+	/// the header ends (<see cref="StyleHeaderGaps"/>).
+	/// </summary>
+	/// <param name="at">The cell's column, past the record's next one.</param>
+	private void AppendGaps(int at)
+	{
+		for (var gap = recordNextColumn; gap < at; gap++)
+		{
+			if (row != headerRowNumber)
+			{
+				output.Append(Placeholder(gap));
+			}
+			else if (protection is not null)
+			{
+				AppendCellStart(gap, 0, "/>"u8);
+			}
+			else
+			{
+				(headerGaps ??= []).Add((output.Length - recordStart, gap));
+				output.Append(EmptyCell);
+			}
+		}
+	}
+
+	/// <summary>
+	/// A gap's placeholder below the header: an empty cell in its column's default style, the one <see cref="AppendColumns"/>
+	/// writes on its <c>col</c>, which a cell not in the file would show; or <c>&lt;c/&gt;</c> for a column without one.
+	/// Made when the column's first gap is written, so that a sheet without gaps adds no cell format.
+	/// </summary>
+	/// <param name="at">The gap's column.</param>
+	/// <returns>The placeholder's bytes.</returns>
+	private byte[] Placeholder(int at)
+	{
+		var cells = placeholders;
+		if (cells is null || at >= cells.Length)
+		{
+			var grown = new byte[Math.Min(Math.Max(at + 1, (cells?.Length ?? 8) * 2), CellReference.MaxColumns)][];
+			cells?.CopyTo(grown, 0);
+			placeholders = cells = grown;
+		}
+
+		if (cells[at] is { } placeholder)
+		{
+			return placeholder;
+		}
+
+		var style = columnDefaults is { } defaults && at < defaults.Length ? defaults[at] : 0;
+		if (at < unlockedColumns)
+		{
+			style = styles.Unlocked(style);
+		}
+
+		placeholder = style == 0 ? EmptyCell : Encoding.ASCII.GetBytes("<c s=\"" + style.ToString(CultureInfo.InvariantCulture) + "\"/>");
+		cells[at] = placeholder;
+
+		return placeholder;
+	}
+
+	/// <summary>
+	/// Gives the header's placeholders, written as <c>&lt;c/&gt;</c>, their columns' default styles once the header has
+	/// ended and they are known, before its row is kept for the new sheets of <see cref="ExcelRowLimit.NewSheet"/>: as a
+	/// placeholder below the header has them, since a sheet whose header has placeholders isn't protected.
+	/// </summary>
+	private void StyleHeaderGaps()
+	{
+		var gaps = headerGaps!;
+		headerGaps = null;
+		if (columnDefaults is null)
+		{
+			return;
+		}
+
+		var record = output.Written.Slice(recordStart).ToArray();
+		output.Truncate(recordStart);
+		var from = 0;
+		foreach (var (offset, at) in gaps)
+		{
+			output.Append(record.AsSpan(from, offset - from));
+			output.Append(Placeholder(at));
+			from = offset + EmptyCell.Length;
+		}
+
+		output.Append(record.AsSpan(from));
 	}
 
 	/// <summary>
@@ -1364,12 +1671,16 @@ internal sealed class SheetSink : CsvCellSink
 		return at < unlockedColumns ? styles.Unlocked(style) : style;
 	}
 
-	/// <summary>Sets the font of the current row's cells, and whether cells need more than their own style.</summary>
+	/// <summary>
+	/// Sets the font of the current row's cells, whether cells need more than their own style, and whether those without
+	/// one take their column's start (<see cref="ColumnStart"/>): below the header, where their style is their column's.
+	/// </summary>
 	/// <param name="font">The font.</param>
 	private void SetRowFont(CellFont font)
 	{
 		rowFont = font;
 		styling = font != CellFont.Regular || columnStyles is not null || headerSaysStyle || unlockedColumns > 0;
+		stylesColumns = styling && font == CellFont.Regular && !headerSaysStyle;
 	}
 
 	/// <summary>
@@ -1602,9 +1913,7 @@ internal sealed class SheetSink : CsvCellSink
 		{
 			// The row's style, which its cells not in the file take, so that the title's merged cells are locked too, as
 			// Excel locks them, rather than in their columns' unlocked styles.
-			output.Append("<row r=\""u8);
-			output.AppendNumber(row);
-			output.Append("\" s=\""u8);
+			output.Append("<row s=\""u8);
 			output.AppendNumber(styles.WithFont(0, CellFont.Title));
 			output.Append("\" customFormat=\"1\">"u8);
 			rowOpen = true;
@@ -1613,6 +1922,7 @@ internal sealed class SheetSink : CsvCellSink
 		WriteText(title, 0);
 		output.Append("</row>"u8);
 		rowOpen = false;
+		recordNextColumn = 0;
 		lastRow = row;
 		lastColumn = Math.Max(lastColumn, 0);
 		numberLikeText |= recordNumberLikeText;

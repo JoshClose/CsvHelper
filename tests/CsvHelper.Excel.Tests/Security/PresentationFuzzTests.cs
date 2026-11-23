@@ -12,13 +12,14 @@ namespace CsvHelper.Excel.Tests.Security;
 /// Seeded fuzzing of the writer's presentation, as Phase 5's "Testing" describes: workbooks of random sheet options
 /// (titles, a bold or frozen header, frozen columns, filters, tables with names and styles, auto-fit, columns' widths,
 /// formats, wrap and hidden), with options Excel wouldn't open planted now and then; headers of random names under a
-/// table (empty, repeated in other cases, numbered, longer than 255 characters); random data, URIs among it, under each
-/// link policy; ranges merged before the header, between records and after them, some of which the writer refuses; and
-/// <see cref="ExcelRowLimit.NewSheet"/> at a few rows. Each workbook passes the Open XML SDK's validator, and reads back
-/// through CsvHelper.Excel's reader as the same data written in Phase 4's look does, but for a table's header. The test's
-/// own rules, from the writer's documentation of Excel's, say which options and ranges are refused, what each table and
-/// its columns are named, which cells are links (and that <see cref="ExcelLinks.Web"/> links nothing but <c>http</c>,
-/// <c>https</c> and <c>mailto</c>), and what each sheet's panes, filter, merged ranges and hidden columns are.
+/// table (empty, repeated in other cases, numbered, longer than 255 characters); random data, URIs among it, with empty
+/// fields and now and then an empty record, under each link policy; ranges merged before the header, between records
+/// and after them, some of which the writer refuses; and <see cref="ExcelRowLimit.NewSheet"/> at a few rows. Each
+/// workbook passes the Open XML SDK's validator, and reads back through CsvHelper.Excel's reader as the same data written
+/// in Phase 4's look does, but for a table's header. The test's own rules, from the writer's documentation of Excel's,
+/// say which options and ranges are refused, what each table and its columns are named, which cells are links (and that
+/// <see cref="ExcelLinks.Web"/> links nothing but <c>http</c>, <c>https</c> and <c>mailto</c>), and what each sheet's
+/// panes, filter, merged ranges and hidden columns are.
 /// <c>CSVHELPER_EXCEL_FUZZ_PRESENTATIONS</c> sets the number of workbooks, <c>CSVHELPER_EXCEL_FUZZ_SEED</c> the first
 /// seed, and <c>CSVHELPER_EXCEL_FUZZ_SAVE</c> a folder to save each workbook in, for the corpus tool's <c>fuzzed</c>
 /// command to open in Excel.
@@ -221,6 +222,15 @@ public class PresentationFuzzTests(ITestOutputHelper output)
 			if (sheet.TableName is not null)
 			{
 				Count(tally, "tables");
+			}
+
+			var last = sheet.Records.FindLastIndex(r => r.Any(f => f.Value is not null));
+			for (var r = 0; r < last; r++)
+			{
+				if (sheet.Records[r].All(f => f.Value is null))
+				{
+					Count(tally, "records: empty, before a later one with a value");
+				}
 			}
 		}
 
@@ -944,10 +954,12 @@ public class PresentationFuzzTests(ITestOutputHelper output)
 			sheet.Header.AddRange(header);
 			for (var r = random.Next(0, 7); r > 0; r--)
 			{
+				// Now and then an empty record, whose fields are all null.
+				var empty = random.Next(8) == 0;
 				var fields = new List<Field>();
 				for (var c = Math.Max(1, width + (random.Next(5) == 0 ? random.Next(-1, 3) : 0)); c > 0; c--)
 				{
-					fields.Add(Field.Random(random));
+					fields.Add(empty ? new Field((string?)null) : Field.Random(random));
 				}
 
 				sheet.Records.Add(fields);

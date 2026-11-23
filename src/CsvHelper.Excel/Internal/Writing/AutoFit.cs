@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Text;
 
 namespace CsvHelper.Excel;
@@ -25,11 +26,26 @@ namespace CsvHelper.Excel;
 /// two columns or more (<see cref="ExcelWriterExtensions.MergeCells"/>) counts nothing, as in Excel's AutoFit, so each
 /// cell keeps its row, and the ranges merged by the time the widths are known leave theirs out.
 /// </para>
+/// <para>
+/// The cells are kept in an array rented from the pool when the first is measured, and grown by renting, so that a
+/// workbook's held records allocate nothing once the pool has the arrays. <see cref="Dispose"/> returns it once the widths
+/// are known, or when the sheet completes or fails.
+/// </para>
 /// </remarks>
-internal sealed class AutoFit
+internal sealed class AutoFit : IDisposable
 {
-	// The cells measured, in the order written; and where the current record's start.
-	private Cell[] cells = new Cell[64];
+	/// <summary>
+	/// The longest text, in UTF-8 bytes, decoded on the stack to be measured, into as many characters at most; longer text
+	/// is decoded into a pooled array.
+	/// </summary>
+	private const int MaxStackChars = 256;
+
+	/// <summary>The cells' array's first size, rented when the first cell is measured.</summary>
+	private const int FirstCells = 64;
+
+	// The cells measured, in the order written, in an array rented from the pool (empty before the first and once
+	// returned); and where the current record's start.
+	private Cell[] cells = [];
 	private int count;
 	private int recordStart;
 
@@ -55,12 +71,31 @@ internal sealed class AutoFit
 			return sum;
 		}
 
-		var text = Encoding.UTF8.GetString(utf8.ToArray()).AsSpan();
-		if (!wrap)
+		// Other text, and text that wraps, decoded: on the stack, or into a pooled array when it is long. UTF-8 decodes to
+		// at most a UTF-16 character a byte.
+		char[]? rented = null;
+		Span<char> chars = utf8.Length <= MaxStackChars ? stackalloc char[MaxStackChars] : (rented = ArrayPool<char>.Shared.Rent(utf8.Length));
+		try
 		{
-			return ColumnWidths.TextPixels(text, bold);
-		}
+			var text = chars.Slice(0, Encoding.UTF8.GetChars(utf8, chars));
 
+			return wrap ? WidestLinePixels(text, bold) : ColumnWidths.TextPixels(text, bold);
+		}
+		finally
+		{
+			if (rented is not null)
+			{
+				ArrayPool<char>.Shared.Return(rented);
+			}
+		}
+	}
+
+	/// <summary>The pixels of a text's widest line, its lines broken at line feeds, as Excel breaks them in a cell that wraps.</summary>
+	/// <param name="text">The text.</param>
+	/// <param name="bold">Whether it is in bold.</param>
+	/// <returns>The pixels.</returns>
+	private static double WidestLinePixels(ReadOnlySpan<char> text, bool bold)
+	{
 		var widest = 0.0;
 		while (true)
 		{
@@ -96,7 +131,7 @@ internal sealed class AutoFit
 	/// <param name="row">The cell's row.</param>
 	/// <param name="pixels">Its text's pixels, without the padding.</param>
 	/// <param name="typed">Whether it is a typed cell, which <see cref="ExcelSheetOptions.MaxAutoFitWidth"/> doesn't cap.</param>
-	public void Add(int column, long row, double pixels, bool typed) => Add(new Cell(column, row, pixels, typed ? CellWidth.Typed : CellWidth.Text));
+	public void Add(int column, long row, double pixels, bool typed) => Add(new Cell(row, pixels, column, typed ? CellWidth.Typed : CellWidth.Text));
 
 	/// <summary>
 	/// Notes a formula cell of the current record: its value isn't known, so its column is at least the default column,
@@ -104,7 +139,7 @@ internal sealed class AutoFit
 	/// </summary>
 	/// <param name="column">The cell's column.</param>
 	/// <param name="row">The cell's row.</param>
-	public void AddFormula(int column, long row) => Add(new Cell(column, row, 0, CellWidth.Default));
+	public void AddFormula(int column, long row) => Add(new Cell(row, 0, column, CellWidth.Default));
 
 	/// <summary>
 	/// Adds a filter button to each of the current record's cells, the header's, in its columns: its empty fields too,
@@ -137,10 +172,26 @@ internal sealed class AutoFit
 	{
 		if (count == cells.Length)
 		{
-			Array.Resize(ref cells, cells.Length * 2);
+			Grow();
 		}
 
 		cells[count++] = cell;
+	}
+
+	/// <summary>
+	/// Rents the cells' array, of <see cref="FirstCells"/> cells, or a larger one, at least twice as large, into which it
+	/// copies the cells and whose old array it returns.
+	/// </summary>
+	private void Grow()
+	{
+		var grown = ArrayPool<Cell>.Shared.Rent(cells.Length == 0 ? FirstCells : (int)Math.Min(cells.Length * 2L, Array.MaxLength));
+		if (cells.Length > 0)
+		{
+			cells.AsSpan(0, count).CopyTo(grown);
+			ArrayPool<Cell>.Shared.Return(cells);
+		}
+
+		cells = grown;
 	}
 
 	/// <summary>Keeps the current record's cells: the next ones are another record's.</summary>
@@ -148,6 +199,22 @@ internal sealed class AutoFit
 
 	/// <summary>Drops the current record's cells, when it is discarded.</summary>
 	public void DiscardRecord() => count = recordStart;
+
+	/// <summary>
+	/// Returns the cells' array to the pool and drops the cells, once the widths are known or the sheet is complete. Calling
+	/// it again does nothing, and the array isn't used after.
+	/// </summary>
+	public void Dispose()
+	{
+		if (cells.Length > 0)
+		{
+			ArrayPool<Cell>.Shared.Return(cells);
+		}
+
+		cells = [];
+		count = 0;
+		recordStart = 0;
+	}
 
 	/// <summary>The columns' widths, from the cells measured.</summary>
 	/// <param name="fit">Whether this is auto-fit, rather than the first data record's typed cells.</param>
@@ -232,12 +299,12 @@ internal sealed class AutoFit
 		return widths;
 	}
 
-	/// <summary>A cell measured.</summary>
-	/// <param name="Column">Its column.</param>
+	/// <summary>A cell measured, in 24 bytes: its fields of 8 bytes first, so that the two of 4 share the last 8.</summary>
 	/// <param name="Row">Its row.</param>
 	/// <param name="Pixels">Its text's pixels, without the padding.</param>
+	/// <param name="Column">Its column.</param>
 	/// <param name="Kind">What its width is.</param>
-	private readonly record struct Cell(int Column, long Row, double Pixels, CellWidth Kind);
+	private readonly record struct Cell(long Row, double Pixels, int Column, CellWidth Kind);
 
 	/// <summary>What a cell measured gives its column.</summary>
 	private enum CellWidth

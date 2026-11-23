@@ -1,7 +1,7 @@
 {
   "file": "links-all.xlsx",
   "description": "links by ExcelLinks.All: a share, a Windows path, a relative path with escaped letters, a jump to a cell of the workbook, and ftp and https",
-  "sha256": "28288024d914fd0665ff885483da81c3bea66fafa1864af1e275a7ebec6ffe82",
+  "sha256": "9c01fc70993328211499ede78452cd4a65f459394eae2831c10f7d3afa3ccc82",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

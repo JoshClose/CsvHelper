@@ -1,7 +1,7 @@
 {
   "file": "template-lists.xlsx",
   "description": "a template of lists of each form: inline, matching in case, a quote counted once, repeats listed once; in the very hidden lists sheet, matching ignoring case, those with commas, spaces at either end, or of more than 255 characters; prompts, a title cut to 32 characters, a line break, and a prompt alone; filled in Excel",
-  "sha256": "c464daa94df51ad008f82699530c15473b72cec8ddded153e35c6dbfe98c8239",
+  "sha256": "9bdede5c3510564544c2e61d3e1057912e7262d378ce8c63dfe83dd7510025c8",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [

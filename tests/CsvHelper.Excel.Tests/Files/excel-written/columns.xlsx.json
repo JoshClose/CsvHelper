@@ -1,7 +1,7 @@
 {
   "file": "columns.xlsx",
   "description": "columns' formats (numbers, percents, exponents, currency, fractions, leading zeros, a date's, a boolean's text section, text), widths, wrap and hidden columns, from [ExcelColumn] and from ExcelSheetOptions.Columns, which replaces it whole",
-  "sha256": "64818ded8ad998b903f4e3c415558cbcd347b3a8aeae1c515bdc00b515303d9c",
+  "sha256": "f685e034f1c63355108f402586ee95bb4e90a3533bfff5b214c52a5dd9a0ba7b",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

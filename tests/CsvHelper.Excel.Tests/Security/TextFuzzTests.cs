@@ -12,7 +12,8 @@ namespace CsvHelper.Excel.Tests.Security;
 /// written as UTF-16 strings, UTF-16 spans or UTF-8 bytes, of control characters, CR and LF, U+FFFE and U+FFFF, lone and
 /// reversed surrogates, invalid UTF-8 (lone continuation bytes, overlong forms, encoded surrogates, sequences past
 /// U+10FFFF, cut sequences), the entities' characters, near escapes (<c>_x0041_</c> and its near misses), white space at
-/// either end, and lengths around 32,767 code units, with inline or shared strings, synchronously or not. Each workbook
+/// either end, and lengths around 32,767 code units, with empty fields and empty records among them (gaps and empty rows
+/// before later values), with inline or shared strings, synchronously or not. Each workbook
 /// passes the Open XML SDK's validator and reads back through CsvHelper.Excel's reader as written, with U+FFFD for what
 /// was invalid UTF-16 or UTF-8; a field of more than 32,767 code units throws <see cref="InvalidOperationException"/> and
 /// leaves no cell. With shared strings, the part holds each distinct text once. <c>CSVHELPER_EXCEL_FUZZ_TEXTS</c> sets the
@@ -269,9 +270,17 @@ public class TextFuzzTests(ITestOutputHelper output)
 	private static void Tally(Input input, SortedDictionary<string, int> tally)
 	{
 		Count(tally, $"workbooks: {input.Strings}, {(input.Async ? "async" : "sync")}");
+		for (var r = 0; r < input.Rows.Count; r++)
+		{
+			if (input.Rows[r].All(f => f.Expected.Length == 0))
+			{
+				Count(tally, r < input.Rows.Count - 1 ? "records: empty, before another" : "records: empty, the last");
+			}
+		}
+
 		foreach (var field in input.Rows.SelectMany(r => r))
 		{
-			Count(tally, $"fields: {field.Kind}");
+			Count(tally, $"fields: {field.Kind}{(field.Kind != FieldKind.Null && field.Expected.Length == 0 ? ", empty" : "")}");
 			if (field.TooLong)
 			{
 				Count(tally, "fields: refused, past 32,767 code units");
@@ -312,9 +321,9 @@ public class TextFuzzTests(ITestOutputHelper output)
 		/// <returns>The field.</returns>
 		public static Field Of(Random random)
 		{
-			if (random.Next(10) == 0)
+			if (random.Next(5) == 0)
 			{
-				return new Field(FieldKind.Null, null, null, "null");
+				return Empty(random);
 			}
 
 			var kind = (FieldKind)random.Next(3);
@@ -337,6 +346,21 @@ public class TextFuzzTests(ITestOutputHelper output)
 			}
 
 			return new Field(kind, null, [.. bytes], $"{kind} {origin}");
+		}
+
+		/// <summary>An empty field: null, or empty text written as a string, a span or UTF-8.</summary>
+		/// <param name="random">The input's random numbers.</param>
+		/// <returns>The field.</returns>
+		public static Field Empty(Random random)
+		{
+			if (random.Next(2) == 0)
+			{
+				return new Field(FieldKind.Null, null, null, "null");
+			}
+
+			var kind = (FieldKind)random.Next(3);
+
+			return kind == FieldKind.Utf8 ? new Field(kind, null, [], "Utf8 empty") : new Field(kind, "", null, $"{kind} empty");
 		}
 
 		/// <summary>The field again, as shared strings meet it: the same text, written the same way or the other UTF-16 way.</summary>
@@ -446,8 +470,8 @@ public class TextFuzzTests(ITestOutputHelper output)
 		public bool Async { get; } = async;
 
 		/// <summary>
-		/// The input of a seed: one to six rows of one to six fields (a record has at least one, and one of null fields has
-		/// no cell), now and then one met before.
+		/// The input of a seed: one to six rows of one to six fields (a record has at least one, and one of null or empty
+		/// fields has no cell), now and then one met before; and now and then an empty record of one to three fields.
 		/// </summary>
 		/// <param name="seed">The seed.</param>
 		/// <returns>The input.</returns>
@@ -461,6 +485,18 @@ public class TextFuzzTests(ITestOutputHelper output)
 			for (var r = random.Next(1, 7); r > 0; r--)
 			{
 				var row = new List<Field>();
+				if (random.Next(6) == 0)
+				{
+					for (var f = random.Next(1, 4); f > 0; f--)
+					{
+						row.Add(Field.Empty(random));
+					}
+
+					rows.Add(row);
+
+					continue;
+				}
+
 				for (var f = random.Next(1, 7); f > 0; f--)
 				{
 					var field = all.Count > 0 && random.Next(6) == 0 ? all[random.Next(all.Count)].Again(random) : Field.Of(random);

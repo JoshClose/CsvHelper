@@ -115,9 +115,9 @@ public class RowLimitTests
 		var sheets = Enumerable.Range(1, 4).Select(n => Written.Entry(workbook, $"xl/worksheets/sheet{n}.xml")).ToList();
 		var cols = Regex.Match(sheets[0], "<cols>.*</cols>").Value;
 		Assert.Contains("<col min=\"2\" max=\"2\" width=", cols);
-		var header = Regex.Match(sheets[0], "<row r=\"1\">.*?</row>").Value;
-		Assert.StartsWith("<row r=\"1\"><c r=\"A1\" t=", header);
-		Assert.All(sheets, s => Assert.Contains(cols + "<sheetData>" + header + "<row r=\"2\">", s));
+		var header = Regex.Match(sheets[0], "<sheetData>(<row>.*?</row>)").Groups[1].Value;
+		Assert.StartsWith("<row><c t=", header);
+		Assert.All(sheets, s => Assert.Contains(cols + "<sheetData>" + header + "<row><c t=", s));
 		Assert.Equal([false, false, true, false], sheets.Select(s => s.Contains("<ignoredErrors><ignoredError sqref=\"A1:C3\" numberStoredAsText=\"1\"/></ignoredErrors>")));
 
 		// The header's strings are referred to from each sheet.
@@ -165,7 +165,7 @@ public class RowLimitTests
 
 		Assert.Equal(["Data", "Data (2)", "Data (3)"], names);
 		Assert.Equal(["Data: r1 / r2|1.5", "Data (2): r3 / r4|1.5", "Data (3): r5"], Written.Sheets(workbook));
-		Assert.Contains("<sheetData><row r=\"1\"><c r=\"A1\" t=", Written.Entry(workbook, "xl/worksheets/sheet2.xml"));
+		Assert.Contains("<sheetData><row><c t=", Written.Entry(workbook, "xl/worksheets/sheet2.xml"));
 		Assert.Contains("<ignoredError sqref=\"A1:B2\"", Written.Entry(workbook, "xl/worksheets/sheet2.xml"));
 		Assert.DoesNotContain("ignoredErrors", Written.Entry(workbook, "xl/worksheets/sheet3.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));

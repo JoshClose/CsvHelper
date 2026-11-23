@@ -5,8 +5,8 @@ namespace CsvHelper.Excel.Tests.Security;
 /// none of them. Beside them, on CI's four cores, an input that reads in a tenth of a second waited seven seconds for a
 /// thread of the pool, then ran seven more through the other tests' garbage collections, and failed a limit of five. The
 /// tests that measure the process's memory (<see cref="LinkMemoryTests"/>) run here too, so that it is their own, and so does
-/// the import's allocation test (<see cref="ImportAllocationTests"/>), since other tests' collections trim the array pool
-/// it rents from.
+/// the import's and the held records' allocation tests (<see cref="ImportAllocationTests"/>,
+/// <see cref="Writing.HeldRecordsTests"/>), since other tests' collections trim the array pool they rent from.
 /// </summary>
 [CollectionDefinition(Name, DisableParallelization = true)]
 public sealed class TimedCollection

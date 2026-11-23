@@ -481,10 +481,14 @@ public class ImportTests
 		Assert.Equal(orders.Select(Describe), prefilled.Records.Select(Describe));
 		Assert.Empty(prefilled.Errors);
 
-		// A user types text over the second order's Id, and a status no enum has over the first's.
+		// A user types text over the second order's Id, and a status no enum has over the first's. The Id's cell is found at
+		// its place, A4, whether or not the sheet writes its reference.
 		var edited = Edit(stream.ToArray(), "xl/worksheets/sheet1.xml", sheet =>
 		{
-			sheet = Regex.Replace(sheet, "<c r=\"A4\"([^>]*)><v>2</v></c>", "<c r=\"A4\"$1 t=\"inlineStr\"><is><t>two</t></is></c>");
+			var (start, length) = Written.CellSpan(sheet, "A4") ?? throw new InvalidOperationException("The sheet has no cell at A4.");
+			var typed = Regex.Replace(sheet.Substring(start, length), "^(<c[^>]*?)><v>2</v></c>$", "$1 t=\"inlineStr\"><is><t>two</t></is></c>");
+			Assert.EndsWith(" t=\"inlineStr\"><is><t>two</t></is></c>", typed);
+			sheet = sheet.Substring(0, start) + typed + sheet.Substring(start + length);
 
 			return sheet.Replace("<t>On hold</t>", "<t>Waiting</t>");
 		});

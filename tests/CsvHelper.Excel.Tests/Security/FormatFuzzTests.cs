@@ -24,9 +24,10 @@ namespace CsvHelper.Excel.Tests.Security;
 /// </description></item>
 /// <item><description>
 /// End to end, through workbooks of random formats' columns (<see cref="ExcelWorkbookWriter.AddSheet(string, MemberFormats)"/>),
-/// fields of the column's kind and others, in its format and others, under each <see cref="ExcelDateTimeOffsets"/>: each
-/// cell is a date of the translation's code and the value read back, or a text cell of the field's text, as the
-/// translation says, and the workbook passes the validator.
+/// fields of the column's kind and others, in its format and others, and now and then an empty record, under each
+/// <see cref="ExcelDateTimeOffsets"/>: each cell, found at its place, is a date of the translation's code and the value
+/// read back, or a text cell of the field's text, as the translation says, an empty field has no value, and the workbook
+/// passes the validator.
 /// </description></item>
 /// </list>
 /// <c>CSVHELPER_EXCEL_FUZZ_FORMATS</c> sets the number of formats (and a workbook for each 20 of them), and
@@ -276,7 +277,10 @@ public class FormatFuzzTests(ITestOutputHelper output)
 			Csv = new CsvWriterOptions { ValidateFieldCount = false },
 		};
 		var columns = Enumerable.Range(0, random.Next(1, 7)).Select(_ => new Column(RandomFormat(random), random.Next(4) == 0 ? null : RandomCulture(random), Kinds[random.Next(Kinds.Length)])).ToList();
-		var rows = Enumerable.Range(0, random.Next(1, 6)).Select(_ => columns.Select(c => Field.Of(random, c, options)).ToList()).ToList();
+		// Now and then an empty record, whose row the next record's row follows.
+		var rows = Enumerable.Range(0, random.Next(1, 6))
+			.Select(_ => random.Next(6) == 0 ? columns.Select(c => Field.Null(random, c)).ToList() : columns.Select(c => Field.Of(random, c, options)).ToList())
+			.ToList();
 		var members = new MemberFormats(columns.Select((c, i) => new MemberFormat("c" + i, 0, -1, c.Format, c.Culture)).ToArray());
 		var describe = $"{options.DateTimeOffsets}, columns {string.Join(", ", columns)}";
 		var workbook = await Written.WorkbookAsync(async (book, a) =>
@@ -311,6 +315,11 @@ public class FormatFuzzTests(ITestOutputHelper output)
 		var read = Written.Read(workbook)[0].Rows;
 		for (var r = 0; r < rows.Count; r++)
 		{
+			if (rows[r].All(f => f.Text is null))
+			{
+				Count(tally, "records: empty");
+			}
+
 			for (var c = 0; c < columns.Count; c++)
 			{
 				var field = rows[r][c];
@@ -319,10 +328,11 @@ public class FormatFuzzTests(ITestOutputHelper output)
 				cells.TryGetValue(reference, out var cell);
 				if (string.IsNullOrEmpty(field.Text))
 				{
-					// A field that couldn't be formatted is written as null, and an empty text (FF of whole seconds) is empty too.
+					// A field that couldn't be formatted is written as null, and an empty text (FF of whole seconds) is empty too:
+					// no cell, or a gap's placeholder, which holds no value.
 					if (cell is not null)
 					{
-						return $"{at}: a cell, for an empty field";
+						return $"{at}: a cell with a value, for an empty field";
 					}
 
 					continue;
@@ -502,7 +512,11 @@ public class FormatFuzzTests(ITestOutputHelper output)
 		}
 	}
 
-	/// <summary>The cells of a workbook's one sheet, by reference: their type, their number format's code and their value.</summary>
+	/// <summary>
+	/// The cells with a value of a workbook's one sheet, by reference, at their places
+	/// (<see cref="Written.Rows(XDocument)"/>): their type, their number format's code and their value. A gap's placeholder
+	/// holds no value, as an empty field.
+	/// </summary>
 	/// <param name="workbook">The workbook.</param>
 	/// <returns>The cells.</returns>
 	private static Dictionary<string, Cell> SheetCells(byte[] workbook)
@@ -512,16 +526,14 @@ public class FormatFuzzTests(ITestOutputHelper output)
 		var codes = styles.Descendants(main + "numFmt").ToDictionary(n => (int)n.Attribute("numFmtId")!, n => CorpusFiles.DecodeEscapes((string)n.Attribute("formatCode")!));
 		codes[46] = "[h]:mm:ss";
 		var formats = styles.Descendants(main + "cellXfs").Single().Elements(main + "xf").Select(x => (int)x.Attribute("numFmtId")!).ToList();
-		var sheet = XDocument.Parse(Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
 
-		return sheet.Descendants(main + "c").ToDictionary(c => (string)c.Attribute("r")!, c =>
+		return Written.Cells(Written.Sheet(workbook)).Where(c => !c.IsEmpty).ToDictionary(c => c.Reference, c =>
 		{
-			var style = (int?)c.Attribute("s") ?? 0;
-			var value = c.Element(main + "v")?.Value;
+			var value = c.Element.Element(main + "v")?.Value;
 
 			return new Cell(
-				(string?)c.Attribute("t"),
-				style > 0 && codes.TryGetValue(formats[style], out var code) ? code : null,
+				(string?)c.Element.Attribute("t"),
+				c.Style > 0 && codes.TryGetValue(formats[c.Style], out var code) ? code : null,
 				value is null ? double.NaN : double.Parse(value, CultureInfo.InvariantCulture));
 		});
 	}
@@ -648,6 +660,12 @@ public class FormatFuzzTests(ITestOutputHelper output)
 
 			return new Field(value, format, provider, text, expected);
 		}
+
+		/// <summary>A field of a column written as null, as one that can't be formatted is: a record of them is empty.</summary>
+		/// <param name="random">The seed's random numbers.</param>
+		/// <param name="column">The column.</param>
+		/// <returns>The field.</returns>
+		public static Field Null(Random random, Column column) => new(Value.Random(random, column.Kind), column.Format, CultureInfo.InvariantCulture, null, null);
 
 		/// <summary>Writes the field: its value in its format and culture, or null when that can't be formatted.</summary>
 		/// <param name="writer">The sheet's writer.</param>

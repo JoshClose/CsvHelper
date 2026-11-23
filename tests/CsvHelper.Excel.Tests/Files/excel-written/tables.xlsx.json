@@ -1,7 +1,7 @@
 {
   "file": "tables.xlsx",
   "description": "tables: named after their sheets or given, in a style, in one given in lower case or in none, without stripes or buttons, header cells renamed as Excel names them, over a header alone, under a title, with AutoFilter, and from [ExcelSheet]",
-  "sha256": "01ce8312199ded85fcff770a7f14ae986e8c585d13634624509062d309290a24",
+  "sha256": "ca252c4ebc589ebb1fcb7f7e77af6c03775b474eea875bf236cbec375856c2a9",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

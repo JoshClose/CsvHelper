@@ -20,7 +20,8 @@ namespace CsvHelper.Excel.Corpus;
 /// one first, since Excel exports the active sheet. For each it keeps the sheet's name, its used range, from whose
 /// top-left cell the export starts, whether the file began with a byte-order mark, and the CSV's text. A written
 /// workbook's answers hold its <see cref="Written.PartsHash"/>, and <c>cultures.xlsx</c>'s the fingerprint of the
-/// culture data it read, as <c>excel-written/</c>'s do.
+/// culture data it read, as <c>excel-written/</c>'s do. <see cref="ExportSet"/> limits a run to the corpus or to the
+/// written set, whose answers are <c>excel-csv/excel-written/</c>: the other's answers are kept as they are.
 /// </summary>
 [SupportedOSPlatform("windows")]
 internal static class ExcelExports
@@ -52,14 +53,33 @@ internal static class ExcelExports
 	/// </summary>
 	private static readonly string[] LeftOut = ["excel/encrypted.xlsx", "excel/packageassets-1695.xlsx", "excel/orders-1000.xlsx", "excel/packageassets-report-250.xlsx"];
 
-	/// <summary>Writes the exports of the corpus and of the written set.</summary>
+	/// <summary>
+	/// Writes the exports of the corpus and of the written set, or of one of them: its answers are deleted and made again,
+	/// the other's kept.
+	/// </summary>
 	/// <param name="files">The corpus folder.</param>
-	public static void Write(string files)
+	/// <param name="set">The workbooks to export.</param>
+	public static void Write(string files, ExportSet set = ExportSet.All)
 	{
 		var folder = Path.Combine(files, "excel-csv");
+		var writtenFolder = Path.Combine(folder, "excel-written");
 		if (Directory.Exists(folder))
 		{
-			Directory.Delete(folder, true);
+			foreach (var entry in Directory.EnumerateFileSystemEntries(folder).ToList())
+			{
+				var isWritten = string.Equals(Path.GetFullPath(entry), Path.GetFullPath(writtenFolder), StringComparison.OrdinalIgnoreCase);
+				if (set == ExportSet.All || (set == ExportSet.Written) == isWritten)
+				{
+					if (Directory.Exists(entry))
+					{
+						Directory.Delete(entry, true);
+					}
+					else
+					{
+						File.Delete(entry);
+					}
+				}
+			}
 		}
 
 		var corpus = Directory.EnumerateFiles(files, "*", SearchOption.AllDirectories)
@@ -71,14 +91,21 @@ internal static class ExcelExports
 		var temp = Directory.CreateDirectory(Path.Combine(Path.GetTempPath(), "CsvHelper.Excel.Corpus." + Guid.NewGuid().ToString("N"))).FullName;
 		try
 		{
-			ExcelProducer.Run(excel => Each(excel, CalculationManual, corpus.Select(f => (f, Path.Combine(files, f), (WrittenWorkbook?)null, (byte[]?)null)), folder, temp));
-			var written = Written.Workbooks.Select(w => (Workbook: w, Bytes: Written.Write(w))).ToList();
-			foreach (var (workbook, bytes) in written)
+			if (set != ExportSet.Written)
 			{
-				File.WriteAllBytes(Path.Combine(temp, workbook.Name), bytes);
+				ExcelProducer.Run(excel => Each(excel, CalculationManual, corpus.Select(f => (f, Path.Combine(files, f), (WrittenWorkbook?)null, (byte[]?)null)), folder, temp));
 			}
 
-			ExcelProducer.Run(excel => Each(excel, CalculationAutomatic, written.Select(w => ("excel-written/" + w.Workbook.Name, Path.Combine(temp, w.Workbook.Name), (WrittenWorkbook?)w.Workbook, (byte[]?)w.Bytes)), folder, temp));
+			if (set != ExportSet.Corpus)
+			{
+				var written = Written.Workbooks.Select(w => (Workbook: w, Bytes: Written.Write(w))).ToList();
+				foreach (var (workbook, bytes) in written)
+				{
+					File.WriteAllBytes(Path.Combine(temp, workbook.Name), bytes);
+				}
+
+				ExcelProducer.Run(excel => Each(excel, CalculationAutomatic, written.Select(w => ("excel-written/" + w.Workbook.Name, Path.Combine(temp, w.Workbook.Name), (WrittenWorkbook?)w.Workbook, (byte[]?)w.Bytes)), folder, temp));
+			}
 		}
 		finally
 		{
@@ -236,4 +263,17 @@ internal static class ExcelExports
 		json.WriteString("csv", Encoding.UTF8.GetString(bytes, bom ? ByteOrderMark.Length : 0, bytes.Length - (bom ? ByteOrderMark.Length : 0)));
 		json.WriteEndObject();
 	}
+}
+
+/// <summary>The workbooks <see cref="ExcelExports.Write"/> exports: the tool's <c>--set</c>.</summary>
+internal enum ExportSet
+{
+	/// <summary>The corpus's and the written set's: <c>excel-csv/</c> whole.</summary>
+	All,
+
+	/// <summary>The corpus's, with Excel's answers: <c>excel-csv/</c> but <c>excel-written/</c>.</summary>
+	Corpus,
+
+	/// <summary>The written set's (<see cref="Corpus.Written"/>): <c>excel-csv/excel-written/</c>.</summary>
+	Written,
 }

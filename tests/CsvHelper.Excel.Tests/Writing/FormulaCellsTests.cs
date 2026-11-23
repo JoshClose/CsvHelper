@@ -56,9 +56,10 @@ public class FormulaCellsTests
 		var workbook = await Write(Records, async);
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"D2\"><f>B2*C2</f></c><c r=\"E2\"><f>IF(D2&gt;5,\"big\",\"small\")</f></c></row>", sheet);
-		Assert.Contains("<c r=\"D3\"><f>B3*C3</f></c></row>", sheet);
-		Assert.Contains("<row r=\"4\"><c r=\"A4\" t=\"inlineStr\"><is><t>total</t></is></c><c r=\"B4\"><v>0</v></c><c r=\"C4\"><v>0</v></c><c r=\"D4\"><f>SUM(D2:D3)</f></c></row>", sheet);
+		Assert.Contains("<c><f>B2*C2</f></c><c><f>IF(D2&gt;5,\"big\",\"small\")</f></c></row>", sheet);
+		Assert.Contains("<c><f>B3*C3</f></c></row>", sheet);
+		Assert.Contains("</row><row><c t=\"inlineStr\"><is><t>total</t></is></c><c><v>0</v></c><c><v>0</v></c><c><f>SUM(D2:D3)</f></c></row></sheetData>", sheet);
+		Assert.Equal("<c><f>B3*C3</f></c>", Written.CellXml(sheet, "D3"));
 		Assert.DoesNotContain("<cols>", sheet);
 		Assert.DoesNotContain("ignoredErrors", sheet);
 		Assert.Empty(Written.ValidationErrors(workbook));
@@ -105,7 +106,9 @@ public class FormulaCellsTests
 		}, async, Written.Phase4());
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<row r=\"1\"><c r=\"A1\"><v>2</v></c><c r=\"B1\"><v>3</v></c><c r=\"C1\"><f>A1+B1</f></c><c r=\"D1\"><f>A1*B1</f></c><c r=\"G1\"><f>1+1</f></c></row>", sheet);
+		// The null and the default formula are gaps before G's formula: placeholders, in the header's row of columns without
+		// a default style.
+		Assert.Contains("<sheetData><row><c><v>2</v></c><c><v>3</v></c><c><f>A1+B1</f></c><c><f>A1*B1</f></c><c/><c/><c><f>1+1</f></c></row></sheetData>", sheet);
 
 		// A formula that starts like a number is no text, which Excel would flag.
 		Assert.DoesNotContain("ignoredErrors", sheet);
@@ -141,9 +144,9 @@ public class FormulaCellsTests
 		}, async, Written.Phase4());
 
 		var sheet = Written.Entry(workbook, "xl/worksheets/sheet1.xml");
-		Assert.Contains("<c r=\"A1\"><f>\"a_x005F_x0041_b\"&amp;\"&lt;&amp;&gt;\"</f></c>", sheet);
-		Assert.Contains("<c r=\"B1\"><f>\"a_x000D_\nb\"&amp;\n\"c\"</f></c>", sheet);
-		Assert.Contains("<c r=\"C1\"><f>\"a_x0001_b\"&amp;\"_xFFFE_\"</f></c>", sheet);
+		Assert.Contains(
+			"<sheetData><row><c><f>\"a_x005F_x0041_b\"&amp;\"&lt;&amp;&gt;\"</f></c><c><f>\"a_x000D_\nb\"&amp;\n\"c\"</f></c><c><f>\"a_x0001_b\"&amp;\"_xFFFE_\"</f></c>",
+			sheet);
 		Assert.Empty(Written.ValidationErrors(workbook));
 
 		using var book = ExcelWorkbook.Open(new MemoryStream(workbook));
@@ -159,7 +162,7 @@ public class FormulaCellsTests
 	{
 		var workbook = await Write(Records, async, new ExcelWriterOptions { Strings = ExcelStrings.Shared });
 
-		Assert.Contains("<c r=\"D2\"><f>B2*C2</f></c>", Written.Entry(workbook, "xl/worksheets/sheet1.xml"));
+		Assert.Equal("<c><f>B2*C2</f></c>", Written.CellXml(Written.Entry(workbook, "xl/worksheets/sheet1.xml"), "D2"));
 		Assert.DoesNotContain("B2*C2", Written.Entry(workbook, "xl/sharedStrings.xml"));
 		Assert.Empty(Written.ValidationErrors(workbook));
 		Assert.Equal("pear|0.25|10|=B3*C3|", ReadRows(workbook, FormulaText)[2]);

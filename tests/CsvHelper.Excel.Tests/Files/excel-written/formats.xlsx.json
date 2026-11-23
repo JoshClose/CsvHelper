@@ -1,7 +1,7 @@
 {
   "file": "formats.xlsx",
   "description": "[CsvFormat] dates, times, offsets and durations in the invariant culture, standard and custom, with DateTimeOffsets = ClockTime",
-  "sha256": "ff80ee6ff22b3c7fa68728fa71f56d448d42b62262108b983b0deb432576e4fb",
+  "sha256": "e600e37c01addabce610884fa351c55e70c26f3604aa6f2b8290a2c28562416f",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],

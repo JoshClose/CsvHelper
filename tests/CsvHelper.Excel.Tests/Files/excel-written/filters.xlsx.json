@@ -1,7 +1,7 @@
 {
   "file": "filters.xlsx",
   "description": "autofilters, with their hidden _FilterDatabase names: over the rows, under a title in a sheet whose name needs quotes, over a header alone with an empty field at its end, and with a frozen column in a sheet whose name reads as an escape",
-  "sha256": "8af2fff7fd4757afd5acac55797ef8ec332076388ab3c83f64bbead5cecf116d",
+  "sha256": "6649c82a901c6007505d71c763dac4553a1f9c36027f579a30a9de7193a5edf8",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [

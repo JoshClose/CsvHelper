@@ -1,7 +1,7 @@
 {
   "file": "template-types.xlsx",
   "description": "a template of every type of the design's table that every target has, booleans' values, flags, offsets as text, a translated [CsvFormat] and a column's own format, under a title, protected with a password (its salt fixed); filled in Excel with a text each column takes and one it refuses",
-  "sha256": "294bd5d446b6c16eefcacded9ce2371142be0cd4c1306f17d8b61ad2f9d35d1c",
+  "sha256": "5e668b65b8e248393d73bf7c245c59f7851a236c9a76f38d87c8d91e9173a057",
   "dpi": 144,
   "os": "Microsoft Windows 10.0.26300",
   "names": [],
