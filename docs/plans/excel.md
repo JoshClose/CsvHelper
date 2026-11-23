@@ -9205,7 +9205,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 9: performance (XL)
 
-Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day; see "Step 6, the own zip writer, serial" under "As built".
+Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day; see "Step 6's follow-up, the wider CRC folds" under "As built".
 
 Scope, as planned:
 
@@ -9935,7 +9935,7 @@ Filled in step by step; the code is the reference.
     - Many empty records before a value write their `<row/>`s at once into that record's part of the buffer, up to about 6.3 MB for a full sheet.
     - Lane F's worker needs the same per-column caches.
 
-**Step 6, the own zip writer, serial** (built 2026-11-22, decisions 28 to 30; approved, with the recommendation below, and committed that day; `Csv\_bench\results\phase9-10\step6\`):
+**Step 6, the own zip writer, serial** (built 2026-11-22, decisions 28 to 30; approved, with the recommendation below, and committed that day, and pushed: CI's run 45115293352 passed every step; `Csv\_bench\results\phase9-10\step6\`):
 
 - **How it was built:** the step's plan (`plan.md`) put two points to the user, each approved as recommended:
   - An entry that closes within its first 64 KB of output is written whole, with its sizes in its header, whichever call wrote it.
@@ -10034,6 +10034,77 @@ Filled in step by step; the code is the reference.
   - **X1:** the own writer's packages through Excel and the probe's readers: whole and streamed, deflated and stored, Zip64 by size. Above all, POI from a stream with a stored package (recommendation 2).
   - **W3:** the gate's pairs: not slower than `ZipArchive` on .NET 10 for the defaults, and `WriteStored`'s 2-6% there unless a wider fold closes it first.
 - **On approval** (2026-11-22, as recommended): **a wider fold as a follow-up change**, with its own tests, mutation check and timings, before X1 and W3. It is a 256- or 512-bit VPCLMULQDQ fold for stored entries on the net10.0 build; the net8.0 build keeps the 128-bit one. Alternatives: built into step 6 before its commit, or recorded for W3 to judge.
+
+**Step 6's follow-up, the wider CRC folds** (built 2026-11-23, as approved that day; approved, with the recommendation below, and committed that day; `Csv\_bench\results\phase9-10\step6\fold\`, the plan in `step6\fold-plan.md`):
+
+- **What it is:** on the net10.0 build, `Zip/Crc32.cs` gets a 512-bit and a 256-bit VPCLMULQDQ fold, for the CRC of stored entries. Every other build compiles as at `b1f1899c`.
+  - **`Append`'s order of paths:**
+    1. 256 bytes or more go to `Fold512`, where `Pclmulqdq.V512` is supported and `Vector512.IsHardwareAccelerated`.
+    2. 128 or more go to `Fold256`, on the same terms for 256 bits.
+    3. Then the 128-bit fold, ARM64 and slice-by-8, as before.
+  - **The gate on acceleration** was added on review. The runtime reports wide vectors as unaccelerated on processors that slow down for them, and there the CRC keeps to 128 bits.
+  - **The folds:**
+    - Four lanes of 512 or 256 bits each fold over the data, 256 or 128 bytes a step.
+    - The lanes then fold onto one another, down to four 128-bit parts.
+    - `FinishFold` takes those parts through the 128-bit fold's tail: its 64-byte loop, the fold of four lanes into one, the 16-byte folds, and the 64-bit and Barrett reductions.
+  - **`FinishFold` is a copy of `FoldBlocks`' tail, not shared with it:** sharing it slowed the 128-bit fold on .NET 8 from 22.2 to 18.9 GB/s. `FoldBlocks` is as at `b1f1899c`.
+  - **The constants** are named `const` fields. Those are the four new ones and the seven the 128-bit fold held as literals, which compile to the same IL. `HoldsTheGeneratedConstants` checks each against a generator in the tests (x^n mod P, reflected, and the Barrett quotient).
+- **Tests** (`Crc32Tests`, rewritten): four theories. Each runs over six paths (`Append`, `SliceBy8`, `Fold`, `Fold256`, `Fold512`, `Arm64`) against `System.IO.Hashing`:
+  - every length from 0 to 1,100, at starts 0 to 63;
+  - random lengths up to 4 MiB;
+  - each path's minimum and step at their edges (63-65, 127-129, 255-257 and 511-513 bytes, among others);
+  - random pieces, with the CRC carried from piece to piece.
+  - A path the machine or build lacks is skipped, with the reason: ARM64 here, and the wide folds on net8.0 and net48.
+- **Suites:**
+  - net10.0: 6,298 passed (5 skipped).
+  - net8.0: 6,279 passed (13 skipped).
+  - net48: 6,155 passed (17 skipped).
+  - AOT: the app publishes with no warnings, and runs.
+- **Speeds** (the agent's probe: 64 MiB of cached data, one process):
+  - `Fold512`: 83 GB/s; `Append` reaches 81 GB/s in the writer's 64 KB pieces.
+  - `Fold256`: 43.7 GB/s.
+  - The 128-bit fold: 22.2 GB/s, the same as `System.IO.Hashing` 10.0.5.
+  - Slice-by-8: 2.6 GB/s.
+  - The plan expected 45-60 GB/s from the 512-bit fold. `ZipArchive`'s zlib-ng CRC runs at 55.
+- **Mutation check** (`mutate_fold.py`, `mutations.txt`): 7 bugs planted one at a time in the new code, and all 7 caught. They were:
+  - a constant a bit off;
+  - a lane skipped in the fold-down, or two lanes crossed;
+  - the parts finished out of order;
+  - the fold not seeded with the CRC;
+  - the 128-bit fold's constants in the 256-bit step;
+  - the 512-bit fold's minimum below its first step.
+- **Indicative timings** (`quick.sh`, `quick\`, `timings.txt`, `load.txt`):
+  - **How they ran:** alone on the machine from 00:52 to 01:38, each process after a quiet minute, with the load under 4%. QuickRunner on core 4 timed three trees: `3a1c2ad9` (before step 6, `ZipArchive`), `b1f1899c` (step 6) and the follow-up.
+    - The writes ran in rounds of `3a1c2ad9`, `b1f1899c`, the follow-up, the follow-up, `b1f1899c` and `3a1c2ad9`, then reversed.
+    - The zip stage ran in rounds of `b1f1899c`, the follow-up, the follow-up and `b1f1899c`, then reversed.
+  - **.NET 10** (ms, medians of four runs):
+
+    | | `3a1c2ad9` | `b1f1899c` | Follow-up | Against `b1f1899c` | Against `3a1c2ad9` |
+    |---|---:|---:|---:|---:|---:|
+    | Package assets `WriteStored` | 576 | 612 | 590 | −3.6% | +2.5% |
+    | Orders `WriteStored` | 538 | 545 | 537 | −1.4% | −0.3% |
+    | Package assets `Write` | 898 | 899 | 897 | −0.2% | −0.1% |
+    | Orders `Write` | 1,225 | 1,222 | 1,228 | +0.4% | +0.2% |
+    | SpreadCheetah's `Write` (control), package assets | 712 | 718 | 712 | −0.8% | −0.1% |
+    | SpreadCheetah's `Write` (control), orders | 1,013 | 1,009 | 1,010 | +0.2% | −0.3% |
+
+  - **The zip stage, stored** (`PackageWriter_NoCompression`, beside `ZipArchive_NoCompression` in the same processes):
+    - Package assets: 51.8 → 24.6 ms (`ZipArchive`: 19.1-19.3). The plan expected 25-30 ms.
+    - Orders: 23.7 → 10.7 ms (`ZipArchive`: 8.2).
+  - **Both halves agree:** against `3a1c2ad9`, the package assets' `WriteStored` is +1.8% and +2.6% (`b1f1899c`: +6.3% and +6.4%).
+  - **Allocation** is unchanged from `b1f1899c`.
+  - **Against the plan:**
+    - The orders' `WriteStored` is back within 1% of `3a1c2ad9`'s.
+    - The package assets' is not: +2.5%, down from +6.4%.
+    - The defaults are unchanged, as expected.
+- **Found: what is left of the stored gap is not the CRC.** The 512-bit fold is now faster than zlib-ng's, 83 against 55 GB/s.
+  - **The zip stage:** the package assets' CRC takes about 11 ms there, against `ZipArchive`'s 17. The own writer's other work over the bytes takes about 13 ms of its 24.6; `ZipArchive`'s takes about 2.5 ms.
+  - **The likely cause** (by arithmetic, not profiled) is the copy of a stored entry's data into the entry's 64 KB buffers. `ZipArchive` writes through, without that copy. The plan left it as it is (Z1).
+  - **Not explained:** `WriteStored`'s gap is 15 ms, the zip stage's only 5. A profile would tell.
+  - **A possible fix:** a stored entry, once streamed, could write through and skip the copy. That changes the buffering rule.
+- **On approval** (2026-11-23, as recommended): **the write-through goes into step 7's plan as a candidate**, with a profile of `WriteStored` first to confirm what the gap is.
+  - It doesn't change the bytes written, so X1 isn't affected; it lands before W3 judges the stored writes.
+  - Alternatives: left for W3 to judge, or built into this follow-up before its commit.
 
 ### Phase 10: other formats (XL)
 
