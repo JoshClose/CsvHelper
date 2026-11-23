@@ -87,6 +87,38 @@ public class ZipStructureTests
 	}
 
 	/// <summary>
+	/// The rules of patched entries and full Zip64 extras broken, each in a package of the own writer that keeps them: a
+	/// stored entry past one buffer, written to a stream that seeks, whose local CRC is still the placeholder; and an
+	/// entry whose sizes overflow with its offset in its central field rather than all ones in the Zip64 extra.
+	/// </summary>
+	/// <param name="name">The break.</param>
+	/// <param name="rule">Words of the rule's message.</param>
+	[Theory]
+	[InlineData("unpatched CRC", "a whole or patched entry's local header holds its CRC and sizes")]
+	[InlineData("offset outside the extra", "all three are 0xFFFFFFFF when any reaches Max32")]
+	public void FailsABrokenPatchOrExtraRule(string name, string rule)
+	{
+		var limits = name == "unpatched CRC" ? ZipLimits.Default : new ZipLimits(5_000, 0xFFFF);
+		var package = ZipPackages.Write([new ZipPart("a.bin", ZipPackages.RandomBytes(name == "unpatched CRC" ? 100_000 : 6_000, 3))], CompressionLevel.NoCompression, limits);
+		var entry = ZipStructure.Read(package).Entries[0];
+		ZipStructure.AssertValid(package, limits.Max32, limits.Max16);
+		if (name == "unpatched CRC")
+		{
+			Assert.True(entry.Patched);
+			BinaryPrimitives.WriteUInt32LittleEndian(package.AsSpan((int)entry.Local.Position + 14), 0);
+		}
+		else
+		{
+			Assert.Equal((0L, 28), (entry.Offset, entry.Central.Extra.Length));
+			BinaryPrimitives.WriteUInt32LittleEndian(package.AsSpan((int)entry.Central.Position + 42), 0);
+		}
+
+		var failure = Assert.ThrowsAny<Xunit.Sdk.XunitException>(() => ZipStructure.AssertValid(package, limits.Max32, limits.Max16));
+
+		Assert.Contains(rule, failure.Message);
+	}
+
+	/// <summary>
 	/// <see cref="ZipArchive"/>'s own packages don't take the own writer's shape (version made by, and on a stream that
 	/// can't seek, 4-byte descriptors at version 2.0), so the check fails them. .NET Framework's can't write to a stream
 	/// that can't seek.

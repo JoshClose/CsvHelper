@@ -4,11 +4,13 @@ using System.Security.Cryptography;
 namespace CsvHelper.Excel.Tests.Package;
 
 /// <summary>
-/// Stored entries written through: a stored entry, once streamed (its data past one buffer, its local header written
-/// with bit 3), writes what its buffers hold, and from then on each write straight to the package's stream, in one write,
-/// without copying it. The packages are byte for byte those the writer wrote before (<c>6b21adca</c>), pinned by their
-/// SHA-256, whatever the pieces they are written in, synchronously and asynchronously; every package checked by its
-/// records (<see cref="ZipStructure"/>), read back by <see cref="ZipArchive"/> and, on .NET Framework, by WindowsBase.
+/// Stored entries written through: a stored entry, once its data passes one buffer (its local header written then, with
+/// bit 3 on a stream that can't seek, or to be patched after its data on one that seeks), writes what its buffers hold,
+/// and from then on each write straight to the package's stream, in one write, without copying it. The packages are byte
+/// for byte those pinned by their SHA-256, whatever the pieces they are written in, synchronously and asynchronously:
+/// <c>6b21adca</c>'s on a stream that can't seek, and on one that seeks those of the patched local headers; every package
+/// checked by its records (<see cref="ZipStructure"/>), read back by <see cref="ZipArchive"/> and, on .NET Framework, by
+/// WindowsBase.
 /// </summary>
 public class ZipWriteThroughTests
 {
@@ -37,8 +39,10 @@ public class ZipWriteThroughTests
 	private static readonly string[] PieceSizes = ["1", "1000", "65535", "65536", "65537", "1048576", "random"];
 
 	/// <summary>
-	/// The SHA-256 of each case's package as <c>6b21adca</c>'s writer wrote it (synchronously, each part in one write),
-	/// before stored entries were written through.
+	/// The SHA-256 of each case's package written to a stream that can't seek (synchronously, each part in one write): as
+	/// <c>6b21adca</c>'s writer wrote it, before stored entries were written through, but for <c>Zip64 limits</c>, whose
+	/// central Zip64 extras hold all three fields since X1's follow-up (<c>6b21adca</c>'s was
+	/// <c>64661AB0BA2976A9C9F947F0FB7E1942B32F9147CF777448A16604CFDC9D4858</c>).
 	/// </summary>
 	private static readonly Dictionary<string, string> Pinned = new()
 	{
@@ -54,20 +58,46 @@ public class ZipWriteThroughTests
 		["several MB"] = "1CB9397171C31A43B69562154E5C8E5E9683A2AB500267B57452FD4EFC4653BB",
 		["several"] = "32BFD7E70A495D0CF7C69B94FB353E7357BE271FFE7CE7FD8673FDD4CC9EE4A1",
 		["streamed in a row"] = "77FD87CBF41281AF5FAEF95F6A9244F9391DEF45B5C9C920354050E4FBD02E3E",
-		["Zip64 limits"] = "64661AB0BA2976A9C9F947F0FB7E1942B32F9147CF777448A16604CFDC9D4858",
+		["Zip64 limits"] = "7661C0D6A936776DCA6C3C23F981E5F0BC23DA5AB77011AB7591058F977F4E7C",
 	};
 
-	/// <summary>Every case, in every piece size, synchronously and asynchronously.</summary>
-	/// <returns>The cases' names, the pieces and the modes.</returns>
-	public static TheoryData<string, string, bool> SameBytesCases()
+	/// <summary>
+	/// The SHA-256 of each case's package written to a stream that seeks (synchronously, each part in one write), since
+	/// X1's follow-up: a stored entry past one buffer has its CRC and sizes patched into its local header, or past
+	/// <see cref="ZipLimits.Max32"/> the streamed form patched in. Those of at most one buffer per entry are
+	/// <c>6b21adca</c>'s, unchanged.
+	/// </summary>
+	private static readonly Dictionary<string, string> PinnedSeekable = new()
 	{
-		var data = new TheoryData<string, string, bool>();
+		["0"] = "35B3B094D1ABB4DD5059A019A786483F65018CCD14421D4F0FCA2ECBDE27CC42",
+		["1"] = "211393F96C2344ACEC144E9481621A561F7D9DFF7DE286DB40927C0FA69A746A",
+		["65535"] = "E48678A30E75B1036F96ED8509F6DBCBBE9071E25C04299734E9248EBF1F04B1",
+		["65536"] = "D84B90E9CD123A7B01FC90BAC20B8FC694FE5EF2F023A4F7AA58B4C5940101F7",
+		["65537"] = "B9FABA40159392D5AC37B3D6A12B10E2F8B3C9C1F2CD8C02C50A69BCD15BF663",
+		["131071"] = "565D360E2B15268870E1E58A2221195B5936D1C44FD7B9940B0AF3F1AEAF0122",
+		["131072"] = "A04CF1394734F5542A4AC356FA13324B7F9EF03C12C724FD83F0233F61A29CCC",
+		["131073"] = "0CD4C90E045BD44BE3CACEE9CB1E76D0F5E106CE634AAADD00B10CBF1FBB48D9",
+		["about 1 MB"] = "F3B7D8E369F64CC9F1643DE5F4C6A98BAF9545B23AC69450D3B0CB403976E074",
+		["several MB"] = "D7A514D2D329A5793784895A0746E381CF8E70893B05C42ED6907B67D95E3F12",
+		["several"] = "512E402B0EC753CF0D563F64AD952F98A406364533EF420991A79200A7A5B835",
+		["streamed in a row"] = "40D6FDE5F93A97D3CD3F1A6BCC3A2D0D3E057EADCB7D6F938517A9818395EBE5",
+		["Zip64 limits"] = "F61714C77E5047B41A44C51FFCD15DBD5DE28B24EA53BF9E8909079AC882E52A",
+	};
+
+	/// <summary>Every case, in every piece size, to a stream that seeks and one that doesn't, synchronously and asynchronously.</summary>
+	/// <returns>The cases' names, the pieces, the stream kinds and the modes.</returns>
+	public static TheoryData<string, string, bool, bool> SameBytesCases()
+	{
+		var data = new TheoryData<string, string, bool, bool>();
 		foreach (var name in Cases.Keys)
 		{
 			foreach (var pieces in PieceSizes)
 			{
-				data.Add(name, pieces, false);
-				data.Add(name, pieces, true);
+				foreach (var seekable in new[] { true, false })
+				{
+					data.Add(name, pieces, seekable, false);
+					data.Add(name, pieces, seekable, true);
+				}
 			}
 		}
 
@@ -75,29 +105,32 @@ public class ZipWriteThroughTests
 	}
 
 	/// <summary>
-	/// A stored package's bytes are those <c>6b21adca</c>'s writer wrote, whatever the pieces its entries are written in,
-	/// synchronously or asynchronously: pinned by their SHA-256, which was taken from that writer. Every write and flush
-	/// of the stream is in the call's mode (the other mode throws), the package is valid by its records under its
-	/// limits, and it reads back.
+	/// A stored package's bytes are the pinned ones for its stream's kind, whatever the pieces its entries are written in,
+	/// synchronously or asynchronously: <c>6b21adca</c>'s on a stream that can't seek (but for the full Zip64 extras),
+	/// and the patched local headers' on one that seeks. Every write and flush of the stream is in the call's mode (the
+	/// other mode throws), the package is valid by its records under its limits, every entry past one buffer is patched
+	/// exactly when the stream seeks, and it reads back.
 	/// </summary>
 	/// <param name="name">The case.</param>
 	/// <param name="pieces">The pieces it is written in.</param>
+	/// <param name="seekable">Whether the stream seeks.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <returns>A task that completes when the test is done.</returns>
 	[Theory]
 	[MemberData(nameof(SameBytesCases))]
-	public async Task WritesTheSameBytesInAnyPieces(string name, string pieces, bool async)
+	public async Task WritesTheSameBytesInAnyPieces(string name, string pieces, bool seekable, bool async)
 	{
 		var (parts, limits) = Parts(name);
-		var stream = new ZipTestStream { ForbidSync = async, ForbidAsync = !async, Yields = false };
+		var stream = new ZipTestStream(seekable) { ForbidSync = async, ForbidAsync = !async, Yields = false };
 
 		var task = WriteAsync(parts, stream, async, Pieces(pieces), limits);
 		Assert.True(async || task.IsCompleted, "A synchronous write didn't complete synchronously.");
 		var package = await task;
 
-		Assert.Equal(Pinned[name], Sha256(package));
+		Assert.Equal((seekable ? PinnedSeekable : Pinned)[name], Sha256(package));
 		Assert.Equal((async ? 0 : 1, async ? 1 : 0), (stream.Flushes, stream.AsyncFlushes));
 		ZipStructure.AssertValid(package, limits.Max32, limits.Max16);
+		Assert.All(ZipStructure.Read(package).Entries.Where(e => e.CompressedSize > ZipStructure.WholeData), e => Assert.Equal(seekable, e.Patched));
 		ZipStructure.AssertPackagingReads(package);
 		ZipPackages.AssertReadsBack(package, parts);
 	}
@@ -105,19 +138,24 @@ public class ZipWriteThroughTests
 	/// <summary>
 	/// The stream's writes of stored entries. Until an entry's data passes one buffer, it is held, as before: an entry of
 	/// at most 65,536 bytes is whole, its header written as it closes. The write that passes one buffer writes the local
-	/// header, the full buffer and the rest the entry held; from then on each write reaches the stream as one write (1 MB
-	/// too, not cut into buffers), of the caller's own bytes, not a copy; and closing the entry writes its descriptor. The
-	/// package's bytes are those of the same parts written whole.
+	/// header (with a Zip64 extra, streamed, on a stream that can't seek; without, patched, on one that seeks), the full
+	/// buffer and the rest the entry held; from then on each write reaches the stream as one write (1 MB too, not cut into
+	/// buffers), of the caller's own bytes, not a copy; and closing the entry writes its descriptor, or on a stream that
+	/// seeks its 12 bytes of CRC and sizes over its header's. The package's bytes are those of the same parts written whole
+	/// to a stream of the same kind.
 	/// </summary>
+	/// <param name="seekable">Whether the stream seeks.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <returns>A task that completes when the test is done.</returns>
 	[Theory]
-	[InlineData(false)]
-	[InlineData(true)]
-	public async Task WritesStraightThroughOnceStreamed(bool async)
+	[InlineData(false, false)]
+	[InlineData(false, true)]
+	[InlineData(true, false)]
+	[InlineData(true, true)]
+	public async Task WritesStraightThroughPastOneBuffer(bool seekable, bool async)
 	{
 		var source = Data(2_500_000, 11);
-		var stream = new ZipTestStream { Watched = source };
+		var stream = new ZipTestStream(seekable) { Watched = source };
 		var package = new PackageWriter(stream, leaveOpen: true, CompressionLevel.NoCompression);
 		var parts = new List<ZipPart>();
 		var at = 0;
@@ -155,24 +193,27 @@ public class ZipWriteThroughTests
 		await ZipPackages.RunAsync(async, a => PackageWriter.CloseAsync(types, a));
 		await ZipPackages.RunAsync(async, package.DisposeAsync);
 
-		(int, bool, bool) Header(string name) => (30 + name.Length + 20, async, false);
+		(int, bool, bool) Header(string name) => (30 + name.Length + (seekable ? 0 : 20), async, false);
 		(int, bool, bool) Held(int size) => (size, async, false);
 		(int, bool, bool) Through(int size) => (size, async, true);
-		var descriptor = (24, async, false);
+		var end = (seekable ? 12 : 24, async, false);
 		Assert.Equal(
 		[
-			Header("a.bin"), Held(65_536), Held(4_457), Through(7_777), Through(1_048_576), Through(1), descriptor,
-			Header("b.bin"), Held(65_536), Held(65_536), Through(917_509), Through(3), descriptor,
-			Header("c.bin"), Held(65_536), Held(1), Through(65_536), descriptor,
+			Header("a.bin"), Held(65_536), Held(4_457), Through(7_777), Through(1_048_576), Through(1), end,
+			Header("b.bin"), Held(65_536), Held(65_536), Through(917_509), Through(3), end,
+			Header("c.bin"), Held(65_536), Held(1), Through(65_536), end,
 			(30 + 5, async, false), Held(65_536),
 			(30 + 19, async, false), Held(ZipPackages.ContentTypes.Length),
 		],
 		stream.Writes.Take(stream.Writes.Count - 2));
 		var written = stream.ToArray();
-		Assert.Equal(ZipPackages.Write(parts, CompressionLevel.NoCompression), written);
+		Assert.Equal(await ZipPackages.WriteAsync(parts, CompressionLevel.NoCompression, new ZipTestStream(seekable), false), written);
 		ZipStructure.AssertValid(written);
 		ZipStructure.AssertPackagingReads(written);
-		Assert.Equal(["a.bin", "b.bin", "c.bin"], ZipStructure.Read(written).Entries.Where(e => e.Streamed).Select(e => e.Name));
+		var zip = ZipStructure.Read(written);
+		string[] large = ["a.bin", "b.bin", "c.bin"];
+		Assert.Equal(seekable ? [] : large, zip.Entries.Where(e => e.Streamed).Select(e => e.Name));
+		Assert.Equal(seekable ? large : [], zip.Entries.Where(e => e.Patched).Select(e => e.Name));
 	}
 
 	/// <summary>

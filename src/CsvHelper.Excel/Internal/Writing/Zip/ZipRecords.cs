@@ -14,16 +14,31 @@ internal static class ZipRecords
 	/// <summary>The length of a local header before its name and extra field.</summary>
 	public const int LocalLength = 30;
 
-	/// <summary>The length of a streamed entry's local extra field: a Zip64 extra of two 8-byte zeros.</summary>
+	/// <summary>
+	/// The length of the local extra field of an entry streamed from its local header (not of a patched entry that falls
+	/// back to the streamed form, which has none): a Zip64 extra of two 8-byte zeros.
+	/// </summary>
 	public const int LocalExtraLength = 20;
 
 	/// <summary>The length of a descriptor: its signature, the CRC and two 8-byte sizes.</summary>
 	public const int DescriptorLength = 24;
 
+	/// <summary>The offset in a local header of its version needed, which its flags follow.</summary>
+	public const int LocalVersionAt = 4;
+
+	/// <summary>The length of a local header's version needed and flags.</summary>
+	public const int LocalVersionLength = 4;
+
+	/// <summary>The offset in a local header of its CRC, which its compressed and uncompressed sizes follow.</summary>
+	public const int LocalCrcAt = 14;
+
+	/// <summary>The length of a local header's CRC and sizes.</summary>
+	public const int LocalCrcLength = 12;
+
 	/// <summary>The length of a central header before its name and extra field.</summary>
 	public const int CentralLength = 46;
 
-	/// <summary>The most a central extra field holds: a Zip64 extra of three 8-byte fields.</summary>
+	/// <summary>The length of a central extra field, when there is one: a Zip64 extra of three 8-byte fields.</summary>
 	public const int CentralExtraLength = 28;
 
 	/// <summary>The most the end records take: the Zip64 end record (56 bytes), its locator (20) and the end record (22).</summary>
@@ -54,8 +69,10 @@ internal static class ZipRecords
 	private const ushort Wide16 = 0xFFFF;
 
 	/// <summary>
-	/// Writes an entry's local header: a whole entry's with its CRC and sizes and no extra field; a streamed entry's with
-	/// CRC and sizes 0 (never <c>0xFFFFFFFF</c>, which Excel refuses) and a Zip64 extra of zeros.
+	/// Writes an entry's local header: a whole entry's with its CRC and sizes and no extra field; a patched entry's (a
+	/// stored entry past one buffer, on a stream that seeks) without bit 3 or an extra field, its CRC and sizes 0 until
+	/// they are patched in after its data (<see cref="LocalSizes"/>); a streamed entry's with CRC and sizes 0 (never
+	/// <c>0xFFFFFFFF</c>, which Excel refuses) and a Zip64 extra of zeros.
 	/// </summary>
 	/// <param name="destination">Where it goes: at least <see cref="LocalLength"/>, the name and <see cref="LocalExtraLength"/> bytes.</param>
 	/// <param name="entry">The entry, whose shape, version, flags, method, CRC and sizes are set.</param>
@@ -64,15 +81,16 @@ internal static class ZipRecords
 	{
 		var name = entry.Name;
 		var streamed = (entry.Flags & Streamed) != 0;
+		var sized = !streamed && !entry.Patched;
 		BinaryPrimitives.WriteUInt32LittleEndian(destination, 0x04034B50);
-		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(4), entry.VersionNeeded);
+		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(LocalVersionAt), entry.VersionNeeded);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(6), entry.Flags);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(8), entry.Method);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(10), Time);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(12), Date);
-		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(14), streamed ? 0 : entry.Crc);
-		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(18), streamed ? 0 : (uint)entry.CompressedSize);
-		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(22), streamed ? 0 : (uint)entry.UncompressedSize);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(LocalCrcAt), sized ? entry.Crc : 0);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(18), sized ? (uint)entry.CompressedSize : 0);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(22), sized ? (uint)entry.UncompressedSize : 0);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(26), (ushort)name.Length);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(28), streamed ? (ushort)LocalExtraLength : (ushort)0);
 		WriteName(destination.Slice(LocalLength), name);
@@ -87,6 +105,38 @@ internal static class ZipRecords
 		}
 
 		return length;
+	}
+
+	/// <summary>
+	/// Writes a patched entry's CRC and sizes, closed with both sizes below <see cref="ZipLimits.Max32"/>: the
+	/// <see cref="LocalCrcLength"/> bytes of its local header from <see cref="LocalCrcAt"/>.
+	/// </summary>
+	/// <param name="destination">Where they go: at least <see cref="LocalCrcLength"/> bytes.</param>
+	/// <param name="entry">The entry, closed.</param>
+	/// <returns>Their length.</returns>
+	public static int LocalSizes(Span<byte> destination, ZipEntryStream entry)
+	{
+		BinaryPrimitives.WriteUInt32LittleEndian(destination, entry.Crc);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(4), (uint)entry.CompressedSize);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(8), (uint)entry.UncompressedSize);
+
+		return LocalCrcLength;
+	}
+
+	/// <summary>
+	/// Writes a patched entry's version needed and flags, closed with a size at <see cref="ZipLimits.Max32"/>, which falls
+	/// back to the streamed form (version 4.5, bit 3; its CRC and sizes stay 0, with no extra field): the
+	/// <see cref="LocalVersionLength"/> bytes of its local header from <see cref="LocalVersionAt"/>.
+	/// </summary>
+	/// <param name="destination">Where they go: at least <see cref="LocalVersionLength"/> bytes.</param>
+	/// <param name="entry">The entry, closed, its version and flags set.</param>
+	/// <returns>Their length.</returns>
+	public static int LocalVersion(Span<byte> destination, ZipEntryStream entry)
+	{
+		BinaryPrimitives.WriteUInt16LittleEndian(destination, entry.VersionNeeded);
+		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(2), entry.Flags);
+
+		return LocalVersionLength;
 	}
 
 	/// <summary>Writes a streamed entry's descriptor: its signature, the CRC, and the compressed and uncompressed sizes in 8 bytes each.</summary>
@@ -104,9 +154,10 @@ internal static class ZipRecords
 	}
 
 	/// <summary>
-	/// Writes an entry's central header: its real sizes and offset, or <c>0xFFFFFFFF</c> for each that reaches
-	/// <see cref="ZipLimits.Max32"/>, with a Zip64 extra holding exactly those, in the order uncompressed size, compressed
-	/// size, offset; no extra field when none does.
+	/// Writes an entry's central header: its real sizes and offset when each is below <see cref="ZipLimits.Max32"/>,
+	/// with no extra field; when any reaches it, all three are <c>0xFFFFFFFF</c> and a Zip64 extra holds all three, in
+	/// APPNOTE's order (uncompressed size, compressed size, offset), as readers that take the extra's fields by
+	/// position (LibreOffice) read it.
 	/// </summary>
 	/// <param name="destination">Where it goes: at least <see cref="CentralLength"/>, the name and <see cref="CentralExtraLength"/> bytes.</param>
 	/// <param name="entry">The entry, closed.</param>
@@ -115,10 +166,8 @@ internal static class ZipRecords
 	public static int Central(Span<byte> destination, ZipEntryStream entry, ZipLimits limits)
 	{
 		var name = entry.Name;
-		var wideUncompressed = entry.UncompressedSize >= limits.Max32;
-		var wideCompressed = entry.CompressedSize >= limits.Max32;
-		var wideOffset = entry.Offset >= limits.Max32;
 		var extraLength = CentralExtra(entry, limits);
+		var wide = extraLength > 0;
 		BinaryPrimitives.WriteUInt32LittleEndian(destination, 0x02014B50);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(4), MadeBy);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(6), entry.VersionNeeded);
@@ -127,54 +176,43 @@ internal static class ZipRecords
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(12), Time);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(14), Date);
 		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(16), entry.Crc);
-		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(20), wideCompressed ? Wide32 : (uint)entry.CompressedSize);
-		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(24), wideUncompressed ? Wide32 : (uint)entry.UncompressedSize);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(20), wide ? Wide32 : (uint)entry.CompressedSize);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(24), wide ? Wide32 : (uint)entry.UncompressedSize);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(28), (ushort)name.Length);
 		BinaryPrimitives.WriteUInt16LittleEndian(destination.Slice(30), (ushort)extraLength);
 
 		// The comment's length, the disk, and the internal and external attributes: all 0.
 		destination.Slice(32, 10).Clear();
-		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(42), wideOffset ? Wide32 : (uint)entry.Offset);
+		BinaryPrimitives.WriteUInt32LittleEndian(destination.Slice(42), wide ? Wide32 : (uint)entry.Offset);
 		WriteName(destination.Slice(CentralLength), name);
 		var length = CentralLength + name.Length;
-		if (extraLength > 0)
+		if (wide)
 		{
-			var extra = destination.Slice(length);
+			var extra = destination.Slice(length, CentralExtraLength);
 			BinaryPrimitives.WriteUInt16LittleEndian(extra, 0x0001);
-			BinaryPrimitives.WriteUInt16LittleEndian(extra.Slice(2), (ushort)(extraLength - 4));
-			var at = 4;
-			if (wideUncompressed)
-			{
-				BinaryPrimitives.WriteUInt64LittleEndian(extra.Slice(at), (ulong)entry.UncompressedSize);
-				at += 8;
-			}
-
-			if (wideCompressed)
-			{
-				BinaryPrimitives.WriteUInt64LittleEndian(extra.Slice(at), (ulong)entry.CompressedSize);
-				at += 8;
-			}
-
-			if (wideOffset)
-			{
-				BinaryPrimitives.WriteUInt64LittleEndian(extra.Slice(at), (ulong)entry.Offset);
-			}
-
-			length += extraLength;
+			BinaryPrimitives.WriteUInt16LittleEndian(extra.Slice(2), CentralExtraLength - 4);
+			BinaryPrimitives.WriteUInt64LittleEndian(extra.Slice(4), (ulong)entry.UncompressedSize);
+			BinaryPrimitives.WriteUInt64LittleEndian(extra.Slice(12), (ulong)entry.CompressedSize);
+			BinaryPrimitives.WriteUInt64LittleEndian(extra.Slice(20), (ulong)entry.Offset);
+			length += CentralExtraLength;
 		}
 
 		return length;
 	}
 
-	/// <summary>The length of an entry's central Zip64 extra: 4 bytes and 8 for each field that overflows, or 0 when none does.</summary>
+	/// <summary>
+	/// The length of an entry's central extra field: <see cref="CentralExtraLength"/>, a Zip64 extra of all three fields,
+	/// when any of its uncompressed size, compressed size or offset reaches <see cref="ZipLimits.Max32"/>, or 0 when none
+	/// does.
+	/// </summary>
 	/// <param name="entry">The entry, its sizes and offset known.</param>
 	/// <param name="limits">The limits.</param>
 	/// <returns>The length.</returns>
 	public static int CentralExtra(ZipEntryStream entry, ZipLimits limits)
 	{
-		var fields = (entry.UncompressedSize >= limits.Max32 ? 1 : 0) + (entry.CompressedSize >= limits.Max32 ? 1 : 0) + (entry.Offset >= limits.Max32 ? 1 : 0);
+		var wide = entry.UncompressedSize >= limits.Max32 || entry.CompressedSize >= limits.Max32 || entry.Offset >= limits.Max32;
 
-		return fields == 0 ? 0 : 4 + (8 * fields);
+		return wide ? CentralExtraLength : 0;
 	}
 
 	/// <summary>

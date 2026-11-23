@@ -9205,7 +9205,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 9: performance (XL)
 
-Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day; see "Step 7, conversions and small wins" under "As built".
+Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45184153550 passed every step; see "Step 7, conversions and small wins" under "As built". Its Excel window X1 ran 2026-11-23, and its follow-up to the zip writer (a stored entry's sizes patched into its header on a stream that seeks, and full Zip64 extras) was built and checked that day, and approved and committed that day; see "Window X1, the own writer's packages through the readers" under "As built".
 
 Scope, as planned:
 
@@ -9637,6 +9637,7 @@ Applied at approval, 2026-11-20, but for the guide (step 12) and the feature cov
   - `:523`, Size: Zip64 packages that the Open XML SDK and ClosedXML open on .NET Framework too.
   - `:525-527`: the parallel write methods and `CompressionThreads` beside "not thread-safe"; the synchronous-writes sentence goes.
   - `:773`: `Protect`'s cost and the password's time measured again.
+  - Writing, `NoCompression` (window X1): to a stream that can't seek, a stored part past 64 KB carries a descriptor, which POI from a stream refuses with its defaults (`ZipSecureFile.setMinInflateRatio(0)`, or a file, reads it), and past 2 GiB can't read at all; to a stream that seeks, its sizes are in its header. A buffered stream, such as `FileStream`, writes its own buffer synchronously as the writer seeks to patch a header, even under asynchronous calls.
   - Reading: `PoolStrings` and its identity; `ParallelEnumerate`'s speed over workbooks; `<` in attribute values; and, in writing, the readers that lose positions on r-less sheets (POI's event API, Open XML SDK code reading `CellReference`, Sylvan 0.5.8's empty records).
 
 #### As built
@@ -10106,7 +10107,7 @@ Filled in step by step; the code is the reference.
   - It doesn't change the bytes written, so X1 isn't affected; it lands before W3 judges the stored writes.
   - Alternatives: left for W3 to judge, or built into this follow-up before its commit.
 
-**Step 7, conversions and small wins** (built 2026-11-23, decisions 40 and 42, and step 6's follow-up's "On approval"; its plan's recommendations approved ahead of time that day; approved, as recommended, and committed that day; `Csv\_bench\results\phase9-10\step7\`, the plan in `plan.md`):
+**Step 7, conversions and small wins** (built 2026-11-23, decisions 40 and 42, and step 6's follow-up's "On approval"; its plan's recommendations approved ahead of time that day; approved, as recommended, and committed that day, and pushed: CI's run 45184153550 passed every step; `Csv\_bench\results\phase9-10\step7\`, the plan in `plan.md`):
 
 - **The profile first** (`profiles\`, `callers.py`): `WriteStored` on the package assets at `6b21adca`.
   - `Buffer.Memmove` under `ZipEntryStream.Take` took 35% of the samples, the copy into the entry's buffers. The CRC took 1.4%.
@@ -10221,6 +10222,111 @@ Filled in step by step; the code is the reference.
   - **The renders gain what `Digits.Of` saves:** about 26-29 ns a cell for the codes that take one number's digits, and 58 ns for the fraction, which takes several. That is why they beat the plan's 10-25%, which was based on 10-20 ns a call.
   - **What is left of `Format_Double`'s 44 ns:** probably half is the parse of the text into a double, which the step didn't change (`Parse`, the same parse over General's texts, takes 22 ns). The rest is the new comparison. Not profiled further.
 - **On approval** (2026-11-23, as recommended): committed as built. Next in the order of work is Excel's window X1, then W3, each with its own plan.
+
+**Window X1, the own writer's packages through the readers** (run 2026-11-23, as approved that day, with both recommendations; its follow-up approved, with both recommendations, built and checked that day; approved, as recommended, and committed that day; `Csv\_bench\results\phase9-10\x1\`: the plans in `plan.md` and `followup-plan.md`):
+
+- **How it ran:** two agents at once, in a copy of the design's probe (`heavy\rless-probe`) at `33779549`.
+  - W wrote the set and ran the .NET readers (`notes-w.md`, `app\`). R adapted and ran the others and the comparison (`notes-r.md`, `scripts\`, `out\matrix.md`).
+  - **The set:** `small` (every part whole), the probe's `zip` and 100,000 rows of the package assets. Each was written at every level by net10.0, net8.0 and net48 (no `SmallestSize` on net48): 33 packages through the public API.
+    - Each package was written sync and async, to a stream that seeks and to one that doesn't, and all four gave the same SHA-256.
+    - 11 more packages took Zip64 by the writer's lowered limits, reached by reflection: every field, past its limit and at it.
+    - Two more were real packages past 4 GiB, a 4.56 GB sheet deflated and stored.
+  - **Each package's twin:** the same parts, byte for byte, re-packed by .NET's `ZipArchive`. A reader passes when it gives the twin's answer, so the r-less sheets' known quirks (step 5) cancel out.
+  - **The readers:** the probe's 27 reader/runtime pairs. The real Zip64 pair went only through Excel and the readers that stream.
+  - **Excel:** under `excel.lock`, 08:18-08:19 and 08:21-08:23, with no Excel left after.
+- **First run: 1,171 of 1,188 entries ok, 17 FAILED, no different values.**
+  - **Excel** opened all 56 workbooks without repair, with the twins' used ranges and `Value2` hashes. It read both real Zip64 packages, at about 16.3 GB.
+  - Every .NET reader read every package as its twin, on both runtimes (792 of 792), and so did GridCraft, POI from a file and its event API, openpyxl and pandas.
+  - **POI from a stream** (`new XSSFWorkbook(InputStream)`, defaults) refused the 12 `NoCompression` packages with a stored part over 100 KiB: `Zip bomb detected! ... Raw/compressed size: 0`.
+    - POI already lets Commons Compress read stored entries with a descriptor. Its own ratio check then sees a compressed size of 0, after the 100 KiB it lets through.
+    - The twins, with their sizes in the local header, read. So did `ZipSecureFile.setMinInflateRatio(0)`, which is process-wide.
+  - **LibreOffice 26** refused the 5 Zip64 packages with a whole entry past `Max32` whose central extra held only its offset. It reads the extra's fields by position: the offset as the uncompressed size.
+    - A full extra (all three fields, the central ones all ones) loaded. The writer followed APPNOTE 4.5.3.
+  - **The real pair:**
+    - Excel, openpyxl read-only and the streaming .NET readers read both.
+    - POI's event API read them from a file once its limits were raised.
+    - From a stream, POI can't read the stored one with any setting: Commons Compress holds a stored entry with a descriptor in a Java array, under 2 GiB.
+- **On the findings** (2026-11-23, the user's choice, both as recommended): a follow-up before W3.
+  - **A stored entry on a stream that seeks** has its real CRC and sizes patched into its local header after its data: the twins' shape, which every reader took. Unseekable streams keep the streamed shape.
+  - **When any of an entry's central fields overflows,** the extra holds all three, with the three central fields all ones.
+  - Alternatives:
+    - leave POI's case to the guide;
+    - record LibreOffice's as its bug, since only packages past 4 GiB have it.
+- **The follow-up** (agent Z in a worktree at `33779549`, `followup\z\notes.md`, `changes.patch`):
+  - **The patch:**
+    - A stored entry past one buffer on a stream that seeks writes its local header at the switch, without bit 3 or an extra, its CRC and sizes 0.
+    - Its data goes straight through, as step 7's write-through does.
+    - On close it seeks to the header, writes the real CRC and sizes (12 bytes) and seeks back to the end. There is no descriptor.
+    - Sync calls patch with `Write` and async calls with `WriteAsync`; a failed seek or patch faults the writer.
+  - **Past `Max32`** (recommendation 1), its sizes don't fit the header: the close patches only the version and flags (bit 3, version 45, 4 bytes), and the 24-byte descriptor follows. That is the probe's `z-desc8-noextra`.
+  - **Full central extras:** 28 bytes, in APPNOTE's order.
+  - **Unchanged:** whole entries; deflated entries on every stream (recommendation 2); everything on unseekable streams; local Zip64 extras and the end records.
+  - **"Same bytes"** now holds for the same parts, levels, runtime and stream kind. Sync and async still give the same bytes.
+  - **Seeking:** a buffered stream may write its own buffer as it seeks. .NET's `FileStream` does so synchronously, once per patched entry, even under async calls. That is the stream's write, not the writer's; the guide's item below says so.
+- **Its tests:**
+  - **The pins:** the 13 pinned packages (182 cases) were all stored and seekable. The theory gained the stream kind (364 cases).
+    - At `33779549` the old pins held on both kinds.
+    - After the change, the 9 seekable packages with an entry past one buffer changed, plus `Zip64 limits` on both kinds (the full extras).
+    - They were pinned again after `ZipStructure.AssertValid`, `ZipArchive` and WindowsBase checks, the same on all three runtimes.
+    - **A wider comparison** of 256 packages changed exactly the stored seekable ones with an entry past one buffer, and those with a central Zip64 extra.
+  - **New tests:**
+    - the patch's bytes, seeks and mode;
+    - writing from position 100;
+    - a failure at each of the five points of a patch;
+    - the fallback below, at and past the limit;
+    - every combination of overflows for the full extra.
+  - **`Zip64Tests`** (on demand), on net10.0 and net48: a stored sheet past 4 GiB on a file takes the fallback, and the parts after it, past 4 GiB, take full extras; WindowsBase reads every part.
+  - **The suites:**
+    - the Excel suite: net10.0 6,769 passed (5 skipped), net8.0 6,750 (13), net48 6,624 (17);
+    - core's: 1,401, 1,396 and 936;
+    - Linq's: 112, 110 and 101;
+    - AOT publishes with no warnings, and runs.
+  - **Mutation check:** 15 bugs planted in the new code, all caught, among them:
+    - patched on any stream, or never;
+    - the patch 4 bytes early, its CRC 0, no seek back, counted as written, always synchronous, not faulting;
+    - the fallback only past the limit, at version 20, or sizes patched instead;
+    - the extra's sizes swapped, its compressed field only when it overflows, the offset not counted.
+- **X1 again on the follow-up** (agent H's harness, `notes-h.md` §7, `out2\matrix.md`; Excel 10:12-10:13 and 10:18-10:21):
+  - **The set:** 56 packages and 12 twins. Stored packages are written to both stream kinds now, since their bytes differ; 36 kept the first run's bytes.
+  - **Results:** 1,491 ok, 21 FAILED, no different values. Excel, LibreOffice, GridCraft, POI from a file and its event API, openpyxl, pandas, and every .NET reader but EPPlus read all 56.
+  - **POI from a stream** now reads every stored package written to a stream that seeks.
+    - It still refuses the 12 written to one that doesn't, as the plan expected.
+    - It also refuses the 3 seekable variants whose lowered `Max32` forces the fallback.
+  - **LibreOffice** reads every Zip64 variant.
+  - **EPPlus 4.5** refuses the same 3 fallback variants on both runtimes: `Bad signature`. It takes a 16-byte descriptor without a local Zip64 extra.
+    - Recommendation 1 expected this: the probe found EPPlus alone refusing `z-desc8-noextra`.
+    - At the real limits that shape appears only past 4 GiB, where EPPlus, which reads in memory, isn't run.
+  - **The real three** (deflated, stored to a file, stored through an unseekable stream) read as in the first run: Excel at about 16.3 GB, openpyxl read-only, and the streaming .NET readers on both runtimes.
+- **Indicative timings** (`followup\quick.sh`, `followup\quick\`, `timings.txt`, `load.txt`):
+  - **How they ran:** alone on the machine from 10:27 to 11:07, each process after 30 s under 8% CPU, with the load under 4.3%. QuickRunner on core 4 timed `33779549` against the follow-up, in rounds of `33779549`, the follow-up, the follow-up and `33779549`, then reversed.
+  - **The benchmarks write to a stream that can't seek** (`CountingStream`), so they time the unchanged path (.NET 10, ms, medians of four runs):
+
+    | | `33779549` | Follow-up | Change |
+    |---|---:|---:|---:|
+    | Package assets `WriteStored` | 570 | 573 | +0.7% |
+    | Orders `WriteStored` | 532 | 537 | +1.1% |
+    | Package assets `Write` | 890 | 894 | +0.4% |
+    | Orders `Write` | 1,221 | 1,224 | +0.2% |
+    | SpreadCheetah's `Write` (control), package assets | 712 | 710 | −0.2% |
+    | SpreadCheetah's `Write` (control), orders | 1,000 | 1,012 | +1.2% |
+
+    - **The halves:** the package assets' `WriteStored` is +0.7% and −0.3%, and the orders' +0.1% and +1.1%. The orders' control, which runs none of our code, moved +0.9% and +1.4%, so these runs' noise is about 1%.
+    - **The stored zip stage:** 18.15 → 18.19 ms on the package assets and 7.33 → 7.41 on the orders. `ZipArchive`'s, in the same processes, moved −0.1% and +0.4%.
+  - **The patch, on a stream that seeks** (`followup\seekbench\`, a scratch console):
+    - **What it does:** writes the package assets' million rows stored, alternately to a discarding stream that seeks and to one that doesn't, in one process. 15 rounds after 2 warm-ups, on core 4, four processes per tree.
+    - **In the follow-up,** the seekable write (patched, 44 bytes smaller) against the unseekable one (streamed): +0.15%, −0.1%, −0.1% and −0.1%, each a median of 15.
+    - **At `33779549`,** where both are streamed: −0.05%, −0.4%, +0.2% and +0.2%.
+    - **The seekable write against `33779549`'s:** 0.0% in the first half's processes and +0.3% in the second's.
+    - So the patch's cost, a seek there and back and 12 bytes an entry, is below what these runs resolve.
+  - **Against the plan:** within noise, as it expected.
+- **Found:**
+  - **The design's probe hadn't covered these two shapes.** Stored entries with descriptors and offset-only central extras weren't among its zip probes. This window is what found them.
+  - **POI from a stream is the limit for stored packages.** Past 2 GiB it reads no stored entry with a descriptor. Below that, on a stream that can't seek, it needs `ZipSecureFile.setMinInflateRatio(0)`, and the guide says so.
+  - **A probe-side lock:** EPPlus 4.5 leaves its file open when its constructor throws, and `System.IO.Packaging` opens files exclusively. The harness reran those readers alone.
+- **For the guide** (step 12, added to "Changes elsewhere"):
+  - `NoCompression` to a stream that can't seek, through POI from a stream;
+  - a buffered stream's own synchronous write as the patch seeks.
+- **On approval** (2026-11-23, as recommended): committed as built, the follow-up's code with the plan. Next in the order of work is W3, with its own plan.
 
 ### Phase 10: other formats (XL)
 

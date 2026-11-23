@@ -2,9 +2,9 @@ namespace CsvHelper.Excel.Tests.Package;
 
 /// <summary>
 /// A stream that a package is written to, over memory, for the zip writer's tests: it records each write's size, whether
-/// it was asynchronous and whether its bytes were a watched array's own, can refuse synchronous or asynchronous calls,
-/// can fail at its nth write, its flush or its dispose, and can cancel a token as its nth write starts. It seeks or not,
-/// as made.
+/// it was asynchronous, whether its bytes were a watched array's own and where it started, and each seek; can refuse
+/// synchronous or asynchronous calls; can fail at its nth write (with its own exception, or as canceled), its nth seek,
+/// its flush or its dispose; and can cancel a token as its nth write starts. It seeks or not, as made.
 /// </summary>
 /// <param name="seekable">Whether it seeks.</param>
 internal sealed class ZipTestStream(bool seekable = true) : Stream
@@ -39,6 +39,15 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <summary>The write that throws <see cref="Failure"/>, from 1; it and every write after it throw.</summary>
 	public int FailAt { get; init; } = int.MaxValue;
 
+	/// <summary>
+	/// Whether the writes from <see cref="FailAt"/> on throw <see cref="Canceling"/> rather than <see cref="Failure"/>,
+	/// as a stream canceled by its own means does, whatever the write's token.
+	/// </summary>
+	public bool FailCanceled { get; init; }
+
+	/// <summary>The seek that throws <see cref="Failure"/>, from 1 as <see cref="Seeks"/> counts them; it and every seek after it throw.</summary>
+	public int FailSeekAt { get; init; } = int.MaxValue;
+
 	/// <summary>Whether a flush throws <see cref="Failure"/>.</summary>
 	public bool FailFlush { get; init; }
 
@@ -48,11 +57,20 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <summary>The exception the stream throws when it fails.</summary>
 	public IOException Failure { get; } = new("The test stream failed.");
 
+	/// <summary>The exception the stream throws when its write is canceled (<see cref="FailCanceled"/>).</summary>
+	public OperationCanceledException Canceling { get; } = new("The test stream's write was canceled.");
+
 	/// <summary>
 	/// Each write that reached the stream, in order: its size, whether it was asynchronous, and whether its bytes were
 	/// <see cref="Watched"/>'s own.
 	/// </summary>
 	public List<(int Size, bool Async, bool Watched)> Writes { get; } = [];
+
+	/// <summary>Where each write of <see cref="Writes"/> started: the stream's position, in order.</summary>
+	public List<long> Starts { get; } = [];
+
+	/// <summary>Each seek tried, those that threw included: the position sought, from the stream's start.</summary>
+	public List<long> Seeks { get; } = [];
 
 	/// <summary>The writes tried, those that threw included.</summary>
 	public int Attempts { get; private set; }
@@ -78,11 +96,11 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <inheritdoc/>
 	public override long Length => seekable ? inner.Length : throw new NotSupportedException();
 
-	/// <inheritdoc/>
+	/// <summary>The position; setting it is a seek (<see cref="Seeks"/>).</summary>
 	public override long Position
 	{
 		get => seekable ? inner.Position : throw new NotSupportedException();
-		set => inner.Position = seekable ? value : throw new NotSupportedException();
+		set => MoveTo(value);
 	}
 
 	/// <summary>The bytes written.</summary>
@@ -127,8 +145,22 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <inheritdoc/>
 	public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException();
 
-	/// <inheritdoc/>
-	public override long Seek(long offset, SeekOrigin origin) => seekable ? inner.Seek(offset, origin) : throw new NotSupportedException();
+	/// <summary>Seeks, recording the position sought (<see cref="Seeks"/>), and failing from <see cref="FailSeekAt"/> on.</summary>
+	/// <param name="offset">The offset from the origin.</param>
+	/// <param name="origin">The origin.</param>
+	/// <returns>The new position.</returns>
+	public override long Seek(long offset, SeekOrigin origin)
+	{
+		var position = origin switch
+		{
+			SeekOrigin.Begin => offset,
+			SeekOrigin.Current => inner.Position + offset,
+			_ => inner.Length + offset,
+		};
+		MoveTo(position);
+
+		return position;
+	}
 
 	/// <inheritdoc/>
 	public override void SetLength(long value) => throw new NotSupportedException();
@@ -194,9 +226,28 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 		}
 	}
 
+	/// <summary>Moves to a position, on a stream that seeks: a seek, recorded, failing from <see cref="FailSeekAt"/> on.</summary>
+	/// <param name="position">The position, from the stream's start.</param>
+	/// <exception cref="NotSupportedException">The stream doesn't seek.</exception>
+	private void MoveTo(long position)
+	{
+		if (!seekable)
+		{
+			throw new NotSupportedException();
+		}
+
+		Seeks.Add(position);
+		if (Seeks.Count >= FailSeekAt)
+		{
+			throw Failure;
+		}
+
+		inner.Position = position;
+	}
+
 	/// <summary>
 	/// Counts a write, refusing it if it is synchronous or asynchronous and those are forbidden, or failing it from
-	/// <see cref="FailAt"/> on.
+	/// <see cref="FailAt"/> on (as canceled, with <see cref="FailCanceled"/>).
 	/// </summary>
 	/// <param name="count">Its size.</param>
 	/// <param name="async">Whether it is asynchronous.</param>
@@ -216,10 +267,11 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 		Attempts++;
 		if (Attempts >= FailAt)
 		{
-			throw Failure;
+			throw FailCanceled ? (Exception)Canceling : Failure;
 		}
 
 		Writes.Add((count, async, watched));
+		Starts.Add(inner.Position);
 	}
 
 	/// <summary>

@@ -8,33 +8,44 @@ using System.Threading.Tasks;
 namespace CsvHelper.Excel;
 
 /// <summary>
-/// Writes a zip one entry at a time, forward only, so that a stream that can't seek works too, and the same bytes go to
-/// any stream (<see cref="ZipRecords"/>), however an entry's data is cut into writes. An entry's data goes into pooled
-/// buffers of <see cref="BufferSize"/> bytes and reaches the stream in whole buffers, but for its last. An entry closed
-/// with at most one buffer of data and sizes within 32 bits is written whole: its local header holds its CRC and sizes.
-/// Any other entry is streamed, its local header written as its data passes one buffer: bit 3, version 4.5, CRC and sizes
-/// 0 with a Zip64 extra of zeros, and a signed descriptor with 8-byte sizes after the data. A stored entry, once
-/// streamed, writes all its buffers hold, the last too, and from then on each of its writes reaches the stream as one
-/// write of the caller's bytes, uncopied. The central directory, kept in pooled buffers until the end, holds every
-/// entry's real sizes and offset, with Zip64 fields only where they overflow (<see cref="ZipLimits"/>), and so do the end
-/// records.
+/// Writes a zip one entry at a time, forward only but for one patch per large stored entry on a stream that seeks, so
+/// that a stream that can't seek works too (<see cref="ZipRecords"/>), however an entry's data is cut into writes. An
+/// entry's data goes into pooled buffers of <see cref="BufferSize"/> bytes and reaches the stream in whole buffers, but
+/// for its last. An entry closed with at most one buffer of data and sizes within 32 bits is written whole: its local
+/// header holds its CRC and sizes. A deflated entry past one buffer, and on a stream that can't seek a stored one too, is
+/// streamed, its local header written as its data passes one buffer: bit 3, version 4.5, CRC and sizes 0 with a Zip64
+/// extra of zeros, and a signed descriptor with 8-byte sizes after the data. A stored entry past one buffer on a stream
+/// that seeks is patched: its local header, written as its data passes one buffer, has no bit 3 and no extra field, and
+/// CRC and sizes 0, which closing it overwrites with the real ones, so that no descriptor follows, as readers that check a
+/// stored entry's sizes before its data (POI from a stream) need. Its sizes at or past <see cref="ZipLimits.Max32"/> don't
+/// fit the header, so closing it then patches the header to the streamed form (bit 3, version 4.5, CRC and sizes 0, no
+/// extra field), and the descriptor follows. A stored entry past one buffer writes all its buffers hold, the last too,
+/// and from then on each of its writes reaches the stream as one write of the caller's bytes, uncopied. The central
+/// directory, kept in pooled buffers until the end, holds every entry's real sizes and offset; when any of an entry's
+/// three reaches <see cref="ZipLimits.Max32"/>, all three are all ones and in its Zip64 extra. The end records hold the
+/// directory's, with Zip64 fields only where they overflow (<see cref="ZipLimits"/>).
 /// </summary>
 /// <remarks>
 /// <para>
+/// A package's bytes depend only on its parts, their order and level, the runtime's deflate output, and whether the
+/// stream seeks: the same for the same, written synchronously or asynchronously.
+/// </para>
+/// <para>
 /// A synchronous call writes the stream only with <c>Write</c> and <see cref="Stream.Flush"/>, an asynchronous one only
 /// with <c>WriteAsync</c> and <see cref="Stream.FlushAsync()"/>, on every target: the deflater writes into memory, and
-/// only the buffers, a streamed stored entry's writes, headers, descriptors and directory reach the stream. The buffers,
-/// headers, descriptors and directory are written from arrays (<see cref="Stream.Write(byte[], int, int)"/>), and a
-/// streamed stored entry's writes from spans and memory where the target's streams take them, else from arrays.
+/// only the buffers, a large stored entry's writes, headers, patches, descriptors and directory reach the stream. A patch
+/// seeks the stream (<see cref="Stream.Seek"/>) to the header and back, in either mode. The buffers, headers, patches,
+/// descriptors and directory are written from arrays (<see cref="Stream.Write(byte[], int, int)"/>), and a large stored
+/// entry's writes from spans and memory where the target's streams take them, else from arrays.
 /// </para>
 /// <para>
 /// Offsets count from the stream's position when the writer is made, on a stream that seeks, and from 0 on one that
-/// can't, as <see cref="ZipArchive"/> counts them.
+/// can't, as <see cref="ZipArchive"/> counts them. Whether the stream seeks is taken then too.
 /// </para>
 /// <para>
-/// Once a write, flush or dispose of the stream throws, the writer is faulted: its pooled buffers are returned, and from
-/// then on opening, writing and closing entries and disposing it write nothing and throw nothing, so that a dispose
-/// doesn't replace the stream's exception. The package is left without its directory.
+/// Once a write, seek, flush or dispose of the stream throws, the writer is faulted: its pooled buffers are returned,
+/// and from then on opening, writing and closing entries and disposing it write nothing and throw nothing, so that a
+/// dispose doesn't replace the stream's exception. The package is left without its directory.
 /// </para>
 /// </remarks>
 internal sealed class ZipWriter
@@ -89,7 +100,8 @@ internal sealed class ZipWriter
 		this.leaveOpen = leaveOpen;
 		Level = level;
 		Limits = limits;
-		start = stream.CanSeek ? stream.Position : 0;
+		Seekable = stream.CanSeek;
+		start = Seekable ? stream.Position : 0;
 		directory = new ZipBuffers(this);
 	}
 
@@ -99,7 +111,13 @@ internal sealed class ZipWriter
 	/// <summary>Where the package's fields overflow into Zip64's.</summary>
 	public ZipLimits Limits { get; }
 
-	/// <summary>Whether a write, flush or dispose of the stream has thrown, so that the writer writes nothing more.</summary>
+	/// <summary>
+	/// Whether the stream seeks, as the writer was made: a stored entry past one buffer is then patched, its CRC and sizes
+	/// written into its local header after its data (<see cref="PatchLocalHeaderAsync"/>), rather than streamed.
+	/// </summary>
+	public bool Seekable { get; }
+
+	/// <summary>Whether a write, seek, flush or dispose of the stream has thrown, so that the writer writes nothing more.</summary>
 	public bool Faulted { get; private set; }
 
 	/// <summary>The offset of the next byte written: the package's start and the bytes written so far.</summary>
@@ -213,6 +231,28 @@ internal sealed class ZipWriter
 		return WriteAsync(scratch, length, async, cancellationToken);
 	}
 
+	/// <summary>
+	/// Patches a patched entry's local header as it closes: its real CRC and sizes
+	/// (<see cref="ZipRecords.LocalSizes"/>), or, once it has fallen back to the streamed form, its version needed and
+	/// flags (<see cref="ZipRecords.LocalVersion"/>).
+	/// </summary>
+	/// <param name="entry">The entry, closed, its CRC, sizes, version and flags set.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <returns>A task that completes when the header is patched and the stream is back at the package's end.</returns>
+	internal ValueTask PatchLocalHeaderAsync(ZipEntryStream entry, bool async)
+	{
+		if ((entry.Flags & ZipRecords.Streamed) != 0)
+		{
+			var length = ZipRecords.LocalVersion(Scratch(ZipRecords.LocalVersionLength), entry);
+
+			return PatchAsync(entry.Offset + ZipRecords.LocalVersionAt, length, async);
+		}
+
+		var sizes = ZipRecords.LocalSizes(Scratch(ZipRecords.LocalCrcLength), entry);
+
+		return PatchAsync(entry.Offset + ZipRecords.LocalCrcAt, sizes, async);
+	}
+
 	/// <summary>Writes a streamed entry's descriptor.</summary>
 	/// <param name="entry">The entry, closed.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
@@ -274,8 +314,8 @@ internal sealed class ZipWriter
 
 #if NET || NETSTANDARD2_1_OR_GREATER
 	/// <summary>
-	/// Writes bytes to the stream synchronously, in one write, faulting the writer if the stream throws: a streamed stored
-	/// entry's data, written through.
+	/// Writes bytes to the stream synchronously, in one write, faulting the writer if the stream throws: a stored entry's
+	/// data past one buffer, written through.
 	/// </summary>
 	/// <param name="bytes">The bytes.</param>
 	internal void Write(ReadOnlySpan<byte> bytes)
@@ -295,8 +335,8 @@ internal sealed class ZipWriter
 	}
 #else
 	/// <summary>
-	/// Writes bytes to the stream synchronously, in one write, faulting the writer if the stream throws: a streamed stored
-	/// entry's data, written through. The target's streams take no spans, so the caller's array is written.
+	/// Writes bytes to the stream synchronously, in one write, faulting the writer if the stream throws: a stored entry's
+	/// data past one buffer, written through. The target's streams take no spans, so the caller's array is written.
 	/// </summary>
 	/// <param name="buffer">The bytes.</param>
 	/// <param name="offset">The first.</param>
@@ -319,9 +359,9 @@ internal sealed class ZipWriter
 #endif
 
 	/// <summary>
-	/// Writes bytes to the stream asynchronously, in one write, faulting the writer if the stream throws (a canceled write
-	/// too): a streamed stored entry's data, written through. Where the target's streams take no memory, the caller's
-	/// array is written (<c>WriteAsync(byte[], int, int, CancellationToken)</c>).
+	/// Writes bytes to the stream asynchronously, in one write, faulting the writer if the stream throws (a canceled
+	/// write too): a stored entry's data past one buffer, written through. Where the target's streams take no memory,
+	/// the caller's array is written (<c>WriteAsync(byte[], int, int, CancellationToken)</c>).
 	/// </summary>
 	/// <param name="bytes">The bytes.</param>
 	/// <param name="cancellationToken">Cancels the write.</param>
@@ -340,6 +380,40 @@ internal sealed class ZipWriter
 		}
 
 		written += bytes.Length;
+	}
+
+	/// <summary>
+	/// Overwrites bytes already written, on a stream that seeks: seeks to them, writes the scratch buffer's first bytes
+	/// over them (with <c>WriteAsync</c> or <see cref="Stream.Write(byte[], int, int)"/>, as any write), and seeks back
+	/// to the package's end, where the next write goes. It writes nothing new, so <see cref="Position"/> stays. A seek
+	/// or write that throws faults the writer.
+	/// </summary>
+	/// <param name="position">The stream's position of the first byte overwritten.</param>
+	/// <param name="count">How many bytes.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <returns>A task that completes when the bytes are written and the stream is back at the end.</returns>
+	private async ValueTask PatchAsync(long position, int count, bool async)
+	{
+		try
+		{
+			stream.Seek(position, SeekOrigin.Begin);
+			if (async)
+			{
+				await stream.WriteAsync(new ReadOnlyMemory<byte>(scratch, 0, count), CancellationToken.None).ConfigureAwait(false);
+			}
+			else
+			{
+				stream.Write(scratch, 0, count);
+			}
+
+			stream.Seek(Position, SeekOrigin.Begin);
+		}
+		catch
+		{
+			Fault();
+
+			throw;
+		}
 	}
 
 	/// <summary>

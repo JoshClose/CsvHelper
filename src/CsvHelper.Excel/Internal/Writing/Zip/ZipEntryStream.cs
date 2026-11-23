@@ -9,12 +9,13 @@ namespace CsvHelper.Excel;
 /// <summary>
 /// An entry's stream, write-only: what is written is deflated (or stored, at <see cref="CompressionLevel.NoCompression"/>)
 /// into the entry's pooled buffers, which reach the package's stream whole as each fills and is followed by more data. A
-/// stored entry is held so only until it is streamed, as its data passes one buffer: it then writes all it holds, and
+/// stored entry is held so only until its data passes one buffer: it then writes its local header and all it holds, and
 /// from then on each write goes straight to the package's stream, as one write of the caller's bytes, uncopied
-/// (<see cref="WritesThrough"/>). Closing it writes the rest, the descriptor of a streamed entry, and adds the entry to the
-/// central directory (<see cref="ZipWriter"/>). Synchronous calls write the package's stream synchronously, asynchronous
-/// ones asynchronously. <see cref="Flush"/> does nothing: flushing the deflater would change the bytes. Once the writer
-/// is faulted, writing and closing do nothing.
+/// (<see cref="WritesThrough"/>). Closing it writes the rest, patches a patched entry's local header
+/// (<see cref="Patched"/>), writes the descriptor of a streamed entry, and adds the entry to the central directory
+/// (<see cref="ZipWriter"/>). Synchronous calls write the package's stream synchronously, asynchronous ones
+/// asynchronously. <see cref="Flush"/> does nothing: flushing the deflater would change the bytes. Once the writer is
+/// faulted, writing and closing do nothing.
 /// </summary>
 internal sealed class ZipEntryStream : Stream
 #if !NET && !NETSTANDARD2_1_OR_GREATER
@@ -71,12 +72,24 @@ internal sealed class ZipEntryStream : Stream
 
 	/// <summary>
 	/// The general purpose flags: bits 1-2 of the deflate level (<c>0x0006</c> at <see cref="CompressionLevel.Fastest"/>,
-	/// <c>0x0002</c> at <c>SmallestSize</c>), and bit 3 for a streamed entry. Set with the local header.
+	/// <c>0x0002</c> at <c>SmallestSize</c>), and bit 3 for a streamed entry. Set with the local header, and bit 3 added as
+	/// a patched entry whose sizes don't fit its header closes.
 	/// </summary>
 	public ushort Flags { get; private set; }
 
-	/// <summary>The version needed to extract: 45 for a streamed entry or one past the 32-bit offsets, else 20. Set with the local header.</summary>
+	/// <summary>
+	/// The version needed to extract: 45 for a streamed entry or one past the 32-bit offsets, else 20. Set with the local
+	/// header, and to 45 as a patched entry whose sizes don't fit its header closes.
+	/// </summary>
 	public ushort VersionNeeded { get; private set; }
+
+	/// <summary>
+	/// Whether the local header is patched after the data, rather than streamed: a stored entry's, past one buffer, on a
+	/// stream that seeks (<see cref="ZipWriter.Seekable"/>). Its header is written without bit 3 or an extra field, CRC and
+	/// sizes 0, and closing the entry writes its real CRC and sizes into it, or, when a size reaches
+	/// <see cref="ZipLimits.Max32"/>, bit 3 and version 4.5, for the descriptor after the data. Set with the local header.
+	/// </summary>
+	public bool Patched { get; private set; }
 
 	/// <summary>The offset of the local header. Set with it.</summary>
 	public long Offset { get; private set; }
@@ -110,22 +123,22 @@ internal sealed class ZipEntryStream : Stream
 	}
 
 	/// <summary>
-	/// Whether writes go straight to the package's stream, uncopied: a stored entry's, once it is streamed (its local
-	/// header written while it is open, as its data passed one buffer), which holds nothing from then on.
+	/// Whether writes go straight to the package's stream, uncopied: a stored entry's, once its data has passed one buffer
+	/// (its local header written while it is open, patched or streamed), which holds nothing from then on.
 	/// </summary>
 	private bool WritesThrough => stored && headerWritten;
 
 	/// <summary>
-	/// Does nothing: the data reaches the package's stream in whole buffers, or as it is written once a stored entry is
-	/// streamed, and the deflater isn't flushed.
+	/// Does nothing: the data reaches the package's stream in whole buffers, or as it is written once a stored entry's data
+	/// has passed one buffer, and the deflater isn't flushed.
 	/// </summary>
 	public override void Flush()
 	{
 	}
 
 	/// <summary>
-	/// Does nothing: the data reaches the package's stream in whole buffers, or as it is written once a stored entry is
-	/// streamed, and the deflater isn't flushed.
+	/// Does nothing: the data reaches the package's stream in whole buffers, or as it is written once a stored entry's data
+	/// has passed one buffer, and the deflater isn't flushed.
 	/// </summary>
 	/// <param name="cancellationToken">Not used.</param>
 	/// <returns>A completed task.</returns>
@@ -237,9 +250,10 @@ internal sealed class ZipEntryStream : Stream
 	}
 
 	/// <summary>
-	/// Closes the entry: finishes the deflater, writes the local header if it waits, the rest of the data and a streamed
-	/// entry's descriptor, and adds the entry to the central directory. The pooled buffers return, whatever happens.
-	/// Calling it again does nothing, and so does closing an entry of a faulted writer.
+	/// Closes the entry: finishes the deflater, writes the local header if it waits and the rest of the data, patches a
+	/// patched entry's local header (<see cref="PatchHeaderAsync"/>), writes a streamed entry's descriptor, and adds the
+	/// entry to the central directory. The pooled buffers return, whatever happens. Calling it again does nothing, and so
+	/// does closing an entry of a faulted writer.
 	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <returns>A task that completes when the entry is closed.</returns>
@@ -273,6 +287,11 @@ internal sealed class ZipEntryStream : Stream
 			}
 
 			data.Clear();
+			if (Patched)
+			{
+				await PatchHeaderAsync(async).ConfigureAwait(false);
+			}
+
 			if ((Flags & ZipRecords.Streamed) != 0)
 			{
 				await writer.WriteDescriptorAsync(this, async).ConfigureAwait(false);
@@ -481,8 +500,8 @@ internal sealed class ZipEntryStream : Stream
 
 	/// <summary>
 	/// Writes the buffers that are full and followed by more data, after the local header the first time, so that the
-	/// entry is streamed: it has more than one buffer of data. A stored entry writes the rest it holds too, and from then
-	/// on writes through (<see cref="WriteBuffersAsync"/>).
+	/// entry is streamed (or patched): it has more than one buffer of data. A stored entry writes the rest it holds
+	/// too, and from then on writes through (<see cref="WriteBuffersAsync"/>).
 	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
@@ -498,9 +517,10 @@ internal sealed class ZipEntryStream : Stream
 	}
 
 	/// <summary>
-	/// Writes the first buffers, which are full, after the streamed local header the first time. A stored entry, streamed
-	/// from here on, writes its last buffer too, full or not, and holds nothing more: its later writes go straight to the
-	/// package's stream (<see cref="WritesThrough"/>).
+	/// Writes the first buffers, which are full, after the local header the first time: streamed, or patched for a stored
+	/// entry on a stream that seeks (<see cref="Patched"/>). A stored entry, past one buffer from here on, writes its last
+	/// buffer too, full or not, and holds nothing more: its later writes go straight to the package's stream
+	/// (<see cref="WritesThrough"/>).
 	/// </summary>
 	/// <param name="full">How many: all but the last.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
@@ -510,7 +530,8 @@ internal sealed class ZipEntryStream : Stream
 	{
 		if (!headerWritten)
 		{
-			await WriteHeaderAsync(true, async, cancellationToken).ConfigureAwait(false);
+			Patched = stored && writer.Seekable;
+			await WriteHeaderAsync(!Patched, async, cancellationToken).ConfigureAwait(false);
 		}
 
 		for (var i = 0; i < full; i++)
@@ -532,8 +553,11 @@ internal sealed class ZipEntryStream : Stream
 		}
 	}
 
-	/// <summary>Writes the local header, at the package's position, which becomes the entry's offset.</summary>
-	/// <param name="streamed">Whether the entry is streamed, rather than whole.</param>
+	/// <summary>
+	/// Writes the local header, at the package's position, which becomes the entry's offset: version 4.5 for a streamed
+	/// entry, or at an offset at or past <see cref="ZipLimits.Max32"/>, else 2.0.
+	/// </summary>
+	/// <param name="streamed">Whether the entry is streamed, rather than whole or patched.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when the header is written.</returns>
@@ -545,6 +569,26 @@ internal sealed class ZipEntryStream : Stream
 		headerWritten = true;
 
 		return writer.WriteLocalHeaderAsync(this, async, cancellationToken);
+	}
+
+	/// <summary>
+	/// Patches the local header of a patched entry as it closes, its data written: its real CRC and sizes when both sizes
+	/// are below <see cref="ZipLimits.Max32"/>; otherwise they don't fit the header, which takes the streamed form (bit 3,
+	/// version 4.5, its CRC and sizes left 0, still with no extra field), and the descriptor follows the data. Either way
+	/// the stream is back at the package's end.
+	/// </summary>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <returns>A task that completes when the header is patched.</returns>
+	private ValueTask PatchHeaderAsync(bool async)
+	{
+		var limits = writer.Limits;
+		if (CompressedSize >= limits.Max32 || UncompressedSize >= limits.Max32)
+		{
+			Flags = (ushort)(Flags | ZipRecords.Streamed);
+			VersionNeeded = ZipRecords.Version45;
+		}
+
+		return writer.PatchLocalHeaderAsync(this, async);
 	}
 
 	/// <summary>

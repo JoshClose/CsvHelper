@@ -5,10 +5,11 @@ namespace CsvHelper.Excel.Tests.Package;
 
 /// <summary>
 /// A stream that fails mid-package: at a local header, in the middle of a streamed entry (a stored one's writes straight
-/// through too), at a descriptor, at the directory, at the end records, at its flush or at its dispose; or that cancels a
-/// write it was given. The stream's exception reaches the caller; from then on the writer writes nothing and throws
-/// nothing, whatever is opened, written, closed or disposed, so that a dispose doesn't replace the stream's exception;
-/// and every pooled buffer returns.
+/// through too), at a descriptor, at a stored entry's patch (its seek to the header, its write, its seek back), at the
+/// directory, at the end records, at its flush or at its dispose; or that cancels a write it was given, or a patch. The
+/// stream's exception reaches the caller; from then on the writer writes and seeks nothing and throws nothing, whatever
+/// is opened, written, closed or disposed, so that a dispose doesn't replace the stream's exception; and every pooled
+/// buffer returns.
 /// </summary>
 public class ZipFailureTests
 {
@@ -34,6 +35,27 @@ public class ZipFailureTests
 	{
 		var data = new TheoryData<string, bool, bool>();
 		foreach (var point in new[] { "streamed header", "held buffer", "held rest", "first write through", "later write through", "descriptor" })
+		{
+			foreach (var async in new[] { false, true })
+			{
+				data.Add(point, async, false);
+				data.Add(point, async, true);
+			}
+		}
+
+		return data;
+	}
+
+	/// <summary>
+	/// Where a stored package's patch fails on a stream that seeks: its seek to the header, its write (failing, or
+	/// canceled by the stream), its seek back, and past the limit its write of the streamed form; synchronously and
+	/// asynchronously, leaving the stream open or not.
+	/// </summary>
+	/// <returns>The points, the modes, and whether the stream is left open.</returns>
+	public static TheoryData<string, bool, bool> PatchPoints()
+	{
+		var data = new TheoryData<string, bool, bool>();
+		foreach (var point in new[] { "seek to the header", "patch", "canceled patch", "seek back", "streamed form" })
 		{
 			foreach (var async in new[] { false, true })
 			{
@@ -158,6 +180,60 @@ public class ZipFailureTests
 	}
 
 	/// <summary>
+	/// A stored package's stream, which seeks, that fails at a patch of its stored entry past one buffer: at the seek to
+	/// its header, at the write of its CRC and sizes (failing, or canceled by the stream itself, since closing an entry
+	/// takes no token), at the seek back, and past the limit at the write of the streamed form. As for any write, the
+	/// stream's exception reaches the caller and faults the writer; from then on nothing more is written, sought or
+	/// thrown; every buffer returns, and the stream is disposed unless it was left open. A patch that fails or is canceled
+	/// takes nothing: the header keeps its zeros, and the package's position stays at the end of the data.
+	/// </summary>
+	/// <param name="point">Where the stream fails.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="leaveOpen">Whether the package leaves the stream open.</param>
+	/// <returns>A task that completes when the test is done.</returns>
+	[Theory]
+	[MemberData(nameof(PatchPoints))]
+	public async Task WritesNothingMoreOnceAPatchFails(string point, bool async, bool leaveOpen)
+	{
+		// Writes from 1: a.xml whole (header, data); b.bin's header and, as its third piece of 30,000 bytes passes one
+		// buffer, the full buffer and the 24,464 bytes held; then the other seven pieces straight through (6 to 12);
+		// then its patch: a seek to its header, its 12 bytes of CRC and sizes (13), a seek back. Past the limit, the
+		// patch is the 4 bytes of its version and flags (13), and its descriptor follows (14).
+		var limits = point == "streamed form" ? new ZipLimits(250_000, 0xFFFF) : ZipLimits.Default;
+		var (failAt, failSeekAt, size) = point switch
+		{
+			"seek to the header" => (int.MaxValue, 1, 0),
+			"seek back" => (int.MaxValue, 2, 0),
+			"streamed form" => (13, int.MaxValue, 4),
+			_ => (13, int.MaxValue, 12),
+		};
+		var stream = new ZipTestStream { FailAt = failAt, FailSeekAt = failSeekAt, FailCanceled = point == "canceled patch" };
+		var package = new PackageWriter(stream, leaveOpen, CompressionLevel.NoCompression, limits);
+		Stream? open = null;
+
+		var caught = await Record(() => WritePackageAsync(package, async, entry => open = entry));
+
+		Assert.Same(point == "canceled patch" ? stream.Canceling : stream.Failure, caught);
+		Assert.True(package.Zip.Faulted);
+		Assert.Equal(0, package.Zip.RentedBuffers);
+		Assert.Equal(point == "seek to the header" ? 12 : 13, stream.Attempts);
+		Assert.Equal(point == "seek back" ? 2 : 1, stream.Seeks.Count);
+		var header = stream.Starts[2];
+		var end = header + 30 + 5 + 300_000;
+		Assert.Equal((header + (point == "streamed form" ? 4 : 14), end), (stream.Seeks[0], package.Zip.Position));
+		var sizes = stream.ToArray().AsSpan((int)header + 14, 12).ToArray();
+		Assert.Equal(point == "seek back", sizes.Any(b => b != 0));
+		var seeks = stream.Seeks.Count;
+		await AssertWritesNothingMoreAsync(package, stream, open, async);
+		Assert.Equal(seeks, stream.Seeks.Count);
+		Assert.Equal(!leaveOpen, stream.Disposed);
+		if (size > 0)
+		{
+			Assert.Equal(size, await SizeOfWriteAsync(CompressionLevel.NoCompression, failAt, true, limits));
+		}
+	}
+
+	/// <summary>
 	/// An asynchronous write canceled while the stream writes it, after the entry has taken its bytes: the stream's
 	/// <see cref="OperationCanceledException"/> reaches the caller and faults the writer, as any failure of the stream
 	/// does, since the entry can't take its bytes back; from then on nothing more is written or thrown, every buffer
@@ -265,11 +341,13 @@ public class ZipFailureTests
 	/// </summary>
 	/// <param name="level">The compression.</param>
 	/// <param name="write">The write, from 1.</param>
+	/// <param name="seekable">Whether the stream seeks.</param>
+	/// <param name="limits">The limits, or <see langword="null"/> for the default ones.</param>
 	/// <returns>Its size.</returns>
-	private static async Task<int> SizeOfWriteAsync(CompressionLevel level, int write)
+	private static async Task<int> SizeOfWriteAsync(CompressionLevel level, int write, bool seekable = false, ZipLimits? limits = null)
 	{
-		var plain = new ZipTestStream(false);
-		await WritePackageAsync(new PackageWriter(plain, leaveOpen: false, level), true, _ => { });
+		var plain = new ZipTestStream(seekable);
+		await WritePackageAsync(new PackageWriter(plain, leaveOpen: false, level, limits ?? ZipLimits.Default), true, _ => { });
 
 		return plain.Writes[write - 1].Size;
 	}

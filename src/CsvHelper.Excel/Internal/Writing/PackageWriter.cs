@@ -8,14 +8,26 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// The zip package of a workbook being written, through the library's own zip writer (<see cref="ZipWriter"/>), which
-/// writes one entry at a time, forward only, so a stream that can't seek works too, and the same bytes to any stream.
-/// Every entry is deflated at the options' level, or stored at <see cref="CompressionLevel.NoCompression"/>, and dated
-/// 1980-01-01, as Excel dates its entries, so a workbook's bytes depend only on what is written and the runtime's deflate.
+/// writes one entry at a time, forward only, so a stream that can't seek works too. Every entry is deflated at the
+/// options' level, or stored at <see cref="CompressionLevel.NoCompression"/>, and dated 1980-01-01, as Excel dates its
+/// entries, so a workbook's bytes depend only on what is written, the runtime's deflate, and whether the stream seeks:
+/// the same for the same parts, levels, runtime and stream kind, written synchronously or asynchronously.
 /// </summary>
 /// <remarks>
+/// <para>
+/// A deflated entry past one buffer is streamed: its CRC and sizes follow its data in a descriptor. A stored entry past
+/// one buffer is streamed too on a stream that can't seek; on one that seeks, its CRC and sizes are patched into its
+/// local header after its data (one seek there and back), with no descriptor, since readers that check a stored entry's
+/// sizes before its data refuse one without them (POI from a stream). Past 4 GiB its sizes don't fit the header, which is
+/// then patched to the streamed form, and a descriptor follows. An entry whose sizes or offset need Zip64 has all three in
+/// its central Zip64 extra, as readers that take the extra's fields by position (LibreOffice) need.
+/// </para>
+/// <para>
 /// A synchronous call writes the stream only synchronously, and an asynchronous call only asynchronously, on every target:
-/// entries are deflated into pooled buffers, and only whole buffers, headers, descriptors and the directory reach the
-/// stream; and a stored entry, once past one buffer, writes the call's bytes straight through, in the call's mode.
+/// entries are deflated into pooled buffers, and only whole buffers, headers, patches, descriptors and the directory reach
+/// the stream; and a stored entry, once past one buffer, writes the call's bytes straight through, in the call's mode.
+/// Seeking for a patch is synchronous in either mode, as <see cref="Stream.Seek"/> is.
+/// </para>
 /// </remarks>
 internal sealed class PackageWriter
 {
@@ -73,7 +85,8 @@ internal sealed class PackageWriter
 	}
 
 	/// <summary>
-	/// Closes an entry's stream, which finishes the entry: the rest of its data, and its header's sizes or its descriptor.
+	/// Closes an entry's stream, which finishes the entry: the rest of its data, and its header's sizes (written with the
+	/// header, or patched into it) or its descriptor.
 	/// </summary>
 	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync"/>.</param>
 	/// <param name="async">Whether to close it asynchronously.</param>

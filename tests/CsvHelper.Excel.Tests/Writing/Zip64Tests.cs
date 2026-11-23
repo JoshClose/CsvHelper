@@ -28,8 +28,10 @@ public sealed class Zip64TheoryAttribute : TheoryAttribute
 /// A sheet whose XML is past 4 GiB, so that its entry needs Zip64 sizes, written through
 /// <see cref="ExcelWorkbookWriter.ToFile"/> (a stream that seeks) and to a stream that can't seek, synchronously and
 /// asynchronously: Phase 4's "Risks" (readers' support of Zip64 differs between targets). Stored too, where the sheet is
-/// written straight through and the parts after it start past 4 GiB, so that their offsets need Zip64 too. The
-/// package's zip is checked record by record, and on .NET Framework read whole by WindowsBase's packaging
+/// written straight through and the parts after it start past 4 GiB, so that their offsets need Zip64 too; to the file,
+/// the sheet's local header, written to be patched with its sizes, is patched to the streamed form instead, since its
+/// sizes don't fit it. Every entry past 4 GiB has all three of its fields in its central Zip64 extra. The package's zip
+/// is checked record by record, and on .NET Framework read whole by WindowsBase's packaging
 /// (<see cref="Written.CheckedFile"/>); it is read back with <see cref="ZipArchive"/>, whole, and with CsvHelper.Excel's
 /// reader. Each case writes about 4.6 GB of XML and reads it twice (three times on .NET Framework), so the tests run on
 /// demand (<see cref="Zip64TheoryAttribute"/>).
@@ -54,8 +56,10 @@ public class Zip64Tests(ITestOutputHelper output)
 
 	/// <summary>
 	/// Writes a million rows of four 1,100-character cells, then checks that the sheet's entry is past 4 GiB, that it
-	/// inflates to its stated length, that the zip's records follow the writer's rules and WindowsBase reads every part on
-	/// .NET Framework, and that CsvHelper.Excel reads every row back.
+	/// inflates to its stated length, that it is streamed (stored to the file: patched to the streamed form, without a
+	/// local extra field) with all three fields in its central Zip64 extra, and so is every entry after it when stored,
+	/// that the zip's records follow the writer's rules and WindowsBase reads every part on .NET Framework, and that
+	/// CsvHelper.Excel reads every row back.
 	/// </summary>
 	/// <param name="seekable">Whether the workbook is written through <see cref="ExcelWorkbookWriter.ToFile"/>, rather than to a stream that can't seek.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
@@ -102,13 +106,21 @@ public class Zip64Tests(ITestOutputHelper output)
 				output.WriteLine($"The sheet's XML is {sheet.Length:N0} bytes, {(stored ? "stored as" : "deflated to")} {sheet.CompressedLength:N0}, in a file of {new FileInfo(path).Length:N0}; written in {written.TotalSeconds:F1} s.");
 			}
 
-			if (stored)
+			using (var file = File.OpenRead(path))
 			{
-				using var file = File.OpenRead(path);
 				var entries = ZipStructure.Read(file).Entries;
-				var last = entries[entries.Count - 1];
-				Assert.True(last.Offset > uint.MaxValue, $"The last part starts at {last.Offset:N0}, not past 4 GiB.");
-				Assert.Equal(0xFFFFFFFFu, last.Central.OffsetField);
+				var index = entries.ToList().FindIndex(e => e.Name == "xl/worksheets/sheet1.xml");
+				var entry = entries[index];
+				var patched = stored && seekable;
+				Assert.Equal((true, patched, patched ? 0 : 20), (entry.Streamed, entry.Patched, entry.Local.Extra.Length));
+				Assert.Equal((0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 28), (entry.Central.UncompressedField, entry.Central.CompressedField, entry.Central.OffsetField, entry.Central.Extra.Length));
+				if (stored)
+				{
+					var last = entries[entries.Count - 1];
+					Assert.True(last.Offset > uint.MaxValue, $"The last part starts at {last.Offset:N0}, not past 4 GiB.");
+					Assert.All(entries.Skip(index + 1), e => Assert.Equal((0xFFFFFFFFu, 0xFFFFFFFFu, 0xFFFFFFFFu, 28), (e.Central.UncompressedField, e.Central.CompressedField, e.Central.OffsetField, e.Central.Extra.Length)));
+					output.WriteLine($"The sheet's local header: version {entry.Local.VersionNeeded}, flags 0x{entry.Local.Flags:X4}, extra {entry.Local.Extra.Length} bytes; {entries.Count - index - 1} entries after it, the last at {last.Offset:N0}.");
+				}
 			}
 
 			clock.Restart();

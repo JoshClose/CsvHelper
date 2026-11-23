@@ -71,6 +71,13 @@ internal sealed record ZipEntryRecords(string Name, ZipCentralHeader Central, Zi
 	/// <summary>Whether the entry is streamed: bit 3, sizes in a descriptor after its data.</summary>
 	public bool Streamed => (Central.Flags & 0x0008) != 0;
 
+	/// <summary>
+	/// Whether the entry's local header was patched after its data: a stored entry past one buffer, written to a stream
+	/// that seeks, without a local extra field. Its local header holds its CRC and sizes, without bit 3; or, when a size
+	/// reaches Max32, it was patched to the streamed form (bit 3, version 4.5, CRC and sizes 0), and a descriptor follows.
+	/// </summary>
+	public bool Patched => Central.Method == 0 && CompressedSize > ZipStructure.WholeData && Local.Extra.Length == 0;
+
 	/// <summary>Where the entry ends: after its data and descriptor.</summary>
 	public long End => Local.DataStart + CompressedSize + (Descriptor?.Length ?? 0);
 }
@@ -118,8 +125,9 @@ internal sealed record ZipLayout(long Length, ZipEndRecord End, Zip64Locator? Lo
 
 /// <summary>
 /// The zip structure of written packages, read by hand from their records and checked against the rules the own zip
-/// writer keeps (APPNOTE 6.3.10, and what Excel, WindowsBase and EPPlus refuse), and opened with System.IO.Packaging's
-/// <c>Package</c> on .NET Framework, the WindowsBase that the Open XML SDK and ClosedXML read with there.
+/// writer keeps (APPNOTE 6.3.10, and what Excel, WindowsBase, EPPlus, POI from a stream and LibreOffice refuse), and
+/// opened with System.IO.Packaging's <c>Package</c> on .NET Framework, the WindowsBase that the Open XML SDK and ClosedXML
+/// read with there.
 /// </summary>
 internal static class ZipStructure
 {
@@ -171,7 +179,9 @@ internal static class ZipStructure
 	/// <summary>
 	/// Checks a package's structure against every rule, with the limits it was written with: the end records read from
 	/// the end, then every central header, local header and descriptor, without reading the data (its sizes are the
-	/// central directory's). A broken rule fails with a message naming the entry, the field and the rule.
+	/// central directory's). A broken rule fails with a message naming the entry, the field and the rule. A package's
+	/// stored entries past one buffer are all patched (written to a stream that seeks) or all streamed with a local Zip64
+	/// extra (to one that can't), since a package is written to one stream.
 	/// </summary>
 	/// <param name="package">A stream that seeks, the package from its position 0.</param>
 	/// <param name="max32">The 32-bit limit the package was written with.</param>
@@ -184,12 +194,14 @@ internal static class ZipStructure
 		foreach (var entry in zip.Entries)
 		{
 			CheckCentral(entry, max32);
-			CheckLocal(entry);
+			CheckLocal(entry, max32);
 			Check(entry.Offset == expected, entry.Name, "local header offset", "each entry starts where the one before ends, counted from the package's first byte");
 			expected = entry.End;
 		}
 
 		Check(zip.DirectoryOffset == expected, "central directory", "offset", "the directory starts where the last entry ends");
+		var kinds = zip.Entries.Where(e => e.Central.Method == 0 && e.CompressedSize > WholeData).Select(e => e.Patched).Distinct().Count();
+		Check(kinds <= 1, "package", "stored entries past one buffer", "all patched (no local extra field), written to a stream that seeks, or all streamed with a local Zip64 extra, to one that can't");
 	}
 
 	/// <summary>
@@ -232,7 +244,8 @@ internal static class ZipStructure
 	/// <summary>
 	/// Reads a package's records: its end record (from the end, past a comment if it has one), its Zip64 locator and end
 	/// record if it has them, then each central header, the local header it points at and, for an entry with bit 3, the
-	/// descriptor after its data. A record that isn't where its signature should be fails.
+	/// descriptor after its data, whose sizes are read as 8 bytes each when the local header has a Zip64 extra or needs
+	/// version 4.5, as WindowsBase reads them. A record that isn't where its signature should be fails.
 	/// </summary>
 	/// <param name="package">A stream that seeks, the package from its position 0.</param>
 	/// <returns>Its records.</returns>
@@ -322,60 +335,43 @@ internal static class ZipStructure
 		Check(central.Method == 8 ? level is 0x0000 or 0x0002 or 0x0006 : level == 0, name, "flags", "bits 1-2 only with deflate (0x0000, 0x0002 or 0x0006), bit 3 for a streamed entry, no other bit (no UTF-8 flag)");
 		Check(central.Method != 0 || entry.CompressedSize == entry.UncompressedSize, name, "sizes", "a stored entry's sizes are equal");
 
-		// The Zip64 extra holds exactly the fields that are all ones, in APPNOTE's order.
-		var wide = new List<long>();
-		CheckField(central.UncompressedField, entry.UncompressedSize, max32, name, "uncompressed size", wide);
-		CheckField(central.CompressedField, entry.CompressedSize, max32, name, "compressed size", wide);
-		CheckField(central.OffsetField, entry.Offset, max32, name, "local header offset", wide);
-
+		// When any of the sizes and offset reaches Max32, all three are all ones and the Zip64 extra holds all three, in
+		// APPNOTE's order, since LibreOffice reads the extra's fields by position; no extra field when none does.
 		var extra = central.Extra;
-		if (wide.Count == 0)
+		var wide = entry.UncompressedSize >= max32 || entry.CompressedSize >= max32 || entry.Offset >= max32;
+		if (wide)
 		{
-			Check(extra.Length == 0, name, "central extra field", "no extra field when no field overflows");
+			Check(central.UncompressedField == 0xFFFFFFFF && central.CompressedField == 0xFFFFFFFF && central.OffsetField == 0xFFFFFFFF, name, "central sizes and offset",
+				$"all three are 0xFFFFFFFF when any reaches Max32 ({max32}); written 0x{central.UncompressedField:X8}, 0x{central.CompressedField:X8} and 0x{central.OffsetField:X8}");
+			Check(extra.Length == 28 && U16(extra, 0) == 0x0001 && U16(extra, 2) == 24, name, "central extra field", "one Zip64 extra (0x0001, size 24) of all three fields when any reaches Max32");
+			Check((long)U64(extra, 4) == entry.UncompressedSize && (long)U64(extra, 12) == entry.CompressedSize && (long)U64(extra, 20) == entry.Offset, name, "central extra field", "the Zip64 extra holds the uncompressed size, compressed size and offset, in that order");
 		}
 		else
 		{
-			Check(extra.Length == 4 + (8 * wide.Count) && U16(extra, 0) == 0x0001 && U16(extra, 2) == 8 * wide.Count, name, "central extra field", "one Zip64 extra (0x0001, size 8 x n) of the fields that overflow");
-			for (var i = 0; i < wide.Count; i++)
-			{
-				Check((long)U64(extra, 4 + (8 * i)) == wide[i], name, "central extra field", "the Zip64 extra holds the uncompressed size, compressed size and offset that overflow, in that order");
-			}
+			Check(central.UncompressedField == entry.UncompressedSize && central.CompressedField == entry.CompressedSize && central.OffsetField == entry.Offset, name, "central sizes and offset", "the real sizes and offset when none reaches Max32");
+			Check(extra.Length == 0, name, "central extra field", "no extra field when no field reaches Max32");
 		}
 
 		Check(central.VersionNeeded == (entry.Streamed || extra.Length > 0 ? 45 : 20), name, "version needed", "45 for a streamed entry or one with a Zip64 extra, else 20");
-		var whole = entry.CompressedSize <= WholeData && entry.CompressedSize < max32 && entry.UncompressedSize < max32;
-		if (entry.Streamed == whole)
-		{
-			Fail(name, "flags (bit 3)", $"an entry is whole exactly when it has at most {WholeData} bytes of data and both sizes are below Max32; it is {(entry.Streamed ? "streamed" : "whole")} with {entry.CompressedSize} bytes of {entry.UncompressedSize}");
-		}
-	}
 
-	/// <summary>
-	/// Checks a central header's size or offset field: <c>0xFFFFFFFF</c> exactly when its value reaches the limit, then
-	/// adds the value to the Zip64 extra's expected fields, else the field's value itself.
-	/// </summary>
-	/// <param name="field">The field as written.</param>
-	/// <param name="value">The value meant: the field's, or the Zip64 extra's.</param>
-	/// <param name="max32">The 32-bit limit.</param>
-	/// <param name="entry">The entry, for the message.</param>
-	/// <param name="what">The field's name, for the message.</param>
-	/// <param name="wide">The Zip64 extra's expected fields, in order.</param>
-	private static void CheckField(uint field, long value, long max32, string entry, string what, List<long> wide)
-	{
-		if ((field == 0xFFFFFFFF) != (value >= max32))
+		// Whole: at most one buffer of data, both sizes below Max32. A stored entry past one buffer, its sizes below Max32,
+		// is patched on a stream that seeks (no bit 3) and streamed on one that can't; any other entry is streamed.
+		var small = entry.CompressedSize <= WholeData;
+		var fits = entry.CompressedSize < max32 && entry.UncompressedSize < max32;
+		if (entry.Streamed)
 		{
-			Fail(entry, what, $"0xFFFFFFFF exactly when the value reaches Max32 ({max32}); it is {value}, written 0x{field:X8}");
+			Check(!small || !fits, name, "flags (bit 3)", $"an entry of at most {WholeData} bytes of data with both sizes below Max32 is whole, without bit 3; it is streamed with {entry.CompressedSize} bytes of {entry.UncompressedSize}");
 		}
-
-		if (field == 0xFFFFFFFF)
+		else
 		{
-			wide.Add(value);
+			Check(fits && (small || central.Method == 0), name, "flags (bit 3)", $"an entry without bit 3 has both sizes below Max32, and at most {WholeData} bytes of data unless stored (patched, on a stream that seeks); it has {entry.CompressedSize} bytes of {entry.UncompressedSize}");
 		}
 	}
 
 	/// <summary>Checks an entry's local header and descriptor against its central header.</summary>
 	/// <param name="entry">The entry.</param>
-	private static void CheckLocal(ZipEntryRecords entry)
+	/// <param name="max32">The 32-bit limit.</param>
+	private static void CheckLocal(ZipEntryRecords entry, long max32)
 	{
 		var central = entry.Central;
 		var local = entry.Local;
@@ -386,14 +382,23 @@ internal static class ZipStructure
 		Check(local.Name.AsSpan().SequenceEqual(central.Name), name, "local name", "the local header's name is the central header's");
 		if (!entry.Streamed)
 		{
-			Check(local.Crc == central.Crc && local.CompressedSize == entry.CompressedSize && local.UncompressedSize == entry.UncompressedSize, name, "local CRC and sizes", "a whole entry's local header holds its CRC and sizes");
-			Check(local.Extra.Length == 0, name, "local extra field", "a whole entry's local header has no extra field");
+			Check(local.Crc == central.Crc && local.CompressedSize == entry.CompressedSize && local.UncompressedSize == entry.UncompressedSize, name, "local CRC and sizes", "a whole or patched entry's local header holds its CRC and sizes");
+			Check(local.Extra.Length == 0, name, "local extra field", "a whole or patched entry's local header has no extra field");
 
 			return;
 		}
 
 		Check(local.Crc == 0 && local.CompressedSize == 0 && local.UncompressedSize == 0, name, "local CRC and sizes", "a streamed entry's local CRC and sizes are 0, not 0xFFFFFFFF");
-		Check(local.Extra.Length == 20 && U16(local.Extra, 0) == 0x0001 && U16(local.Extra, 2) == 16 && U64(local.Extra, 4) == 0 && U64(local.Extra, 12) == 0, name, "local extra field", "a streamed entry's local header has a Zip64 extra of zeros (0x0001, size 16)");
+		if (local.Extra.Length == 0)
+		{
+			Check(entry.Patched && (entry.CompressedSize >= max32 || entry.UncompressedSize >= max32), name, "local extra field",
+				"only a patched entry (stored, past one buffer, on a stream that seeks) whose sizes reach Max32 is streamed without a local extra field, its header patched to the streamed form");
+		}
+		else
+		{
+			Check(local.Extra.Length == 20 && U16(local.Extra, 0) == 0x0001 && U16(local.Extra, 2) == 16 && U64(local.Extra, 4) == 0 && U64(local.Extra, 12) == 0, name, "local extra field", "a streamed entry's local header has a Zip64 extra of zeros (0x0001, size 16)");
+		}
+
 		var descriptor = entry.Descriptor!;
 		Check(descriptor.Signed, name, "descriptor signature", "every descriptor is signed 50 4B 07 08");
 		Check(descriptor.Wide, name, "descriptor sizes", "a descriptor's sizes are 8 bytes each");
@@ -497,7 +502,7 @@ internal static class ZipStructure
 		if ((central.Flags & 0x0008) != 0)
 		{
 			var at = local.DataStart + compressed;
-			var zip64 = Zip64Fields(local.Extra, true).Count > 0;
+			var zip64 = Zip64Fields(local.Extra, true).Count > 0 || local.VersionNeeded >= 45;
 			var signed = U32(ReadAt(package, at, 4, name), 0) == DescriptorSignature;
 			var fields = ReadAt(package, at + (signed ? 4 : 0), zip64 ? 20 : 12, name);
 			descriptor = zip64
