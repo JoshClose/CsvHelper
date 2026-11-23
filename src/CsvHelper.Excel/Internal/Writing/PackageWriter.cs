@@ -15,7 +15,7 @@ namespace CsvHelper.Excel;
 /// <remarks>
 /// A synchronous call writes the stream only synchronously, and an asynchronous call only asynchronously, on every target:
 /// entries are deflated into pooled buffers, and only whole buffers, headers, descriptors and the directory reach the
-/// stream.
+/// stream; and a stored entry, once past one buffer, writes the call's bytes straight through, in the call's mode.
 /// </remarks>
 internal sealed class PackageWriter
 {

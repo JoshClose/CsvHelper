@@ -57,6 +57,20 @@ public class ZipWriterTests
 	/// <summary>Every level, to a stream that seeks and one that doesn't.</summary>
 	public static TheoryData<CompressionLevel, bool> LevelsAndStreams() => LevelsAndModes();
 
+	/// <summary>Every deflated level, synchronously and asynchronously.</summary>
+	/// <returns>The levels and the modes.</returns>
+	public static TheoryData<CompressionLevel, bool> DeflatedLevelsAndModes()
+	{
+		var data = new TheoryData<CompressionLevel, bool>();
+		foreach (var level in ZipPackages.Levels.Where(l => l != CompressionLevel.NoCompression))
+		{
+			data.Add(level, false);
+			data.Add(level, true);
+		}
+
+		return data;
+	}
+
 	/// <summary>Every level, synchronously and asynchronously.</summary>
 	public static TheoryData<CompressionLevel, bool> LevelsAndModes()
 	{
@@ -185,14 +199,15 @@ public class ZipWriterTests
 	}
 
 	/// <summary>
-	/// An entry's data reaches the stream in whole 65,536-byte writes but for its last, after its local header and
-	/// before its descriptor; the directory and the end records follow the last entry.
+	/// A deflated entry's data reaches the stream in whole 65,536-byte writes but for its last, after its local header and
+	/// before its descriptor; the directory and the end records follow the last entry. A stored entry's is written
+	/// through once streamed (<see cref="ZipWriteThroughTests"/>).
 	/// </summary>
 	/// <param name="level">The compression.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <returns>A task that completes when the test is done.</returns>
 	[Theory]
-	[MemberData(nameof(LevelsAndModes))]
+	[MemberData(nameof(DeflatedLevelsAndModes))]
 	public async Task WritesDataInWholeBuffers(CompressionLevel level, bool async)
 	{
 		var stream = new ZipTestStream(false);
@@ -218,7 +233,8 @@ public class ZipWriterTests
 
 	/// <summary>
 	/// Opening an entry writes nothing, and so does writing its first 65,536 bytes of data: the local header waits until
-	/// the data passes a buffer (streamed) or the entry closes (whole).
+	/// the data passes a buffer (streamed) or the entry closes (whole). The stored entry streamed writes the byte that
+	/// passed the buffer with it, as it is written through from then on.
 	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <returns>A task that completes when the test is done.</returns>
@@ -236,7 +252,7 @@ public class ZipWriterTests
 		await ZipPackages.WriteAsync(entry, bytes, 0, 65536, async);
 		Assert.Empty(stream.Writes);
 		await ZipPackages.WriteAsync(entry, bytes, 65536, 1, async);
-		Assert.Equal([30 + 5 + 20, 65536], stream.Writes.Select(w => w.Size));
+		Assert.Equal([30 + 5 + 20, 65536, 1], stream.Writes.Select(w => w.Size));
 		await PackageWriter.CloseAsync(entry, async);
 		Assert.Equal([30 + 5 + 20, 65536, 1, 24], stream.Writes.Select(w => w.Size));
 
@@ -328,35 +344,42 @@ public class ZipWriterTests
 
 	/// <summary>
 	/// The entry's stream's other overloads: spans and memory on .NET, a byte at a time, and disposing it with
-	/// <c>using</c> and <c>await using</c>, which close it as <see cref="PackageWriter.CloseAsync"/> does. The package is
-	/// valid and reads back; its bytes aren't compared with a package written whole, since .NET's deflate gives other bytes
-	/// for other pieces.
+	/// <c>using</c> and <c>await using</c>, which close it as <see cref="PackageWriter.CloseAsync"/> does; deflated, and
+	/// stored, where each overload's write after the first goes straight through, of the caller's own bytes but for the
+	/// byte <see cref="Stream.WriteByte"/> copies. The package is valid and reads back. A stored package's bytes are those
+	/// of the parts written whole; a deflated one's aren't compared, since .NET's deflate gives other bytes for other
+	/// pieces.
 	/// </summary>
+	/// <param name="level">The compression.</param>
 	/// <returns>A task that completes when the test is done.</returns>
-	[Fact]
-	public async Task WritesThroughEveryOverload()
+	[Theory]
+	[InlineData(CompressionLevel.Optimal)]
+	[InlineData(CompressionLevel.NoCompression)]
+	public async Task WritesThroughEveryOverload(CompressionLevel level)
 	{
-		var bytes = Bytes(100_000, 6);
-		var stream = new ZipTestStream();
-		var package = new PackageWriter(stream, leaveOpen: true, CompressionLevel.Optimal);
+		var bytes = Bytes(200_000, 6);
+		var stream = new ZipTestStream { Watched = bytes };
+		var package = new PackageWriter(stream, leaveOpen: true, level);
 
 		using (var entry = await package.OpenPartAsync("a.xml", false, CancellationToken.None))
 		{
-			entry.WriteByte(bytes[0]);
+			entry.Write(bytes, 0, 70_000);
+			entry.WriteByte(bytes[70_000]);
 #if NET
-			entry.Write(bytes.AsSpan(1, 30_000));
-			await entry.WriteAsync(bytes.AsMemory(30_001, 30_000));
+			entry.Write(bytes.AsSpan(70_001, 30_000));
+			await entry.WriteAsync(bytes.AsMemory(100_001, 30_000));
 #else
-			entry.Write(bytes, 1, 30_000);
-			await entry.WriteAsync(bytes, 30_001, 30_000);
+			entry.Write(bytes, 70_001, 30_000);
+			await entry.WriteAsync(bytes, 100_001, 30_000);
 #endif
-			entry.Write(bytes, 60_001, bytes.Length - 60_001);
+			entry.Write(bytes, 130_001, bytes.Length - 130_001);
 		}
 
 		var second = (ZipEntryStream)await package.OpenPartAsync("b.xml", true, CancellationToken.None);
 		await using (second)
 		{
-			await second.WriteAsync(bytes, 0, bytes.Length);
+			await second.WriteAsync(bytes, 0, 70_000);
+			await second.WriteAsync(bytes, 70_000, bytes.Length - 70_000);
 		}
 
 		var types = await package.OpenPartAsync("[Content_Types].xml", false, CancellationToken.None);
@@ -367,7 +390,13 @@ public class ZipWriterTests
 		var written = stream.ToArray();
 		ZipStructure.AssertValid(written);
 		ZipStructure.AssertPackagingReads(written);
-		ZipPackages.AssertReadsBack(written, [new ZipPart("a.xml", bytes), new ZipPart("b.xml", bytes)]);
+		var parts = new List<ZipPart> { new("a.xml", bytes), new("b.xml", bytes) };
+		ZipPackages.AssertReadsBack(written, parts);
+		if (level == CompressionLevel.NoCompression)
+		{
+			Assert.Equal(ZipPackages.Write(parts, level), written);
+			Assert.Equal([(30_000, false), (30_000, true), (69_999, false), (130_000, true)], stream.Writes.Where(w => w.Watched).Select(w => (w.Size, w.Async)));
+		}
 	}
 
 	/// <summary>
@@ -457,7 +486,7 @@ public class ZipWriterTests
 	/// A workbook written through the workbook writer's asynchronous calls (a sheet added and its records written
 	/// asynchronously, one written whole asynchronously, and the asynchronous dispose; shared strings, a table, a link and
 	/// the lists sheet included) to a stream whose synchronous writes and flush throw: every write and flush is
-	/// asynchronous, on every target, at every level.
+	/// asynchronous, on every target, at every level; stored, the sheet is streamed, and written straight through.
 	/// </summary>
 	/// <param name="level">The compression.</param>
 	/// <param name="seekable">Whether the stream seeks.</param>
@@ -475,6 +504,32 @@ public class ZipWriterTests
 		Assert.Equal((0, 1), (stream.Flushes, stream.AsyncFlushes));
 		ZipStructure.AssertValid(workbook);
 		ZipStructure.AssertPackagingReads(workbook);
+		Assert.Contains(ZipStructure.Read(workbook).Entries, e => e.Streamed);
+		Assert.Equal([("Orders", WorkbookRows + 1), ("Links", 2), ("Lists", 2)], Written.Read(workbook).Select(s => (s.Sheet, s.Rows.Count)));
+	}
+
+	/// <summary>
+	/// The same workbook written through the workbook writer's synchronous calls to a stream whose asynchronous writes and
+	/// flush throw: every write and flush is synchronous, on every target, at every level; stored, the sheet is streamed,
+	/// and written straight through.
+	/// </summary>
+	/// <param name="level">The compression.</param>
+	/// <param name="seekable">Whether the stream seeks.</param>
+	/// <returns>A task that completes when the test is done.</returns>
+	[Theory]
+	[MemberData(nameof(LevelsAndStreams))]
+	public async Task WritesWorkbooksOnlySynchronously(CompressionLevel level, bool seekable)
+	{
+		var stream = new ZipTestStream(seekable) { ForbidAsync = true };
+
+		var workbook = await WriteWorkbookAsync(stream, level, false);
+
+		Assert.NotEmpty(stream.Writes);
+		Assert.All(stream.Writes, w => Assert.False(w.Async));
+		Assert.Equal((1, 0), (stream.Flushes, stream.AsyncFlushes));
+		ZipStructure.AssertValid(workbook);
+		ZipStructure.AssertPackagingReads(workbook);
+		Assert.Contains(ZipStructure.Read(workbook).Entries, e => e.Streamed);
 		Assert.Equal([("Orders", WorkbookRows + 1), ("Links", 2), ("Lists", 2)], Written.Read(workbook).Select(s => (s.Sheet, s.Rows.Count)));
 	}
 

@@ -68,17 +68,19 @@ internal static class SheetProtection
 		}
 
 #if NET
-		var hash = new byte[HashLength];
+		// One SHA-512 for all the spins: each hash goes over the last, at the start of the block it is hashed again with.
+		using var sha = IncrementalHash.CreateHash(HashAlgorithmName.SHA512);
 		Span<byte> block = stackalloc byte[HashLength + 4];
-		SHA512.HashData(input, hash);
+		sha.AppendData(input);
+		sha.GetHashAndReset(block);
 		for (var i = 0; i < spinCount; i++)
 		{
-			hash.CopyTo(block);
 			WriteLittleEndian(block.Slice(HashLength), i);
-			SHA512.HashData(block, hash);
+			sha.AppendData(block);
+			sha.GetHashAndReset(block);
 		}
 
-		return hash;
+		return block.Slice(0, HashLength).ToArray();
 #else
 		using var sha = SHA512.Create();
 		var hash = sha.ComputeHash(input);

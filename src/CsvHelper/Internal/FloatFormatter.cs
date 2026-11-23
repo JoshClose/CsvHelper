@@ -162,6 +162,52 @@ internal static partial class FloatFormatter
 		return written != 0;
 	}
 
+	/// <summary>
+	/// The digits <see cref="TryFormat(double, Span{byte}, out int)"/> writes for a positive finite double that isn't 0,
+	/// normal or subnormal, without the text: its shortest round-trip digits as an integer without trailing zeros, and the
+	/// power of ten of the last of them. 123.45 gives 12345 and -2, 1200 gives 12 and 2, 1E+17 gives 1 and 17, and 5E-324
+	/// gives 5 and -324.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// An integer that <see cref="TryFormat(double, Span{byte}, out int)"/> writes exactly, by the same test (one below
+	/// 2^52), has its own digits less their trailing zeros. Any other double has Dragonbox's
+	/// (<see cref="ToShortestDecimal(ulong, int, out int)"/>), which for the integers from 2^52 to 2^53 are their own
+	/// digits too; a power of two's come from <see cref="ShorterIntervalDouble"/>, with 2^-25 and 2^-958 as
+	/// <see cref="PowerOfTwoQuirk"/> has them on this runtime.
+	/// </para>
+	/// <para>
+	/// They are <see cref="TryFormat(double, Span{byte}, out int)"/>'s digits only on a little-endian machine. On a
+	/// big-endian one it asks the BCL (and .NET Framework's <c>"R"</c> isn't always the shortest), so a caller that must
+	/// have its text's digits keeps a path through the text there, when <see cref="BitConverter.IsLittleEndian"/> is false.
+	/// </para>
+	/// </remarks>
+	/// <param name="value">The value: positive, finite and not 0. Any other value's digits are meaningless.</param>
+	/// <param name="exponent">The power of ten of the last digit.</param>
+	/// <returns>The digits: 1 to 17 of them, the last not 0.</returns>
+	internal static ulong ShortestDigits(double value, out int exponent)
+	{
+#if NET
+		var bits = BitConverter.DoubleToUInt64Bits(value);
+#else
+		var bits = (ulong)BitConverter.DoubleToInt64Bits(value);
+#endif
+		var fraction = bits & 0x000F_FFFF_FFFF_FFFFUL;
+		var biasedExponent = (int)(bits >> 52) & 0x7FF;
+
+		// TryFormat's exact integers (below 2^52, value = c * 2^-mq): their digits, less their trailing zeros.
+		var c = fraction | (1UL << 52);
+		var mq = 1075 - biasedExponent;
+		if ((uint)(mq - 1) < 52u && (c & ((1UL << mq) - 1)) == 0)
+		{
+			exponent = 0;
+
+			return RemoveTrailingZeros(c >> mq, ref exponent);
+		}
+
+		return ToShortestDecimal(fraction, biasedExponent, out exponent);
+	}
+
 	// ------------------------------------------------------------------------------------------------------------
 	// Dragonbox
 	// ------------------------------------------------------------------------------------------------------------

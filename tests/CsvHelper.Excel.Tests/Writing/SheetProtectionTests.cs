@@ -45,6 +45,25 @@ public class SheetProtectionTests
 	}
 
 	[Fact]
+	public void HashesAsANewHashOfEachSpin()
+	{
+		// The hash reuses one SHA-512 over the spins: the bytes of a new hash for each, over random passwords (lone
+		// surrogates among their code units), salts and spin counts, and the probe's.
+		var random = new Random(512);
+		for (var round = 0; round < 300; round++)
+		{
+			var password = new string(Enumerable.Range(0, random.Next(0, 40)).Select(_ => (char)random.Next(0, 0x10000)).ToArray());
+			var salt = new byte[random.Next(0, 33)];
+			random.NextBytes(salt);
+			var spinCount = random.Next(0, 64);
+
+			Assert.Equal(NewHashEachSpin(password, salt, spinCount), SheetProtection.Hash(password, salt, spinCount));
+		}
+
+		Assert.Equal(NewHashEachSpin("secret", ProbeSalt, SheetProtection.SpinCount), SheetProtection.Hash("secret", ProbeSalt, SheetProtection.SpinCount));
+	}
+
+	[Fact]
 	public void WritesTheProbesElementWithItsSalt()
 	{
 		var element = Encoding.UTF8.GetString(SheetProtection.ForSheet("secret", ProbeSalt, filter: false));
@@ -82,6 +101,48 @@ public class SheetProtectionTests
 			Assert.Equal(Convert.ToBase64String(SheetProtection.Hash("secret", salt, SheetProtection.SpinCount)), attributes["hashValue"]);
 			Assert.Equal(("SHA-512", "100000", "0", "0"), (attributes["algorithmName"], attributes["spinCount"], attributes["sort"], attributes["autoFilter"]));
 		}
+	}
+
+	/// <summary>
+	/// A password's hash with a new SHA-512 hash for each spin: on .NET, one-shot <c>SHA512.HashData</c> calls, as
+	/// <see cref="SheetProtection.Hash"/> made it before Phase 9's step 7; on .NET Framework, <c>ComputeHash</c> calls.
+	/// </summary>
+	/// <param name="password">The password.</param>
+	/// <param name="salt">The salt.</param>
+	/// <param name="spinCount">The times the hash is hashed again.</param>
+	/// <returns>The hash.</returns>
+	private static byte[] NewHashEachSpin(string password, byte[] salt, int spinCount)
+	{
+		var input = new byte[salt.Length + (password.Length * 2)];
+		salt.CopyTo(input, 0);
+		for (var i = 0; i < password.Length; i++)
+		{
+			input[salt.Length + (i * 2)] = (byte)password[i];
+			input[salt.Length + (i * 2) + 1] = (byte)(password[i] >> 8);
+		}
+
+#if NET
+		var hash = SHA512.HashData(input);
+#else
+		using var sha = SHA512.Create();
+		var hash = sha.ComputeHash(input);
+#endif
+		var block = new byte[hash.Length + 4];
+		for (var i = 0; i < spinCount; i++)
+		{
+			hash.CopyTo(block, 0);
+			block[hash.Length] = (byte)i;
+			block[hash.Length + 1] = (byte)(i >> 8);
+			block[hash.Length + 2] = (byte)(i >> 16);
+			block[hash.Length + 3] = (byte)(i >> 24);
+#if NET
+			hash = SHA512.HashData(block);
+#else
+			hash = sha.ComputeHash(block);
+#endif
+		}
+
+		return hash;
 	}
 
 	/// <summary>An element's attributes.</summary>

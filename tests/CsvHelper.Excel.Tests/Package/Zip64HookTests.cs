@@ -81,6 +81,34 @@ public class Zip64HookTests
 	}
 
 	/// <summary>
+	/// Stored entries streamed and written straight through, past the limit: the first's sizes (both in its Zip64 extra),
+	/// the second's offset (its sizes below the limit), then a whole entry's offset and the directory's. The writes
+	/// straight through count toward the sizes and offsets as buffers do.
+	/// </summary>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <returns>A task that completes when the test is done.</returns>
+	[Theory]
+	[InlineData(false)]
+	[InlineData(true)]
+	public async Task WritesStoredEntriesWrittenThroughPastTheLimit(bool async)
+	{
+		var limits = new ZipLimits(150_000, 0xFFFF);
+		var parts = new List<ZipPart> { new("a.bin", ZipPackages.RandomBytes(200_003, 11)), new("b.bin", ZipPackages.RandomBytes(100_003, 12)), new("c.xml", Text(1_000)) };
+
+		var zip = await CheckAsync(parts, CompressionLevel.NoCompression, limits, async);
+
+		var (a, b, c) = (zip.Entries[0], zip.Entries[1], zip.Entries[2]);
+		Assert.True(a.Streamed && b.Streamed);
+		Assert.Equal((0xFFFFFFFFu, 0xFFFFFFFFu, 0u), (a.Central.UncompressedField, a.Central.CompressedField, a.Central.OffsetField));
+		Assert.Equal(20, a.Central.Extra.Length);
+		Assert.Equal((100_003u, 100_003u, 0xFFFFFFFFu), (b.Central.UncompressedField, b.Central.CompressedField, b.Central.OffsetField));
+		Assert.Equal((a.End, 12), (b.Offset, b.Central.Extra.Length));
+		Assert.False(c.Streamed);
+		Assert.Equal((45, 45, 0xFFFFFFFFu), (c.Central.VersionNeeded, c.Local.VersionNeeded, c.Central.OffsetField));
+		Assert.Equal(0xFFFFFFFFu, zip.End.DirectoryOffset);
+	}
+
+	/// <summary>
 	/// A whole entry whose offset alone reaches the limit: its central header holds the offset in a Zip64 extra of one
 	/// field, at version 4.5, and so does its local header's version, which agrees.
 	/// </summary>

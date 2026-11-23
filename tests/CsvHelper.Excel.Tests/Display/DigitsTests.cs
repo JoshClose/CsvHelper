@@ -198,6 +198,72 @@ public class DigitsTests
 		Assert.Equal("5.09258994083622E+89", Scientific(Math.Pow(2, 298)));
 	}
 
+	/// <summary>
+	/// The digits are those of the text path they replaced (<see cref="DigitsReference"/>: core's text formatted and read
+	/// back), for random doubles of every magnitude and the cases above: Excel's answers, the halves it takes up, the edges,
+	/// every power of two and its neighbours, and the numbers rounded.
+	/// </summary>
+	[Fact]
+	public void TakesTheTextPathsDigits()
+	{
+		var values = new List<double>
+		{
+			0, -0.0, double.NaN, double.PositiveInfinity, double.NegativeInfinity, double.Epsilon, -2.2250738585072009E-308,
+			2.2250738585072014E-308, -2.2250738585072014E-308, double.MaxValue, -double.MaxValue, 999999999999999.9,
+			0.30000000000000004, 1, 1e16, 123456789012345678, 1234.5, 0.5, 1e20, 2.675, 1.005, 0.285, 8.345, 1.5, 2.5, 0.125,
+			999.995, 0.004, 0.005, 0.0004, 0.0006, 9.95, 45306.99999999, 1250, 49, 50, 9.87654321e-5, 0.99999999999,
+		};
+		values.AddRange(Lines(ExcelAnswers).Select(line => line.Value));
+		values.AddRange(Lines(ExcelTakesUp).Select(line => line.Value));
+		for (var power = -1074; power <= 1023; power++)
+		{
+			var bits = power < -1022 ? 1L << (power + 1074) : (long)(power + 1023) << 52;
+			values.Add(BitConverter.Int64BitsToDouble(bits));
+			values.Add(BitConverter.Int64BitsToDouble(bits + 1));
+			values.Add(-BitConverter.Int64BitsToDouble(bits - 1));
+		}
+
+		var random = new Random(7023);
+		var bytes = new byte[8];
+		for (var i = 0; i < 300_000; i++)
+		{
+			switch (i % 4)
+			{
+				case 0:
+					// Any bits: every magnitude, subnormals and values that aren't finite among them.
+					random.NextBytes(bytes);
+					values.Add(BitConverter.ToDouble(bytes, 0));
+					break;
+				case 1:
+					// A decimal of 15 to 17 digits, as a workbook stores numbers.
+					values.Add(Math.Floor((random.NextDouble() * 9e16) + 1e16) * Math.Pow(10, random.Next(-30, 30) - 16));
+					break;
+				case 2:
+					// A binary fraction, often exactly the half between two 15-digit numbers.
+					values.Add(Math.Floor((random.NextDouble() * 9e15) / Math.Pow(2, random.Next(0, 60)) * 1024) / 1024);
+					break;
+				default:
+					// An integer, with trailing zeros now and then.
+					values.Add(Math.Floor(random.NextDouble() * 1e15) * Math.Pow(10, random.Next(0, 8)));
+					break;
+			}
+		}
+
+		var failures = new List<string>();
+		foreach (var value in values)
+		{
+			var digits = Digits.Of(value);
+			var expected = DigitsReference.Of(value);
+			if ((digits.Significand, digits.Count, digits.Exponent) != expected && failures.Count < 20)
+			{
+				failures.Add($"{value.ToString("R", CultureInfo.InvariantCulture)}: the text path {expected}, ours ({digits.Significand}, {digits.Count}, {digits.Exponent})");
+			}
+		}
+
+		Assert.True(failures.Count == 0, string.Join("\n", failures));
+		Assert.True(values.Count > 300_000);
+	}
+
 	/// <summary>Rounding to the places shown is half away from zero, on the 15 digits: Excel's answers from the design.</summary>
 	/// <param name="value">The number.</param>
 	/// <param name="decimals">The places.</param>

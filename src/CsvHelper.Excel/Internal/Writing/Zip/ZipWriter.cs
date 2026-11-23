@@ -9,20 +9,23 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// Writes a zip one entry at a time, forward only, so that a stream that can't seek works too, and the same bytes go to
-/// any stream (<see cref="ZipRecords"/>). An entry's data goes into pooled buffers of <see cref="BufferSize"/> bytes and
-/// reaches the stream in whole buffers, but for its last. An entry closed with at most one buffer of data and sizes
-/// within 32 bits is written whole: its local header holds its CRC and sizes. Any other entry is streamed, its local
-/// header written as its data passes one buffer: bit 3, version 4.5, CRC and sizes 0 with a Zip64 extra of zeros, and a
-/// signed descriptor with 8-byte sizes after the data. The central directory, kept in pooled buffers until the end,
-/// holds every entry's real sizes and offset, with Zip64 fields only where they overflow (<see cref="ZipLimits"/>), and
-/// so do the end records.
+/// any stream (<see cref="ZipRecords"/>), however an entry's data is cut into writes. An entry's data goes into pooled
+/// buffers of <see cref="BufferSize"/> bytes and reaches the stream in whole buffers, but for its last. An entry closed
+/// with at most one buffer of data and sizes within 32 bits is written whole: its local header holds its CRC and sizes.
+/// Any other entry is streamed, its local header written as its data passes one buffer: bit 3, version 4.5, CRC and sizes
+/// 0 with a Zip64 extra of zeros, and a signed descriptor with 8-byte sizes after the data. A stored entry, once
+/// streamed, writes all its buffers hold, the last too, and from then on each of its writes reaches the stream as one
+/// write of the caller's bytes, uncopied. The central directory, kept in pooled buffers until the end, holds every
+/// entry's real sizes and offset, with Zip64 fields only where they overflow (<see cref="ZipLimits"/>), and so do the end
+/// records.
 /// </summary>
 /// <remarks>
 /// <para>
-/// A synchronous call writes the stream only with <see cref="Stream.Write(byte[], int, int)"/> and
-/// <see cref="Stream.Flush"/>, an asynchronous one only with <c>WriteAsync</c> and <see cref="Stream.FlushAsync()"/>, on
-/// every target: the deflater writes into memory, and only the buffers, headers, descriptors and directory reach the
-/// stream.
+/// A synchronous call writes the stream only with <c>Write</c> and <see cref="Stream.Flush"/>, an asynchronous one only
+/// with <c>WriteAsync</c> and <see cref="Stream.FlushAsync()"/>, on every target: the deflater writes into memory, and
+/// only the buffers, a streamed stored entry's writes, headers, descriptors and directory reach the stream. The buffers,
+/// headers, descriptors and directory are written from arrays (<see cref="Stream.Write(byte[], int, int)"/>), and a
+/// streamed stored entry's writes from spans and memory where the target's streams take them, else from arrays.
 /// </para>
 /// <para>
 /// Offsets count from the stream's position when the writer is made, on a stream that seeks, and from 0 on one that
@@ -36,7 +39,10 @@ namespace CsvHelper.Excel;
 /// </remarks>
 internal sealed class ZipWriter
 {
-	/// <summary>The size of the pooled buffers, and of the stream's writes of an entry's data.</summary>
+	/// <summary>
+	/// The size of the pooled buffers, and of the stream's writes of an entry's buffered data, but for its last: the most
+	/// data a whole entry has.
+	/// </summary>
 	public const int BufferSize = 65536;
 
 	/// <summary>The stream the package is written to.</summary>
@@ -264,6 +270,76 @@ internal sealed class ZipWriter
 		}
 
 		written += count;
+	}
+
+#if NET || NETSTANDARD2_1_OR_GREATER
+	/// <summary>
+	/// Writes bytes to the stream synchronously, in one write, faulting the writer if the stream throws: a streamed stored
+	/// entry's data, written through.
+	/// </summary>
+	/// <param name="bytes">The bytes.</param>
+	internal void Write(ReadOnlySpan<byte> bytes)
+	{
+		try
+		{
+			stream.Write(bytes);
+		}
+		catch
+		{
+			Fault();
+
+			throw;
+		}
+
+		written += bytes.Length;
+	}
+#else
+	/// <summary>
+	/// Writes bytes to the stream synchronously, in one write, faulting the writer if the stream throws: a streamed stored
+	/// entry's data, written through. The target's streams take no spans, so the caller's array is written.
+	/// </summary>
+	/// <param name="buffer">The bytes.</param>
+	/// <param name="offset">The first.</param>
+	/// <param name="count">How many.</param>
+	internal void Write(byte[] buffer, int offset, int count)
+	{
+		try
+		{
+			stream.Write(buffer, offset, count);
+		}
+		catch
+		{
+			Fault();
+
+			throw;
+		}
+
+		written += count;
+	}
+#endif
+
+	/// <summary>
+	/// Writes bytes to the stream asynchronously, in one write, faulting the writer if the stream throws (a canceled write
+	/// too): a streamed stored entry's data, written through. Where the target's streams take no memory, the caller's
+	/// array is written (<c>WriteAsync(byte[], int, int, CancellationToken)</c>).
+	/// </summary>
+	/// <param name="bytes">The bytes.</param>
+	/// <param name="cancellationToken">Cancels the write.</param>
+	/// <returns>A task that completes when the bytes are written.</returns>
+	internal async ValueTask WriteAsync(ReadOnlyMemory<byte> bytes, CancellationToken cancellationToken)
+	{
+		try
+		{
+			await stream.WriteAsync(bytes, cancellationToken).ConfigureAwait(false);
+		}
+		catch
+		{
+			Fault();
+
+			throw;
+		}
+
+		written += bytes.Length;
 	}
 
 	/// <summary>

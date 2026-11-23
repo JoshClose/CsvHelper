@@ -163,12 +163,13 @@ internal static class ZipPackages
 	/// <param name="offset">The first.</param>
 	/// <param name="count">How many.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when they are written.</returns>
-	public static async Task WriteAsync(Stream entry, byte[] bytes, int offset, int count, bool async)
+	public static async Task WriteAsync(Stream entry, byte[] bytes, int offset, int count, bool async, CancellationToken cancellationToken = default)
 	{
 		if (async)
 		{
-			await entry.WriteAsync(bytes, offset, count);
+			await entry.WriteAsync(bytes, offset, count, cancellationToken);
 		}
 		else
 		{

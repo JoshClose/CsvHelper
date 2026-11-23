@@ -19,12 +19,13 @@ namespace CsvHelper.Excel;
 /// sign), which no rule found explains, so they are listed differences.
 /// </para>
 /// <para>
-/// The digits come from core's shortest round-trip text (<see cref="FloatFormatter"/>): a double whose shortest text has
-/// 15 digits or fewer has those as its nearest 15-digit number, since the 15-digit numbers near it are further apart than
-/// its rounding interval; one of 16 or 17 digits rounds by the digits past the 15th, which lie on the same side of the
-/// half as the double does, unless they are exactly the half (16 digits ending in 5), where the double is compared with
-/// that decimal exactly. Excel holds a number below the smallest normal double as 0 (its <c>Value2</c> for 5E-324 is 0),
-/// so such a number's digits are zero, as are those of the low-precision doubles whose shortest text wouldn't be nearest.
+/// The digits are core's shortest round-trip digits, those of its text (<see cref="FloatFormatter.ShortestDigits"/>, or the
+/// text read back on a big-endian machine): a double whose shortest text has 15 digits or fewer has those as its nearest
+/// 15-digit number, since the 15-digit numbers near it are further apart than its rounding interval; one of 16 or 17 digits
+/// rounds by the digits past the 15th, which lie on the same side of the half as the double does, unless they are exactly
+/// the half (16 digits ending in 5), where the double is compared with that decimal exactly. Excel holds a number below
+/// the smallest normal double as 0 (its <c>Value2</c> for 5E-324 is 0), so such a number's digits are zero, as are those
+/// of the low-precision doubles whose shortest text wouldn't be nearest.
 /// </para>
 /// </remarks>
 internal readonly struct Digits
@@ -89,9 +90,11 @@ internal readonly struct Digits
 			return default;
 		}
 
-		Span<byte> text = stackalloc byte[FloatFormatter.MaxDoubleLength];
-		FloatFormatter.TryFormat(abs, text, out var written);
-		Shortest(text.Slice(0, written), out var significand, out var count, out var exponent);
+		// Core's shortest digits, those of its text, and the power of ten of the last; read from the text on a big-endian
+		// machine, where the text is the BCL's.
+		var significand = BitConverter.IsLittleEndian ? FloatFormatter.ShortestDigits(abs, out var last) : ShortestText(abs, out last);
+		var count = FloatFormatter.CountDigits(significand);
+		var exponent = last + count - 1;
 		if (count <= MaxSignificant)
 		{
 			return new Digits(significand, count, exponent);
@@ -102,7 +105,7 @@ internal readonly struct Digits
 		var kept = significand / Powers[dropped];
 		var rest = significand % Powers[dropped];
 		var half = 5 * Powers[dropped - 1];
-		if (rest > half || (rest == half && IsAbove(abs, significand, exponent - count + 1)))
+		if (rest > half || (rest == half && IsAbove(abs, significand, last)))
 		{
 			kept++;
 		}
@@ -176,6 +179,23 @@ internal readonly struct Digits
 		}
 
 		return new Digits(significand, digits, exponent);
+	}
+
+	/// <summary>
+	/// A positive number's shortest digits read from core's text of it, for a big-endian machine, where core's text is the
+	/// BCL's and <see cref="FloatFormatter.ShortestDigits"/> doesn't follow it.
+	/// </summary>
+	/// <param name="value">The number, positive and finite.</param>
+	/// <param name="last">The power of ten of the last digit.</param>
+	/// <returns>The digits as an integer, without leading or trailing zeros.</returns>
+	private static ulong ShortestText(double value, out int last)
+	{
+		Span<byte> text = stackalloc byte[FloatFormatter.MaxDoubleLength];
+		FloatFormatter.TryFormat(value, text, out var written);
+		Shortest(text.Slice(0, written), out var significand, out var count, out var exponent);
+		last = exponent - count + 1;
+
+		return significand;
 	}
 
 	/// <summary>

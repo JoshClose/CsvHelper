@@ -1,9 +1,10 @@
 namespace CsvHelper.Excel.Tests.Package;
 
 /// <summary>
-/// A stream that a package is written to, over memory, for the zip writer's tests: it records each write's size and
-/// whether it was asynchronous, can refuse synchronous calls, and can fail at its nth write, its flush or its dispose.
-/// It seeks or not, as made.
+/// A stream that a package is written to, over memory, for the zip writer's tests: it records each write's size, whether
+/// it was asynchronous and whether its bytes were a watched array's own, can refuse synchronous or asynchronous calls,
+/// can fail at its nth write, its flush or its dispose, and can cancel a token as its nth write starts. It seeks or not,
+/// as made.
 /// </summary>
 /// <param name="seekable">Whether it seeks.</param>
 internal sealed class ZipTestStream(bool seekable = true) : Stream
@@ -13,6 +14,27 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 
 	/// <summary>Whether synchronous writes and flushes throw, as some network streams' do.</summary>
 	public bool ForbidSync { get; init; }
+
+	/// <summary>Whether asynchronous writes and flushes throw, so that a synchronous call's are checked to be synchronous.</summary>
+	public bool ForbidAsync { get; init; }
+
+	/// <summary>
+	/// Whether asynchronous writes and flushes yield before they run, so that they complete asynchronously; tests of many
+	/// small writes turn it off.
+	/// </summary>
+	public bool Yields { get; init; } = true;
+
+	/// <summary>The source that is canceled as the write <see cref="CancelAt"/> starts.</summary>
+	public CancellationTokenSource? Canceled { get; init; }
+
+	/// <summary>
+	/// The asynchronous write, from 1 as <see cref="Attempts"/> counts them, as which <see cref="Canceled"/> is canceled:
+	/// that write then throws if its token is that source's, before it counts as tried.
+	/// </summary>
+	public int CancelAt { get; init; } = int.MaxValue;
+
+	/// <summary>The array whose own bytes each write is checked for: not a copy of them, but the array itself.</summary>
+	public byte[]? Watched { get; init; }
 
 	/// <summary>The write that throws <see cref="Failure"/>, from 1; it and every write after it throw.</summary>
 	public int FailAt { get; init; } = int.MaxValue;
@@ -26,8 +48,11 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <summary>The exception the stream throws when it fails.</summary>
 	public IOException Failure { get; } = new("The test stream failed.");
 
-	/// <summary>Each write that reached the stream, in order: its size, and whether it was asynchronous.</summary>
-	public List<(int Size, bool Async)> Writes { get; } = [];
+	/// <summary>
+	/// Each write that reached the stream, in order: its size, whether it was asynchronous, and whether its bytes were
+	/// <see cref="Watched"/>'s own.
+	/// </summary>
+	public List<(int Size, bool Async, bool Watched)> Writes { get; } = [];
 
 	/// <summary>The writes tried, those that threw included.</summary>
 	public int Attempts { get; private set; }
@@ -82,7 +107,16 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <inheritdoc/>
 	public override async Task FlushAsync(CancellationToken cancellationToken)
 	{
-		await Task.Yield();
+		if (Yields)
+		{
+			await Task.Yield();
+		}
+
+		if (ForbidAsync)
+		{
+			throw new InvalidOperationException("The stream can only be flushed synchronously.");
+		}
+
 		AsyncFlushes++;
 		if (FailFlush)
 		{
@@ -102,23 +136,27 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <inheritdoc/>
 	public override void Write(byte[] buffer, int offset, int count)
 	{
-		Take(count, false);
+		Take(count, false, ReferenceEquals(buffer, Watched));
 		inner.Write(buffer, offset, count);
 	}
 
 	/// <inheritdoc/>
 	public override void WriteByte(byte value)
 	{
-		Take(1, false);
+		Take(1, false, false);
 		inner.WriteByte(value);
 	}
 
 	/// <inheritdoc/>
 	public override async Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
 	{
-		await Task.Yield();
-		cancellationToken.ThrowIfCancellationRequested();
-		Take(count, true);
+		if (Yields)
+		{
+			await Task.Yield();
+		}
+
+		Cancel(cancellationToken);
+		Take(count, true, ReferenceEquals(buffer, Watched));
 		inner.Write(buffer, offset, count);
 	}
 
@@ -126,16 +164,20 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 	/// <inheritdoc/>
 	public override void Write(ReadOnlySpan<byte> buffer)
 	{
-		Take(buffer.Length, false);
+		Take(buffer.Length, false, IsWatched(buffer));
 		inner.Write(buffer);
 	}
 
 	/// <inheritdoc/>
 	public override async ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
 	{
-		await Task.Yield();
-		cancellationToken.ThrowIfCancellationRequested();
-		Take(buffer.Length, true);
+		if (Yields)
+		{
+			await Task.Yield();
+		}
+
+		Cancel(cancellationToken);
+		Take(buffer.Length, true, IsWatched(buffer.Span));
 		inner.Write(buffer.Span);
 	}
 #endif
@@ -152,14 +194,23 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 		}
 	}
 
-	/// <summary>Counts a write, refusing it if it is synchronous and those are forbidden, or failing it from <see cref="FailAt"/> on.</summary>
+	/// <summary>
+	/// Counts a write, refusing it if it is synchronous or asynchronous and those are forbidden, or failing it from
+	/// <see cref="FailAt"/> on.
+	/// </summary>
 	/// <param name="count">Its size.</param>
 	/// <param name="async">Whether it is asynchronous.</param>
-	private void Take(int count, bool async)
+	/// <param name="watched">Whether its bytes are <see cref="Watched"/>'s own.</param>
+	private void Take(int count, bool async, bool watched)
 	{
 		if (!async && ForbidSync)
 		{
 			throw new InvalidOperationException("The stream can only be written asynchronously.");
+		}
+
+		if (async && ForbidAsync)
+		{
+			throw new InvalidOperationException("The stream can only be written synchronously.");
 		}
 
 		Attempts++;
@@ -168,6 +219,29 @@ internal sealed class ZipTestStream(bool seekable = true) : Stream
 			throw Failure;
 		}
 
-		Writes.Add((count, async));
+		Writes.Add((count, async, watched));
 	}
+
+	/// <summary>
+	/// Cancels <see cref="Canceled"/> if this asynchronous write is <see cref="CancelAt"/>, then throws if the write's token
+	/// is canceled.
+	/// </summary>
+	/// <param name="cancellationToken">The write's token.</param>
+	/// <exception cref="OperationCanceledException">The token is canceled.</exception>
+	private void Cancel(CancellationToken cancellationToken)
+	{
+		if (Attempts + 1 == CancelAt)
+		{
+			Canceled?.Cancel();
+		}
+
+		cancellationToken.ThrowIfCancellationRequested();
+	}
+
+#if NET
+	/// <summary>Whether bytes are <see cref="Watched"/>'s own, rather than a copy.</summary>
+	/// <param name="bytes">The bytes.</param>
+	/// <returns>Whether they lie in <see cref="Watched"/>.</returns>
+	private bool IsWatched(ReadOnlySpan<byte> bytes) => Watched is not null && bytes.Overlaps(new ReadOnlySpan<byte>(Watched));
+#endif
 }

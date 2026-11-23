@@ -456,7 +456,7 @@ internal sealed class ColumnTypes
 		if (significant > MaxSignificantDigits)
 		{
 			// A double's text: an integer's digits alone, such as an ID's, are never one, as a 16-digit ID isn't a double.
-			isDouble = (hasExponent || digits > integer) && IsDoubleText(destination.Slice(0, n), significant);
+			isDouble = (hasExponent || digits > integer) && IsDoubleText(destination.Slice(0, n), significant, magnitude);
 			if (!isDouble && !longNumbers)
 			{
 				return -1;
@@ -470,16 +470,68 @@ internal sealed class ColumnTypes
 	/// Whether a number's invariant text is its double's own: it has the significant digits, and the magnitude, of the
 	/// shortest text that reads back as the double nearest it, so that the double gives them back.
 	/// </summary>
-	/// <param name="text">The invariant text: <c>-</c>, digits, <c>.</c>, and <c>E</c> with <c>+</c> or <c>-</c>.</param>
+	/// <param name="text">
+	/// The invariant text: <c>-</c>, digits, <c>.</c>, and <c>E</c> with <c>+</c> or <c>-</c>; of a number that isn't 0,
+	/// from 1E-307 to below 1E+308.
+	/// </param>
 	/// <param name="significant">Its significant digits' count.</param>
+	/// <param name="magnitude">The decimal exponent of its first significant digit.</param>
 	/// <returns>Whether it is.</returns>
-	private static bool IsDoubleText(ReadOnlySpan<byte> text, int significant)
+	private static bool IsDoubleText(ReadOnlySpan<byte> text, int significant, int magnitude)
 	{
 		if (significant > MaxDoubleDigits || !FastFloat.TryParseDouble(text, out var value))
 		{
 			return false;
 		}
 
+		if (!BitConverter.IsLittleEndian)
+		{
+			return IsShortestText(text, value);
+		}
+
+		// The double's shortest digits, those of core's text of it, without the text (the text's range makes the double
+		// normal). Neither integer ends in 0, so the texts have the same significant digits when the integers are equal, and
+		// the same magnitude when their last digits are at the same power of ten.
+		var shortest = FloatFormatter.ShortestDigits(Math.Abs(value), out var exponent);
+
+		return shortest == Mantissa(text, significant) && exponent == magnitude - significant + 1;
+	}
+
+	/// <summary>
+	/// The significant digits of a number's invariant text as an integer, from the first that isn't 0 to the last:
+	/// <c>-0.0123E2</c> has 123.
+	/// </summary>
+	/// <param name="text">The text, of a number that isn't 0.</param>
+	/// <param name="significant">Its significant digits' count, at most <see cref="MaxDoubleDigits"/>.</param>
+	/// <returns>The digits.</returns>
+	private static ulong Mantissa(ReadOnlySpan<byte> text, int significant)
+	{
+		var digits = 0UL;
+		var count = 0;
+		for (var i = 0; count < significant; i++)
+		{
+			// The sign, the point and the zeros before the first significant digit are skipped; the exponent isn't reached.
+			var digit = (uint)(text[i] - '0');
+			if (digit <= 9 && (digit != 0 || count != 0))
+			{
+				digits = (digits * 10) + digit;
+				count++;
+			}
+		}
+
+		return digits;
+	}
+
+	/// <summary>
+	/// Whether a number's invariant text has the significant digits and the magnitude of core's shortest text of its
+	/// double, both read from the texts: for a big-endian machine, where core's text is the BCL's and
+	/// <see cref="FloatFormatter.ShortestDigits"/> doesn't follow it.
+	/// </summary>
+	/// <param name="text">The invariant text.</param>
+	/// <param name="value">Its double.</param>
+	/// <returns>Whether it has.</returns>
+	private static bool IsShortestText(ReadOnlySpan<byte> text, double value)
+	{
 		Span<byte> shortest = stackalloc byte[FloatFormatter.MaxDoubleLength];
 		if (!FloatFormatter.TryFormat(value, shortest, out var written))
 		{

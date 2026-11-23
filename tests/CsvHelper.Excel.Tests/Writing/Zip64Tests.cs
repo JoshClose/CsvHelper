@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO.Compression;
+using CsvHelper.Excel.Tests.Package;
 using Xunit.Abstractions;
 
 namespace CsvHelper.Excel.Tests.Writing;
@@ -26,10 +27,12 @@ public sealed class Zip64TheoryAttribute : TheoryAttribute
 /// <summary>
 /// A sheet whose XML is past 4 GiB, so that its entry needs Zip64 sizes, written through
 /// <see cref="ExcelWorkbookWriter.ToFile"/> (a stream that seeks) and to a stream that can't seek, synchronously and
-/// asynchronously: Phase 4's "Risks" (readers' support of Zip64 differs between targets). The package's zip is checked
-/// record by record, and on .NET Framework read whole by WindowsBase's packaging (<see cref="Written.CheckedFile"/>); it
-/// is read back with <see cref="ZipArchive"/>, whole, and with CsvHelper.Excel's reader. Each case writes about 4.6 GB of
-/// XML and reads it twice (three times on .NET Framework), so the tests run on demand (<see cref="Zip64TheoryAttribute"/>).
+/// asynchronously: Phase 4's "Risks" (readers' support of Zip64 differs between targets). Stored too, where the sheet is
+/// written straight through and the parts after it start past 4 GiB, so that their offsets need Zip64 too. The
+/// package's zip is checked record by record, and on .NET Framework read whole by WindowsBase's packaging
+/// (<see cref="Written.CheckedFile"/>); it is read back with <see cref="ZipArchive"/>, whole, and with CsvHelper.Excel's
+/// reader. Each case writes about 4.6 GB of XML and reads it twice (three times on .NET Framework), so the tests run on
+/// demand (<see cref="Zip64TheoryAttribute"/>).
 /// </summary>
 /// <param name="output">Shows the sizes and times of each case.</param>
 public class Zip64Tests(ITestOutputHelper output)
@@ -56,21 +59,25 @@ public class Zip64Tests(ITestOutputHelper output)
 	/// </summary>
 	/// <param name="seekable">Whether the workbook is written through <see cref="ExcelWorkbookWriter.ToFile"/>, rather than to a stream that can't seek.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="stored">Whether the entries are stored (<see cref="CompressionLevel.NoCompression"/>), rather than deflated at the default level.</param>
 	/// <returns>A task that completes when the test is done.</returns>
 	[Zip64Theory]
-	[InlineData(true, false)]
-	[InlineData(true, true)]
-	[InlineData(false, false)]
-	[InlineData(false, true)]
-	public async Task WritesASheetPast4GiB(bool seekable, bool async)
+	[InlineData(true, false, false)]
+	[InlineData(true, true, false)]
+	[InlineData(false, false, false)]
+	[InlineData(false, true, false)]
+	[InlineData(true, false, true)]
+	[InlineData(false, true, true)]
+	public async Task WritesASheetPast4GiB(bool seekable, bool async, bool stored)
 	{
 		var path = Path.Combine(Path.GetTempPath(), $"csvhelper-zip64-{Guid.NewGuid():N}.xlsx");
 		var clock = Stopwatch.StartNew();
 		try
 		{
+			var writerOptions = stored ? new ExcelWriterOptions { CompressionLevel = CompressionLevel.NoCompression } : null;
 			var workbook = seekable
-				? ExcelWorkbookWriter.ToFile(path)
-				: ExcelWorkbookWriter.Create(new ForwardOnlyStream(new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1 << 16, async)));
+				? ExcelWorkbookWriter.ToFile(path, writerOptions)
+				: ExcelWorkbookWriter.Create(new ForwardOnlyStream(new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1 << 16, async)), writerOptions);
 			if (async)
 			{
 				await using (workbook)
@@ -92,7 +99,16 @@ public class Zip64Tests(ITestOutputHelper output)
 				var sheet = zip.GetEntry("xl/worksheets/sheet1.xml")!;
 				Assert.True(sheet.Length > uint.MaxValue, $"The sheet's XML is {sheet.Length:N0} bytes, not past 4 GiB.");
 				Assert.Equal(sheet.Length, Inflate(sheet));
-				output.WriteLine($"The sheet's XML is {sheet.Length:N0} bytes, deflated to {sheet.CompressedLength:N0}, in a file of {new FileInfo(path).Length:N0}; written in {written.TotalSeconds:F1} s.");
+				output.WriteLine($"The sheet's XML is {sheet.Length:N0} bytes, {(stored ? "stored as" : "deflated to")} {sheet.CompressedLength:N0}, in a file of {new FileInfo(path).Length:N0}; written in {written.TotalSeconds:F1} s.");
+			}
+
+			if (stored)
+			{
+				using var file = File.OpenRead(path);
+				var entries = ZipStructure.Read(file).Entries;
+				var last = entries[entries.Count - 1];
+				Assert.True(last.Offset > uint.MaxValue, $"The last part starts at {last.Offset:N0}, not past 4 GiB.");
+				Assert.Equal(0xFFFFFFFFu, last.Central.OffsetField);
 			}
 
 			clock.Restart();

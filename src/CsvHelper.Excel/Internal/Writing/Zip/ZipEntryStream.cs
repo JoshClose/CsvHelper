@@ -8,11 +8,13 @@ namespace CsvHelper.Excel;
 
 /// <summary>
 /// An entry's stream, write-only: what is written is deflated (or stored, at <see cref="CompressionLevel.NoCompression"/>)
-/// into the entry's pooled buffers, which reach the package's stream whole as each fills and is followed by more data;
-/// closing it writes the rest, the descriptor of a streamed entry, and adds the entry to the central directory
-/// (<see cref="ZipWriter"/>). Synchronous calls write the package's stream synchronously, asynchronous ones
-/// asynchronously. <see cref="Flush"/> does nothing: flushing the deflater would change the bytes. Once the writer is
-/// faulted, writing and closing do nothing.
+/// into the entry's pooled buffers, which reach the package's stream whole as each fills and is followed by more data. A
+/// stored entry is held so only until it is streamed, as its data passes one buffer: it then writes all it holds, and
+/// from then on each write goes straight to the package's stream, as one write of the caller's bytes, uncopied
+/// (<see cref="WritesThrough"/>). Closing it writes the rest, the descriptor of a streamed entry, and adds the entry to the
+/// central directory (<see cref="ZipWriter"/>). Synchronous calls write the package's stream synchronously, asynchronous
+/// ones asynchronously. <see cref="Flush"/> does nothing: flushing the deflater would change the bytes. Once the writer
+/// is faulted, writing and closing do nothing.
 /// </summary>
 internal sealed class ZipEntryStream : Stream
 #if !NET && !NETSTANDARD2_1_OR_GREATER
@@ -37,7 +39,7 @@ internal sealed class ZipEntryStream : Stream
 	/// <summary>The deflater, made with the first bytes written; <see langword="null"/> before, and once finished.</summary>
 	private Stream? deflater;
 
-	/// <summary>The bytes of data written to the package's stream.</summary>
+	/// <summary>The bytes of data written to the package's stream: a write straight through counts as it starts.</summary>
 	private long dataWritten;
 
 	/// <summary>Whether the local header has been written.</summary>
@@ -107,12 +109,24 @@ internal sealed class ZipEntryStream : Stream
 		set => throw new NotSupportedException();
 	}
 
-	/// <summary>Does nothing: the data reaches the package's stream in whole buffers, and the deflater isn't flushed.</summary>
+	/// <summary>
+	/// Whether writes go straight to the package's stream, uncopied: a stored entry's, once it is streamed (its local
+	/// header written while it is open, as its data passed one buffer), which holds nothing from then on.
+	/// </summary>
+	private bool WritesThrough => stored && headerWritten;
+
+	/// <summary>
+	/// Does nothing: the data reaches the package's stream in whole buffers, or as it is written once a stored entry is
+	/// streamed, and the deflater isn't flushed.
+	/// </summary>
 	public override void Flush()
 	{
 	}
 
-	/// <summary>Does nothing: the data reaches the package's stream in whole buffers, and the deflater isn't flushed.</summary>
+	/// <summary>
+	/// Does nothing: the data reaches the package's stream in whole buffers, or as it is written once a stored entry is
+	/// streamed, and the deflater isn't flushed.
+	/// </summary>
 	/// <param name="cancellationToken">Not used.</param>
 	/// <returns>A completed task.</returns>
 	public override Task FlushAsync(CancellationToken cancellationToken) => Task.CompletedTask;
@@ -145,6 +159,13 @@ internal sealed class ZipEntryStream : Stream
 
 		for (var at = 0; at < bytes.Count; at += ZipWriter.BufferSize)
 		{
+			if (WritesThrough)
+			{
+				WriteThrough(bytes.Array!, bytes.Offset + at, bytes.Count - at);
+
+				return;
+			}
+
 			Take(bytes.Array!, bytes.Offset + at, Math.Min(ZipWriter.BufferSize, bytes.Count - at));
 			SyncOrAsync.Wait(WriteFullBuffersAsync(false, CancellationToken.None));
 		}
@@ -175,6 +196,13 @@ internal sealed class ZipEntryStream : Stream
 
 		while (!buffer.IsEmpty)
 		{
+			if (WritesThrough)
+			{
+				WriteThrough(buffer);
+
+				return;
+			}
+
 			var slice = buffer.Slice(0, Math.Min(ZipWriter.BufferSize, buffer.Length));
 			Take(slice);
 			SyncOrAsync.Wait(WriteFullBuffersAsync(false, CancellationToken.None));
@@ -302,7 +330,10 @@ internal sealed class ZipEntryStream : Stream
 	/// <exception cref="ObjectDisposedException">The entry has been closed.</exception>
 	private void CheckOpen() => ObjectDisposedException.ThrowIf(closed, this);
 
-	/// <summary>Writes bytes to the entry, writing the package's stream asynchronously, a buffer's worth at a time.</summary>
+	/// <summary>
+	/// Writes bytes to the entry, writing the package's stream asynchronously: a buffer's worth at a time into the
+	/// buffers, and once a stored entry is streamed, the rest straight through in one write.
+	/// </summary>
 	/// <param name="buffer">The bytes.</param>
 	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken.</param>
 	/// <returns>A task that completes when the bytes are taken.</returns>
@@ -317,6 +348,14 @@ internal sealed class ZipEntryStream : Stream
 		cancellationToken.ThrowIfCancellationRequested();
 		while (!buffer.IsEmpty)
 		{
+			if (WritesThrough)
+			{
+				CountThrough(buffer.Span);
+				await writer.WriteAsync(buffer, cancellationToken).ConfigureAwait(false);
+
+				return;
+			}
+
 			var slice = buffer.Slice(0, Math.Min(ZipWriter.BufferSize, buffer.Length));
 #if NET || NETSTANDARD2_1_OR_GREATER
 			Take(slice.Span);
@@ -391,6 +430,44 @@ internal sealed class ZipEntryStream : Stream
 	}
 #endif
 
+#if NET || NETSTANDARD2_1_OR_GREATER
+	/// <summary>
+	/// Writes bytes straight to the package's stream, synchronously, uncopied, once a stored entry is streamed
+	/// (<see cref="WritesThrough"/>): counted first (<see cref="CountThrough"/>), then written in one write.
+	/// </summary>
+	/// <param name="bytes">The bytes.</param>
+	private void WriteThrough(ReadOnlySpan<byte> bytes)
+	{
+		CountThrough(bytes);
+		writer.Write(bytes);
+	}
+#else
+	/// <summary>
+	/// Writes bytes straight to the package's stream, synchronously, uncopied, once a stored entry is streamed
+	/// (<see cref="WritesThrough"/>): counted first (<see cref="CountThrough"/>), then written in one write.
+	/// </summary>
+	/// <param name="buffer">The bytes.</param>
+	/// <param name="offset">The first.</param>
+	/// <param name="count">How many.</param>
+	private void WriteThrough(byte[] buffer, int offset, int count)
+	{
+		CountThrough(new ReadOnlySpan<byte>(buffer, offset, count));
+		writer.Write(buffer, offset, count);
+	}
+#endif
+
+	/// <summary>
+	/// Counts bytes about to go straight to the package's stream: their CRC, the bytes written and the data written. A
+	/// failed write faults the writer, so the counts are never used after it.
+	/// </summary>
+	/// <param name="bytes">The bytes.</param>
+	private void CountThrough(ReadOnlySpan<byte> bytes)
+	{
+		Crc = Crc32.Append(Crc, bytes);
+		UncompressedSize += bytes.Length;
+		dataWritten += bytes.Length;
+	}
+
 	/// <summary>Makes the deflater, at the writer's level, writing into <see cref="sink"/>.</summary>
 	/// <returns>The deflater.</returns>
 	private Stream CreateDeflater()
@@ -404,7 +481,8 @@ internal sealed class ZipEntryStream : Stream
 
 	/// <summary>
 	/// Writes the buffers that are full and followed by more data, after the local header the first time, so that the
-	/// entry is streamed: it has more than one buffer of data.
+	/// entry is streamed: it has more than one buffer of data. A stored entry writes the rest it holds too, and from then
+	/// on writes through (<see cref="WriteBuffersAsync"/>).
 	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
@@ -419,8 +497,12 @@ internal sealed class ZipEntryStream : Stream
 		return WriteBuffersAsync(data.Count - 1, async, cancellationToken);
 	}
 
-	/// <summary>Writes the first buffers, which are full, after the streamed local header the first time.</summary>
-	/// <param name="full">How many.</param>
+	/// <summary>
+	/// Writes the first buffers, which are full, after the streamed local header the first time. A stored entry, streamed
+	/// from here on, writes its last buffer too, full or not, and holds nothing more: its later writes go straight to the
+	/// package's stream (<see cref="WritesThrough"/>).
+	/// </summary>
+	/// <param name="full">How many: all but the last.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when they are written.</returns>
@@ -437,7 +519,17 @@ internal sealed class ZipEntryStream : Stream
 			dataWritten += ZipWriter.BufferSize;
 		}
 
-		data.RemoveFirst(full);
+		if (stored)
+		{
+			var rest = data.LengthOf(full);
+			await writer.WriteAsync(data[full], rest, async, cancellationToken).ConfigureAwait(false);
+			dataWritten += rest;
+			data.Clear();
+		}
+		else
+		{
+			data.RemoveFirst(full);
+		}
 	}
 
 	/// <summary>Writes the local header, at the package's position, which becomes the entry's offset.</summary>

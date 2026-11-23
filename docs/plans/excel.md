@@ -9205,7 +9205,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 9: performance (XL)
 
-Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day; see "Step 6's follow-up, the wider CRC folds" under "As built".
+Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day; see "Step 7, conversions and small wins" under "As built".
 
 Scope, as planned:
 
@@ -10035,7 +10035,7 @@ Filled in step by step; the code is the reference.
   - **W3:** the gate's pairs: not slower than `ZipArchive` on .NET 10 for the defaults, and `WriteStored`'s 2-6% there unless a wider fold closes it first.
 - **On approval** (2026-11-22, as recommended): **a wider fold as a follow-up change**, with its own tests, mutation check and timings, before X1 and W3. It is a 256- or 512-bit VPCLMULQDQ fold for stored entries on the net10.0 build; the net8.0 build keeps the 128-bit one. Alternatives: built into step 6 before its commit, or recorded for W3 to judge.
 
-**Step 6's follow-up, the wider CRC folds** (built 2026-11-23, as approved that day; approved, with the recommendation below, and committed that day; `Csv\_bench\results\phase9-10\step6\fold\`, the plan in `step6\fold-plan.md`):
+**Step 6's follow-up, the wider CRC folds** (built 2026-11-23, as approved that day; approved, with the recommendation below, and committed that day, and pushed: CI's run 45133974694 passed every step; `Csv\_bench\results\phase9-10\step6\fold\`, the plan in `step6\fold-plan.md`):
 
 - **What it is:** on the net10.0 build, `Zip/Crc32.cs` gets a 512-bit and a 256-bit VPCLMULQDQ fold, for the CRC of stored entries. Every other build compiles as at `b1f1899c`.
   - **`Append`'s order of paths:**
@@ -10105,6 +10105,122 @@ Filled in step by step; the code is the reference.
 - **On approval** (2026-11-23, as recommended): **the write-through goes into step 7's plan as a candidate**, with a profile of `WriteStored` first to confirm what the gap is.
   - It doesn't change the bytes written, so X1 isn't affected; it lands before W3 judges the stored writes.
   - Alternatives: left for W3 to judge, or built into this follow-up before its commit.
+
+**Step 7, conversions and small wins** (built 2026-11-23, decisions 40 and 42, and step 6's follow-up's "On approval"; its plan's recommendations approved ahead of time that day; approved, as recommended, and committed that day; `Csv\_bench\results\phase9-10\step7\`, the plan in `plan.md`):
+
+- **The profile first** (`profiles\`, `callers.py`): `WriteStored` on the package assets at `6b21adca`.
+  - `Buffer.Memmove` under `ZipEntryStream.Take` took 35% of the samples, the copy into the entry's buffers. The CRC took 1.4%.
+  - The sampler overstates the copy: 35% would be 229 ms, but the whole stored zip stage, copy included, measures 24.6 ms. EventPipe's sampler stops threads where they can be suspended, so a long copy loop takes the samples of the code before it.
+  - So the profile named the copy but couldn't size it, and the timings below do.
+- **Two lanes, two agents at once**, each in its own worktree at `6b21adca`. I reviewed both patches and merged them: they share no file.
+- **Lane G, the digits** (`g\notes.md`):
+  - **Core: `FloatFormatter.ShortestDigits(double, out int exponent)`**, a new internal method. For a positive, finite double that isn't 0, it gives the digits `TryFormat` writes, as an integer without trailing zeros, and the power of ten of the last digit.
+    - Its paths:
+      - the integers `TryFormat` writes exactly (below 2^52) give their own digits, less the trailing zeros;
+      - everything else goes through Dragonbox, which also covers 2^52 to 2^53 and the powers of two with `PowerOfTwoQuirk`.
+    - On a big-endian machine, where `TryFormat` asks the BCL, its callers keep their text path.
+    - **Phase 0's core gate, this step's part:** `git diff` over `src/CsvHelper` adds only this method. Every existing method's IL is the same on all five targets, once the metadata tokens the new method's row renumbered are resolved (`g\il-compare.txt`). Opcodes, other operands, lengths, max stack and exception regions are identical, so no inlining decision can move. The timing part waits for W3, as the order of work says.
+  - **`Digits.Of`** takes its digits from the new method, instead of formatting the text and reading it back.
+  - **`IsDoubleText`** (recommendation 1): it compares `ShortestDigits` with the text's own digits, read by a small loop (`Mantissa`), and the power of the last digit.
+    - It takes the magnitude `TryNumber` already has (a new parameter), so `Significant` doesn't run at all. Decision 40's text comparison would have formatted the double's text once.
+    - The answers are the same.
+  - **The password's hash:** one `IncrementalHash` for all the spins, hashing in place in the stack block (.NET only; the .NET Framework branch is unchanged).
+- **Lane Z, the write-through** (recommendation 2; `z\notes.md`):
+  - **The rule:** a stored entry, once streamed, writes all it holds and then takes each later write straight to the package's stream, after counting its CRC and sizes, in one write of the caller's bytes. Its switch point is unchanged: the slice that takes its data past 65,536 bytes.
+  - **What stays as it was:**
+    - before the switch, buffering is exactly as before, so the whole-or-streamed rule doesn't change;
+    - deflated entries are unchanged;
+    - the package's bytes are the same for the same data, whatever the writes.
+  - **`ZipWriter`** gets a span (or array) write and a memory write. They fault the writer and rethrow as the buffer write does, and move the position only after the write.
+  - **Changed tests:** four existing tests pinned the old write pattern of stored entries. `WritesDataInWholeBuffers` now covers deflated levels; the others changed their expected writes, not what they check.
+- **Tests:**
+  - **Same answers** (lane G), against copies of the code at `6b21adca` kept in the tests. They reach core's formatter and parser by reflection, since core's internals aren't visible to the Excel tests.
+    - `ShortestDigits` against `TryFormat`'s text read back: every binary exponent, subnormals, every power of two with its neighbours, the quirk's two, and integers around 2^52, 2^53 and the powers of ten.
+    - `Digits.Of` over 306,000 values.
+    - `IsDoubleText` through `ColumnTypes.Format` over 1.6 million fields: random doubles' texts, other notations, and the 16- and 17-digit edges. 0 mismatches; about 700,000 of the fields were doubles' texts and 500,000 not.
+    - The hash over 300 random passwords, salts and spin counts, plus the probe's 100,000 spins.
+  - **Same bytes** (lane Z): 182 cases a target, each a package's SHA-256 pinned from the unchanged code at `6b21adca`.
+    - The cases: entries of 0 bytes to 3 MB across the whole/streamed edge, written in pieces of 1 byte to 1 MB and random pieces, sync and async; several entries, and Zip64 limits.
+    - Each package is also read by `ZipStructure.AssertValid`, and by WindowsBase on net48.
+    - The stream sees only sync calls on sync paths, and only async calls on async paths.
+  - **Faults and cancellation** (lane Z), the base's behavior checked first and kept:
+    - a stream that throws at any write, the write-through's included, faults the writer;
+    - a cancellation the stream raises mid-write faults it too;
+    - a write whose token is already canceled takes nothing, before and after the switch.
+  - **Zip64:** stored entries written through past the hook's limits. On net48, WindowsBase read a stored package whose later parts start past 4 GiB (`Zip64Tests`, on demand).
+- **Suites:**
+  - The Excel suite: net10.0 6,529 passed (5 skipped), net8.0 6,510 (13), net48 6,384 (17).
+  - Core's suite: 1,401, 1,396 and 936 passed.
+  - Linq's suite passes.
+  - AOT: the app publishes with no warnings, and runs.
+- **Mutation check:**
+  - **Lane Z's** (`z\mutate.py`, `z\mutations.txt`): 12 bugs planted in the write-through, all 12 caught:
+    - the held rest not written, or not counted;
+    - the CRC or a size not counted;
+    - the token ignored, or checked after the counts;
+    - never through, or cut into buffers;
+    - a write that doesn't fault, or doesn't move the position.
+  - **Lane G's** (`mutate_g.py`, `mutations.txt`): 9 planted in the main tree, 8 caught:
+    - the integers' trailing zeros kept;
+    - any double below 2^52 taken as an integer;
+    - the last digit's power off;
+    - `Mantissa` dropping the zeros between digits;
+    - `Digits.Of`'s first digit, or its exact half, a power off;
+    - the hash's spins without their number, or its first round not reset.
+  - **One lived, as an equivalent mutant:** `IsDoubleText` comparing the digits only. Two texts with the same digits but last digits at different powers of ten differ tenfold, so they can't both round to the same normal double. The power check is kept as a guard.
+- **Indicative timings** (`quick.sh`, `quick\`, `timings.txt`, `load.txt`):
+  - **How they ran:** alone on the machine from 03:04 to 04:34, each process after 30 s under 8% CPU, with the load under 4% throughout. The Installer's download (03:46) came while the runs waited it out. QuickRunner on core 4 timed three trees: `3a1c2ad9` (before step 6, `ZipArchive`), `6b21adca` (the base) and the step.
+    - The writes ran in rounds of `3a1c2ad9`, `6b21adca`, the step, the step, `6b21adca` and `3a1c2ad9`, then reversed.
+    - The zip stage, the small calls and the conversions ran in rounds of `6b21adca`, the step, the step and `6b21adca`, then reversed.
+  - **The writes, .NET 10** (ms, medians of four runs):
+
+    | | `3a1c2ad9` | `6b21adca` | Step 7 | Against `6b21adca` | Against `3a1c2ad9` |
+    |---|---:|---:|---:|---:|---:|
+    | Package assets `WriteStored` | 571 | 587 | 574 | −2.3% | +0.4% |
+    | Orders `WriteStored` | 537 | 539 | 539 | 0.0% | +0.4% |
+    | Package assets `Write` | 899 | 899 | 904 | +0.5% | +0.5% |
+    | Orders `Write` | 1,234 | 1,229 | 1,236 | +0.5% | +0.1% |
+    | SpreadCheetah's `Write` (control), package assets | 721 | 715 | 717 | +0.3% | −0.5% |
+    | SpreadCheetah's `Write` (control), orders | 1,015 | 1,013 | 1,011 | −0.1% | −0.4% |
+
+    - **The halves:** against `3a1c2ad9`, the package assets' `WriteStored` is −0.4% and +2.9%.
+      - The second half's +2.9% comes from one run of `3a1c2ad9` at 542 ms, 5% under its other three and the fastest of all twelve. The median sets it aside.
+      - Against `6b21adca`, the halves are −1.8% and −3.6%. The orders' against `3a1c2ad9` are +0.4% and +0.3%.
+    - **The defaults** (`Write`) are +0.5% on both workbooks, with halves of +0.1% and +0.8%, and of +0.9% and −1.0%. That is under 1% and within these runs' noise. The deflated path's only change is the write-through's check; W3 judges it.
+  - **The zip stage, stored** (`PackageWriter_NoCompression`, beside `ZipArchive_NoCompression` in the same processes):
+    - Package assets: 25.1 → 18.0 ms (−28%), with `ZipArchive` at 19.3-19.4.
+    - Orders: 11.0 → 7.8 ms (−29%), with `ZipArchive` at 8.5.
+    - The own writer's stored stage is now 7-8% faster than `ZipArchive`'s. It was 30% slower.
+  - **The small calls** (ns a field or a cell, 1,024 of them a call, medians of four runs):
+    - **The doubles' types:** `Matches_Double` 90.8 → 42.5 (−53%), and `Format_Double` 92.3 → 44.4 (−52%). The plan expected 30-40 ns for `Format_Double`. The other types' (the controls) moved under 2 ns.
+    - **`Digits`:** 38.6 → 14.6 (−62%), 24 ns less a cell. The plan expected 10-20.
+    - **The renders:**
+      - `#,##0.00`: 82.5 → 54.7 (−34%);
+      - the date and time: 123.5 → 97.2 (−21%);
+      - `# ?/?`: 115.2 → 57.1 (−50%);
+      - the conditional code: 73.7 → 44.4 (−40%).
+      - The plan expected 10-25%.
+    - **General:** QuickRunner's median isn't its cost: its warm-up is too short for a call this small to reach its optimized code (step 1's record: 485 against BenchmarkDotNet's 54 ns). Its fastest samples went 57 → 31 ns (−45%), and its median 712 → 502.
+    - **The references** `Parse` and `DotNet`: +2.3% and −1.7%.
+  - **The password** (`CreatePassword`, 100,000 spins): 25.4 → 19.9 ms (−21.5%). The plan expected −20-25%.
+    - It allocates about 330 B more a password: the `IncrementalHash` and its handle.
+  - **The inferred conversion** (the orders, ms):
+    - `ToExcel`: 1,383 → 1,297 (−86 ms, −6.2%).
+    - Stored: 664 → 576 (−87 ms, −13.2%).
+    - The plan expected 60-80 ms.
+    - The controls: `ToExcelText` −0.1%, Sylvan's +0.1%, and `ToExcelTextStored` −2.1% (−7 ms, the write-through).
+  - **Allocation** is otherwise unchanged from `6b21adca`.
+  - **Against the plan:**
+    - `WriteStored` is within 1% of `3a1c2ad9`'s on both workbooks, at +0.4%. So the write-through is kept, as the plan said.
+    - The defaults are unchanged within the noise.
+    - The digits, the renders, the password and the conversion meet or beat what the plan expected. `Format_Double`, at 44 ns, is above its 30-40.
+- **Found:**
+  - **The stored gap was the copy.** With the write-through, the stored zip stage is faster than `ZipArchive`'s, and `WriteStored` is back to `3a1c2ad9`'s.
+    - **The whole write gains more than the stage:** `WriteStored` gained 13 ms on the package assets, about twice the zip stage's 7 ms. That partly answers the follow-up's "not explained" (a 15 ms gap against 5): the copy costs more in the whole write than in the stage alone.
+    - The likely cause is cache: the copy took each 64 KB piece through the cache a second time, beside the sheet's own buffers. Not profiled.
+  - **The renders gain what `Digits.Of` saves:** about 26-29 ns a cell for the codes that take one number's digits, and 58 ns for the fraction, which takes several. That is why they beat the plan's 10-25%, which was based on 10-20 ns a call.
+  - **What is left of `Format_Double`'s 44 ns:** probably half is the parse of the text into a double, which the step didn't change (`Parse`, the same parse over General's texts, takes 22 ns). The rest is the new comparison. Not profiled further.
+- **On approval** (2026-11-23, as recommended): committed as built. Next in the order of work is Excel's window X1, then W3, each with its own plan.
 
 ### Phase 10: other formats (XL)
 
