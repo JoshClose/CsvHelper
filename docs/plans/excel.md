@@ -9205,7 +9205,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 9: performance (XL)
 
-Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45184153550 passed every step; see "Step 7, conversions and small wins" under "As built". Its Excel window X1 ran 2026-11-23, and its follow-up to the zip writer (a stored entry's sizes patched into its header on a stream that seeks, and full Zip64 extras) was built and checked that day, and approved and committed that day; see "Window X1, the own writer's packages through the readers" under "As built".
+Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45184153550 passed every step; see "Step 7, conversions and small wins" under "As built". Its Excel window X1 ran 2026-11-23, and its follow-up to the zip writer (a stored entry's sizes patched into its header on a stream that seeks, and full Zip64 extras) was built and checked that day, and approved and committed that day, and pushed: CI's run 45225278002 passed every step; see "Window X1, the own writer's packages through the readers" under "As built". Its window W3 (write candidates) ran 2026-11-23 and 24 against the tip after step 4, and its record was approved, with every recommendation, and committed 2026-11-24; see "Window W3, write candidates" under "As built".
 
 Scope, as planned:
 
@@ -10223,7 +10223,7 @@ Filled in step by step; the code is the reference.
   - **What is left of `Format_Double`'s 44 ns:** probably half is the parse of the text into a double, which the step didn't change (`Parse`, the same parse over General's texts, takes 22 ns). The rest is the new comparison. Not profiled further.
 - **On approval** (2026-11-23, as recommended): committed as built. Next in the order of work is Excel's window X1, then W3, each with its own plan.
 
-**Window X1, the own writer's packages through the readers** (run 2026-11-23, as approved that day, with both recommendations; its follow-up approved, with both recommendations, built and checked that day; approved, as recommended, and committed that day; `Csv\_bench\results\phase9-10\x1\`: the plans in `plan.md` and `followup-plan.md`):
+**Window X1, the own writer's packages through the readers** (run 2026-11-23, as approved that day, with both recommendations; its follow-up approved, with both recommendations, built and checked that day; approved, as recommended, and committed that day, and pushed: CI's run 45225278002 passed every step; `Csv\_bench\results\phase9-10\x1\`: the plans in `plan.md` and `followup-plan.md`):
 
 - **How it ran:** two agents at once, in a copy of the design's probe (`heavy\rless-probe`) at `33779549`.
   - W wrote the set and ran the .NET readers (`notes-w.md`, `app\`). R adapted and ran the others and the comparison (`notes-r.md`, `scripts\`, `out\matrix.md`).
@@ -10327,6 +10327,153 @@ Filled in step by step; the code is the reference.
   - `NoCompression` to a stream that can't seek, through POI from a stream;
   - a buffered stream's own synchronous write as the patch seeks.
 - **On approval** (2026-11-23, as recommended): committed as built, the follow-up's code with the plan. Next in the order of work is W3, with its own plan.
+
+**Window W3, write candidates** (run 2026-11-23 and 24 against the tip after step 4, `434928cf`, as approved 2026-11-23 with the driver's seven recommendations, and started that evening on the user's go-ahead for all of it; its record approved, with every recommendation, and committed 2026-11-24; `Csv\_bench\results\phase9-10\w3\`: the plan in `plan.md`, the notes in `a-notes.md` and `b-notes.md`, the tables `pairs.txt`, `quick.txt`, `quickcore.txt`, `quickconv.txt`, `runner.txt` and `ncsvperf.txt`):
+
+- **How it ran:**
+  - **The trees:** five LF worktrees under `Csv\_bench`, sharing the workbook cache's key `b515e517f3ca7051`. Each ran the tip's bench sources, so that `FormulaText` and the `PackageWriter_*` methods are in all five; the library code is each commit's.
+    - `w3base`: `434928cf`, the base.
+    - `w3s5`: +5, `3a1c2ad9`.
+    - `w3s56`: +5+6, `6b21adca`, step 6 with its wider folds.
+    - `w3s567`: +5+6+7, `a0d48fd6`, the tip and W4's base. It times as `33779549`: no benchmark writes to a stream that seeks, the only place X1's follow-up changed the bytes.
+    - `w3s6a`: 6 alone, `434928cf` with step 6's and its follow-up's `src`.
+    - Two NCsvPerf copies, `w3nbase` and `w3ntip`, built against the base's and the tip's core.
+  - **Part A**, BenchmarkDotNet: a host per class and tree, each after a quiet minute and outside the Installer's download, on core 4, with the load logged every minute. Round 1 ran from 20:48 to 23:33 and round 2, each class's trees reversed, from 23:33 to 02:18: 88 hosts, 628 runs.
+  - **Part B**, 02:24 to 08:54:
+    - B1: QuickRunner's write pairs in fresh processes on the base, +5, +5+6 and the tip, 12 processes a tree.
+    - B2: the per-target runner on +5, +5+6 and the tip, .NET 8 and .NET Framework, two processes of 7 rounds a tree.
+    - B3: NCsvPerf, three blocks of base, tip, tip, base.
+    - The top-up, below.
+  - **The top-up's list** followed the plan's rule, since the go-ahead covered A and B together. The driver added one item the rule didn't call for (t4, below).
+  - **All of it:** 212 processes, every one exit 0. No quiet wait over 70 s and no memory wait (paged pool 6.19-6.24 GB, 43.6-44.3 GB free). No agent, build, test or Excel session ran in the window.
+- **Clean runs** (StdDev under 2%, no logged disturbance): 294 of round 1's 314 and 296 of round 2's, against about half in W1 and W2. Every unclean run is unclean by its StdDev:
+  - `ExcelTemplateCreate.CsvHelper_Create`, a call of 100-130 µs, 8-15% in every run;
+  - the zip stage's stored methods;
+  - `ExcelReportRead`'s two reads;
+  - the package assets' `Records`.
+- **Disturbed:**
+  - The Installer's download, four times: twice in A, twice in B (until 03:50 and 06:50). The driver waited each out with nothing running.
+  - Defender, at 03:33, inside B1's process 15 (+5+6, round 4). Left out with its round, so +5+6 has 11 processes.
+  - A service host, at 07:01, inside B2's .NET Framework run of the orders on +5. Left out with its round, so that cell has 7 rounds.
+- **How it is read:**
+  - **BenchmarkDotNet's pairs:** as W2's: the geometric mean of the clean pairs, else of all pairs.
+  - **Its stored writes run in process modes** wider than a pair can resolve. The orders' `WriteStored` at the tip read 504.5 ms in round 1 and 609.5 ms in round 2, each with a StdDev under 1%.
+  - **So the writes' verdicts are B1's:** each side's median of its process medians, and the median of the rounds' ratios, with its two halves (the second half's rounds reversed).
+- **The writes in fresh processes** (.NET 10, ms; G1, G2 and G4 of the driver's plan):
+
+  | | Base | +5 | +5+6 | Tip | Tip/base | +5+6/+5 | Tip/+5+6 | Tip/+5 |
+  |---|---:|---:|---:|---:|---:|---:|---:|---:|
+  | Package assets `Write` | 1,388.7 | 857.4 | 854.2 | 854.5 | −38.4% | −0.4% | −0.1% | −0.3% |
+  | `WriteStored` | 775.6 | 535.0 | 543.1 | 533.1 | −31.2% | +1.4% | −2.0% | −0.2% |
+  | `WriteProtected` | 1,557.8 | 938.1 | 929.5 | 929.7 | −40.3% | −0.9% | 0.0% | −0.8% |
+  | SpreadCheetah's `Write` (control) | 711.6 | 709.5 | 709.9 | 710.5 | −0.1% | +0.1% | +0.2% | +0.2% |
+  | Orders `Write` | 1,565.2 | 1,224.0 | 1,229.8 | 1,233.4 | −21.1% | +0.4% | +0.3% | +0.8% |
+  | `WriteStored` | 668.1 | 526.0 | 536.3 | 532.4 | −20.3% | +2.3% | −0.9% | +1.6% |
+  | `WriteProtected` | 1,717.8 | 1,258.3 | 1,259.2 | 1,265.4 | −26.4% | +0.3% | +0.1% | +0.3% |
+  | SpreadCheetah's `Write` (control) | 991.0 | 989.8 | 987.2 | 989.5 | 0.0% | −0.2% | +0.1% | −0.1% |
+
+  Each side's processes are within 1-3% of each other. A ratio's halves differ by 0.0 to 1.6 points.
+- **The write defaults, faster by the recorded amount:** met.
+  - −38.4% on the package assets and −21.1% on the orders, with SpreadCheetah level; step 5 recorded −37.7% and −22.3%.
+  - CsvHelper takes 1.20x SpreadCheetah's time on the package assets (1.95x at the base) and 1.25x on the orders (1.58x).
+  - BenchmarkDotNet's pairs agree: 0.625 and 0.781.
+- **The own zip writer, not slower than `ZipArchive` on .NET 10** (the tip against +5):
+  - **The package assets:** met. `Write` −0.3%, `WriteStored` −0.2%, `WriteProtected` −0.8%.
+  - **The orders:** `Write` +0.8% (halves −0.1 and +1.3) and `WriteProtected` +0.3%, within 1%.
+  - **The orders' `WriteStored`: +1.6%** (halves +1.2 and +2.8), about 6 ms. It is the one write more than 1% slower than with `ZipArchive`.
+    - In the same hosts, the stored stage alone is faster at the tip: 0.909 and 0.937 of `ZipArchive`'s time (7.4 against 8.0 ms).
+    - So the cost lies around the stage, not in it. Where, no run here shows: recommendation 2.
+    - At `Fastest` the stage is +1.5% and +0.9% on the package assets (step 6's GZip trailer) and level on the orders.
+  - **Step 6, on r-less sheets** (+5+6/+5):
+    - `Write` −0.4% and +0.4%.
+    - `WriteStored` +1.4% and +2.3%: the copy step 7 removed. The stored stage there takes 1.29-1.40x `ZipArchive`'s time.
+  - **Step 7** (the tip against +5+6):
+    - `Write` −0.1% and +0.3%. The write-through's check in the deflated path costs nothing measurable, which answers step 7's "W3 judges it".
+    - `WriteStored` −2.0% and −0.9%.
+  - **Step 6 on sheets with `r`** (6 alone against the base, BenchmarkDotNet only): `Write` 1.010 and 0.999, `WriteStored` 1.049 and 0.989. These pairs disagree by 3-5 points, inside the process modes.
+  - **Templates:** `CsvHelper_Create` 0.786 with the own writer (6 alone against the base), with 2-4 KB less allocated a call. No run of it is clean.
+- **`Protect`'s share** (`WriteProtected` over `Write` in each process, the median of 11-12 processes):
+
+  | | Base | +5 | +5+6 | Tip |
+  |---|---:|---:|---:|---:|
+  | Package assets | +12.1% | +9.3% | +8.9% | +8.9% |
+  | Orders | +9.7% | +2.7% | +2.3% | +2.4% |
+
+  - At the tip the orders' +2.4% is within the +1.2-4.5% expected; the package assets' +8.9% is over it. Step 5 had +8.6% and +2.9%.
+  - In time, `Protect` costs the package assets 75 ms at the tip against 169 at the base.
+  - What is left is the bytes step 5 named: each cell's unlocked `s`, and each gap's placeholder in its column's unlocked style, which keeps the gap editable. Recommendation 1.
+- **The recorded writes** (BenchmarkDotNet, the tip against the base, package assets; orders):
+  - `WriteShared` 0.682; 0.812. `WritePlain` 0.640; 0.795. `WritePresentation` 0.626; 0.766. `WriteTable` 0.631; 0.798.
+  - `WriteLinks` 0.617 and `WriteLinksAsText` 0.624. The orders have no links; their `WriteValidated` is 0.803.
+  - `WriteProtectedStored` 0.667; 0.814. `WriteNoAutoFit` 0.643; 0.785.
+  - The shapes, `Wide` and `Sparse`: `Write` 0.685 and 0.726, `Write100Rows` 0.697 and 0.765, `Write10000Rows` 0.687 and 0.730.
+- **Held records, within their budget:** met. The wide sheet's 1,000 columns allocate 48.7 KB at 100 rows, 48.9 KB at 1,000 and 48.8-49.8 KB at 10,000, within `HeldRecordsTests`' 64 KiB. At the base they allocated 8,240 KB each.
+  - The sparse sheet: 6.9 KB (70.4 KB at the base).
+  - A default write: 9.13 KB on the package assets (136.05 KB at the base) and 7.26 KB on the orders (173.35 KB).
+- **The own writer on .NET 8 and .NET Framework** (the per-target runner; ms, each tree's median of 14 rounds over two processes): recorded.
+
+  | | +5 (`ZipArchive`) | +5+6 | Tip | Tip/+5 |
+  |---|---:|---:|---:|---:|
+  | .NET 8, package assets `write` | 1,227.6 | 1,170.3 | 1,162.1 | −66 (−5.3%) |
+  | `write-stored` | 657.0 | 609.2 | 585.6 | −71 (−10.9%) |
+  | .NET 8, orders `write` | 2,099.1 | 2,058.5 | 2,060.3 | −39 (−1.8%) |
+  | `write-stored` | 636.0 | 606.0 | 594.9 | −41 (−6.5%) |
+  | .NET Framework, package assets `write` | 5,427.1 | 4,313.5 | 4,273.8 | −1,153 (−21.3%) |
+  | `write-stored` | 4,235.9 | 3,092.1 | 3,042.5 | −1,193 (−28.2%) |
+  | .NET Framework, orders `write` | 5,244.4 | 4,685.6 | 4,717.9 | −526 (−10.0%) |
+  | `write-stored` | 3,592.8 | 3,001.5 | 3,029.6 | −563 (−15.7%) |
+
+  - **Against step 6's record:** its own runs had −75 and −25 ms on .NET 8 and −1,232 and −498 ms on .NET Framework; lane E expected about −80 ms and −1.5 s.
+  - **Step 7's share:**
+    - The stored writes on .NET 8: −24 and −11 ms.
+    - The package assets on .NET Framework: −40 and −50 ms.
+    - The orders on .NET Framework: +32 and +28 ms (+0.7% and +0.9%, both halves).
+- **The conversions to CSV, within 1%:** met. The package assets 0.993 (inline) and 0.999 (shared), the orders 0.998. Sylvan's control is at 0.94-1.03.
+- **The inferred conversion, faster by the recorded amount:** met.
+  - **The orders:** `CsvHelper_ToExcel` −5.9% for step 7 in fresh processes (t4: 1,382.7 → 1,303.4 ms); step 7 recorded −6.2%.
+    - At the tip it takes 0.757 of the base's time (1,614 → 1,221 ms in BenchmarkDotNet).
+    - `ToExcelStored` −18.4% for step 7 (it recorded −13.2%).
+  - **The package assets: level for step 7** in fresh processes. `CsvHelper_ToExcel` −0.1% (909.0 → 908.2 ms), `ToExcelText` 0.0%, Sylvan −0.2%.
+    - BenchmarkDotNet's two clean pairs had put it 5.9% slower (785 → 831 ms). Those were the process modes again; t4 ran to settle it.
+  - **`ExcelColumnTypes`:** `Matches_Double` 0.456 and `Format_Double` 0.457 (step 7: −53% and −52%).
+    - `Format_Number` 1.121, about +1.1 ns of 9.4, and `Matches_Number` 1.028. Step 7's runs had these controls moving under 2 ns, and they don't show in a conversion.
+- **Phase 0's gate for core's `FloatFormatter.ShortestDigits`:** met. The rest of it was done at step 7: the suites, `git diff` and the IL.
+  - BenchmarkDotNet's pairs disagreed (`FloatsWrite.CsvHelper_Write` 0.992 and 1.021), so t3 ran fresh processes, 12 a side. The tip against the base:
+    - `PackageAssetsWrite`'s `CsvHelper_Write` −0.2%, `CsvHelper_WriteAsync` −0.4%, `CsvHelper_WriteRecordsByHand` −0.3%, `CsvHelper_WriteRecords` +0.6% (halves −0.1 and +2.0), `CsvHelper_WriteRecordsAsync` −0.5%;
+    - `FloatsWrite.CsvHelper_Write` −0.7%;
+    - Sep's controls +0.4%, +0.3% and 0.0%.
+  - NCsvPerf: `CsvHelperLocal` 349.5 → 349.4 ms (−0.0%), `CsvHelperLocal_MT` 200.2 → 201.9 ms (+0.8%), with the same allocations.
+- **The reads under the write lanes, within 1%:** met. The tip against the base:
+  - The package assets: `Rows` 1.003 and 0.996, `Strings` 1.001 and 1.006, `StringsFormatted` 0.996 and 0.990, `Records` 0.993 and 0.988.
+  - The orders: `Records` 0.997, `Values` 1.008, `Strings` 0.996.
+  - `ExcelReportRead`: `Range` 0.999 and `FormulaText` 0.999, over four pairs each (A's and t1's and t2's).
+    - Their medians are 1,085-1,115 ms on both sides.
+    - Neither is ever a clean pair: every run of either has a StdDev of 2.4-2.9%.
+  - Sylvan's control: 0.994-1.014.
+- **`Digits.Of`:** recorded.
+  - `ExcelCellRender.Digits` 0.220 (27.6 → 6.1 ns).
+  - The renders: `General` 0.559, `Grouped` 0.648, `DateTime` 0.789, `Fraction` 0.617, `Conditional` 0.575. The references `Parse` and `DotNet` are at 0.998 and 0.984.
+  - The orders' formatted reads: `StringsFormatted` 0.891 (1,660 → 1,478 ms), `ToCsvFormatted` 0.881 (1,736 → 1,530 ms), with the same allocations. The package assets' formatted reads, which are text, are at 0.990-1.007.
+  - The password: `CsvHelper_CreatePassword` 0.742 (23.84 → 17.70 ms; step 7 had −21.5%).
+- **Found:**
+  - **BenchmarkDotNet's process modes on stored writes** are wider than design D's 2-4%: up to 20% between rounds, each round steady. Fresh-process pairs decide stored writes, and W4 and W5 should plan them so.
+  - **`ExcelReportRead`'s reads** have a 2.4-2.9% StdDev in every run, so the 2% rule never makes them a clean pair. W5 reads them by all their pairs.
+  - **Part A's load sampler didn't stop at its end line:** `Start-Process` split the line's argument. Its log is complete. It was stopped by hand at 02:23, and the scripts now quote the argument.
+  - **A minute the load log flagged** (03:40, `csvhelper.benchmarks`) was B1's own process ending before the sampler read its command line. The analysis scripts now leave out the window's own processes, and the tables above count that process.
+- **On approval** (2026-11-24, every recommendation):
+  1. **`Protect`'s share on the package assets is recorded as missed** (+8.9% against +1.2-4.5%), not changed.
+     - What is left is bytes every protected cell needs to stay editable.
+     - The protected write is 40.3% faster than at the base, and `Protect`'s own time fell from 169 to 75 ms.
+     - W5 measures it again.
+     - Alternative: a follow-up with its own plan before W5, trying an unlocked default style under `Protect`. Cells and gaps would need no `s`, and the title, the header and the columns past the header's would take a locked style. It would remove most of those bytes, but it changes how every protected sheet is styled, so Excel and LibreOffice would have to check it.
+  2. **The orders' stored write is explained after the window.** QuickRunner and a profile, alone on the machine, at +5 and the tip, on the orders' `WriteStored`, about an hour. It looks for the 6 ms around a stage that is itself faster, as W2's recommendation 2 did for step 4's small costs.
+     - If a fix shows, it comes as its own plan before step 8.
+     - If not, the 1.6% is recorded as missed, and W5 measures it again.
+     - Alternative: recorded as missed now, for W5.
+  3. **W3's worktrees are removed:**
+     - on approval: `w3base`, `w3s56`, `w3s6a` and the two NCsvPerf copies;
+     - after recommendation 2's runs: `w3s5` and `w3s567`.
+     The logs, tables and BenchmarkDotNet's artifacts stay.
 
 ### Phase 10: other formats (XL)
 
