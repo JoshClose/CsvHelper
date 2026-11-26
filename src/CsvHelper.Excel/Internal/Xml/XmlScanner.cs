@@ -821,6 +821,36 @@ internal sealed class XmlScanner : IDisposable, IAsyncDisposable
 	}
 
 	/// <summary>
+	/// Starts reading again at the start of the window's bytes, as if inside <paramref name="depth"/> open elements, the root
+	/// among them: for a window put over a segment's bytes (<see cref="XmlWindow.Segment"/>), or restarted over a stream
+	/// from a segment's offset (<see cref="XmlWindow.Restart"/>), both between rows in <c>sheetData</c> (depth 2). The
+	/// position is 0, the root element has started and not ended, no token is read, no raw skip or markup in it is in
+	/// progress, and the states saved before, and the attributes made before, are no longer valid.
+	/// </summary>
+	/// <param name="depth">The number of open elements: 1 or more.</param>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="depth"/> is less than 1.</exception>
+	internal void ResetTo(int depth)
+	{
+		if (depth < 1)
+		{
+			throw new ArgumentOutOfRangeException(nameof(depth), depth, "The depth must be 1 or more: the root element is open.");
+		}
+
+		position = 0;
+		this.depth = depth;
+		rootSeen = true;
+		rootClosed = false;
+		tokenStart = 0;
+		Kind = XmlTokenKind.None;
+		IsEmptyElement = false;
+		rawSkipping = false;
+		rawMarkup = RawMarkup.None;
+		quoteCount = 0;
+		refills++;
+		tags++;
+	}
+
+	/// <summary>
 	/// Decodes the content of a text or CDATA token into UTF-8 (<see cref="XmlText.DecodeText"/>,
 	/// <see cref="XmlText.DecodeCData"/>). The <c>_xHHHH_</c> escapes are left for the caller, over the joined text of a value.
 	/// </summary>

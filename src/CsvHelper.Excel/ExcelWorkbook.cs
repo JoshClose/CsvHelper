@@ -1,4 +1,5 @@
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -55,8 +56,24 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 	// on, but for tests and benchmarks that read both ways, as rawSkips.
 	internal bool fastCells = true;
 	// The cells the scanners this workbook opened read by the tokenizer's path (SheetScanner.FallbackCells), added as each
-	// is disposed: the sheet's, and the header search's. For tests.
+	// is disposed: the sheet's, the header search's, and the segment workers'. For tests.
 	internal long fallbackCells;
+	// Whether a reader under ParallelEnumerate reads its sheet's rows in segments, on threads of its own (SegmentPipeline):
+	// on, but for tests and benchmarks that read both ways, as fastCells.
+	internal bool segmentScans = true;
+	// The size the sheet is cut into segments at, at the first row start at or after it; tests make it small.
+	internal int segmentSize = SegmentSizes.DefaultSize;
+	// How far into the sheet's part the serial read goes before segments can begin; tests make it 0.
+	internal long segmentMinimum = SegmentSizes.DefaultMinimum;
+	// The pool the segments' buffers come from: the shared one, or a test's checking pool.
+	internal ArrayPool<byte> segmentPool = ArrayPool<byte>.Shared;
+	// The scan threads of a pipeline: 0 for the enumeration's degree, at most the processor count; more forces that many.
+	internal int segmentThreads;
+	// The segments the readers of this workbook appended to their batches, the fallbacks to a serial read they took, and
+	// the pipelines they started, added as each is disposed. For tests.
+	internal long segmentsStitched;
+	internal long segmentFallbacks;
+	internal long segmentStarts;
 
 	/// <summary>Creates the workbook.</summary>
 	/// <param name="archive">The package.</param>
@@ -521,7 +538,7 @@ public sealed class ExcelWorkbook : IDisposable, IAsyncDisposable
 
 		try
 		{
-			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, cellOptions), settings.ReaderCsv());
+			return new CsvReader(new SheetRecordSource(scanner, this, ownsWorkbook, cellOptions, limits.MaxPartSize), settings.ReaderCsv());
 		}
 		catch
 		{

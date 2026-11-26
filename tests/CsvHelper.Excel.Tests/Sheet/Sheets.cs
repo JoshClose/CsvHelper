@@ -6,19 +6,28 @@ namespace CsvHelper.Excel.Tests.Sheet;
 
 /// <summary>
 /// A way of reading a sheet: a <see cref="ScanMode"/>, with raw skips (<see cref="ScanMode.RawSkips"/>) and fast cells
-/// (<see cref="ScanMode.FastCells"/>) on or off, and the number of records after which a fill's target is full.
+/// (<see cref="ScanMode.FastCells"/>) on or off, the number of records after which a fill's target is full, and whether the
+/// rows are read in segments (<see cref="SegmentTarget"/>).
 /// </summary>
 /// <param name="scan">How the part is read.</param>
 /// <param name="recordsPerFill">The records a fill takes.</param>
-public sealed class SheetMode(ScanMode scan, int recordsPerFill)
+/// <param name="segmentTarget">
+/// 0 to read serially; otherwise the cut target of segments (<see cref="SegmentReads"/>): 1 cuts at every row start, 64 at
+/// the first row start 64 bytes or more into each segment.
+/// </param>
+public sealed class SheetMode(ScanMode scan, int recordsPerFill, int segmentTarget = 0)
 {
 	/// <summary>
 	/// Every scan mode with its fast paths on (raw skips and fast cells) and with both off, each with fills that take every
-	/// record and fills that take one: 32 modes. A test that flips one switch alone does it with <see cref="WithRawSkips"/>
-	/// or <see cref="WithFastCells"/>.
+	/// record and fills that take one: 32 modes; and four segment modes, whole reads into a 64 KB window cut at every row
+	/// start and at 64-byte targets, each with the fast paths on and off, a record a fill (<see cref="SegmentReads"/>): 36
+	/// in all. A test that flips one switch alone does it with <see cref="WithRawSkips"/> or <see cref="WithFastCells"/>.
 	/// </summary>
 	public static IReadOnlyList<SheetMode> All { get; } =
-		[.. ScanMode.All.SelectMany(s => new[] { s, s.WithRawSkips(false).WithFastCells(false) }).SelectMany(s => new[] { new SheetMode(s, int.MaxValue), new SheetMode(s, 1) })];
+	[
+		.. ScanMode.All.SelectMany(s => new[] { s, s.WithRawSkips(false).WithFastCells(false) }).SelectMany(s => new[] { new SheetMode(s, int.MaxValue), new SheetMode(s, 1) }),
+		.. new[] { 1, 64 }.SelectMany(t => new[] { new SheetMode(ScanMode.All[0], 1, t), new SheetMode(ScanMode.All[0].WithRawSkips(false).WithFastCells(false), 1, t) }),
+	];
 
 	/// <summary>How the part is read.</summary>
 	public ScanMode Scan => scan;
@@ -26,18 +35,26 @@ public sealed class SheetMode(ScanMode scan, int recordsPerFill)
 	/// <summary>The records a fill takes.</summary>
 	public int RecordsPerFill => recordsPerFill;
 
+	/// <summary>0 for a serial read; otherwise the cut target of the segments the rows are read in (<see cref="SegmentReads"/>).</summary>
+	public int SegmentTarget => segmentTarget;
+
+	/// <summary>Whether the rows are read in segments once they can be (<see cref="SegmentReads"/>).</summary>
+	public bool Segments => segmentTarget > 0;
+
 	/// <summary>The same mode with raw skips on or off, and fast cells as they are.</summary>
 	/// <param name="raw">Whether the sheet readers skip by a raw search.</param>
 	/// <returns>The mode.</returns>
-	public SheetMode WithRawSkips(bool raw) => new(scan.WithRawSkips(raw), recordsPerFill);
+	public SheetMode WithRawSkips(bool raw) => new(scan.WithRawSkips(raw), recordsPerFill, segmentTarget);
 
 	/// <summary>The same mode with fast cells on or off, and raw skips as they are.</summary>
 	/// <param name="fast">Whether the sheet scanner reads the cells it can through its fast path.</param>
 	/// <returns>The mode.</returns>
-	public SheetMode WithFastCells(bool fast) => new(scan.WithFastCells(fast), recordsPerFill);
+	public SheetMode WithFastCells(bool fast) => new(scan.WithFastCells(fast), recordsPerFill, segmentTarget);
 
 	/// <inheritdoc/>
-	public override string ToString() => $"{scan.Name}, {Switches()}" + (recordsPerFill == int.MaxValue ? "" : $", {recordsPerFill} record per fill");
+	public override string ToString() =>
+		$"{scan.Name}, {Switches()}" + (recordsPerFill == int.MaxValue ? "" : $", {recordsPerFill} record per fill") +
+		(segmentTarget switch { 0 => "", 1 => ", segments at every row start", _ => $", segments at {segmentTarget}-byte targets" });
 
 	/// <summary>The switches, as <see cref="ToString"/> names them: both together when they agree.</summary>
 	/// <returns>The description, such as <c>fast paths on</c>, or <c>raw skips on, fast cells off</c>.</returns>
@@ -265,7 +282,7 @@ internal static class Sheets
 		return [.. records.Select(r => styled ? r.Styled() : r.ToString())];
 	}
 
-	/// <summary>Reads a sheet's records.</summary>
+	/// <summary>Reads a sheet's records; in a segment mode, through segments once they can begin (<see cref="SegmentReads"/>).</summary>
 	/// <param name="xml">The part.</param>
 	/// <param name="mode">How to read it.</param>
 	/// <param name="skipEmptyRows">Whether rows without a value are dropped.</param>
@@ -277,6 +294,11 @@ internal static class Sheets
 	public static async Task<List<CapturedRecord>> ReadRecordsAsync(
 		string xml, SheetMode mode, bool skipEmptyRows = true, SharedStrings? strings = null, string sheetName = "Data", long maxSize = 1 << 20, CellReading? reading = null)
 	{
+		if (mode.Segments)
+		{
+			return SegmentReads.Read(xml, mode, skipEmptyRows, strings, sheetName, maxSize, reading).Records;
+		}
+
 		using var sheet = Open(xml, mode.Scan, skipEmptyRows, strings, sheetName, maxSize, reading);
 		var captured = new Captured(mode.RecordsPerFill);
 		await FillAllAsync(sheet, captured, mode.Scan.Async);

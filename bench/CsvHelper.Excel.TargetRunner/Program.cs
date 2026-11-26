@@ -101,6 +101,9 @@ public static class Program
 			  rows         ExcelReader.Create and Read() to the end, FieldCount summed
 			  records      GetRecords<PackageAsset>() or GetRecords<OrderRecord>(), to a list
 			  rows-stored  rows over a copy of the workbook with every entry re-zipped at NoCompression, made in memory at start
+			  and, only when named:
+			  records-parallel  records through ParallelEnumerate at {ReadMethods.ParallelDegree} workers, to a list
+			  rows-parallel     rows through ParallelEnumerate at {ReadMethods.ParallelDegree} workers, FieldCount summed
 
 			write methods, of the million package assets (Data\PackageAssets.csv) or the million orders (ExcelOrders.Generate):
 			  {string.Join(",", WriteMethods.Names)} (the default, in that order)
@@ -281,10 +284,11 @@ internal sealed class Arguments
 		}
 
 		var methods = positional.Count == 2 ? positional[1].Split(',').Select(m => m.Trim()).ToArray() : names;
-		var unknown = methods.Where(m => !names.Contains(m)).ToList();
+		string[] valid = command == "read" ? [.. names, .. ReadMethods.Optional] : names;
+		var unknown = methods.Where(m => !valid.Contains(m)).ToList();
 		if (unknown.Count > 0)
 		{
-			throw new ArgumentException($"Unknown {command} method '{string.Join("', '", unknown)}': the methods are {string.Join(", ", names)}.");
+			throw new ArgumentException($"Unknown {command} method '{string.Join("', '", unknown)}': the methods are {string.Join(", ", valid)}.");
 		}
 
 		if (methods.Distinct().Count() != methods.Length)

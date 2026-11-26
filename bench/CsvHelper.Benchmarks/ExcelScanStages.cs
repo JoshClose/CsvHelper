@@ -81,9 +81,21 @@ public class ExcelScanStages
 	public void SetupStored()
 	{
 		BenchWorkbooks.Ensure();
-		var source = SourcePath();
-		var path = ExcelDataGenerator.CachedPath($"stored-{Workbook.ToString().ToLowerInvariant()}-", stream => Store(source, stream));
-		stored = File.ReadAllBytes(path);
+		stored = ReadStored(Workbook);
+	}
+
+	/// <summary>
+	/// Reads the stored copy of a workbook from the cache, made there from the workbook the first time: every entry stored,
+	/// not deflated. <see cref="RowsStored"/> reads it, and so do the parallel classes' stored method.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <returns>The copy's bytes.</returns>
+	internal static byte[] ReadStored(StageWorkbook workbook)
+	{
+		var source = SourcePath(workbook);
+		var path = ExcelDataGenerator.CachedPath($"stored-{workbook.ToString().ToLowerInvariant()}-", stream => Store(source, stream));
+
+		return File.ReadAllBytes(path);
 	}
 
 	/// <summary>Opening a reader: the zip's directory, the workbook part, the styles and the shared strings; no rows.</summary>
@@ -425,7 +437,12 @@ public class ExcelScanStages
 
 	/// <summary>Returns the path of the workbook in the cache.</summary>
 	/// <returns>The path, the workbook written there if missing.</returns>
-	private string SourcePath() => Workbook switch
+	private string SourcePath() => SourcePath(Workbook);
+
+	/// <summary>Returns the path of a workbook in the cache.</summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <returns>The path, the workbook written there if missing.</returns>
+	private static string SourcePath(StageWorkbook workbook) => workbook switch
 	{
 		StageWorkbook.Shared => ExcelDataGenerator.PackageAssetsPath(ExcelDataGenerator.PackageAssetRows, ExcelStrings.Shared),
 		StageWorkbook.Inline => ExcelDataGenerator.PackageAssetsPath(ExcelDataGenerator.PackageAssetRows, ExcelStrings.Inline),

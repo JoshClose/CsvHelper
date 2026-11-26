@@ -23,6 +23,12 @@ namespace CsvHelper.Excel;
 /// Byte offsets (<see cref="Offset"/>, and in errors) count from the start of the part, its UTF-8 byte order mark included.
 /// In a UTF-16 part they count the bytes of its UTF-8 text.
 /// </para>
+/// <para>
+/// A window for segments (<see cref="ForSegments"/>) has no stream: a segment's scan puts it over the segment's bytes, at
+/// their offset in the part (<see cref="Segment"/>), and it never reads, compacts or grows, so the bytes, which the segment
+/// pipeline owns, are never written. Its bytes are never the part's last (<see cref="IsEof"/> is false), so a token they cut
+/// short asks for more, as at any refill.
+/// </para>
 /// </remarks>
 internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 {
@@ -44,6 +50,9 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 	private bool sniffed;
 	private bool eof;
 	private bool disposed;
+	// Whether the window is over segments' bytes (ForSegments): no stream, and a buffer it doesn't own. Declared last, so
+	// that the fields a scan reads keep their places.
+	private readonly bool segments;
 
 	/// <summary>Creates a window over the stream of a part.</summary>
 	/// <param name="stream">The stream of the part, which the window owns: disposing the window disposes it.</param>
@@ -78,6 +87,19 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 		buffer = ArrayPool<byte>.Shared.Rent(capacity);
 	}
 
+	/// <summary>Creates a window for segments, without a stream or bytes until <see cref="Segment"/>.</summary>
+	/// <param name="partName">The name of the part, for errors.</param>
+	/// <param name="maxSize">The part's size limit, as the part's own window has it.</param>
+	private XmlWindow(string partName, int maxSize)
+	{
+		stream = Stream.Null;
+		this.partName = partName;
+		this.maxSize = maxSize;
+		buffer = [];
+		sniffed = true;
+		segments = true;
+	}
+
 	/// <summary>The name of the part, for errors.</summary>
 	public string PartName => partName;
 
@@ -96,10 +118,106 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 	/// <summary>Whether the stream has ended: the bytes up to <see cref="End"/> are the last of the part.</summary>
 	public bool IsEof => eof;
 
+	/// <summary>Whether the window reads its part through <see cref="Utf16Stream"/>: the part's bytes are UTF-16, and the window's their UTF-8 text.</summary>
+	public bool Transcodes => stream is Utf16Stream;
+
+	/// <summary>Whether the window is over segments' bytes (<see cref="ForSegments"/>), which it never reads more of.</summary>
+	public bool HoldsSegments => segments;
+
 	/// <summary>The offset in the part of a position in <see cref="Buffer"/>.</summary>
 	/// <param name="position">The position in <see cref="Buffer"/>.</param>
 	/// <returns>The number of bytes of the part before <paramref name="position"/>.</returns>
 	public long Offset(int position) => discarded + position;
+
+	/// <summary>
+	/// Creates a window for the segments of a part (<see cref="ISegmentScanner"/>): no stream, and no bytes until
+	/// <see cref="Segment"/> puts it over a segment's. Disposing it disposes nothing, and returns no buffer.
+	/// </summary>
+	/// <param name="partName">The name of the part, for errors.</param>
+	/// <param name="maxSize">The part's size limit, as the part's own window has it (<see cref="MaxSize"/>).</param>
+	/// <returns>The window.</returns>
+	/// <exception cref="ArgumentNullException"><paramref name="partName"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="maxSize"/> is 0 or less.</exception>
+	public static XmlWindow ForSegments(string partName, int maxSize)
+	{
+		ArgumentNullException.ThrowIfNull(partName);
+		if (maxSize <= 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(maxSize), maxSize, "The size limit must be more than 0.");
+		}
+
+		return new XmlWindow(partName, maxSize);
+	}
+
+	/// <summary>
+	/// Puts a window for segments over a segment's bytes: <see cref="Buffer"/> is <paramref name="bytes"/>, whose first
+	/// <paramref name="length"/> are the window's, and position 0 is <paramref name="offset"/> in the part. The bytes are
+	/// read, never written; the window holds them until the next call.
+	/// </summary>
+	/// <param name="bytes">The segment's bytes, from its start.</param>
+	/// <param name="length">The number of the segment's bytes.</param>
+	/// <param name="offset">The offset in the part of the segment's first byte.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="bytes"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="length"/> is outside <paramref name="bytes"/>, or <paramref name="offset"/> is negative.</exception>
+	/// <exception cref="InvalidOperationException">The window is a part's, over its stream.</exception>
+	/// <exception cref="ObjectDisposedException">The window is disposed.</exception>
+	public void Segment(byte[] bytes, int length, long offset)
+	{
+		ArgumentNullException.ThrowIfNull(bytes);
+		ObjectDisposedException.ThrowIf(disposed, this);
+		if (!segments)
+		{
+			throw new InvalidOperationException("Only a window for segments is put over a segment's bytes.");
+		}
+
+		if ((uint)length > (uint)bytes.Length)
+		{
+			throw new ArgumentOutOfRangeException(nameof(length), length, "The length is outside the bytes.");
+		}
+
+		if (offset < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(offset), offset, "The offset can't be negative.");
+		}
+
+		buffer = bytes;
+		capacity = length;
+		end = length;
+		discarded = offset;
+	}
+
+	/// <summary>
+	/// Restarts the window over another stream of the same part, which reads on from <paramref name="offset"/>: the bytes
+	/// the window holds are dropped (<see cref="End"/> is 0, and the next byte read is at <paramref name="offset"/>), its
+	/// buffer and size are kept, the byte order mark is not looked for again, and the window owns the new stream. The old
+	/// stream is not disposed: whoever gave the new one owns it. For a segmented read that falls back to the part's window.
+	/// </summary>
+	/// <param name="stream">The part's bytes from <paramref name="offset"/> on.</param>
+	/// <param name="offset">The offset in the part of the stream's first byte.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> is negative.</exception>
+	/// <exception cref="InvalidOperationException">The window is for segments, which has no stream.</exception>
+	/// <exception cref="ObjectDisposedException">The window is disposed.</exception>
+	public void Restart(Stream stream, long offset)
+	{
+		ArgumentNullException.ThrowIfNull(stream);
+		ObjectDisposedException.ThrowIf(disposed, this);
+		if (segments)
+		{
+			throw new InvalidOperationException("A window for segments has no stream to restart.");
+		}
+
+		if (offset < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(offset), offset, "The offset can't be negative.");
+		}
+
+		this.stream = stream;
+		end = 0;
+		discarded = offset;
+		sniffed = true;
+		eof = false;
+	}
 
 	/// <summary>
 	/// Makes room to read more: drops the bytes before <paramref name="keepFrom"/> and moves the rest to the start, so a
@@ -184,7 +302,10 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 		var rented = buffer;
 		buffer = [];
 		end = capacity = 0;
-		ArrayPool<byte>.Shared.Return(rented);
+		if (!segments)
+		{
+			ArrayPool<byte>.Shared.Return(rented);
+		}
 
 		return true;
 	}
@@ -296,15 +417,20 @@ internal sealed class XmlWindow : IDisposable, IAsyncDisposable
 		capacity = size;
 	}
 
-	/// <summary>Throws when the window is disposed, or the stream has ended.</summary>
+	/// <summary>Throws when the window is disposed, the stream has ended, or the window is for segments, which never reads.</summary>
 	/// <exception cref="ObjectDisposedException">The window is disposed.</exception>
-	/// <exception cref="InvalidOperationException">The stream has ended.</exception>
+	/// <exception cref="InvalidOperationException">The stream has ended, or the window is for segments.</exception>
 	private void CheckReadable()
 	{
 		ObjectDisposedException.ThrowIf(disposed, this);
 		if (eof)
 		{
 			throw new InvalidOperationException("The part has no more bytes to read.");
+		}
+
+		if (segments)
+		{
+			throw new InvalidOperationException("A window for segments reads nothing more: its bytes are the segment's.");
 		}
 	}
 }

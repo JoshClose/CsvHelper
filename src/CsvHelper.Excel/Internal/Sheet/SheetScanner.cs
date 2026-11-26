@@ -114,6 +114,16 @@ namespace CsvHelper.Excel;
 /// that can't be inflated, throws <see cref="InvalidDataException"/>. After either, every fill throws the same exception
 /// again.
 /// </para>
+/// <para>
+/// <b>Segments.</b> Under <c>CsvReader.ParallelEnumerate</c>, once the rows have begun and a fill has ended between rows
+/// (<see cref="CanStartSegments"/>), the rest of <c>sheetData</c> can be cut into segments at row starts and scanned on
+/// threads of their own by workers of this scanner (<see cref="CreateSegmentScanner"/>, <see cref="SheetSegmentScanner"/>),
+/// each with the sheet's configuration and state when the segments began, and its own window over a segment's bytes. A
+/// worker writes exactly the records this scanner would, its rows numbered from the segment's start when they float (no
+/// <c>r</c>), or marks the segment; <see cref="SegmentStitcher"/> joins the segments, and at a marked one this scanner reads
+/// on from the segment's start (<see cref="ResumeAt"/>), so that every error, and every limit's trip, is this scanner's.
+/// Nothing of segment mode is on a cell's path: its branches are in <see cref="SetRow"/> and in the worker's own code.
+/// </para>
 /// </remarks>
 internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 {
@@ -214,6 +224,19 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	private readonly bool textStyles;
 	// The cells the tokenizer's path began reading (ReadCell): with the fast path, the ones it declined.
 	private long fallbackCells;
+	// The rows' start for the segment pipeline's cuts: '<', sheetData's prefix and "row", noted at sheetData's start tag.
+	// Declared after the fields above, for the same reason, as are segment mode's below, which only a worker
+	// (CreateSegmentScanner) sets.
+	private byte[]? rowStart;
+	// Where a worker is in its segment's rows: before the first, or in a segment whose rows float. None for this scanner's
+	// own read, and for a worker past an anchored first row, whose rows then read as this scanner reads them.
+	private SegmentRows segmentRows;
+	// A worker's segment's first row: its number when it is anchored, 0 when it floats, -1 before it.
+	private long segmentFirstRow;
+	// What the charges count when there is no budget (a worker's segment's extras), and the most they may: past it, the
+	// segment is marked.
+	private long extras;
+	private long extrasLimit = long.MaxValue;
 
 	/// <summary>Creates the scanner of a worksheet part.</summary>
 	/// <param name="scanner">The part's XML, at its start; the sheet scanner owns it, and disposes it.</param>
@@ -377,6 +400,373 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <summary>Asynchronously disposes the part's XML, and so its stream.</summary>
 	/// <returns>A task that completes when the stream is disposed.</returns>
 	public ValueTask DisposeAsync() => scanner.DisposeAsync();
+
+	/// <summary>
+	/// Whether the rest of the rows can be read in segments from here, at a fill's end (<see cref="CreateSegmentScanner"/>):
+	/// the rows have begun, the scanner is between rows in <c>sheetData</c> with no missing row left to write and no row
+	/// waiting for the next fill after the missing rows before it (whose state <see cref="SegmentStitcher"/> can't be given),
+	/// the width the rows are padded to is set (by a record with a value, or the held one), and no held record is left to
+	/// write. Never when formulas read as text or merged cells are filled (their state goes from row to row), for a UTF-16
+	/// part (which the window reads through <see cref="Utf16Stream"/>), without a budget, after an error, after the rows, or
+	/// for a worker. Under an area that bounds rows, only when the next row, whole in the window, has an <c>r</c>: a segment
+	/// can't place a row that floats there, so an <c>r</c>-less sheet in such an area never begins segments.
+	/// </summary>
+	internal bool CanStartSegments =>
+		CanCopy && mode == Mode.SheetData && gapNext >= gapEnd && gapNext <= Math.Max(lastRow + 1, layout is null ? 1 : layout.FirstRow) &&
+		scanner.Depth == RowDepth - 1 && budget is not null && !scanner.Window.Transcodes && (!SegmentStitcher.BoundsRows(layout) || NextRowAnchors());
+
+	/// <summary>The offset in the part of where the scanner is: where the window's unread bytes start (<see cref="Unread"/>).</summary>
+	internal long Position => scanner.Window.Offset(scanner.Position);
+
+	/// <summary>The window's bytes from where the scanner is to their end, which the part's stream has been read to: the segments' first bytes.</summary>
+	internal ReadOnlySpan<byte> Unread => scanner.Window.Buffer.AsSpan(scanner.Position, scanner.Window.End - scanner.Position);
+
+	/// <summary>
+	/// The rows' start, which the segment pipeline cuts at: <c>&lt;</c>, <c>sheetData</c>'s prefix and <c>row</c>, as in
+	/// <c>&lt;x:row</c>; noted at <c>sheetData</c>'s start tag, <see langword="null"/> before it.
+	/// </summary>
+	internal byte[]? RowStart => rowStart;
+
+	/// <summary>The last row read, written or not; 0 before the first.</summary>
+	internal long LastRow => lastRow;
+
+	/// <summary>Whether the rows the file lacks are written as empty records: with empty rows kept, unless the sheet hides them.</summary>
+	internal bool KeepsMissingRows => keepsMissingRows;
+
+	/// <summary>The part's stream, which the scanner's charges count toward the workbook's uncompressed size; <see langword="null"/> without one.</summary>
+	internal LimitedReadStream? Budget => budget;
+
+	/// <summary>
+	/// Whether the scanner's configuration and state can be copied into a worker: the rows have begun, the width is set, no
+	/// held record is left, no state goes from row to row (shared formulas, merged cells), no fill has failed, the rows'
+	/// start is noted, and the scanner isn't a worker itself.
+	/// </summary>
+	private bool CanCopy =>
+		rowsBegun && width >= 0 && held is null && sharedFormulas is null && merged is null && mergedCells is null && fault is null && rowStart is not null &&
+		!scanner.Window.HoldsSegments;
+
+	/// <summary>
+	/// Creates a worker of this scanner for one of the segment pipeline's scan threads, when the segments begin
+	/// (<see cref="CanStartSegments"/>). It shares this scanner's configuration, which is read-only (the shared strings,
+	/// the styles, the formatter, the switches, the final layout, the rows' and cells' names, the locations), copies the
+	/// state the rows go on with (whether <c>xml:space="preserve"</c> applies in <c>sheetData</c>, and the width), and has its
+	/// own window and XML scanner, no budget (its charges count toward its segment's extras), and nothing that goes from row
+	/// to row. See <see cref="SheetSegmentScanner"/>.
+	/// </summary>
+	/// <param name="extrasLimit">
+	/// What the workbook's limit had left when the segments began: a segment whose extras pass it is marked
+	/// (<see cref="SegmentMark.ExtrasCap"/>), since its serial read would certainly pass the limit.
+	/// </param>
+	/// <returns>The worker.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="extrasLimit"/> is negative.</exception>
+	/// <exception cref="InvalidOperationException">The scanner's state can't be copied: segments can't begin here.</exception>
+	internal ISegmentScanner CreateSegmentScanner(long extrasLimit)
+	{
+		if (extrasLimit < 0)
+		{
+			throw new ArgumentOutOfRangeException(nameof(extrasLimit), extrasLimit, "The limit can't be negative.");
+		}
+
+		if (!CanCopy)
+		{
+			throw new InvalidOperationException("Segments can't begin here: the rows haven't begun, their width isn't set, or the sheet's state goes from row to row.");
+		}
+
+		var window = XmlWindow.ForSegments(scanner.Window.PartName, scanner.Window.MaxSize);
+		var xml = new XmlScanner(window) { RawSkips = scanner.RawSkips };
+
+		return new SheetSegmentScanner(new SheetScanner(this, xml, extrasLimit));
+	}
+
+	/// <summary>
+	/// Reads on serially from a segment's start, after the segments, as the read would have from there: the window restarts
+	/// over <paramref name="stream"/>, the part's bytes from <paramref name="offset"/> on (<see cref="XmlWindow.Restart"/>),
+	/// the XML scanner in <c>sheetData</c> (<see cref="XmlScanner.ResetTo"/>), and the scanner between rows after row
+	/// <paramref name="lastRow"/>, with the missing rows from <paramref name="nextMissingRow"/> still to write before the
+	/// next row, when missing rows are kept. The scanner must be where the segments began, untouched since; the window owns
+	/// the new stream, and the old one is left to whoever gave the new one.
+	/// </summary>
+	/// <param name="stream">The part's bytes from <paramref name="offset"/> on.</param>
+	/// <param name="offset">The offset in the part of the segment's first byte.</param>
+	/// <param name="lastRow">The last row the segments delivered (<see cref="SegmentStitcher.LastRow"/>).</param>
+	/// <param name="nextMissingRow">The next missing row to write (<see cref="SegmentStitcher.NextMissingRow"/>): after <paramref name="lastRow"/>.</param>
+	/// <exception cref="ArgumentNullException"><paramref name="stream"/> is <see langword="null"/>.</exception>
+	/// <exception cref="ArgumentOutOfRangeException">
+	/// <paramref name="lastRow"/> is before the last row the scanner read, or <paramref name="nextMissingRow"/> isn't after it.
+	/// </exception>
+	/// <exception cref="InvalidOperationException">The scanner isn't between rows where segments could begin.</exception>
+	internal void ResumeAt(Stream stream, long offset, long lastRow, long nextMissingRow)
+	{
+		ArgumentNullException.ThrowIfNull(stream);
+		if (!CanCopy || mode != Mode.SheetData)
+		{
+			throw new InvalidOperationException("The scanner reads on from a segment only from where the segments began.");
+		}
+
+		if (lastRow < this.lastRow)
+		{
+			throw new ArgumentOutOfRangeException(nameof(lastRow), lastRow, $"The last row delivered can't be before the scanner's, {this.lastRow}.");
+		}
+
+		if (nextMissingRow <= lastRow)
+		{
+			throw new ArgumentOutOfRangeException(nameof(nextMissingRow), nextMissingRow, "The next missing row must be after the last row.");
+		}
+
+		scanner.Window.Restart(stream, offset);
+		scanner.ResetTo(RowDepth - 1);
+		this.lastRow = lastRow;
+		row = lastRow;
+		rowKnown = false;
+
+		// SetRow writes from the later of these and the row after lastRow.
+		gapNext = nextMissingRow;
+		gapEnd = nextMissingRow;
+		cellColumn = -1;
+		unwritten = false;
+		rowHidden = false;
+		rowNamed = false;
+		skipsRaw = false;
+	}
+
+	/// <summary>Creates a worker of <paramref name="sheet"/> (<see cref="CreateSegmentScanner"/>).</summary>
+	/// <param name="sheet">The sheet's scanner, where the segments begin.</param>
+	/// <param name="scanner">The worker's XML scanner, over a window for segments.</param>
+	/// <param name="extrasLimit">The most a segment's extras may be.</param>
+	private SheetScanner(SheetScanner sheet, XmlScanner scanner, long extrasLimit)
+	{
+		this.scanner = scanner;
+		location = sheet.location;
+		strings = sheet.strings;
+		styles = sheet.styles;
+		skipEmptyRows = sheet.skipEmptyRows;
+		date1904 = sheet.date1904;
+		nullErrors = sheet.nullErrors;
+		skipHiddenRows = sheet.skipHiddenRows;
+		formatter = sheet.formatter;
+		textStyles = sheet.textStyles;
+		fastCells = sheet.fastCells;
+		keepsMissingRows = sheet.keepsMissingRows;
+		missingRowsHidden = sheet.missingRowsHidden;
+		layout = sheet.layout;
+		rowName = sheet.rowName;
+		cellNames = sheet.cellNames;
+		rowStart = sheet.rowStart;
+		rootPreserves = sheet.rootPreserves;
+		dataPreserves = sheet.dataPreserves;
+		width = sheet.width;
+		rowsBegun = true;
+		mode = Mode.SheetData;
+		this.extrasLimit = extrasLimit;
+	}
+
+	/// <summary>
+	/// A worker's scan of one segment (<see cref="SheetSegmentScanner.Scan"/>): into <paramref name="block"/>, which it
+	/// clears first, from between rows in <c>sheetData</c>, with no row before it. It never throws: whatever it can't finish
+	/// exactly marks the segment.
+	/// </summary>
+	/// <param name="bytes">The segment's bytes.</param>
+	/// <param name="length">The number of the segment's bytes.</param>
+	/// <param name="offset">The offset in the part of the segment's first byte.</param>
+	/// <param name="final">Whether the part's bytes end with the segment's.</param>
+	/// <param name="block">Takes the segment's records.</param>
+	/// <returns>How the segment ended, and what the stitcher needs of it.</returns>
+	/// <exception cref="InvalidOperationException">The scanner isn't a worker.</exception>
+	internal SegmentResult ScanSegment(byte[] bytes, int length, long offset, bool final, SegmentBlock block)
+	{
+		if (!scanner.Window.HoldsSegments)
+		{
+			throw new InvalidOperationException("Only a worker of segment mode scans segments.");
+		}
+
+		try
+		{
+			block.Clear();
+			BeginSegment();
+
+			// Before anything is scanned: a comment, CDATA section, processing instruction or DOCTYPE anywhere in the segment
+			// is the serial read's, which reads every path through them as it does.
+			if (HasMarkup(bytes.AsSpan(0, length)))
+			{
+				return EndSegment(SegmentEnd.Marked, SegmentMark.Markup, null);
+			}
+
+			scanner.Window.Segment(bytes, length, offset);
+			scanner.ResetTo(RowDepth - 1);
+			var step = Scan(new BlockTarget(block));
+			if (step == Step.Done)
+			{
+				return EndSegment(SegmentEnd.Ended, SegmentMark.None, null);
+			}
+
+			// Every byte read, between rows: the next segment goes on. Anything else (a row, a tag or a skip the bytes cut
+			// short, or rows that the part's last bytes don't end) is the serial read's.
+			if (step == Step.More && !final && mode == Mode.SheetData && scanner.Depth == RowDepth - 1 && scanner.Position == scanner.Window.End)
+			{
+				return EndSegment(SegmentEnd.Done, SegmentMark.None, null);
+			}
+
+			return EndSegment(SegmentEnd.Marked, SegmentMark.Unfinished, null);
+		}
+		catch (SegmentMarkException e)
+		{
+			return EndSegment(SegmentEnd.Marked, e.Mark, null);
+		}
+		catch (Exception e)
+		{
+			// Whatever it is: the serial read throws the sheet's error, at its place, from the segment's start.
+			return EndSegment(SegmentEnd.Marked, SegmentMark.Error, e);
+		}
+	}
+
+	/// <summary>Puts a worker at the start of a segment: between rows in <c>sheetData</c>, with no row before it, no missing row to write, and nothing counted.</summary>
+	private void BeginSegment()
+	{
+		mode = Mode.SheetData;
+		row = 0;
+		rowKnown = false;
+		lastRow = 0;
+		gapNext = layout is null ? 1 : Math.Max(layout.FirstRow, 1);
+		gapEnd = gapNext;
+		lastColumn = -1;
+		fields = 0;
+		fillFrom = 0;
+		cellColumn = -1;
+		unwritten = false;
+		rowHidden = false;
+		rowNamed = false;
+		skipsRaw = false;
+		segmentRows = SegmentRows.First;
+		segmentFirstRow = -1;
+		extras = 0;
+		fallbackCells = 0;
+	}
+
+	/// <summary>What a worker's scan of a segment gives the stitcher.</summary>
+	/// <param name="end">How the segment ended.</param>
+	/// <param name="mark">Why it was marked, or <see cref="SegmentMark.None"/>.</param>
+	/// <param name="error">The exception that marked it, for <see cref="SegmentMark.Error"/>.</param>
+	/// <returns>The result.</returns>
+	private SegmentResult EndSegment(SegmentEnd end, SegmentMark mark, Exception? error) => new()
+	{
+		End = end,
+		Mark = mark,
+		FirstRow = segmentFirstRow,
+		LastRow = lastRow,
+		Extras = extras,
+		FallbackCells = fallbackCells,
+		Error = error,
+	};
+
+	/// <summary>Whether bytes have <c>&lt;!</c> or <c>&lt;?</c>: a comment, CDATA section, processing instruction or DOCTYPE, or the start of one.</summary>
+	/// <param name="bytes">The bytes.</param>
+	/// <returns>Whether they have.</returns>
+	private static bool HasMarkup(ReadOnlySpan<byte> bytes)
+	{
+		// '!' and '?' are rare in a sheet's XML, where '<' is everywhere: each is looked at once.
+		var at = 0;
+		while (true)
+		{
+			var mark = bytes.Slice(at).IndexOfAny((byte)'!', (byte)'?');
+			if (mark < 0)
+			{
+				return false;
+			}
+
+			at += mark;
+			if (at > 0 && bytes[at - 1] == (byte)'<')
+			{
+				return true;
+			}
+
+			at++;
+		}
+	}
+
+	/// <summary>
+	/// Whether the next row the window holds anchors a segment that starts with it, for <see cref="CanStartSegments"/>
+	/// under an area that bounds rows: after the text between rows, the rows' start tag, whole in the window, with an
+	/// <c>r</c>. Anything else (another tag, markup, a row without <c>r</c>, a tag the window cuts) is no.
+	/// </summary>
+	/// <returns>Whether it anchors.</returns>
+	private bool NextRowAnchors()
+	{
+		var start = rowStart!;
+		var unread = Unread;
+		var at = unread.IndexOf((byte)'<');
+		if (at < 0 || !unread.Slice(at).StartsWith(start))
+		{
+			return false;
+		}
+
+		var tag = unread.Slice(at + start.Length);
+
+		return tag.Length > 0 && (XmlScanner.IsWhitespace(tag[0]) || tag[0] is (byte)'>' or (byte)'/') && TagHasReference(tag);
+	}
+
+	/// <summary>
+	/// Whether a start tag's attributes, from after its name, have one named <c>r</c> (by its local name, as
+	/// <see cref="XmlAttributes"/> names them, namespace declarations aside), read up to the tag's end.
+	/// </summary>
+	/// <param name="tag">The tag's bytes after its name.</param>
+	/// <returns>Whether it has; <see langword="false"/> also when the bytes end first, or don't read as attributes.</returns>
+	private static bool TagHasReference(ReadOnlySpan<byte> tag)
+	{
+		var at = 0;
+		while (true)
+		{
+			while (at < tag.Length && XmlScanner.IsWhitespace(tag[at]))
+			{
+				at++;
+			}
+
+			if (at == tag.Length || tag[at] is (byte)'>' or (byte)'/')
+			{
+				return false;
+			}
+
+			var start = at;
+			while (at < tag.Length && tag[at] is not ((byte)'=' or (byte)'>' or (byte)'/') && !XmlScanner.IsWhitespace(tag[at]))
+			{
+				at++;
+			}
+
+			var qualified = tag.Slice(start, at - start);
+			while (at < tag.Length && XmlScanner.IsWhitespace(tag[at]))
+			{
+				at++;
+			}
+
+			if (at == tag.Length || tag[at] != (byte)'=')
+			{
+				return false;
+			}
+
+			at++;
+			while (at < tag.Length && XmlScanner.IsWhitespace(tag[at]))
+			{
+				at++;
+			}
+
+			if (at == tag.Length || tag[at] is not ((byte)'"' or (byte)'\''))
+			{
+				return false;
+			}
+
+			var close = tag.Slice(at + 1).IndexOf(tag[at]);
+			if (close < 0)
+			{
+				return false;
+			}
+
+			if (qualified.Slice(qualified.IndexOf((byte)':') + 1).SequenceEqual("r"u8) && !qualified.StartsWith("xmlns:"u8))
+			{
+				return true;
+			}
+
+			at += close + 2;
+		}
+	}
 
 	/// <summary>The kind of a cell's type (<c>t</c>), for how its value is read.</summary>
 	/// <param name="type">The type, without white space around it.</param>
@@ -774,20 +1164,25 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		return true;
 	}
 
-	/// <summary>Notes the rows' name, sheetData's prefix and <c>row</c>, at <c>sheetData</c>'s start tag, when rows can be skipped whole by a raw search.</summary>
+	/// <summary>
+	/// Notes, at <c>sheetData</c>'s start tag, the rows' start that the segment pipeline cuts at (<see cref="RowStart"/>),
+	/// and the rows' name, sheetData's prefix and <c>row</c>, when rows can be skipped whole by a raw search.
+	/// </summary>
 	private void NoteRowName()
 	{
+		var data = scanner.QualifiedName;
+		var prefix = data.Slice(0, data.Length - "sheetData".Length);
+		var start = new byte[prefix.Length + 4];
+		start[0] = (byte)'<';
+		prefix.CopyTo(start.AsSpan(1));
+		"row"u8.CopyTo(start.AsSpan(prefix.Length + 1));
+		rowStart = start;
 		if (layout is null || !scanner.RawSkips)
 		{
 			return;
 		}
 
-		var data = scanner.QualifiedName;
-		var prefix = data.Slice(0, data.Length - "sheetData".Length);
-		var name = new byte[prefix.Length + 3];
-		prefix.CopyTo(name);
-		"row"u8.CopyTo(name.AsSpan(prefix.Length));
-		rowName = name;
+		rowName = start.AsSpan(1).ToArray();
 	}
 
 	/// <summary>
@@ -1068,8 +1463,15 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 	/// <summary>Sets the row's number, and the rows missing before it.</summary>
 	/// <param name="number">The row's number.</param>
 	/// <exception cref="CsvFormatException">The number is not a sheet's, or not after the row before.</exception>
+	/// <exception cref="SegmentMarkException">In a worker of segment mode, the row can't be placed exactly in its segment (<see cref="SegmentRow"/>).</exception>
 	private void SetRow(long number)
 	{
+		// Only a worker of segment mode, at its segment's first row or in a segment that floats.
+		if (segmentRows != SegmentRows.None)
+		{
+			SegmentRow(number);
+		}
+
 		if (number < 1 || number > CellReference.MaxRow)
 		{
 			throw Error(TokenOffset, $"its row number, {number}, is not one of a sheet's (1 to {CellReference.MaxRow})", -1, 0);
@@ -1088,6 +1490,99 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 		{
 			gapNext = Math.Max(gapNext, lastRow + 1);
 			gapEnd = number;
+		}
+	}
+
+	/// <summary>
+	/// Places a row of a worker's segment, for <see cref="SetRow"/>, before its checks: the segment's first row anchors the
+	/// segment when its number comes from an <c>r</c>, its own or its first cell's, and floats otherwise, as row 1 of the
+	/// segment; in a segment that floats, every row must float.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// An anchored first row is checked as any row is (its number, its place in the area), but not against the row before,
+	/// which the segment doesn't know: <see cref="lastRow"/> is 0. The rows missing before it are the stitcher's to write, so
+	/// none are written here; after it, the worker reads as this scanner does, and the rows missing between its rows, from
+	/// the area's first, are the worker's (<see cref="SegmentRows.None"/>).
+	/// </para>
+	/// <para>
+	/// A floating first row is numbered 1, and the rows after it from it: the stitcher adds the row before the segment's.
+	/// Under an area that bounds rows, a floating row's place in the area isn't known, and in a segment that floats, a row
+	/// with an <c>r</c> can't be checked against the row before: either marks the segment.
+	/// </para>
+	/// </remarks>
+	/// <param name="number">The row's number: from an <c>r</c>, or the row before's plus one.</param>
+	/// <exception cref="SegmentMarkException">The segment is marked: <see cref="SegmentMark.FloatingArea"/> or <see cref="SegmentMark.Anchor"/>.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void SegmentRow(long number)
+	{
+		var anchored = RowHasReference();
+		if (segmentRows == SegmentRows.First)
+		{
+			if (anchored)
+			{
+				// From here the rows are the sheet's, and the rows missing between them are written from the area's first.
+				segmentFirstRow = number;
+				gapNext = Math.Max(number, layout is null ? 1 : layout.FirstRow);
+				segmentRows = SegmentRows.None;
+
+				return;
+			}
+
+			if (SegmentStitcher.BoundsRows(layout))
+			{
+				throw new SegmentMarkException(SegmentMark.FloatingArea);
+			}
+
+			segmentFirstRow = 0;
+			segmentRows = SegmentRows.Floating;
+
+			return;
+		}
+
+		if (anchored)
+		{
+			throw new SegmentMarkException(SegmentMark.Anchor);
+		}
+	}
+
+	/// <summary>
+	/// Whether the number <see cref="SetRow"/> is given comes from an <c>r</c>: the row's own, or its first cell's. It is
+	/// told from the token the scanner is at, as each caller leaves it: a row's start tag (<see cref="StartRow"/>, or an
+	/// empty row without <c>r</c> that <see cref="EndRow"/> numbers) or a cell's (the tokenizer's path), whose attributes are
+	/// read again; a row's end tag (a row without cells, numbered from the row before); or no token, at a cell the fast path
+	/// read whole (<see cref="ReadCells"/>), which has an <c>r</c> only as its first attribute.
+	/// </summary>
+	/// <returns>Whether the number comes from an <c>r</c>.</returns>
+	/// <exception cref="SegmentMarkException">The scanner is at no token this tells it from: <see cref="SegmentMark.Anchor"/>, as the safe answer.</exception>
+	private bool RowHasReference()
+	{
+		switch (scanner.Kind)
+		{
+			case XmlTokenKind.StartTag:
+			{
+				var attributes = scanner.Attributes;
+				while (attributes.MoveNext())
+				{
+					if (attributes.IsName("r"u8))
+					{
+						return true;
+					}
+				}
+
+				return false;
+			}
+			case XmlTokenKind.EndTag:
+				return false;
+			case XmlTokenKind.None:
+			{
+				var xml = new ReadOnlySpan<byte>(scanner.Window.Buffer, 0, scanner.Window.End);
+				var name = cellNames is null ? "<c"u8.Length : cellNames.Cell.Length;
+
+				return xml.Slice(scanner.TokenStart + name).StartsWith(" r=\""u8);
+			}
+			default:
+				throw new SegmentMarkException(SegmentMark.Anchor);
 		}
 	}
 
@@ -2869,12 +3364,42 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 	/// <summary>Counts fields or records that the XML doesn't hold toward the workbook's uncompressed size.</summary>
 	/// <param name="count">The number of them.</param>
+	/// <remarks>
+	/// Without a budget (a worker of segment mode's), they count toward the scanner's own count (<see cref="CountExtras"/>), in a
+	/// method of its own. With one, the code is what it was before segments, which its callers on a cell's path inline.
+	/// </remarks>
 	/// <exception cref="InvalidDataException">The workbook passes its uncompressed size.</exception>
+	/// <exception cref="SegmentMarkException">A worker's count passes what the workbook's limit had left when the segments began.</exception>
 	private void Charge(long count)
 	{
 		if (count > 0)
 		{
-			budget?.Charge(count);
+			if (budget is not null)
+			{
+				budget.Charge(count);
+			}
+			else
+			{
+				CountExtras(count);
+			}
+		}
+	}
+
+	/// <summary>
+	/// Counts bytes for <see cref="Charge"/> without a budget: toward the scanner's own count, which in a worker of segment
+	/// mode is its segment's extras, charged by the stitcher once it joins the segment (<see cref="SegmentResult.Extras"/>).
+	/// Past what the workbook's limit had left when the segments began, the read would certainly pass the limit, so the
+	/// segment is marked, and the serial read trips where it trips.
+	/// </summary>
+	/// <param name="count">The number of bytes: more than 0.</param>
+	/// <exception cref="SegmentMarkException">The scanner's own count passes its limit.</exception>
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	private void CountExtras(long count)
+	{
+		extras += count;
+		if (extras > extrasLimit)
+		{
+			throw new SegmentMarkException(SegmentMark.ExtrasCap);
 		}
 	}
 
@@ -3200,6 +3725,19 @@ internal sealed class SheetScanner : IDisposable, IAsyncDisposable
 
 		/// <summary>After the rows: nothing more is read.</summary>
 		Done,
+	}
+
+	/// <summary>Where a worker of segment mode is in its segment's rows (<see cref="SegmentRow"/>).</summary>
+	private enum SegmentRows : byte
+	{
+		/// <summary>Not in segment mode's rows: the scanner's own read, or a worker past an anchored first row, which reads as it does.</summary>
+		None,
+
+		/// <summary>Before the segment's first row.</summary>
+		First,
+
+		/// <summary>In a segment whose first row floated: every row after it must float too.</summary>
+		Floating,
 	}
 
 	/// <summary>How a cell's value is read, from its type (<c>t</c>).</summary>

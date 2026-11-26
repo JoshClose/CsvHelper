@@ -68,6 +68,7 @@ public sealed partial class CsvReader
 	private IEnumerable<T> ParallelIterator<T>(Func<CsvReader, T> selector, int degree)
 	{
 		if (!headerDone && !EnsureHeader()) yield break;
+		recordSource?.BeginParallel(degree);
 		var run = new ParallelRun<T>(this, selector, degree);
 		var next = 0L;
 		try
@@ -88,6 +89,7 @@ public sealed partial class CsvReader
 		finally
 		{
 			run.Stop(next);
+			recordSource?.EndParallel();
 		}
 	}
 

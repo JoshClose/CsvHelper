@@ -139,6 +139,44 @@ internal sealed class LimitedReadStream : Stream
 	/// <exception cref="InvalidDataException">The total passes its limit.</exception>
 	public void Charge(long bytes) => package.Guard.Charge(bytes, maxUncompressedSize, partName);
 
+	/// <summary>
+	/// What the workbook's total may still grow by under this call's limit (<see cref="PartLimits.MaxUncompressedSize"/>):
+	/// negative once the total has passed it.
+	/// </summary>
+	public long Remaining => maxUncompressedSize - package.Guard.Total;
+
+	/// <summary>
+	/// Counts bytes toward the workbook's total, as <see cref="Charge"/> does, but says whether the total is still within the
+	/// limit instead of throwing: for bytes inflated that no read will reach, which a later call's reads then trip over.
+	/// </summary>
+	/// <param name="bytes">The number of bytes to count.</param>
+	/// <returns>Whether the total is at most the limit.</returns>
+	public bool TryCharge(long bytes) => package.Guard.TryCharge(bytes, maxUncompressedSize);
+
+	/// <summary>
+	/// Reads as <see cref="Read(byte[], int, int)"/> does, checking that the workbook is open and that the part stays within
+	/// its size limit, but without counting the bytes toward the workbook's total: for <see cref="SegmentPipeline"/>'s
+	/// inflating thread, whose bytes are charged on the reader's thread, since the guard is not synchronized.
+	/// </summary>
+	/// <param name="buffer">Where the bytes go.</param>
+	/// <param name="offset">The position in <paramref name="buffer"/> of the first byte.</param>
+	/// <param name="count">The most bytes to read.</param>
+	/// <returns>The number of bytes read: 0 at the end of the part.</returns>
+	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>
+	/// <exception cref="InvalidDataException">The part passes its size limit, or can't be inflated.</exception>
+	public int ReadUncounted(byte[] buffer, int offset, int count)
+	{
+		CheckOpen();
+		var bytes = inner.Read(buffer, offset, count);
+		read += bytes;
+		if (read > maxPartSize)
+		{
+			throw TooLarge();
+		}
+
+		return bytes;
+	}
+
 	/// <inheritdoc/>
 	public override int Read(byte[] buffer, int offset, int count)
 	{
@@ -208,13 +246,17 @@ internal sealed class LimitedReadStream : Stream
 		read += count;
 		if (read > maxPartSize)
 		{
-			throw new InvalidDataException($"{partName} is larger than ExcelReaderOptions.MaxPartSize ({maxPartSize} bytes uncompressed).");
+			throw TooLarge();
 		}
 
 		package.Guard.Charge(count, maxUncompressedSize, partName);
 
 		return count;
 	}
+
+	/// <summary>The exception for a part past its size limit.</summary>
+	/// <returns>The exception, to throw.</returns>
+	private InvalidDataException TooLarge() => new($"{partName} is larger than ExcelReaderOptions.MaxPartSize ({maxPartSize} bytes uncompressed).");
 
 	/// <summary>Throws when the workbook is disposed.</summary>
 	/// <exception cref="ObjectDisposedException">The workbook is disposed.</exception>

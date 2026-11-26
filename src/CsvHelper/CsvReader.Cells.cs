@@ -670,6 +670,181 @@ public sealed partial class CsvReader
 			recordFields = 0;
 		}
 
+		/// <summary>
+		/// Appends whole records that a source wrote apart from the reader, such as on threads of its own, making the same
+		/// buffer and index as adding their fields one at a time (<see cref="CommitField(int, CsvCellKind, int)"/>,
+		/// <see cref="EndRecord"/>) would make, with one copy of their bytes.
+		/// </summary>
+		/// <remarks>
+		/// Field <c>i</c>'s value is <c>bytes[start .. ends[i]]</c>, where <c>start</c> is 0 for the first field and
+		/// <c>ends[i - 1] + 1</c> after it, and <paramref name="bytes"/> ends with the byte after the last field's value. Each
+		/// field gets the flag and the style that a commit would give it: the flag when the reader trims, when its kind has
+		/// text of its own, or when it has a style. When this throws, the batch holds the records it held before.
+		/// </remarks>
+		/// <param name="bytes">The fields' values in order, each followed by one byte, which this sets to the separator, or to LF after a record's last field.</param>
+		/// <param name="ends">For each field, the offset in <paramref name="bytes"/> of the byte after its value.</param>
+		/// <param name="kinds">For each field, what it holds.</param>
+		/// <param name="styles">For each field, its style or <see cref="NoStyle"/>; empty when none has one.</param>
+		/// <param name="records">For each record, the index in <paramref name="ends"/> after its last field: every record has a field.</param>
+		/// <param name="lines">For each record, its line before <paramref name="lineOffset"/> is added.</param>
+		/// <param name="lineOffset">Added to every line: the row before the first, for records numbered from the block's start.</param>
+		/// <exception cref="ArgumentException">
+		/// The spans don't agree in length, or with each other (the ends out of order or past the bytes, the last record not
+		/// ending at the last field, the bytes not ending one byte after the last field's value), or a record has no field.
+		/// </exception>
+		/// <exception cref="ArgumentOutOfRangeException">
+		/// A style is not <see cref="NoStyle"/>, and is negative or more than <see cref="CsvCellFormatter.MaxStyle"/>.
+		/// </exception>
+		/// <exception cref="InvalidOperationException">A record is being written (<see cref="FieldCount"/> is not 0).</exception>
+		/// <exception cref="CsvFormatException">The records are too large to buffer.</exception>
+		public void AppendRecords(
+			ReadOnlySpan<byte> bytes, ReadOnlySpan<int> ends, ReadOnlySpan<CsvCellKind> kinds, ReadOnlySpan<int> styles, ReadOnlySpan<int> records,
+			ReadOnlySpan<long> lines, long lineOffset)
+		{
+			if (recordFields != 0)
+			{
+				throw new InvalidOperationException("A record is being written: end it (EndRecord) before appending whole records.");
+			}
+
+			var fields = ends.Length;
+			if (kinds.Length != fields || (styles.Length != 0 && styles.Length != fields) || lines.Length != records.Length)
+			{
+				throw new ArgumentException("The kinds and styles must be as many as the fields' ends, and the lines as the records.");
+			}
+
+			if (records.Length == 0)
+			{
+				if (fields != 0 || bytes.Length != 0)
+				{
+					throw new ArgumentException("Fields must be in a record.", nameof(records));
+				}
+
+				return;
+			}
+
+			if (records[records.Length - 1] != fields)
+			{
+				throw new ArgumentException("The last record must end at the last field.", nameof(records));
+			}
+
+			if (fields == 0)
+			{
+				throw new ArgumentException("A record must have a field.", nameof(records));
+			}
+
+			if (bytes.Length != ends[fields - 1] + 1)
+			{
+				throw new ArgumentException("The bytes must end one byte after the last field's value.", nameof(bytes));
+			}
+
+			// The room for every byte at once, and the index and rows grown as the commits would grow them, by doubling (a
+			// bound on the entries keeps the doubling from overflowing).
+			var r = reader;
+			var start = r.dataEnd;
+			if (r.buffer.Length - start < bytes.Length)
+			{
+				GrowBuffer(bytes.Length);
+			}
+
+			var count = r.endsCount;
+			var entries = count + fields;
+			if (entries > (1 << 30) - EndsSlack)
+			{
+				throw new CsvFormatException("The records are too large to buffer.");
+			}
+
+			while (r.ends.Length - EndsSlack < entries || r.kinds!.Length < entries)
+			{
+				GrowIndex();
+			}
+
+			var rows = r.rowCount + records.Length;
+			while (r.rowEnds.Length < rows || r.rowLines!.Length < rows)
+			{
+				GrowRows();
+			}
+
+			// One copy of the bytes, then for each field its separator, its end with the flag CommitField gives it (trim, a
+			// kind with text, or a style), its kind and its style; then each record's LF, end and line. The counts are set
+			// last, so that a span found wrong on the way leaves the batch as it was.
+			var buffer = r.buffer;
+			bytes.CopyTo(buffer.AsSpan(start));
+			var separator = r.sepByte;
+			var trim = r.trim;
+			var index = r.ends;
+			var fieldKinds = r.kinds!;
+			var fieldStyles = r.styles;
+			var styled = styles.Length != 0;
+			var rowEnds = r.rowEnds;
+			var rowLines = r.rowLines!;
+			var row = r.rowCount;
+			// The next field's end entry; its kind and style go at the entry before, its first.
+			var entry = count;
+			var field = 0;
+			var previous = -1;
+			for (var k = 0; k < records.Length; k++)
+			{
+				var last = records[k];
+				if (last <= field)
+				{
+					throw new ArgumentException("A record must have a field, after the record before it.", nameof(records));
+				}
+
+				for (; field < last; field++)
+				{
+					var end = ends[field];
+					if (end <= previous || end >= bytes.Length)
+					{
+						throw new ArgumentException("The ends of the fields must ascend, within the bytes.", nameof(ends));
+					}
+
+					previous = end;
+					var kind = kinds[field];
+					var style = NoStyle;
+					if (styled)
+					{
+						style = styles[field];
+						if (style != NoStyle)
+						{
+							if ((uint)style > CsvCellFormatter.MaxStyle)
+							{
+								throw new ArgumentOutOfRangeException(nameof(styles), style, $"A style must be from 0 to {CsvCellFormatter.MaxStyle}, or NoStyle.");
+							}
+
+							if (fieldStyles is null)
+							{
+								// The reader keeps styles from this field on: the fields before it, the block's too, have none.
+								StartStyles();
+								fieldStyles = r.styles!;
+								fieldStyles.AsSpan(count - 1, field).Fill(NoStyle);
+							}
+						}
+					}
+
+					buffer[start + end] = separator;
+					fieldKinds[entry - 1] = kind;
+					if (fieldStyles is not null)
+					{
+						fieldStyles[entry - 1] = style;
+					}
+
+					var flagged = trim || kind.HasText() || style != NoStyle;
+					index[entry] = (start + end + 1) | (flagged ? int.MinValue : 0);
+					entry++;
+				}
+
+				// LF after the record's last field, as at the end of a line of CSV.
+				buffer[start + previous] = (byte)'\n';
+				rowEnds[row] = entry - 1;
+				rowLines[row] = lines[k] + lineOffset;
+				row++;
+			}
+
+			r.dataEnd = start + bytes.Length;
+			r.endsCount = entry;
+			r.rowCount = row;
+		}
+
 		/// <summary>Forgets the fields of a record that a fill started and did not end (it threw), as the buffer starts over.</summary>
 		internal void Reset() => recordFields = 0;
 

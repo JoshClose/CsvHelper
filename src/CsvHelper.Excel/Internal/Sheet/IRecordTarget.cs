@@ -60,10 +60,17 @@ internal interface IRecordTarget
 
 /// <summary>
 /// The <see cref="IRecordTarget"/> of a reader: a struct over its <see cref="CsvReader.RecordBatch"/>, converting each
-/// <see cref="SheetCellKind"/> to the <see cref="CsvCellKind"/> of the same value.
+/// <see cref="SheetCellKind"/> to the <see cref="CsvCellKind"/> of the same value. It takes segments' blocks whole too
+/// (<see cref="IBlockTarget"/>), through the batch's bulk append.
 /// </summary>
-internal readonly struct RecordBatchTarget : IRecordTarget
+internal readonly struct RecordBatchTarget : IBlockTarget
 {
+	/// <summary>
+	/// 1 when a block's field without a style holds the batch's value for one. Otherwise the division by zero is a compile
+	/// error, so the build breaks as soon as the two differ (the kinds are checked by <see cref="SheetCellKinds"/>).
+	/// </summary>
+	private const int SameNoStyle = 1 / (SegmentBlock.NoStyle == CsvReader.NoStyle ? 1 : 0);
+
 	private readonly CsvReader.RecordBatch batch;
 
 	/// <summary>Creates the target.</summary>
@@ -90,4 +97,14 @@ internal readonly struct RecordBatchTarget : IRecordTarget
 
 	/// <inheritdoc/>
 	public void EndRecord(long row) => batch.EndRecord(row);
+
+	/// <inheritdoc/>
+	/// <remarks>Through the batch's bulk append (<c>RecordBatch.AppendRecords</c>): one copy of the block's bytes, then one pass over its fields.</remarks>
+	public void AppendBlock(SegmentBlock block, long lineOffset)
+	{
+		// The kinds are CsvHelper's byte for byte (SheetCellKinds). Named in full: on .NET Standard and .NET Framework the
+		// namespace finds core's MemoryMarshal stand-in first, which has no Cast.
+		var kinds = System.Runtime.InteropServices.MemoryMarshal.Cast<SheetCellKind, CsvCellKind>(block.Kinds);
+		batch.AppendRecords(block.Bytes, block.Ends, kinds, block.Styles, block.Records, block.Lines, lineOffset);
+	}
 }

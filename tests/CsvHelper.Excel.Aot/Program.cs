@@ -15,7 +15,8 @@ namespace CsvHelper.Excel.Aot;
 /// say (its title, table, frozen column, widths, formats, hidden column and links), and reads the orders back, by the
 /// header's row and by finding it. Published with NativeAOT, a member the trimmer dropped would lose its look or its value.
 /// Phase 6's conversions too: the orders as CSV converted to a sheet, its columns' types inferred and through
-/// <see cref="Order"/>, and each sheet back to CSV.
+/// <see cref="Order"/>, and each sheet back to CSV. And Phase 9's segment scanning: a sheet read under
+/// <c>ParallelEnumerate</c>, its rows past the first megabyte in segments on threads of their own.
 /// </summary>
 internal static class Program
 {
@@ -76,12 +77,13 @@ internal static class Program
 		Convert(problems, orders);
 		Template(problems);
 		Shown(problems);
+		var lines = ReadInParallel(problems);
 		foreach (var problem in problems)
 		{
 			Console.Error.WriteLine(problem);
 		}
 
-		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, wrote a template and imported a sheet of it, and read and converted a sheet's shown text." : $"{problems.Count} problems.");
+		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, wrote a template and imported a sheet of it, read and converted a sheet's shown text, and read a sheet of {lines:N0} rows in parallel." : $"{problems.Count} problems.");
 
 		return problems.Count == 0 ? 0 : 1;
 	}
@@ -248,6 +250,103 @@ internal static class Program
 		{
 			problems.Add($"The shown text converted as {csv}, not {ExpectedCsv}");
 		}
+	}
+
+	/// <summary>
+	/// Phase 9's segment scanning, as NativeAOT runs it. The internal switches that force small segments aren't visible to
+	/// the app, so the sheet is large enough for the defaults: 60,000 <see cref="Line"/>s, written without references as
+	/// CsvHelper.Excel writes every sheet, about 5 MB, whose rows past the first megabyte are cut into segments of 256 KB
+	/// and scanned on threads of their own. Read under <c>ParallelEnumerate</c> at degree 4, as text and as records, the
+	/// sheet gives the rows the sequential read gives, in order.
+	/// </summary>
+	/// <param name="problems">Takes what isn't as read sequentially.</param>
+	/// <returns>The number of rows read.</returns>
+	private static int ReadInParallel(List<string> problems)
+	{
+		var lines = new Line[60_000];
+		for (var i = 0; i < lines.Length; i++)
+		{
+			lines[i] = new Line { Id = i + 1, Name = "line " + (i + 1).ToString(CultureInfo.InvariantCulture), Amount = (i + 1) * 0.25m };
+		}
+
+		using var stream = new MemoryStream();
+		using (var workbook = ExcelWorkbookWriter.Create(stream, leaveOpen: true))
+		{
+			workbook.WriteSheet("Lines", lines);
+		}
+
+		var bytes = stream.ToArray();
+		var size = Encoding.UTF8.GetByteCount(Entry(bytes, "xl/worksheets/sheet1.xml"));
+		if (size < 3 * 1024 * 1024)
+		{
+			problems.Add($"The sheet of lines is {size:N0} bytes, too few for segments past its first megabyte.");
+		}
+
+		var sequential = new List<string>();
+		using (var book = ExcelWorkbook.Open(new MemoryStream(bytes)))
+		{
+			using var reader = book.OpenReader();
+			while (reader.Read())
+			{
+				sequential.Add(Fields(reader));
+			}
+		}
+
+		using (var book = ExcelWorkbook.Open(new MemoryStream(bytes)))
+		{
+			using var reader = book.OpenReader();
+			var parallel = reader.ParallelEnumerate(r => Fields(r), 4).ToList();
+			if (FirstDifference(sequential, parallel) is { } difference)
+			{
+				problems.Add($"Read in parallel, the sheet of lines differs from the sequential read: {difference}.");
+			}
+		}
+
+		using (var book = ExcelWorkbook.Open(new MemoryStream(bytes)))
+		{
+			using var reader = book.OpenReader();
+			var read = reader.ParallelEnumerate<Line>(4).ToList();
+			var wrong = read.Count != lines.Length ? lines.Length : Enumerable.Range(0, lines.Length).Count(i => read[i].Id != lines[i].Id || read[i].Name != lines[i].Name || read[i].Amount != lines[i].Amount);
+			if (wrong > 0)
+			{
+				problems.Add($"Read in parallel as records, {read.Count:N0} lines of {lines.Length:N0}, {wrong:N0} of them not as written.");
+			}
+		}
+
+		return lines.Length;
+	}
+
+	/// <summary>A record's line and fields as text, to compare reads.</summary>
+	/// <param name="reader">The reader, on a record.</param>
+	/// <returns>The line, then the fields joined.</returns>
+	private static string Fields(CsvReader reader)
+	{
+		var fields = new string[reader.FieldCount];
+		for (var i = 0; i < fields.Length; i++)
+		{
+			fields[i] = reader.GetString(i);
+		}
+
+		return reader.LineNumber.ToString(CultureInfo.InvariantCulture) + ": " + string.Join("|", fields);
+	}
+
+	/// <summary>The first difference between two reads' records, described.</summary>
+	/// <param name="expected">The sequential read's.</param>
+	/// <param name="actual">The other read's.</param>
+	/// <returns>The difference, or <see langword="null"/> when they are the same.</returns>
+	private static string? FirstDifference(List<string> expected, List<string> actual)
+	{
+		for (var i = 0; i < Math.Max(expected.Count, actual.Count); i++)
+		{
+			var sequential = i < expected.Count ? expected[i] : "no record";
+			var other = i < actual.Count ? actual[i] : "no record";
+			if (sequential != other)
+			{
+				return $"record {i + 1} of {expected.Count:N0} and {actual.Count:N0} is {other}, not {sequential}";
+			}
+		}
+
+		return null;
 	}
 
 	/// <summary>Converts CSV to a workbook, its columns' types inferred, or through <see cref="Order"/>.</summary>
@@ -424,6 +523,20 @@ public sealed partial class Reading
 	/// <summary>A note, after a label.</summary>
 	[ExcelColumn(Format = "\"Note: \"@")]
 	public string Note { get; set; } = "";
+}
+
+/// <summary>A line of the sheet the parallel read reads: a number, a text and an amount.</summary>
+[CsvRecord]
+public sealed partial class Line
+{
+	/// <summary>The line's number, from 1.</summary>
+	public int Id { get; set; }
+
+	/// <summary>Its text.</summary>
+	public string Name { get; set; } = "";
+
+	/// <summary>Its amount, in quarters.</summary>
+	public decimal Amount { get; set; }
 }
 
 /// <summary>A ticket's state, written by its other name when it has one.</summary>

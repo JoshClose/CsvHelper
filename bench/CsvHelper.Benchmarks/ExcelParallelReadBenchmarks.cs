@@ -6,8 +6,9 @@ namespace CsvHelper.Benchmarks;
 
 /// <summary>
 /// A workbook's records through <c>ParallelEnumerate</c> at 1, 2, 4, 8 and 16 workers, against <c>GetRecords</c> on one
-/// thread (Records); and the rows alone through a selector that maps nothing, against <c>Read</c> (Rows), which measures
-/// how the read itself (inflating and scanning) scales, without mapping or the garbage collections mapping causes.
+/// thread (Records); and the rows alone through a selector that maps nothing, at 2, 4, 8 and 16 workers and over the
+/// workbook's stored copy at 8, against <c>Read</c> (Rows), which measures how the read itself (inflating and scanning)
+/// scales, without mapping or the garbage collections mapping causes.
 /// </summary>
 /// <typeparam name="T">The record type.</typeparam>
 /// <remarks>
@@ -26,12 +27,26 @@ public abstract class ExcelParallelReadBase<T>
 	/// <summary>The workbook.</summary>
 	private byte[] workbook = [];
 
-	/// <summary>Reads the workbook from the cache.</summary>
+	/// <summary>The workbook's bytes with every entry stored, not deflated: set up for <see cref="CsvHelper_RowsParallelStored_8"/> only.</summary>
+	private byte[] stored = [];
+
+	/// <summary>Reads the workbook from the cache, for every method but <see cref="CsvHelper_RowsParallelStored_8"/>.</summary>
 	[GlobalSetup]
 	public void Setup()
 	{
 		BenchWorkbooks.Ensure();
 		workbook = Create();
+	}
+
+	/// <summary>
+	/// Reads the stored copy of the workbook from the cache (<see cref="ExcelScanStages.ReadStored"/>), for
+	/// <see cref="CsvHelper_RowsParallelStored_8"/> alone.
+	/// </summary>
+	[GlobalSetup(Target = nameof(CsvHelper_RowsParallelStored_8))]
+	public void SetupStored()
+	{
+		BenchWorkbooks.Ensure();
+		stored = ExcelScanStages.ReadStored(Stage);
 	}
 
 	/// <summary>The records on one thread.</summary>
@@ -91,17 +106,46 @@ public abstract class ExcelParallelReadBase<T>
 		return n;
 	}
 
+	/// <summary>The records counted through two workers, whose selector maps nothing.</summary>
+	/// <returns>The number of records.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Rows")]
+	public int CsvHelper_RowsParallel_2() => RowsParallel(2);
+
+	/// <summary>The records counted through four workers, whose selector maps nothing.</summary>
+	/// <returns>The number of records.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Rows")]
+	public int CsvHelper_RowsParallel_4() => RowsParallel(4);
+
 	/// <summary>The records counted through eight workers, whose selector maps nothing.</summary>
 	/// <returns>The number of records.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Rows")]
 	public int CsvHelper_RowsParallel_8() => RowsParallel(8);
 
+	/// <summary>
+	/// The records of the workbook's stored copy counted through eight workers, whose selector maps nothing: the parallel
+	/// read with nothing to inflate, so that it shows how far the scan scales once inflating doesn't bound it.
+	/// </summary>
+	/// <returns>The number of records.</returns>
+	[Benchmark]
+	[BenchmarkCategory("Rows")]
+	public int CsvHelper_RowsParallelStored_8()
+	{
+		using var reader = ExcelReader.Create(new MemoryStream(stored, writable: false));
+
+		return reader.ParallelEnumerate(static r => r.FieldCount, 8).Count();
+	}
+
 	/// <summary>The records counted through sixteen workers, whose selector maps nothing.</summary>
 	/// <returns>The number of records.</returns>
 	[Benchmark]
 	[BenchmarkCategory("Rows")]
 	public int CsvHelper_RowsParallel_16() => RowsParallel(16);
+
+	/// <summary>The workbook as <see cref="ExcelScanStages"/> names it, for its stored copy.</summary>
+	protected abstract StageWorkbook Stage { get; }
 
 	/// <summary>Returns the workbook's bytes.</summary>
 	/// <returns>The bytes.</returns>
@@ -140,6 +184,9 @@ public abstract class ExcelParallelReadBase<T>
 public class ExcelPackageAssetsParallelRead : ExcelParallelReadBase<PackageAsset>
 {
 	/// <inheritdoc/>
+	protected override StageWorkbook Stage => StageWorkbook.Shared;
+
+	/// <inheritdoc/>
 	protected override byte[] Create() => ExcelDataGenerator.PackageAssets(ExcelDataGenerator.PackageAssetRows, ExcelStrings.Shared);
 }
 
@@ -150,6 +197,9 @@ public class ExcelPackageAssetsParallelRead : ExcelParallelReadBase<PackageAsset
 [CategoriesColumn]
 public class ExcelOrdersParallelRead : ExcelParallelReadBase<OrderRecord>
 {
+	/// <inheritdoc/>
+	protected override StageWorkbook Stage => StageWorkbook.Orders;
+
 	/// <inheritdoc/>
 	protected override byte[] Create() => ExcelDataGenerator.Orders(ExcelDataGenerator.OrderRows);
 }

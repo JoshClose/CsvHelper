@@ -10,12 +10,19 @@ namespace CsvHelper.Excel.TargetRunner;
 
 /// <summary>
 /// The reads of a workbook, as lane C's rows probe timed them: its first sheet inflated alone, <c>Rows</c>, the records,
-/// and <c>Rows</c> of a copy with every entry stored, so that <c>rows</c> less <c>rows-stored</c> is inflate's share of a read.
+/// and <c>Rows</c> of a copy with every entry stored, so that <c>rows</c> less <c>rows-stored</c> is inflate's share of a read;
+/// and, when named, the records and <c>Rows</c> through <c>ParallelEnumerate</c> at <see cref="ParallelDegree"/> workers.
 /// </summary>
 internal sealed class ReadMethods
 {
 	/// <summary>The methods, in their default order.</summary>
 	public static readonly string[] Names = ["inflate", "rows", "records", "rows-stored"];
+
+	/// <summary>The methods that run only when named: the parallel reads.</summary>
+	public static readonly string[] Optional = ["records-parallel", "rows-parallel"];
+
+	/// <summary>The workers of the parallel reads: one per physical core of CCD0.</summary>
+	public const int ParallelDegree = 8;
 
 	/// <summary>The size of each read from the inflating stream, as lane C's probes read it.</summary>
 	private const int ReadSize = 64 * 1024;
@@ -87,6 +94,8 @@ internal sealed class ReadMethods
 			"rows" => new Method(name, "fields", () => Rows(workbook, workbook.Length)),
 			"records" => new Method(name, "records", orders ? ReadOrders : ReadAssets),
 			"rows-stored" => new Method(name, "fields", () => Rows(stored, storedLength)),
+			"records-parallel" => new Method(name, "records", orders ? ReadOrdersParallel : ReadAssetsParallel),
+			"rows-parallel" => new Method(name, "fields", RowsParallel),
 			_ => throw new ArgumentException($"Unknown read method '{name}'."),
 		}).ToList();
 	}
@@ -105,6 +114,15 @@ internal sealed class ReadMethods
 		}
 
 		return fields;
+	}
+
+	/// <summary>Sums the fields of every record after the header through <c>ParallelEnumerate</c>, whose selector maps nothing.</summary>
+	/// <returns>The number of fields.</returns>
+	private long RowsParallel()
+	{
+		using var reader = ExcelReader.Create(new MemoryStream(workbook, false));
+
+		return reader.ParallelEnumerate(static r => (long)r.FieldCount, ParallelDegree).Sum();
 	}
 
 	/// <summary>Inflates the first sheet's entry to its end, 64 KB a read, keeping nothing.</summary>
@@ -130,6 +148,24 @@ internal sealed class ReadMethods
 		using var reader = ExcelReader.Create(new MemoryStream(workbook, false));
 
 		return reader.GetRecords<PackageAsset>().ToList().Count;
+	}
+
+	/// <summary>Reads the package assets' records through <c>ParallelEnumerate</c>.</summary>
+	/// <returns>The number of records.</returns>
+	private long ReadAssetsParallel()
+	{
+		using var reader = ExcelReader.Create(new MemoryStream(workbook, false));
+
+		return reader.ParallelEnumerate<PackageAsset>(ParallelDegree).ToList().Count;
+	}
+
+	/// <summary>Reads the orders' records through <c>ParallelEnumerate</c>.</summary>
+	/// <returns>The number of records.</returns>
+	private long ReadOrdersParallel()
+	{
+		using var reader = ExcelReader.Create(new MemoryStream(workbook, false));
+
+		return reader.ParallelEnumerate<OrderRecord>(ParallelDegree).ToList().Count;
 	}
 
 	/// <summary>Reads the orders' records.</summary>

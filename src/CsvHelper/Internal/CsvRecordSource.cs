@@ -62,6 +62,25 @@ internal abstract class CsvRecordSource : IDisposable, IAsyncDisposable
 	/// <returns>The location, or <see langword="null"/> when the source cannot tell.</returns>
 	public abstract string? Locate(long line, int field);
 
+	/// <summary>
+	/// Called by <see cref="CsvReader.ParallelEnumerate{T}(Func{CsvReader, T}, int)"/> once the header is read, before its
+	/// workers start. Until <see cref="EndParallel"/>, the workers call <see cref="Fill"/> one at a time, under a lock, from
+	/// threads of the pool. The default does nothing.
+	/// </summary>
+	/// <param name="degree">The number of workers the enumeration may run.</param>
+	public virtual void BeginParallel(int degree)
+	{
+	}
+
+	/// <summary>
+	/// Called when the enumeration that <see cref="BeginParallel"/> began has ended (at the end of the records, at a
+	/// <c>break</c>, at an exception, or when it is disposed), once its workers have stopped: no fill runs during the call,
+	/// and the reader can read on after it. The default does nothing.
+	/// </summary>
+	public virtual void EndParallel()
+	{
+	}
+
 	/// <summary>Releases the input of the source. The reader calls it when it is disposed; the default does nothing.</summary>
 	public virtual void Dispose()
 	{

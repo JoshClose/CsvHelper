@@ -9205,7 +9205,7 @@ Filled in step by step; the code is the reference.
 
 ### Phase 9: performance (XL)
 
-Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45184153550 passed every step; see "Step 7, conversions and small wins" under "As built". Its Excel window X1 ran 2026-11-23, and its follow-up to the zip writer (a stored entry's sizes patched into its header on a stream that seeks, and full Zip64 extras) was built and checked that day, and approved and committed that day, and pushed: CI's run 45225278002 passed every step; see "Window X1, the own writer's packages through the readers" under "As built". Its window W3 (write candidates) ran 2026-11-23 and 24 against the tip after step 4, and its record was approved, with every recommendation, and committed 2026-11-24, and pushed: CI's run 45423702080 passed every step; see "Window W3, write candidates" under "As built".
+Status: the detailed design below was written on 2026-11-20, after the Excel, LibreOffice and other readers' checks under "Checked on 2026-11-20", and approved that day, with every recommendation accepted; its "Changes elsewhere" are applied. It was designed with Phase 10's, as the user decided that day: seven lanes, prototyped in parallel worktrees and gated in exclusive benchmark windows, which Phase 10 shares where it touches the same paths (see "Order of work"). It makes the phase XL: three of its thirteen steps are L (the scanner's fast path, segment scanning and parallel writing). Phase 3's last gate item, its default path measured again, ran first; see "Phase 3's default path, measured again". Its step 1 (benchmarks) was built that day: every lane's measurement methods, the per-target runner, and a workbook cache that keeps other keys' files; and approved, with every recommendation, and committed that day, and pushed: CI's run 44861846632 passed every step. Its window W1 (the base) ran 2026-11-20 and 21 at that commit, and its record was approved, with every recommendation, and committed 2026-11-21, and pushed: CI's run 44915698156 passed every step. See "Window W1, the base" under "As built". Its step 2 (raw skips, and `<` in attribute values) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44942613620 passed every step; see "Step 2, raw skips and `<` in attribute values" under "As built". Its step 3 (the canonical-cell fast path) was built 2026-11-21, and approved and committed that day, and pushed: CI's run 44966004293 passed every step; two changes followed on review, committed and pushed after it: CI's run 44976844029 passed every step; see "Step 3, the canonical-cell fast path" under "As built". Its step 4 (shared strings: `PoolStrings`, and the table's text in chunks) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 44989406787 passed every step; see "Step 4, shared strings" under "As built". Its window W2 (read candidates) ran 2026-11-21 and 22 against step 1's commit, and its record was approved, with every recommendation, and committed 2026-11-22, and pushed: CI's run 45044104512 passed every step; see "Window W2, read candidates" under "As built". Its step 5 (sheets without references, the cells' starts and templates, and auto-fit's held records) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45087603879 passed every step; see "Step 5, sheets without references" under "As built". Its step 6 (the own zip writer, serial) was built 2026-11-22, and approved and committed that day, and pushed: CI's run 45115293352 passed every step; see "Step 6, the own zip writer, serial" under "As built". Its follow-up (the wider CRC folds for stored entries on .NET 10) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45133974694 passed every step; see "Step 6's follow-up, the wider CRC folds" under "As built". Its step 7 (conversions and small wins: the digits from core's formatter, the password's hash, and the write-through for stored entries) was built 2026-11-23, and approved and committed that day, and pushed: CI's run 45184153550 passed every step; see "Step 7, conversions and small wins" under "As built". Its Excel window X1 ran 2026-11-23, and its follow-up to the zip writer (a stored entry's sizes patched into its header on a stream that seeks, and full Zip64 extras) was built and checked that day, and approved and committed that day, and pushed: CI's run 45225278002 passed every step; see "Window X1, the own writer's packages through the readers" under "As built". Its window W3 (write candidates) ran 2026-11-23 and 24 against the tip after step 4, and its record was approved, with every recommendation, and committed 2026-11-24, and pushed: CI's run 45423702080 passed every step; see "Window W3, write candidates" under "As built". Its step 8 (segment scanning: the sheet read in segments under `ParallelEnumerate`, with core's hook for it) was built 2026-11-25 and timed 2026-11-26, and approved and committed that day; see "Step 8, segment scanning" under "As built".
 
 Scope, as planned:
 
@@ -10470,7 +10470,7 @@ Filled in step by step; the code is the reference.
      - If a fix shows, it comes as its own plan before step 8.
      - If not, the 1.6% is recorded as missed, and W5 measures it again.
      - Alternative: recorded as missed now, for W5.
-     Done 2026-11-24 (`w3\rec2\`, `notes.md` first). The user started the timed part from an elevated PowerShell, and it ran alone on the machine from 22:46 to 23:58.
+     Done 2026-11-24 (`w3\rec2\`, `notes.md` first; committed 2026-11-25, and pushed: CI's run 45560289184 passed every step). The user started the timed part from an elevated PowerShell, and it ran alone on the machine from 22:46 to 23:58.
      - **Untimed:**
        - Both trees send the package's stream the same 6,403 writes of about 64 KB, in the same order.
        - The sheet's code is the same in both, and its hot methods compile alike.
@@ -10490,6 +10490,117 @@ Filled in step by step; the code is the reference.
      - on approval: `w3base`, `w3s56`, `w3s6a` and the two NCsvPerf copies;
      - after recommendation 2's runs: `w3s5` and `w3s567`.
      The logs, tables and BenchmarkDotNet's artifacts stay.
+
+**Step 8, segment scanning** (built 2026-11-25, decisions 14 to 20 and "Core changes" 2, with its plan's 15 recommendations approved that day; timed 2026-11-26, and approved and committed that day; `Csv\_bench\results\phase9-10\step8\`, the plan in `plan.md`, the lanes' contract in `spec.md`):
+
+- **How it was built:** the contract first (`spec.md`, with the block and the segment scan's types as code), then four agents at once, each in its own worktree at `dba922fa`. I reviewed each patch and merged them, and wrote the source over them.
+  - **K, core** (`k\notes.md`): the hook and the bulk append.
+  - **S, the scanner** (`s\notes.md`): segment mode, the stitcher, and the window's and the XML scanner's starts.
+  - **P, the pipeline** (`p\notes.md`): the inflating thread, the splitter, the ring and the fallback's stream.
+  - **T, the API tests** (`t\notes.md`): written from the contract without a build, and compiled on the merged tree.
+- **Core** (Phase 0's gate, this step's part):
+  - `CsvRecordSource.BeginParallel(int degree)` and `EndParallel()`, virtual no-ops. Only `ParallelIterator` calls them: after the header, and in its `finally` after `run.Stop`, so no fill runs during `EndParallel`.
+  - `RecordBatch.AppendRecords`: whole records written apart from the reader, with one copy of their bytes and one pass over their fields. It makes the buffer and index the per-field calls make: separators, LF, the ends' flags (trimming, text kinds, styles), kinds, styles and lines. When it throws, the batch is as it was.
+  - Both types are internal: no public API change.
+  - `git diff` over `src/CsvHelper` shows only these. Every existing method's IL is the same on all five targets, once tokens are resolved, but the iterator's `MoveNext` and its `finally` helper, which gain only the two calls (`k\il-compare.txt`; the merged tree's core is K's patch byte for byte).
+  - The JIT's Tier-1 code for core's CSV read (`jit\core-compare.txt`): every `CsvReader` method has the same inlinee count at `dba922fa` and the step.
+- **How a read under `ParallelEnumerate` goes:**
+  1. The source reads serially until a fill ends between rows, past the part's first megabyte, with a record with a value written, and with no row waiting after its missing rows. A degree under 2, `FormulaText`, merged cells that fill a field and UTF-16 parts never get past this.
+  2. The pipeline starts from the serial scanner's position: one inflating thread and `min(degree, ProcessorCount)` scan threads, with a ring of two slots per scan thread.
+  3. The inflating thread reads the sheet's entry uncounted. It takes the serial window's unread bytes first, and cuts a segment at the first row start (`<`, the rows' qualified name, then white space, `>` or `/`) at or after 256 KB.
+  4. A scan thread first searches its segment for `<!` and `<?`. It then scans it with a worker of the sheet's scanner into a block, and ends Done, Ended or Marked.
+  5. The stitcher, inside core's fill and under its lock, takes segments in order and checks each against the rows before it. It writes the missing rows before an anchored segment, rebases a floating one's rows, charges each segment's bytes and extras, and appends its block whole.
+  6. A marked segment, or one the stitcher can't place, stops the pipeline. The serial scanner then reads on from that segment's start to the sheet's end, through a stream of the inflated bytes held and then the part's stream.
+  7. `EndParallel` stops and joins the threads. Unless the rows ended, it leaves the serial scanner at the first segment not delivered.
+- **Errors are always the serial read's** (recommendation 1). Under `ParallelEnumerate`, at every degree, segments on or off, a fill that throws after whole records delivers them first: the open record is dropped, and the next fill throws the error. Today's parallel read over a sheet dropped them. Sequential reads are unchanged.
+- **The serial read's code** (`jit\compare.txt`, `jit\compare-2.txt`; the Tier-1 call lists of the shared package assets' `Rows`, at `dba922fa` and the step, each taken twice):
+  - `ReadCells`, `ReadCell`, `AddPlain`, `AddValue`, `StartRow`, `EndRow`, `TryScan`, `ParseCell` and `ValueLength` make the same calls at both.
+  - The additions are two calls on branches the serial read never takes: `CountExtras` in the inlined `Charge` (the worker's count), and `SegmentRow` in `SetRow` (one test of a field a row).
+  - Code size grew by 20-35 bytes in `AddPlain`, `AddValue` and `AddEmpty`.
+  - `XmlAttributes.MoveNext`'s inlining varies from run to run at `dba922fa` itself (1,099 and 1,562 bytes), so its difference at the step is PGO's, not the step's.
+- **Merging, and what it changed:**
+  - **`Charge`:** S had moved the budget's count into a method of its own, which put a call on every charged cell; step 3's call lists show the old `Charge` inlined whole. The merge keeps the old shape, with the worker's count in a branch of its own.
+  - **The bulk append:** S's field-by-field `AppendBlock` became K's `AppendRecords` call.
+  - **Two name clashes** (the stitcher's enum and a method of the source; two tests' helpers) were renamed.
+  - **A bug of the source's, found by T's tests:** a fill that stitched segments and then fell back, whose serial read threw at once, dropped the stitched records. The deferral now counts every record the fill wrote.
+  - **Two of T's expectations were wrong, and changed:**
+    - merged cells filled read in segments when no range fills a field, exactly;
+    - a malformed row reads as a record before the XML fails.
+- **What the lanes found against the contract:**
+  - **S:** a fill can end after writing the missing rows before a row that then waits, and starting segments there wrote those rows twice. `CanStartSegments` waits one more fill.
+  - **S:** the next missing row after a segment is the later of the row after it and the one before. Under an area that is the area's first row.
+  - **S:** under an area that bounds rows, the next row must have an `r` for segments to start: a cheap test of the window's bytes, where the contract's "the last row floated" needed state on the serial path.
+  - **P:** with `MaxPartSize` under 512 KB, the cap (half of it) would be at or under the 256 KB cut target, and nothing would be cut. The source now keeps the target under half the cap.
+  - **K:** a header-only input calls `BeginParallel` and `EndParallel`; an input without a header record calls neither. A degree past about 358 million throws in `ParallelRun`'s constructor after `BeginParallel`, so `EndParallel` isn't called. The source's `Dispose` cleans up then.
+- **Tests:** about 8,700 lines, from all four lanes.
+  - **Every scanner test in segments too:** 36 modes, the four new ones cutting at every row and at 64-byte targets, with both fast paths on and off.
+  - **The worker, the stitcher and the window:** `SegmentScannerTests`, `SegmentStitcherTests`, `XmlSegmentWindowTests`, and a seeded fuzzer of 2,000 sheets plus 200 under budgets that trip.
+  - **The pipeline:** `RowSplitterTests`, `SegmentPipelineTests` and `SegmentStreamTests`, with stub scanners, a gated stream, a checking pool and a stress loop. Every wait is bounded.
+  - **Core:** `ParallelHookTests` and `AppendRecordsTests` (random blocks against the per-field calls, byte for byte).
+  - **The API** (`SegmentReadingTests`, `SegmentCorpusTests`, `SegmentSecurityTests`): each record's row and each field's text, kind and styled text, against the sequential read.
+    - generated sheets at every degree from 1 to 16;
+    - every corpus sheet under each option and 16 combinations, at degrees 1, 2, 3, 8 and 16;
+    - errors, markup, the limits, cancellation and disposal, a Linq `Take`.
+  - **Allocation** (Release): 10,000 rows in 248 segments allocate 184 KB, and 100,000 rows in 2,616 segments 216 KB, about 13 bytes a segment.
+  - **AOT:** the app publishes with no warnings, and runs a parallel read of 60,000 rows.
+- **Suites:** the Excel suite net10.0 7,025 passed (23 skipped), net8.0 7,017 (20), net48 6,895 (17); core's 1,441, 1,436 and 976; Linq's 112, 110 and 101.
+- **Mutation check** (`mutate_s8.py`, `mutations.txt`): 43 bugs planted one at a time in the merged tree, over three worktrees, each built in Release and run against core's suite (core's 7) or the whole Excel suite but its allocation tests (the rest). **All 43 were caught**, one by the run's time limit (a slot reused before it is stitched, which stalls the ring).
+  - **Core (7):** `BeginParallel` or `EndParallel` not called; `AppendRecords`' flag without trimming, a record's last byte the separator, styles unset, lines without the offset, ends not rebased.
+  - **The source (10):** no deferral; stitched records not counted for it; `Reset` skipped; segments under `FormulaText`, at degree 1, over a UTF-16 part, under the minimum, or with `segmentScans` off; the fallback from the segment after; no serial read on after an early stop.
+  - **The stitcher (9):** the order check across cuts skipped; missing rows between segments not written, or not charged; floating lines not rebased; `MaxRow` unchecked when rebasing; segments delivered after the rows end; a segment's bytes not charged, or charged twice; its extras not charged.
+  - **Segment mode (9):** the width, `dataPreserves` or the layout not carried; an end inside a row not marked; the markup search for `<!` only; a worker's error not marked; an anchor after floating rows not marked; the block cap, or the extras' limit, not checked.
+  - **The splitter and the ring (8):** a cut at `<rowX`, or a byte off; the window's unread bytes dropped; a slot reused before it is stitched; a stop that doesn't join the inflating thread; buffers returned before the stop; the cut target not halved; the stop's charge skipped.
+  - The lanes' own checks, before the merge, came to 68 more (K 15, P 17, S 36), all caught but S's 3 equivalent ones.
+- **Indicative timings** (`timings\`, the table in `timings.txt`): run 2026-11-26 from 13:36 to 17:36 on the user's go-ahead, alone on the machine.
+  - **How:** `s8base` (`dba922fa` with the step's benchmark sources) against the step. Each process was fresh, started after a quiet minute and outside the Installer's minutes, with the load logged each minute.
+  - **Dropped:** five of the scaling's 24 processes, disturbed between 13:55 and 14:27 by Defender, the WSL VM and another session's processes. None of the other parts' processes.
+  - **Scaling on CCD0** (QuickRunner; 16 logical processors, by the parent's affinity; each read's speedup over the same process's sequential one, workstation GC):
+
+    | | 2 workers | 4 | 8 | 16 | Stored copy, 8 |
+    |---|---:|---:|---:|---:|---:|
+    | Package assets, `Records` (973 ms) | 1.72x | 3.35x | 3.75x | 4.36x | |
+    | Package assets, `Rows` (713 ms) | 1.44x | 3.04x | 3.86x | 3.86x | 6.18x |
+    | Orders, `Records` (1,175 ms) | 1.90x | 2.04x | 2.04x | 2.01x | |
+    | Orders, `Rows` (974 ms) | 1.68x | 1.73x | 1.76x | 1.74x | 5.46x |
+
+    - **Against the plan:**
+      - The package assets give 3.75-4.36x from eight workers; the plan had 3.3-4.4x from four, and four give 3.0-3.4x.
+      - The orders give 2.0x from four, and the stored copies 5.5-6.2x.
+      - One worker gives 0.95-0.97x, as at the base: segments need two.
+    - **`RowsParallel_8`:**
+      - The package assets take 185 ms: the sheet's inflate (135 ms on core 4) and 50.
+      - The orders take 553 ms, of which the open (164 ms) and the sheet's inflate (293 ms) are serial.
+      - The stored copies take 116 and 179 ms, which bounds the scan and the stitch, so the inflating thread sets both times.
+    - **CPU a call:**
+      - 1.6-1.7x the sequential read's on the package assets, and 1.4-1.5x on the orders, above the plan's 1.1-1.3x.
+      - At the base the parallel read already takes 1.1-1.4x, with no gain.
+    - **Server GC isn't ahead,** against the plan: the package assets' `Records` give 3.9x at eight workers and 3.8x at sixteen. One base process of each class survived.
+    - **At the base,** every degree reads at 0.93-1.07x of the sequential read, as in W1.
+  - **The single-thread defaults, core 4** (QuickRunner, eight processes, base and step alternating; the step over the base, by the median of the processes' medians):
+    - **Level, 0.988-1.010:** 12 of 14 cases, namely
+      - the package assets' `Rows`, `Records` and `Strings`, shared and inline;
+      - the orders' `Records` and `Values`;
+      - the report's `Range` and `FormulaText`;
+      - `CellsFast` on the orders and `RowsFast` on the shared package assets.
+    - **Two scan stages over 1%:**
+      - `CellsFast` on the shared package assets, 1.014 (its rounds 1.022, 1.008, 1.130 and 0.993);
+      - `RowsFast` on the orders, 1.013 (1.010, 0.982, 1.020 and 1.024).
+    - **What settles it:** W4's pairs settle the 1%, these two first.
+  - **Per target** (the runner at eight workers on CCD0, seven rounds after one, two processes a tree; speedup over the same process's sequential read):
+
+    | | .NET 8 `rows` | .NET 8 `records` | .NET Framework `rows` | .NET Framework `records` |
+    |---|---:|---:|---:|---:|
+    | Package assets | 3.43x (269 ms) | 3.29x (348 ms) | 6.44x (673 ms) | 6.22x (788 ms) |
+    | Orders | 1.70x (656 ms) | 1.91x (690 ms) | 4.00x (957 ms) | 4.47x (994 ms) |
+
+    - **.NET Framework gains most:** its serial read takes 4.3 s, most of it a scan that spreads.
+    - **The base:** 0.88-1.03x.
+    - **The sequential reads:** in the same processes, level between the trees, but for .NET 8's package assets:
+      - `rows` takes 924 ms against 885 (+4.5%), and `records` 1,147 against 1,118 (+2.6%);
+      - each tree's two processes are 2-3% apart;
+      - these processes aren't pinned to a core, so this is not the gate.
+      - **Not pursued:** .NET 8 is out of support, and its speed isn't a concern (the user's call, 2026-11-26).
+- **Size:** product code 3,322 lines with its documentation (the plan said 1,800-2,200 without), tests 8,696, benchmarks 117.
 
 ### Phase 10: other formats (XL)
 

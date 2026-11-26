@@ -55,7 +55,9 @@ internal sealed class CapturedRecord(long row, List<(string Text, SheetCellKind 
 /// <summary>
 /// Keeps what a <see cref="SheetScanner"/> writes through <see cref="CapturingTarget"/>, and checks that it keeps the
 /// target's rules: whole records in each fill, no call between <see cref="GetFieldSpan"/> and its commit, no value longer
-/// than the room it asked for, no style out of range, and no more records in a fill than it takes.
+/// than the room it asked for, no style out of range, and no more records in a fill than it takes. A segment's block
+/// (<see cref="AppendBlock"/>) is appended whole, between records, into a fill that isn't full: the fill then ends after it,
+/// however many records it has.
 /// </summary>
 /// <param name="recordsPerFill">The number of records after which the target is full.</param>
 internal sealed class Captured(int recordsPerFill)
@@ -64,6 +66,7 @@ internal sealed class Captured(int recordsPerFill)
 	private List<int> styles = [];
 	private byte[]? room;
 	private int recordsThisFill;
+	private bool blockThisFill;
 
 	/// <summary>The records, in order.</summary>
 	public List<CapturedRecord> Records { get; } = [];
@@ -74,23 +77,72 @@ internal sealed class Captured(int recordsPerFill)
 	/// <summary>Whether the fill has written as many records as it takes.</summary>
 	public bool IsFull => recordsThisFill >= recordsPerFill;
 
+	/// <summary>The number of segments' blocks appended (<see cref="AppendBlock"/>).</summary>
+	public int Blocks { get; private set; }
+
 	/// <summary>Starts a fill.</summary>
 	public void StartFill()
 	{
 		recordsThisFill = 0;
+		blockThisFill = false;
 		Fills++;
 	}
 
-	/// <summary>Checks a fill that returned: whole records, at least one when more are to come, and no more than it takes.</summary>
+	/// <summary>
+	/// Checks a fill that returned: whole records, at least one when more are to come, and no more than it takes, unless a
+	/// block was appended, which is appended whole (and only into a fill that isn't full).
+	/// </summary>
 	/// <param name="more">What the fill returned.</param>
 	public void EndFill(bool more)
 	{
 		Assert.True(fields.Count == 0 && room is null, "A fill left a record unended.");
-		Assert.True(recordsThisFill <= recordsPerFill, $"A fill wrote {recordsThisFill} records, past the {recordsPerFill} it takes.");
+		if (!blockThisFill)
+		{
+			Assert.True(recordsThisFill <= recordsPerFill, $"A fill wrote {recordsThisFill} records, past the {recordsPerFill} it takes.");
+		}
+
 		if (more)
 		{
 			Assert.True(recordsThisFill > 0, "A fill that said more records are to come wrote none.");
 		}
+	}
+
+	/// <summary>
+	/// Appends a segment's records, replaying each field and record as a scanner would have written them, with each line plus
+	/// <paramref name="lineOffset"/>; and checks the block's form (<see cref="SegmentBlock"/>) and that it comes between
+	/// records, into a fill that isn't full.
+	/// </summary>
+	/// <param name="block">The records.</param>
+	/// <param name="lineOffset">Added to each record's line.</param>
+	public void AppendBlock(SegmentBlock block, long lineOffset)
+	{
+		Assert.True(fields.Count == 0 && room is null, "A block appended inside a record.");
+		Assert.False(IsFull, "A block appended into a full fill.");
+		var bytes = block.Bytes;
+		var ends = block.Ends;
+		var kinds = block.Kinds;
+		var blockStyles = block.Styles;
+		var records = block.Records;
+		var lines = block.Lines;
+		Assert.Equal(ends.Length, kinds.Length);
+		Assert.True(blockStyles.IsEmpty || blockStyles.Length == ends.Length, "A block's styles are neither none nor one a field.");
+		Assert.Equal(records.Length, lines.Length);
+		Assert.Equal(records.Length == 0 ? 0 : ends.Length, records.Length == 0 ? 0 : records[records.Length - 1]);
+		var field = 0;
+		for (var record = 0; record < records.Length; record++)
+		{
+			Assert.True(records[record] > field, "A block's record has no field.");
+			for (; field < records[record]; field++)
+			{
+				var start = field == 0 ? 0 : ends[field - 1] + 1;
+				AddField(bytes.Slice(start, ends[field] - start), kinds[field], blockStyles.IsEmpty ? -1 : blockStyles[field]);
+			}
+
+			EndRecord(lines[record] + lineOffset);
+		}
+
+		blockThisFill = true;
+		Blocks++;
 	}
 
 	/// <summary>Adds a field.</summary>
@@ -166,9 +218,12 @@ internal sealed class Captured(int recordsPerFill)
 	private static void CheckStyle(int style) => Assert.InRange(style, -1, (1 << 23) - 1);
 }
 
-/// <summary>The <see cref="IRecordTarget"/> of the tests: a struct over <see cref="Captured"/>, as the reader's is over its batch.</summary>
+/// <summary>
+/// The <see cref="IRecordTarget"/> of the tests: a struct over <see cref="Captured"/>, as the reader's is over its batch. It
+/// takes segments' blocks too (<see cref="IBlockTarget"/>), replaying their fields, so a test sees the same records either way.
+/// </summary>
 /// <param name="captured">What it keeps the records in.</param>
-internal readonly struct CapturingTarget(Captured captured) : IRecordTarget
+internal readonly struct CapturingTarget(Captured captured) : IBlockTarget
 {
 	/// <inheritdoc/>
 	public bool IsFull => captured.IsFull;
@@ -198,4 +253,7 @@ internal readonly struct CapturingTarget(Captured captured) : IRecordTarget
 
 	/// <inheritdoc/>
 	public void EndRecord(long row) => captured.EndRecord(row);
+
+	/// <inheritdoc/>
+	public void AppendBlock(SegmentBlock block, long lineOffset) => captured.AppendBlock(block, lineOffset);
 }
