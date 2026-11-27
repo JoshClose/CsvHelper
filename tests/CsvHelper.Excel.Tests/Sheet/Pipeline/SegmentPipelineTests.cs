@@ -557,8 +557,8 @@ public sealed class SegmentPipelineTests
 		{
 			var sheets = Enumerable.Range(0, 6).Select(i => Sheet(300 + i, 150 + (i * 150))).ToArray();
 			var watch = Stopwatch.StartNew();
-			var iterations = 0;
-			for (; iterations < 400 && watch.Elapsed < TimeSpan.FromSeconds(6); iterations++)
+			// At least 20 iterations whatever the machine's load, and up to 400 while 6 s last: Within's 5 minutes catch a hang.
+			for (var iterations = 0; iterations < 20 || (iterations < 400 && watch.Elapsed < TimeSpan.FromSeconds(6)); iterations++)
 			{
 				var random = new Random(iterations);
 				var (data, start) = sheets[random.Next(sheets.Length)];
@@ -584,14 +584,20 @@ public sealed class SegmentPipelineTests
 				}
 
 				run.Begin();
+				Thread? opener = null;
 				if (held)
 				{
+					// A thread of its own, not the pool's, so that other tests' work items can't hold the opening up for seconds.
 					var delay = random.Next(0, 3);
-					ThreadPool.QueueUserWorkItem(_ =>
+					opener = new Thread(() =>
 					{
 						Thread.Sleep(delay);
 						run.Inner.Open();
-					});
+					})
+					{
+						IsBackground = true,
+					};
+					opener.Start();
 				}
 
 				SegmentSlot? kept = null;
@@ -648,10 +654,9 @@ public sealed class SegmentPipelineTests
 					fallback.Dispose();
 				}
 
+				opener?.Join();
 				run.Finish();
 			}
-
-			Assert.True(iterations >= 20, $"Only {iterations} iterations ran.");
 		});
 	}
 
