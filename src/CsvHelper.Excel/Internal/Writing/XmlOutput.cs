@@ -32,10 +32,16 @@ internal sealed class XmlOutput : IDisposable
 
 	private byte[] buffer;
 	private int length;
+	// The capacity it was created with, which a buffer after Detach has at least.
+	private readonly int capacity;
 
 	/// <summary>Creates a buffer.</summary>
 	/// <param name="capacity">The bytes it holds before it grows.</param>
-	public XmlOutput(int capacity) => buffer = ArrayPool<byte>.Shared.Rent(capacity);
+	public XmlOutput(int capacity)
+	{
+		buffer = ArrayPool<byte>.Shared.Rent(capacity);
+		this.capacity = capacity;
+	}
 
 	/// <summary>The number of bytes written.</summary>
 	public int Length => length;
@@ -64,6 +70,37 @@ internal sealed class XmlOutput : IDisposable
 	/// <summary>Drops the bytes written from a position on.</summary>
 	/// <param name="position">The new length, at most <see cref="Length"/>.</param>
 	public void Truncate(int position) => length = position;
+
+	/// <summary>
+	/// Hands over the first bytes written without copying them: the array that holds them becomes the segment's, and the
+	/// buffer goes on in a fresh pooled array, of the capacity it was created with or more, into which the bytes after them
+	/// are copied (a record being written, usually few). The caller owns the segment from then on
+	/// (<see cref="OwnedSegment.Return"/>, or a zip entry that takes it).
+	/// </summary>
+	/// <param name="count">The number of bytes, from 0 to <see cref="Length"/>: 0 hands over nothing and keeps the array.</param>
+	/// <returns>The segment of the bytes; the empty segment for 0.</returns>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="count"/> is negative or past <see cref="Length"/>.</exception>
+	public OwnedSegment Detach(int count)
+	{
+		if (count < 0 || count > length)
+		{
+			throw new ArgumentOutOfRangeException(nameof(count), count, "The count is from 0 to the bytes written.");
+		}
+
+		if (count == 0)
+		{
+			return default;
+		}
+
+		var rest = length - count;
+		var fresh = ArrayPool<byte>.Shared.Rent(Math.Max(capacity, rest));
+		buffer.AsSpan(count, rest).CopyTo(fresh);
+		var segment = new OwnedSegment(buffer, count);
+		buffer = fresh;
+		length = rest;
+
+		return segment;
+	}
 
 	/// <summary>Drops the first bytes written, moving the rest to the start.</summary>
 	/// <param name="count">The number of bytes, at most <see cref="Length"/>.</param>

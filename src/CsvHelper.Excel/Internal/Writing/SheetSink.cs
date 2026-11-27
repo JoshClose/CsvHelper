@@ -2273,20 +2273,50 @@ internal sealed class SheetSink : CsvCellSink
 		}
 	}
 
-	/// <summary>Writes the buffer's first bytes to the entry, opening it and writing the XML before the rows first.</summary>
+	/// <summary>
+	/// Writes the buffer's first bytes to the entry, opening it (chunked: deflated off the writing thread when the package
+	/// has threads) and writing the XML before the rows first. An entry that takes segments
+	/// (<see cref="PackageWriter.TakesSegments"/>) is handed the buffer's array that holds them, uncopied
+	/// (<see cref="XmlOutput.Detach"/>), and takes it whatever happens, so the bytes leave the buffer first; any other entry
+	/// is written from the buffer, which drops the bytes once they are written.
+	/// </summary>
 	/// <param name="count">The bytes: whole records, or a whole sheet's rows and end, at most <see cref="recordStart"/>.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when they are written.</returns>
 	private async ValueTask WriteBufferAsync(int count, bool async, CancellationToken cancellationToken)
 	{
-		entry ??= await package.OpenPartAsync(partName, async, cancellationToken).ConfigureAwait(false);
+		entry ??= await package.OpenPartAsync(partName, chunked: true, async, cancellationToken).ConfigureAwait(false);
 		if (!startWritten)
 		{
 			using var start = new XmlOutput(Start.Length + 256 + (((columnWidths?.Length ?? 0) + (columnOptions?.Length ?? 0)) * 96));
 			AppendStart(start);
-			await start.WriteToAsync(entry, start.Length, async, cancellationToken).ConfigureAwait(false);
-			startWritten = true;
+			if (PackageWriter.TakesSegments(entry))
+			{
+				// A chunked entry takes the bytes before it can throw (a canceled wait for a chunk), so the start is
+				// written from here on, and a later flush doesn't write it again.
+				startWritten = true;
+				await PackageWriter.AppendAsync(entry, start.Detach(start.Length), async, cancellationToken).ConfigureAwait(false);
+			}
+			else
+			{
+				await start.WriteToAsync(entry, start.Length, async, cancellationToken).ConfigureAwait(false);
+				startWritten = true;
+			}
+		}
+
+		if (PackageWriter.TakesSegments(entry))
+		{
+			var segment = output.Detach(count);
+			recordStart -= count;
+			if (sheetEnd >= 0)
+			{
+				sheetEnd -= count;
+			}
+
+			await PackageWriter.AppendAsync(entry, segment, async, cancellationToken).ConfigureAwait(false);
+
+			return;
 		}
 
 		await output.WriteToAsync(entry, count, async, cancellationToken).ConfigureAwait(false);

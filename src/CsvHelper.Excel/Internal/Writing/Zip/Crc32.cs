@@ -70,6 +70,9 @@ internal static class Crc32
 	/// </summary>
 	private static readonly uint[] Tables = MakeTables();
 
+	/// <summary><c>x^(2^n)</c> modulo P for n from 0 to 31, reflected, for <see cref="Combine"/>.</summary>
+	private static readonly uint[] PowersOfTwo = MakePowers();
+
 	/// <summary>
 	/// Appends bytes to a CRC, through the widest path the machine supports whose minimum the bytes reach: on .NET 10 the
 	/// 512-bit fold from 256 bytes, then the 256-bit fold from 128, each only where the runtime accelerates vectors of
@@ -470,6 +473,80 @@ internal static class Crc32
 	private static Vector512<ulong> Load512(ref byte bytes, nuint offset) => Vector512.LoadUnsafe(ref bytes, offset).AsUInt64();
 #endif
 #endif
+
+	/// <summary>
+	/// The CRC of two pieces of data one after the other, from each piece's CRC and the second's length, as zlib's
+	/// <c>crc32_combine</c> computes it (1.2.12's: <c>multmodp(x2nmodp(len2, 3), crc1) ^ crc2</c>): the CRC of a chunked
+	/// entry, from its chunks' CRCs in order. About 0.1 µs, whatever the lengths.
+	/// </summary>
+	/// <param name="first">The CRC of the first piece, 0 for none.</param>
+	/// <param name="second">The CRC of the second piece.</param>
+	/// <param name="secondLength">The second piece's length in bytes, 0 or more.</param>
+	/// <returns>The CRC of both.</returns>
+	public static uint Combine(uint first, uint second, long secondLength) => MultiplyModP(PowerOfX(secondLength, 3), first) ^ second;
+
+	/// <summary>Multiplies two polynomials modulo P, reflected, as zlib's <c>multmodp</c>.</summary>
+	/// <param name="a">The first, reflected: its x^0 coefficient in the top bit.</param>
+	/// <param name="b">The second, reflected.</param>
+	/// <returns>The product modulo P.</returns>
+	private static uint MultiplyModP(uint a, uint b)
+	{
+		var m = 1u << 31;
+		var p = 0u;
+		while (true)
+		{
+			if ((a & m) != 0)
+			{
+				p ^= b;
+				if ((a & (m - 1)) == 0)
+				{
+					break;
+				}
+			}
+
+			m >>= 1;
+			b = (b & 1) != 0 ? (b >> 1) ^ Polynomial : b >> 1;
+		}
+
+		return p;
+	}
+
+	/// <summary><c>x^(n * 2^k)</c> modulo P, reflected, as zlib's <c>x2nmodp</c>.</summary>
+	/// <param name="n">The multiple of 2^k: a length in bytes, with <paramref name="k"/> 3.</param>
+	/// <param name="k">The power of two that <paramref name="n"/> counts in.</param>
+	/// <returns>The power.</returns>
+	private static uint PowerOfX(long n, int k)
+	{
+		var p = 1u << 31;
+		while (n != 0)
+		{
+			if ((n & 1) != 0)
+			{
+				p = MultiplyModP(PowersOfTwo[k & 31], p);
+			}
+
+			n >>= 1;
+			k++;
+		}
+
+		return p;
+	}
+
+	/// <summary>Makes <see cref="PowersOfTwo"/>: <c>x^(2^n)</c> modulo P for n from 0 to 31, reflected (zlib's <c>x2n_table</c>).</summary>
+	/// <returns>The table.</returns>
+	private static uint[] MakePowers()
+	{
+		var table = new uint[32];
+		var p = 1u << 30;
+		table[0] = p;
+		for (var n = 1; n < 32; n++)
+		{
+			p = MultiplyModP(p, p);
+			table[n] = p;
+		}
+
+		return table;
+	}
 
 	/// <summary>Makes slice-by-8's tables.</summary>
 	/// <returns>The tables.</returns>

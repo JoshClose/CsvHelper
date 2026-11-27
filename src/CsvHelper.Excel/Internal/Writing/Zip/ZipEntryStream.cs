@@ -17,6 +17,16 @@ namespace CsvHelper.Excel;
 /// asynchronously. <see cref="Flush"/> does nothing: flushing the deflater would change the bytes. Once the writer is
 /// faulted, writing and closing do nothing.
 /// </summary>
+/// <remarks>
+/// An entry opened chunked on a writer with threads (<see cref="TakesSegments"/>) is deflated off the writing thread: its
+/// data goes to a deflate stage (<see cref="DeflateStage"/>), as segments handed over uncopied (<see cref="AppendAsync"/>)
+/// or as copies of writes, and after each append the entry writes the chunks the stage has deflated, in order, waiting for
+/// the next only while the stage holds as many as it may. A chunk goes after the data before it: into the buffers while
+/// the local header waits, so that an entry of at most one buffer of data is still written whole; as the data passes one
+/// buffer, the local header (streamed) and the buffers; from then on each chunk's buffers straight to the package's
+/// stream. The chunks' CRCs combine into the entry's in order (<see cref="Crc32.Combine"/>). A synchronous call's wait
+/// blocks, and an asynchronous call's awaits, so that each writes the package's stream in its own mode.
+/// </remarks>
 internal sealed class ZipEntryStream : Stream
 #if !NET && !NETSTANDARD2_1_OR_GREATER
 	, IAsyncDisposable
@@ -49,23 +59,73 @@ internal sealed class ZipEntryStream : Stream
 	/// <summary>Whether the entry has been closed.</summary>
 	private bool closed;
 
+	/// <summary>
+	/// Whether the entry deflates in chunks on its deflate stage (<see cref="TakesSegments"/>): opened chunked and deflated,
+	/// with more than one thread as it opened, or since <see cref="UseChunks"/>.
+	/// </summary>
+	private bool chunking;
+
+	/// <summary>The most threads the stage deflates on, once the entry chunks: 2 or more.</summary>
+	private int threads;
+
+	/// <summary>The stage of a chunked entry, made with its first byte; <see langword="null"/> before, and once released.</summary>
+	private DeflateStage? stage;
+
+	/// <summary>The stage's chunks taken, which is the next one's place in order (<see cref="DeflatedChunk.Sequence"/>).</summary>
+	private long chunksTaken;
+
+	/// <summary>
+	/// The bytes written whose deflate is in the data written or held: the input of the chunks written, and of a switched
+	/// entry's data before its switch (<see cref="UseChunks"/>). At close, all the bytes written.
+	/// </summary>
+	private long chunkedInput;
+
 	/// <summary>Opens an entry.</summary>
 	/// <param name="writer">The package's writer.</param>
 	/// <param name="name">The entry's name, ASCII.</param>
-	public ZipEntryStream(ZipWriter writer, string name)
+	/// <param name="chunked">Whether the entry is deflated off the writing thread when the writer has threads (<see cref="ZipWriter.Open(string, bool)"/>).</param>
+	public ZipEntryStream(ZipWriter writer, string name, bool chunked = false)
 	{
 		this.writer = writer;
 		Name = name;
+		Chunked = chunked;
 		data = new ZipBuffers(writer);
 		stored = writer.Level == CompressionLevel.NoCompression;
 		if (!stored)
 		{
 			sink = new DeflaterSink(data);
+			var count = Math.Max(writer.Threads, writer.ParallelThreads);
+			if (chunked && count > 1)
+			{
+				chunking = true;
+				threads = count;
+			}
 		}
 	}
 
 	/// <summary>The entry's name.</summary>
 	public string Name { get; }
+
+	/// <summary>
+	/// Whether the entry was opened chunked (<see cref="ZipWriter.Open(string, bool)"/>): deflated off the writing thread
+	/// when the writer has threads, or once a parallel write's sink asks (<see cref="UseChunks"/>).
+	/// </summary>
+	public bool Chunked { get; }
+
+	/// <summary>
+	/// Whether <see cref="AppendAsync"/> hands a segment on uncopied, to the entry's deflate stage: so the sink detaches its
+	/// buffer at each flush (<see cref="XmlOutput.Detach"/>) rather than writing from it. <see langword="true"/> for an entry
+	/// opened chunked and deflated whose writer had more than one thread as it opened (<c>Math.Max(</c><see cref="ZipWriter.Threads"/><c>, </c><see cref="ZipWriter.ParallelThreads"/><c>)</c>),
+	/// or since <see cref="UseChunks"/> switched it; <see langword="false"/> for an entry that deflates on the writing thread
+	/// or is stored, which copy what they take as <see cref="Write(byte[], int, int)"/> does.
+	/// </summary>
+	public bool TakesSegments => chunking;
+
+	/// <summary>
+	/// Makes the entry's stage in place of <see cref="DeflateStages.Create"/>, for tests that give it one of their own: set
+	/// before the entry's first byte. Given the writer and the threads, it returns a new stage.
+	/// </summary>
+	internal Func<ZipWriter, int, DeflateStage>? StageFactory { get; set; }
 
 	/// <summary>The compression method: 0, stored, or 8, deflated.</summary>
 	public ushort Method => stored ? (ushort)0 : (ushort)8;
@@ -170,6 +230,13 @@ internal sealed class ZipEntryStream : Stream
 			return;
 		}
 
+		if (chunking)
+		{
+			WriteChunked(new ReadOnlySpan<byte>(buffer, offset, count));
+
+			return;
+		}
+
 		for (var at = 0; at < bytes.Count; at += ZipWriter.BufferSize)
 		{
 			if (WritesThrough)
@@ -189,7 +256,7 @@ internal sealed class ZipEntryStream : Stream
 	/// <param name="buffer">The bytes.</param>
 	/// <param name="offset">The first.</param>
 	/// <param name="count">How many.</param>
-	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken.</param>
+	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken; while a chunked entry waits for a chunk's deflate, after they are taken, the wait ends and the entry goes on.</param>
 	/// <returns>A task that completes when the bytes are taken.</returns>
 	/// <exception cref="ObjectDisposedException">The entry has been closed.</exception>
 	public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken) =>
@@ -204,6 +271,13 @@ internal sealed class ZipEntryStream : Stream
 		CheckOpen();
 		if (writer.Faulted)
 		{
+			return;
+		}
+
+		if (chunking)
+		{
+			WriteChunked(buffer);
+
 			return;
 		}
 
@@ -225,7 +299,7 @@ internal sealed class ZipEntryStream : Stream
 
 	/// <summary>Writes bytes to the entry, writing the package's stream asynchronously.</summary>
 	/// <param name="buffer">The bytes.</param>
-	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken.</param>
+	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken; while a chunked entry waits for a chunk's deflate, after they are taken, the wait ends and the entry goes on.</param>
 	/// <returns>A task that completes when the bytes are taken.</returns>
 	/// <exception cref="ObjectDisposedException">The entry has been closed.</exception>
 	public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default) => WriteMemoryAsync(buffer, cancellationToken);
@@ -250,10 +324,155 @@ internal sealed class ZipEntryStream : Stream
 	}
 
 	/// <summary>
-	/// Closes the entry: finishes the deflater, writes the local header if it waits and the rest of the data, patches a
-	/// patched entry's local header (<see cref="PatchHeaderAsync"/>), writes a streamed entry's descriptor, and adds the
-	/// entry to the central directory. The pooled buffers return, whatever happens. Calling it again does nothing, and so
-	/// does closing an entry of a faulted writer.
+	/// Takes a segment of the entry's bytes, after those written before it, writing the package's stream synchronously or
+	/// asynchronously as <see cref="Write(byte[], int, int)"/> and <see cref="WriteAsync(byte[], int, int, CancellationToken)"/>
+	/// do. The segment is the entry's from the call on, whatever happens: handed to its deflate stage uncopied when the
+	/// entry is chunked (<see cref="TakesSegments"/>), else written or deflated as a write is and returned at once
+	/// (<see cref="ZipWriter.Return(OwnedSegment)"/>); returned as well when the call throws before the bytes are taken,
+	/// the entry is closed or the writer faulted. The empty segment writes nothing.
+	/// </summary>
+	/// <param name="segment">The bytes.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">
+	/// Cancels an asynchronous write. An entry that isn't chunked checks it before any of the write, and the bytes then
+	/// aren't taken. A chunked entry takes the bytes first, since its caller has handed them over, and then throws, or ends
+	/// a wait for a chunk's deflate, leaving the entry as it was, with the bytes.
+	/// </param>
+	/// <returns>A task that completes when the bytes are taken.</returns>
+	/// <exception cref="ObjectDisposedException">The entry has been closed.</exception>
+	internal async ValueTask AppendAsync(OwnedSegment segment, bool async, CancellationToken cancellationToken)
+	{
+		writer.Hold(segment);
+		if (!chunking)
+		{
+			try
+			{
+				if (segment.IsEmpty)
+				{
+					CheckOpen();
+
+					return;
+				}
+
+				if (async)
+				{
+					await WriteMemoryAsync(segment.Memory, cancellationToken).ConfigureAwait(false);
+				}
+				else
+				{
+					Write(segment.Array!, 0, segment.Length);
+				}
+			}
+			finally
+			{
+				writer.Return(segment);
+			}
+
+			return;
+		}
+
+		var held = true;
+		try
+		{
+			CheckOpen();
+			if (segment.IsEmpty || writer.Faulted)
+			{
+				return;
+			}
+
+			var current = Stage();
+			held = false;
+			try
+			{
+				current.Append(segment);
+			}
+			catch
+			{
+				writer.Fault();
+
+				throw;
+			}
+
+			UncompressedSize += segment.Length;
+		}
+		finally
+		{
+			if (held)
+			{
+				writer.Return(segment);
+			}
+		}
+
+		if (async)
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+		}
+
+		await WriteChunksAsync(async, cancellationToken).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Chunks the entry from here on, as a parallel write on its sheet begins (<see cref="ZipWriter.ParallelThreads"/>): a
+	/// deflated entry opened chunked deflates on <c>Math.Max(</c><see cref="ZipWriter.Threads"/><c>, </c><see cref="ZipWriter.ParallelThreads"/><c>)</c>
+	/// threads when that is above 1. On net8.0 and net10.0 the bytes written before end as one chunk (a sync flush) and the
+	/// rest is cut in chunks; on the other builds an entry that has deflated nothing yet goes to one deflate thread, and one
+	/// that has stays on the writing thread. A stored entry, an entry not opened chunked, and one already chunked (but for
+	/// its thread count) don't change. It writes nothing to the package's stream: the bytes so far stay in the buffers until
+	/// the next write or the close. A closed entry, or one of a faulted writer, doesn't change either.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">The deflater's sync flush, GZip trailer or final block is not what it should be (which faults the writer).</exception>
+	internal void UseChunks()
+	{
+		if (closed || stored || !Chunked || writer.Faulted)
+		{
+			return;
+		}
+
+		var count = Math.Max(writer.Threads, writer.ParallelThreads);
+		if (chunking)
+		{
+			if (count > threads)
+			{
+				threads = count;
+				try
+				{
+					stage?.RaiseThreads(count);
+				}
+				catch
+				{
+					writer.Fault();
+
+					throw;
+				}
+			}
+
+			return;
+		}
+
+		if (count <= 1)
+		{
+			return;
+		}
+
+		if (deflater is not null)
+		{
+#if NET
+			EndSerialChunk();
+#else
+			// Here Flush doesn't sync-flush, so the bytes so far can't end at a byte boundary: the entry stays on the writing thread.
+			return;
+#endif
+		}
+
+		chunking = true;
+		threads = count;
+	}
+
+	/// <summary>
+	/// Closes the entry: finishes the deflater (a chunked entry's stage, its chunks all written), writes the local header if
+	/// it waits and the rest of the data, patches a patched entry's local header (<see cref="PatchHeaderAsync"/>), writes a
+	/// streamed entry's descriptor, and adds the entry to the central directory. The pooled buffers return, whatever
+	/// happens. Calling it again does nothing, and so does closing an entry of a faulted writer.
 	/// </summary>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <returns>A task that completes when the entry is closed.</returns>
@@ -272,7 +491,15 @@ internal sealed class ZipEntryStream : Stream
 				return;
 			}
 
-			Finish();
+			if (chunking)
+			{
+				await FinishChunksAsync(async).ConfigureAwait(false);
+			}
+			else
+			{
+				Finish();
+			}
+
 			CompressedSize = dataWritten + data.Length;
 			if (!headerWritten)
 			{
@@ -307,11 +534,25 @@ internal sealed class ZipEntryStream : Stream
 	}
 
 	/// <summary>
-	/// Returns the entry's buffers to the pool and drops its deflater, as it closes or as the writer faults. Calling it
+	/// Returns the entry's buffers to the pool and drops its deflater, as it closes or as the writer faults: a chunked
+	/// entry's stage first, which stops and joins its threads and then returns every segment and chunk it holds. Calling it
 	/// again does nothing.
 	/// </summary>
 	internal void Release()
 	{
+		if (stage is { } current)
+		{
+			stage = null;
+			try
+			{
+				current.Dispose();
+			}
+			catch
+			{
+				// The stage has stopped as far as it can, and its failure would hide the one that released the entry.
+			}
+		}
+
 		data.Clear();
 		if (deflater is not null)
 		{
@@ -351,10 +592,11 @@ internal sealed class ZipEntryStream : Stream
 
 	/// <summary>
 	/// Writes bytes to the entry, writing the package's stream asynchronously: a buffer's worth at a time into the
-	/// buffers, and once a stored entry is streamed, the rest straight through in one write.
+	/// buffers, and once a stored entry is streamed, the rest straight through in one write; a chunked entry's as one
+	/// copy to its stage.
 	/// </summary>
 	/// <param name="buffer">The bytes.</param>
-	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken.</param>
+	/// <param name="cancellationToken">Cancels the write: before any of it, the bytes aren't taken; while a chunked entry waits for a chunk's deflate, after they are taken, the wait ends and the entry goes on.</param>
 	/// <returns>A task that completes when the bytes are taken.</returns>
 	private async ValueTask WriteMemoryAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken)
 	{
@@ -365,6 +607,17 @@ internal sealed class ZipEntryStream : Stream
 		}
 
 		cancellationToken.ThrowIfCancellationRequested();
+		if (chunking)
+		{
+			if (!buffer.IsEmpty)
+			{
+				AppendCopy(buffer.Span);
+				await WriteChunksAsync(true, cancellationToken).ConfigureAwait(false);
+			}
+
+			return;
+		}
+
 		while (!buffer.IsEmpty)
 		{
 			if (WritesThrough)
@@ -627,6 +880,295 @@ internal sealed class ZipEntryStream : Stream
 			throw;
 		}
 	}
+
+	/// <summary>
+	/// Writes bytes to a chunked entry, writing the package's stream synchronously: a copy goes to the stage, and the chunks
+	/// it has deflated are written (<see cref="WriteChunksAsync"/>), waiting for them with a wait that blocks.
+	/// </summary>
+	/// <param name="bytes">The bytes.</param>
+	private void WriteChunked(ReadOnlySpan<byte> bytes)
+	{
+		if (bytes.IsEmpty)
+		{
+			return;
+		}
+
+		AppendCopy(bytes);
+		SyncOrAsync.Wait(WriteChunksAsync(false, CancellationToken.None));
+	}
+
+	/// <summary>
+	/// The chunked entry's stage, made with its first byte (<see cref="DeflateStages.Create"/>, or <see cref="StageFactory"/>)
+	/// on the threads the entry chunks with. A failure faults the writer.
+	/// </summary>
+	/// <returns>The stage.</returns>
+	private DeflateStage Stage()
+	{
+		if (stage is null)
+		{
+			try
+			{
+				stage = StageFactory is { } factory ? factory(writer, threads) : DeflateStages.Create(writer, threads);
+			}
+			catch
+			{
+				writer.Fault();
+
+				throw;
+			}
+		}
+
+		return stage;
+	}
+
+	/// <summary>Appends a copy of bytes to a chunked entry's stage, and counts them. A failure faults the writer.</summary>
+	/// <param name="bytes">The bytes: 1 or more.</param>
+	private void AppendCopy(ReadOnlySpan<byte> bytes)
+	{
+		var current = Stage();
+		try
+		{
+			current.Append(bytes);
+		}
+		catch
+		{
+			writer.Fault();
+
+			throw;
+		}
+
+		UncompressedSize += bytes.Length;
+	}
+
+	/// <summary>
+	/// Writes the chunks a chunked entry's stage has deflated, in order (<see cref="WriteChunkAsync"/>): every one it has
+	/// ready, and while it holds as many as it may (<see cref="DeflateStage.MustWait"/>), the next, waiting for it: with a
+	/// wait that blocks for a synchronous call, and asynchronously for an asynchronous one. It never waits for data. A
+	/// canceled wait throws and leaves the chunk to the stage and the entry as it was; any other failure faults the writer.
+	/// </summary>
+	/// <param name="async">Whether to wait and write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous wait or write.</param>
+	/// <returns>A task that completes when the chunks are written.</returns>
+	private async ValueTask WriteChunksAsync(bool async, CancellationToken cancellationToken)
+	{
+		while (stage is { } current)
+		{
+			DeflatedChunk? chunk;
+			try
+			{
+				if (current.TryTake(out var ready))
+				{
+					chunk = ready;
+				}
+				else if (!current.MustWait)
+				{
+					return;
+				}
+				else if (async)
+				{
+					chunk = await current.TakeAsync(cancellationToken).ConfigureAwait(false);
+				}
+				else
+				{
+					chunk = current.Take();
+				}
+			}
+			catch (Exception e) when (!(e is OperationCanceledException && cancellationToken.IsCancellationRequested))
+			{
+				writer.Fault();
+
+				throw;
+			}
+
+			if (chunk is null)
+			{
+				return;
+			}
+
+			await WriteChunkAsync(chunk, async, cancellationToken).ConfigureAwait(false);
+		}
+	}
+
+	/// <summary>
+	/// Writes a chunk of a chunked entry after the data before it, and returns it to the stage: while the local header
+	/// waits, into the buffers, so that an entry of at most one buffer of data is still written whole; as the data passes
+	/// one buffer, the local header (streamed) and the buffers; from then on, the buffers the entry holds (a switched
+	/// entry's last bytes before its switch) and the chunk's own, straight to the package's stream. Its CRC combines into
+	/// the entry's (<see cref="Crc32.Combine"/>). A chunk out of order, or of more input than the entry was given, faults
+	/// the writer, as a failed write does.
+	/// </summary>
+	/// <param name="chunk">The chunk, taken from the stage.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
+	/// <returns>A task that completes when the chunk is written.</returns>
+	/// <exception cref="InvalidOperationException">The chunk isn't the next one in order, or has more input than the entry was given.</exception>
+	private async ValueTask WriteChunkAsync(DeflatedChunk chunk, bool async, CancellationToken cancellationToken)
+	{
+		try
+		{
+			if (chunk.Sequence != chunksTaken || chunk.InputLength < 0 || chunk.InputLength > UncompressedSize - chunkedInput)
+			{
+				writer.Fault();
+
+				throw new InvalidOperationException(
+					$"The deflate stage gave chunk {chunk.Sequence} of {chunk.InputLength} bytes of input, where the entry takes chunk {chunksTaken} of at most {UncompressedSize - chunkedInput}.");
+			}
+
+			chunksTaken++;
+			chunkedInput += chunk.InputLength;
+			Crc = Crc32.Combine(Crc, chunk.Crc, chunk.InputLength);
+			var output = chunk.Output;
+			var straight = headerWritten;
+			if (!straight)
+			{
+				for (var i = 0; i < output.Count; i++)
+				{
+					data.Append(new ReadOnlySpan<byte>(output[i], 0, output.LengthOf(i)));
+				}
+
+				if (data.Count < 2)
+				{
+					return;
+				}
+
+				await WriteHeaderAsync(true, async, cancellationToken).ConfigureAwait(false);
+			}
+
+			for (var i = 0; i < data.Count; i++)
+			{
+				var length = data.LengthOf(i);
+				await writer.WriteAsync(data[i], length, async, cancellationToken).ConfigureAwait(false);
+				dataWritten += length;
+			}
+
+			data.Clear();
+			if (straight)
+			{
+				for (var i = 0; i < output.Count; i++)
+				{
+					var length = output.LengthOf(i);
+					await writer.WriteAsync(output[i], length, async, cancellationToken).ConfigureAwait(false);
+					dataWritten += length;
+				}
+			}
+		}
+		finally
+		{
+			if (stage is { } current)
+			{
+				current.Return(chunk);
+			}
+			else
+			{
+				// The writer faulted and released the entry, whose stage is gone: the chunk's buffers go back to the pool.
+				chunk.Clear();
+			}
+		}
+	}
+
+	/// <summary>
+	/// Finishes a chunked entry's data: ends the stage's input, whose rest is its last chunk, deflated final, and writes
+	/// every chunk left, in order, waiting for each as the call's mode does. Without a stage, as nothing was written since
+	/// the entry chunks, the data ends with an empty final block, as an entry deflated from nothing does. Then the chunks'
+	/// input must be every byte written. A failure faults the writer.
+	/// </summary>
+	/// <param name="async">Whether to wait and write asynchronously.</param>
+	/// <returns>A task that completes when the data is finished.</returns>
+	/// <exception cref="InvalidOperationException">The chunks' input isn't the bytes written.</exception>
+	private async ValueTask FinishChunksAsync(bool async)
+	{
+		if (stage is not { } current)
+		{
+			data.Append(EmptyDeflate);
+		}
+		else
+		{
+			try
+			{
+				current.Complete();
+			}
+			catch
+			{
+				writer.Fault();
+
+				throw;
+			}
+
+			while (true)
+			{
+				DeflatedChunk? chunk;
+				try
+				{
+					chunk = async ? await current.TakeAsync(CancellationToken.None).ConfigureAwait(false) : current.Take();
+				}
+				catch
+				{
+					writer.Fault();
+
+					throw;
+				}
+
+				if (chunk is null)
+				{
+					break;
+				}
+
+				await WriteChunkAsync(chunk, async, CancellationToken.None).ConfigureAwait(false);
+			}
+		}
+
+		if (chunkedInput != UncompressedSize)
+		{
+			writer.Fault();
+
+			throw new InvalidOperationException($"The deflate stage's chunks took {chunkedInput} bytes of input, not the {UncompressedSize} written.");
+		}
+	}
+
+#if NET
+	/// <summary>
+	/// Ends what the entry's deflater has taken as a chunk, as the entry switches to chunks (<see cref="UseChunks"/>): a sync
+	/// flush, so that the data so far ends at a byte boundary, then the deflater disposed, its GZip trailer taken off for
+	/// the CRC so far (its size checked), and the empty final block that disposing added checked and dropped, so that the
+	/// first chunk's blocks follow. The bytes stay in the buffers. A failure faults the writer.
+	/// </summary>
+	/// <exception cref="InvalidOperationException">The deflater's GZip trailer or final block is not what it should be.</exception>
+	private void EndSerialChunk()
+	{
+		try
+		{
+			deflater!.Flush();
+			deflater.Dispose();
+			deflater = null;
+			var (crc, size) = sink!.TakeTrailer();
+			if (size != (uint)UncompressedSize)
+			{
+				throw new InvalidOperationException($"The deflater's GZip trailer gives the size mod 2^32 as {size}, not {(uint)UncompressedSize}.");
+			}
+
+			Span<byte> end = stackalloc byte[2];
+			if (data.Length < end.Length)
+			{
+				throw new InvalidOperationException("The deflater's sync-flushed data ended without its final block.");
+			}
+
+			data.RemoveLast(end);
+			if (!end.SequenceEqual(EmptyDeflate))
+			{
+				throw new InvalidOperationException($"The deflater ended its sync-flushed data with 0x{end[0]:X2} 0x{end[1]:X2}, not the empty final block 03 00.");
+			}
+
+			Crc = crc;
+			chunkedInput = UncompressedSize;
+		}
+		catch
+		{
+			writer.Fault();
+
+			throw;
+		}
+	}
+#endif
 
 	/// <summary>The flags' bits 1-2 for a level: <c>0x0006</c> at <see cref="CompressionLevel.Fastest"/>, <c>0x0002</c> at <c>SmallestSize</c>, else 0.</summary>
 	/// <param name="level">The level.</param>

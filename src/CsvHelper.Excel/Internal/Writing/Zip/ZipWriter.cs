@@ -83,23 +83,51 @@ internal sealed class ZipWriter
 	/// <summary>Whether the writer has been disposed.</summary>
 	private bool disposed;
 
-	/// <summary>Starts a package.</summary>
+	/// <summary>The pooled buffers held (<see cref="RentedBuffers"/>), counted on every thread that rents or returns one.</summary>
+	private int rentedBuffers;
+
+	/// <summary>The owned segments the entries hold (<see cref="HeldSegments"/>), counted on every thread.</summary>
+	private int heldSegments;
+
+	/// <summary>Starts a package whose entries deflate on the writing thread.</summary>
 	/// <param name="stream">The stream the package is written to, from its position.</param>
 	/// <param name="leaveOpen">Whether disposing the writer leaves <paramref name="stream"/> open.</param>
 	/// <param name="level">The compression of every entry.</param>
 	/// <param name="limits">Where its fields overflow into Zip64's.</param>
 	/// <exception cref="ArgumentException"><paramref name="stream"/> can't be written.</exception>
 	public ZipWriter(Stream stream, bool leaveOpen, CompressionLevel level, ZipLimits limits)
+		: this(stream, leaveOpen, level, limits, 1)
+	{
+	}
+
+	/// <summary>Starts a package.</summary>
+	/// <param name="stream">The stream the package is written to, from its position.</param>
+	/// <param name="leaveOpen">Whether disposing the writer leaves <paramref name="stream"/> open.</param>
+	/// <param name="level">The compression of every entry.</param>
+	/// <param name="limits">Where its fields overflow into Zip64's.</param>
+	/// <param name="threads">
+	/// The threads that deflate a chunked entry beside the writing thread (<see cref="Threads"/>): 1 or more, as
+	/// <c>ExcelWriterOptions.CompressionThreads</c> resolves (-1 is <see cref="Environment.ProcessorCount"/>).
+	/// </param>
+	/// <exception cref="ArgumentException"><paramref name="stream"/> can't be written.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="threads"/> is 0 or less.</exception>
+	public ZipWriter(Stream stream, bool leaveOpen, CompressionLevel level, ZipLimits limits, int threads)
 	{
 		if (!stream.CanWrite)
 		{
 			throw new ArgumentException("The stream can't be written.", nameof(stream));
 		}
 
+		if (threads < 1)
+		{
+			throw new ArgumentOutOfRangeException(nameof(threads), threads, "A zip writer has 1 thread or more.");
+		}
+
 		this.stream = stream;
 		this.leaveOpen = leaveOpen;
 		Level = level;
 		Limits = limits;
+		Threads = threads;
 		Seekable = stream.CanSeek;
 		start = Seekable ? stream.Position : 0;
 		directory = new ZipBuffers(this);
@@ -123,8 +151,43 @@ internal sealed class ZipWriter
 	/// <summary>The offset of the next byte written: the package's start and the bytes written so far.</summary>
 	public long Position => start + written;
 
-	/// <summary>The pooled buffers held, for tests that check that they all return.</summary>
-	internal int RentedBuffers { get; private set; }
+	/// <summary>
+	/// The threads that deflate a chunked entry (<see cref="Open(string, bool)"/>) beside the writing thread: 1, the
+	/// default, chunks nothing, and every entry deflates on the writing thread as before; more chunks every entry opened
+	/// chunked, on net8.0 and net10.0 in chunks of <see cref="ChunkSize"/> on up to that many threads, and on the other
+	/// builds through one deflater on one thread (<see cref="DeflateStage"/>).
+	/// </summary>
+	public int Threads { get; }
+
+	/// <summary>
+	/// The input a chunk of a chunked entry takes: <see cref="DeflateSizes.ChunkSize"/>, and less in tests (1 byte, 64
+	/// bytes), set before the first entry opens.
+	/// </summary>
+	internal int ChunkSize { get; set; } = DeflateSizes.ChunkSize;
+
+	/// <summary>
+	/// The threads a chunked entry takes at least while a parallel write runs on a sheet: its degree, which the sheet's
+	/// sink sets as the write begins and sets back to 0 as it ends. An entry opened chunked meanwhile deflates on
+	/// <c>Math.Max(</c><see cref="Threads"/><c>, ParallelThreads)</c> threads, and an entry already open switches when its
+	/// sink asks (<see cref="ZipEntryStream.UseChunks"/>).
+	/// </summary>
+	internal int ParallelThreads { get; set; }
+
+	/// <summary>The pooled buffers held, on every thread, for tests that check that they all return.</summary>
+	internal int RentedBuffers => Volatile.Read(ref rentedBuffers);
+
+	/// <summary>
+	/// The owned segments the entries took (<see cref="Hold"/>), and the copies a chunked entry's stage made of bytes
+	/// written to it, that haven't returned yet, for tests that check that they all return.
+	/// </summary>
+	internal int HeldSegments => Volatile.Read(ref heldSegments);
+
+	/// <summary>
+	/// Called with each deflate stage a chunked entry makes (<see cref="DeflateStages.Create"/>), for tests that hold or
+	/// fail its chunks (<see cref="ThreadedDeflateStage.BeforeDeflate"/>) or check that its threads end
+	/// (<see cref="ThreadedDeflateStage.StartedThreads"/>). <see langword="null"/> by default.
+	/// </summary>
+	internal Action<DeflateStage>? StageCreated { get; set; }
 
 	/// <summary>
 	/// Opens an entry, which writes nothing: its local header waits until its data passes one buffer, or it closes. Once
@@ -134,11 +197,26 @@ internal sealed class ZipWriter
 	/// <returns>The entry's stream.</returns>
 	/// <exception cref="InvalidOperationException">Another entry is open, or the name isn't ASCII or is longer than 65,535 characters.</exception>
 	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
-	public ZipEntryStream Open(string name)
+	public ZipEntryStream Open(string name) => Open(name, false);
+
+	/// <summary>
+	/// Opens an entry, which writes nothing: its local header waits until its data passes one buffer, or it closes. Once
+	/// the writer is faulted, the entry writes nothing.
+	/// </summary>
+	/// <param name="name">The entry's name, ASCII.</param>
+	/// <param name="chunked">
+	/// Whether the entry's data is deflated off the writing thread when the writer has threads (<see cref="Threads"/>, or
+	/// <see cref="ParallelThreads"/> while a parallel write runs): a part streamed in many writes, a sheet or the shared
+	/// strings. Parts written whole stay on the writing thread.
+	/// </param>
+	/// <returns>The entry's stream.</returns>
+	/// <exception cref="InvalidOperationException">Another entry is open, or the name isn't ASCII or is longer than 65,535 characters.</exception>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	public ZipEntryStream Open(string name, bool chunked)
 	{
 		if (Faulted)
 		{
-			return new ZipEntryStream(this, name);
+			return new ZipEntryStream(this, name, chunked);
 		}
 
 		ObjectDisposedException.ThrowIf(disposed, this);
@@ -160,7 +238,7 @@ internal sealed class ZipWriter
 			}
 		}
 
-		open = new ZipEntryStream(this, name);
+		open = new ZipEntryStream(this, name, chunked);
 
 		return open;
 	}
@@ -435,17 +513,41 @@ internal sealed class ZipWriter
 	/// <returns>The buffer.</returns>
 	internal byte[] Rent()
 	{
-		RentedBuffers++;
+		Interlocked.Increment(ref rentedBuffers);
 
 		return ArrayPool<byte>.Shared.Rent(BufferSize);
 	}
 
-	/// <summary>Returns a buffer to the pool.</summary>
+	/// <summary>Returns a buffer to the pool, on any thread.</summary>
 	/// <param name="buffer">A buffer from <see cref="Rent"/>.</param>
 	internal void Return(byte[] buffer)
 	{
-		RentedBuffers--;
+		Interlocked.Decrement(ref rentedBuffers);
 		ArrayPool<byte>.Shared.Return(buffer);
+	}
+
+	/// <summary>Counts a segment an entry takes (<see cref="ZipEntryStream.AppendAsync"/>), which <see cref="Return(OwnedSegment)"/> returns.</summary>
+	/// <param name="segment">The segment; the empty one isn't counted.</param>
+	internal void Hold(OwnedSegment segment)
+	{
+		if (!segment.IsEmpty)
+		{
+			Interlocked.Increment(ref heldSegments);
+		}
+	}
+
+	/// <summary>
+	/// Returns a segment an entry took to the pool, on any thread: once its bytes are deflated or written, or as the entry
+	/// is released.
+	/// </summary>
+	/// <param name="segment">A segment counted by <see cref="Hold"/>; the empty one does nothing.</param>
+	internal void Return(OwnedSegment segment)
+	{
+		if (!segment.IsEmpty)
+		{
+			Interlocked.Decrement(ref heldSegments);
+			segment.Return();
+		}
 	}
 
 	/// <summary>The scratch buffer, grown to hold a record.</summary>

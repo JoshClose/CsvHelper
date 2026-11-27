@@ -40,7 +40,19 @@ internal sealed class PackageWriter
 	/// <param name="level">The compression of every entry.</param>
 	/// <exception cref="ArgumentException"><paramref name="stream"/> can't be written.</exception>
 	public PackageWriter(Stream stream, bool leaveOpen, CompressionLevel level)
-		: this(stream, leaveOpen, level, ZipLimits.Default)
+		: this(stream, leaveOpen, level, ZipLimits.Default, 1)
+	{
+	}
+
+	/// <summary>Starts a package whose chunked parts deflate on threads beside the writing thread.</summary>
+	/// <param name="stream">The stream the package is written to, from its position.</param>
+	/// <param name="leaveOpen">Whether disposing the package leaves <paramref name="stream"/> open.</param>
+	/// <param name="level">The compression of every entry.</param>
+	/// <param name="threads">The threads that deflate a chunked part (<see cref="ZipWriter.Threads"/>): 1 or more.</param>
+	/// <exception cref="ArgumentException"><paramref name="stream"/> can't be written.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="threads"/> is 0 or less.</exception>
+	public PackageWriter(Stream stream, bool leaveOpen, CompressionLevel level, int threads)
+		: this(stream, leaveOpen, level, ZipLimits.Default, threads)
 	{
 	}
 
@@ -51,12 +63,35 @@ internal sealed class PackageWriter
 	/// <param name="limits">Where the package's fields overflow into Zip64's.</param>
 	/// <exception cref="ArgumentException"><paramref name="stream"/> can't be written.</exception>
 	internal PackageWriter(Stream stream, bool leaveOpen, CompressionLevel level, ZipLimits limits)
+		: this(stream, leaveOpen, level, limits, 1)
 	{
-		zip = new ZipWriter(stream, leaveOpen, level, limits);
+	}
+
+	/// <summary>Starts a package whose fields overflow into Zip64's at the limits given, with threads for its chunked parts.</summary>
+	/// <param name="stream">The stream the package is written to, from its position.</param>
+	/// <param name="leaveOpen">Whether disposing the package leaves <paramref name="stream"/> open.</param>
+	/// <param name="level">The compression of every entry.</param>
+	/// <param name="limits">Where the package's fields overflow into Zip64's.</param>
+	/// <param name="threads">The threads that deflate a chunked part (<see cref="ZipWriter.Threads"/>): 1 or more.</param>
+	/// <exception cref="ArgumentException"><paramref name="stream"/> can't be written.</exception>
+	/// <exception cref="ArgumentOutOfRangeException"><paramref name="threads"/> is 0 or less.</exception>
+	internal PackageWriter(Stream stream, bool leaveOpen, CompressionLevel level, ZipLimits limits, int threads)
+	{
+		zip = new ZipWriter(stream, leaveOpen, level, limits, threads);
 	}
 
 	/// <summary>The zip writer, for tests of its buffers and state.</summary>
 	internal ZipWriter Zip => zip;
+
+	/// <summary>
+	/// The threads a chunked part takes at least while a parallel write runs on a sheet (<see cref="ZipWriter.ParallelThreads"/>):
+	/// set by the sheet's sink as the write begins, and back to 0 as it ends.
+	/// </summary>
+	internal int ParallelThreads
+	{
+		get => zip.ParallelThreads;
+		set => zip.ParallelThreads = value;
+	}
 
 	/// <summary>Opens a part's entry, after the entry before it was closed. It writes nothing yet.</summary>
 	/// <param name="partName">The part's name, such as <c>xl/worksheets/sheet1.xml</c>: ASCII.</param>
@@ -64,6 +99,35 @@ internal sealed class PackageWriter
 	/// <param name="cancellationToken">Cancels an asynchronous open.</param>
 	/// <returns>A task whose result is the entry's stream, which deflates what is written to it.</returns>
 	public ValueTask<Stream> OpenPartAsync(string partName, bool async, CancellationToken cancellationToken) => new(zip.Open(partName));
+
+	/// <summary>
+	/// Opens a part's entry, after the entry before it was closed, chunked or not (<see cref="ZipWriter.Open(string, bool)"/>).
+	/// It writes nothing yet.
+	/// </summary>
+	/// <param name="partName">The part's name, such as <c>xl/worksheets/sheet1.xml</c>: ASCII.</param>
+	/// <param name="chunked">Whether the part is deflated off the writing thread when the package has threads: a sheet, or the shared strings.</param>
+	/// <param name="async">Whether to open it asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous open.</param>
+	/// <returns>A task whose result is the entry's stream, which deflates what is written to it.</returns>
+	public ValueTask<Stream> OpenPartAsync(string partName, bool chunked, bool async, CancellationToken cancellationToken) => new(zip.Open(partName, chunked));
+
+	/// <summary>Whether an entry takes segments uncopied (<see cref="ZipEntryStream.TakesSegments"/>).</summary>
+	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync(string, bool, bool, CancellationToken)"/>.</param>
+	/// <returns>Whether it does.</returns>
+	public static bool TakesSegments(Stream entry) => ((ZipEntryStream)entry).TakesSegments;
+
+	/// <summary>Gives an entry a segment of its bytes, which it takes whatever happens (<see cref="ZipEntryStream.AppendAsync"/>).</summary>
+	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync(string, bool, bool, CancellationToken)"/>.</param>
+	/// <param name="segment">The bytes.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
+	/// <returns>A task that completes when the bytes are taken.</returns>
+	public static ValueTask AppendAsync(Stream entry, OwnedSegment segment, bool async, CancellationToken cancellationToken) =>
+		((ZipEntryStream)entry).AppendAsync(segment, async, cancellationToken);
+
+	/// <summary>Chunks an open entry from here on, as a parallel write on its sheet begins (<see cref="ZipEntryStream.UseChunks"/>).</summary>
+	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync(string, bool, bool, CancellationToken)"/>.</param>
+	public static void UseChunks(Stream entry) => ((ZipEntryStream)entry).UseChunks();
 
 	/// <summary>Writes a part held whole: opens its entry, writes the bytes and closes it.</summary>
 	/// <param name="partName">The part's name.</param>
@@ -88,7 +152,7 @@ internal sealed class PackageWriter
 	/// Closes an entry's stream, which finishes the entry: the rest of its data, and its header's sizes (written with the
 	/// header, or patched into it) or its descriptor.
 	/// </summary>
-	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync"/>.</param>
+	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync(string, bool, CancellationToken)"/> or <see cref="OpenPartAsync(string, bool, bool, CancellationToken)"/>.</param>
 	/// <param name="async">Whether to close it asynchronously.</param>
 	/// <returns>A task that completes when the entry is closed.</returns>
 	public static ValueTask CloseAsync(Stream entry, bool async) => ((ZipEntryStream)entry).CloseAsync(async);

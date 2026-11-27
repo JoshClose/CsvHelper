@@ -98,7 +98,8 @@ internal sealed class ValidationLists
 
 	/// <summary>
 	/// Writes the lists sheet: each list a column, from row 1, of inline text cells, in rows as Excel writes them; and its
-	/// protection, without a password.
+	/// protection, without a password. Its entry is opened chunked, as a sheet's is, and the buffer is written out whenever
+	/// it passes 64 KB (<see cref="PackageParts.WriteOutAsync"/>).
 	/// </summary>
 	/// <param name="package">The package.</param>
 	/// <param name="partName">The sheet's part.</param>
@@ -110,7 +111,7 @@ internal sealed class ValidationLists
 		using var xml = new XmlOutput(SheetSink.FlushSize + 4096);
 		xml.Append(PackageParts.Declaration);
 		xml.Append("<worksheet xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" xmlns:r=\"http://schemas.openxmlformats.org/officeDocument/2006/relationships\"><sheetData>"u8);
-		var entry = await package.OpenPartAsync(partName, async, cancellationToken).ConfigureAwait(false);
+		var entry = await package.OpenPartAsync(partName, chunked: true, async, cancellationToken).ConfigureAwait(false);
 		try
 		{
 			// The lists with a value in the row, in column order: each row drops those that ended in the row before.
@@ -147,8 +148,7 @@ internal sealed class ValidationLists
 
 				if (xml.Length >= SheetSink.FlushSize)
 				{
-					await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
-					xml.Truncate(0);
+					await PackageParts.WriteOutAsync(entry, xml, async, cancellationToken).ConfigureAwait(false);
 				}
 			}
 
@@ -156,7 +156,7 @@ internal sealed class ValidationLists
 			xml.Append(SheetProtection.ListsSheet);
 			xml.Append(SheetSink.PageMargins);
 			xml.Append("</worksheet>"u8);
-			await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
+			await PackageParts.WriteOutAsync(entry, xml, async, cancellationToken).ConfigureAwait(false);
 		}
 		finally
 		{

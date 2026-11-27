@@ -301,7 +301,7 @@ public class HeldRecordsTests(ITestOutputHelper output)
 #endif
 
 #if NET10_0_OR_GREATER
-	[OptimizedFact]
+	[SerialAllocationFact]
 	public void AllocatesTheSameFor100And10000Rows()
 	{
 		// Auto-fit holds the header and 100 records either way: their cells' array, and the numbers', durations' and
@@ -325,7 +325,7 @@ public class HeldRecordsTests(ITestOutputHelper output)
 		Assert.True(fewBytes - plainBytes <= AutoFitBudget, $"Auto-fit allocated {fewBytes - plainBytes:N0} bytes beyond the write without it ({plainBytes:N0}).");
 	}
 
-	[OptimizedFact]
+	[SerialAllocationFact]
 	public void HoldsAThousandColumnsWithinItsBudget()
 	{
 		// 1,000 columns of short text, 101 records held: 101,000 cells measured, in arrays rented from the pool as they

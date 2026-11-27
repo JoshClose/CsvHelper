@@ -12,12 +12,19 @@ namespace CsvHelper.Excel.TargetRunner;
 /// The writes of the package assets or of the orders, as <c>ExcelPackageAssetsWrite.CsvHelper_Write</c> and
 /// <c>ExcelOrdersWrite.CsvHelper_Write</c> write them, at the defaults and stored (deflate's share is the difference); and
 /// the writer's sheet XML through a <see cref="ZipArchive"/> entry alone, as lane E's <c>archive</c> probe wrote it, for
-/// the zip's own share.
+/// the zip's own share. When named: the default write with <see cref="ExcelWriterOptions.CompressionThreads"/> at
+/// <see cref="ParallelDegree"/>.
 /// </summary>
 internal sealed class WriteMethods
 {
 	/// <summary>The methods, in their default order.</summary>
 	public static readonly string[] Names = ["write", "write-stored", "zip", "zip-stored"];
+
+	/// <summary>The methods run only when named.</summary>
+	public static readonly string[] Optional = ["write-threads"];
+
+	/// <summary>The deflate threads of <c>write-threads</c>.</summary>
+	public const int ParallelDegree = 8;
 
 	/// <summary>The number of orders: a million, as <c>ExcelDataGenerator.OrderRows</c>.</summary>
 	private const int OrderRows = 1_000_000;
@@ -81,6 +88,7 @@ internal sealed class WriteMethods
 		{
 			"write" => new Method(name, "bytes written", () => Write(Options(stored: false))),
 			"write-stored" => new Method(name, "bytes written", () => Write(Options(stored: true))),
+			"write-threads" => new Method(name, "bytes written", () => Write(Options(stored: false) with { CompressionThreads = ParallelDegree })),
 			"zip" => new Method(name, "bytes written", () => Zip(CompressionLevel.Fastest)),
 			"zip-stored" => new Method(name, "bytes written", () => Zip(CompressionLevel.NoCompression)),
 			_ => throw new ArgumentException($"Unknown write method '{name}'."),

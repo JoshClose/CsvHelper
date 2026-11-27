@@ -95,6 +95,26 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	/// <summary>The sink of the sheet being written, or <see langword="null"/>, for tests of what a sheet was added with.</summary>
 	internal SheetSink? OpenSheet => openSheet;
 
+	/// <summary>The package, for tests of its zip writer's buffers and segments (<see cref="ZipWriter.RentedBuffers"/>, <see cref="ZipWriter.HeldSegments"/>).</summary>
+	internal PackageWriter Package => package;
+
+	/// <summary>
+	/// The input a chunk of a chunked part takes (<see cref="ZipWriter.ChunkSize"/>): 1 MB, and less in tests, which set it
+	/// before adding a sheet.
+	/// </summary>
+	internal int ChunkSize
+	{
+		get => package.Zip.ChunkSize;
+		set => package.Zip.ChunkSize = value;
+	}
+
+	/// <summary>
+	/// The threads every writer created from now on deflates its chunked parts on at least (<see cref="ZipWriter.Threads"/>):
+	/// 0, the default, and 1 leave <see cref="ExcelWriterOptions.CompressionThreads"/> as it resolves; more raises it, so
+	/// that the tests' writer suites run chunked (<c>CSVHELPER_EXCEL_TEST_THREADS</c>, set once as the tests load).
+	/// </summary>
+	internal static int TestThreads { get; set; }
+
 	/// <summary>
 	/// The workbook's dropdown lists that don't go in their validations, which the lists sheet holds, written when the
 	/// workbook ends, after its other sheets (<see cref="ValidationLists"/>).
@@ -123,7 +143,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		var stream = new FileStream(path, FileMode.Create, FileAccess.Write, FileShare.Read, FileBufferSize, fileOptions);
 		try
 		{
-			return new ExcelWorkbookWriter(new PackageWriter(stream, leaveOpen: false, settings.CompressionLevel), settings);
+			return new ExcelWorkbookWriter(new PackageWriter(stream, leaveOpen: false, settings.CompressionLevel, CompressionThreads(settings)), settings);
 		}
 		catch
 		{
@@ -150,7 +170,7 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 			throw new ArgumentException("The stream can't be written.", nameof(stream));
 		}
 
-		return new ExcelWorkbookWriter(new PackageWriter(stream, leaveOpen, settings.CompressionLevel), settings);
+		return new ExcelWorkbookWriter(new PackageWriter(stream, leaveOpen, settings.CompressionLevel, CompressionThreads(settings)), settings);
 	}
 
 	/// <summary>
@@ -691,6 +711,20 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 		}
 
 		return name;
+	}
+
+	/// <summary>
+	/// The threads a package's chunked parts deflate on beside the writing thread: <see cref="ExcelWriterOptions.CompressionThreads"/>,
+	/// at most one per processor (<see cref="Environment.ProcessorCount"/>) but never fewer than 2, so that any count above
+	/// 1 chunks on every machine; -1 one per processor; raised to <see cref="TestThreads"/>.
+	/// </summary>
+	/// <param name="settings">The options, which are valid.</param>
+	/// <returns>The threads: 1 or more.</returns>
+	private static int CompressionThreads(ExcelWriterOptions settings)
+	{
+		var threads = settings.CompressionThreads == -1 ? Environment.ProcessorCount : Math.Min(settings.CompressionThreads, Math.Max(Environment.ProcessorCount, 2));
+
+		return Math.Max(threads, TestThreads);
 	}
 
 	/// <summary>Checks the version of CsvHelper and the options, before a writer is created.</summary>

@@ -15,8 +15,9 @@ namespace CsvHelper.Excel.Tests.Package;
 /// and later; VPCLMULQDQ's 256- and 512-bit folds on .NET 10; the dispatch) against <c>System.IO.Hashing</c>'s over random
 /// data, at every length to 1,100, at random lengths to 4 MiB and around each path's minimum and steps, at unaligned starts,
 /// from 0 and carried, and in random pieces, a path this build or machine hasn't skipped with the reason; the folds'
-/// constants against their generator; the check value; the GZip trailer's CRC of deflated entries; and the GZip header
-/// check.
+/// constants against their generator; the check value; the GZip trailer's CRC of deflated entries; the GZip header
+/// check; and the combine of two pieces' CRCs (zlib's <c>crc32_combine</c>) against the whole's at random splits, with
+/// empty pieces, and at lengths past 2^32 through identities and an independent computation.
 /// </summary>
 public class Crc32Tests
 {
@@ -40,6 +41,16 @@ public class Crc32Tests
 
 	/// <summary>The starts the edges are checked at: aligned and not, to 16, 32 and 64 bytes.</summary>
 	private static readonly int[] Starts = [0, 1, 7, 8, 16, 31, 32, 63];
+
+	/// <summary>
+	/// The lengths the combine is checked at without the data: small ones, around 2^31 and 2^32 (where a length passes 32
+	/// bits, and zlib's table of powers wraps), far past them, and the largest a <see cref="long"/> holds.
+	/// </summary>
+	private static readonly long[] CombinedLengths =
+	[
+		0, 1, 7, 8, 255, 65_536, int.MaxValue, 1L << 31, (1L << 32) - 1, 1L << 32, (1L << 32) + 1, (3L << 32) + 12_345,
+		1L << 40, (1L << 61) - 1, long.MaxValue,
+	];
 
 	/// <summary>Each path gives System.IO.Hashing's CRC at every length from 0 to 1,100, at each of 64 starts.</summary>
 	/// <param name="path">The path.</param>
@@ -256,6 +267,97 @@ public class Crc32Tests
 	}
 #endif
 
+	/// <summary>
+	/// Combining: random data cut at random (empty pieces among them, from one piece to 20), each piece's CRC from 0, and the
+	/// pieces combined in order with the CRC of those before, or as a tree (each half's CRC combined with the next half's),
+	/// give the whole's.
+	/// </summary>
+	[Fact]
+	public void CombinesAtRandomSplits()
+	{
+		var bytes = ZipPackages.RandomBytes(300_000, 21);
+		var random = new Random(22);
+		for (var round = 0; round < 64; round++)
+		{
+			var length = round % 4 == 0 ? random.Next(200) : random.Next(bytes.Length + 1);
+			var cuts = Enumerable.Range(0, random.Next(20)).Select(_ => random.Next(length + 1)).Append(0).Append(length).OrderBy(cut => cut).ToArray();
+			var whole = Reference(bytes.AsSpan(0, length));
+
+			var crc = 0u;
+			for (var i = 0; i + 1 < cuts.Length; i++)
+			{
+				crc = Crc32.Combine(crc, Reference(bytes.AsSpan(cuts[i], cuts[i + 1] - cuts[i])), cuts[i + 1] - cuts[i]);
+			}
+
+			// The round rides along, so that a failure names it.
+			Assert.Equal((round, whole), (round, crc));
+			Assert.Equal((round, whole), (round, CombineTree(bytes, cuts, 0, cuts.Length - 1)));
+		}
+	}
+
+	/// <summary>
+	/// Combining with an empty piece changes nothing, at any length: an empty second piece (CRC 0, length 0) keeps the first
+	/// piece's CRC, and an empty first piece (CRC 0) gives the second's, whatever the second's length, past 2^32 too.
+	/// </summary>
+	[Fact]
+	public void CombinesWithEmptyPieces()
+	{
+		var random = new Random(23);
+		var data = ZipPackages.RandomBytes(1_000, 24);
+
+		Assert.Equal(Reference(data), Crc32.Combine(Reference(data), Reference([]), 0));
+		Assert.Equal(Reference(data), Crc32.Combine(Reference([]), Reference(data), data.Length));
+		foreach (var length in CombinedLengths)
+		{
+			for (var i = 0; i < 8; i++)
+			{
+				var crc = (uint)random.Next() ^ ((uint)random.Next() << 16);
+
+				// The length rides along, so that a failure names it.
+				Assert.Equal((length, crc), (length, Crc32.Combine(crc, 0, 0)));
+				Assert.Equal((length, crc), (length, Crc32.Combine(0, crc, length)));
+			}
+		}
+	}
+
+	/// <summary>
+	/// Combining at lengths past 2^32, without the data: it is associative (two pieces combined, then a third, as the first
+	/// with the other two combined), linear in the second CRC, and the same as this test's own computation, which works in
+	/// the normal bit order, multiplying by x^(8n) mod P by squaring over the whole of n (no table, no wrap), and which is
+	/// checked against data at small lengths first.
+	/// </summary>
+	[Fact]
+	public void CombinesLengthsPastFourGigabytes()
+	{
+		var bytes = ZipPackages.RandomBytes(5_000, 25);
+		var random = new Random(26);
+		for (var round = 0; round < 200; round++)
+		{
+			var length = random.Next(bytes.Length + 1);
+			var cut = random.Next(length + 1);
+
+			Assert.Equal(Reference(bytes.AsSpan(0, length)), ExpectedCombine(Reference(bytes.AsSpan(0, cut)), Reference(bytes.AsSpan(cut, length - cut)), length - cut));
+		}
+
+		var crcs = Enumerable.Range(0, 3).Select(_ => (uint)random.Next() ^ ((uint)random.Next() << 16)).ToArray();
+		var (a, b, c) = (crcs[0], crcs[1], crcs[2]);
+		foreach (var second in CombinedLengths)
+		{
+			// The lengths ride along, so that a failure names them.
+			Assert.Equal((second, ExpectedCombine(a, b, second)), (second, Crc32.Combine(a, b, second)));
+			Assert.Equal((second, Crc32.Combine(a, 0, second) ^ b), (second, Crc32.Combine(a, b, second)));
+			foreach (var third in CombinedLengths)
+			{
+				if (second > long.MaxValue - third)
+				{
+					continue;
+				}
+
+				Assert.Equal((second, third, Crc32.Combine(Crc32.Combine(a, b, second), c, third)), (second, third, Crc32.Combine(a, Crc32.Combine(b, c, third), second + third)));
+			}
+		}
+	}
+
 	/// <summary>Why a path can't run in this build on this machine.</summary>
 	/// <param name="path">The path's name.</param>
 	/// <returns>The reason, or null where the path runs.</returns>
@@ -318,6 +420,76 @@ public class Crc32Tests
 #endif
 			_ => throw new ArgumentOutOfRangeException(nameof(path), path, "No such path."),
 		};
+	}
+
+	/// <summary>The CRC of the pieces between two cuts, combined as a tree: the first half's with the second half's.</summary>
+	/// <param name="bytes">The data.</param>
+	/// <param name="cuts">The cuts, in order, the first 0 and the last the data's length.</param>
+	/// <param name="from">The first cut of the pieces.</param>
+	/// <param name="to">The last cut of the pieces.</param>
+	/// <returns>The CRC of the bytes from the first cut to the last.</returns>
+	private static uint CombineTree(byte[] bytes, int[] cuts, int from, int to)
+	{
+		if (to - from == 1)
+		{
+			return Reference(bytes.AsSpan(cuts[from], cuts[to] - cuts[from]));
+		}
+
+		var middle = (from + to) / 2;
+
+		return Crc32.Combine(CombineTree(bytes, cuts, from, middle), CombineTree(bytes, cuts, middle, to), cuts[to] - cuts[middle]);
+	}
+
+	/// <summary>
+	/// The CRC of two pieces from theirs, as this test computes it apart from zlib's method: the first CRC, as a polynomial
+	/// in the normal bit order (reflected), times x^(8n) mod P, computed as (x^8)^n by squaring over n's bits, reflected
+	/// back, plus the second CRC.
+	/// </summary>
+	/// <param name="first">The first piece's CRC.</param>
+	/// <param name="second">The second piece's CRC.</param>
+	/// <param name="secondLength">The second piece's length.</param>
+	/// <returns>The CRC of both.</returns>
+	private static uint ExpectedCombine(uint first, uint second, long secondLength)
+	{
+		var power = 1UL;
+		var square = 1UL << 8;
+		for (var n = secondLength; n != 0; n >>= 1)
+		{
+			if ((n & 1) != 0)
+			{
+				power = MultiplyModP(power, square);
+			}
+
+			square = MultiplyModP(square, square);
+		}
+
+		return (uint)Reflect(MultiplyModP(Reflect(first, 32), power), 32) ^ second;
+	}
+
+	/// <summary>Multiplies two polynomials of degree below 32 in the normal bit order, carry-less, and reduces the product mod P.</summary>
+	/// <param name="a">The first.</param>
+	/// <param name="b">The second.</param>
+	/// <returns>The product mod P: below 2^32.</returns>
+	private static ulong MultiplyModP(ulong a, ulong b)
+	{
+		var product = 0UL;
+		for (var i = 0; i < 32; i++)
+		{
+			if (((b >> i) & 1) != 0)
+			{
+				product ^= a << i;
+			}
+		}
+
+		for (var bit = 63; bit >= 32; bit--)
+		{
+			if (((product >> bit) & 1) != 0)
+			{
+				product ^= Normal() << (bit - 32);
+			}
+		}
+
+		return product;
 	}
 
 	/// <summary>System.IO.Hashing's CRC-32.</summary>

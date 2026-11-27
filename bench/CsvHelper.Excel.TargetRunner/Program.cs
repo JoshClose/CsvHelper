@@ -113,6 +113,8 @@ public static class Program
 			  zip          the writer's sheet XML (captured at start from a stored write) through a ZipArchive entry at Fastest,
 			               in 64 KB writes
 			  zip-stored   the same at NoCompression
+			  and, only when named:
+			  write-threads   write with CompressionThreads = {WriteMethods.ParallelDegree}: chunked deflate on .NET 8 and later, one deflate thread on .NET Framework
 			Every write goes to a stream that counts its bytes and drops them, and can't seek.
 
 			Methods are separated by commas; the first is the ratios' base. Each round runs them in an order rotated by one
@@ -284,7 +286,7 @@ internal sealed class Arguments
 		}
 
 		var methods = positional.Count == 2 ? positional[1].Split(',').Select(m => m.Trim()).ToArray() : names;
-		string[] valid = command == "read" ? [.. names, .. ReadMethods.Optional] : names;
+		string[] valid = command == "read" ? [.. names, .. ReadMethods.Optional] : [.. names, .. WriteMethods.Optional];
 		var unknown = methods.Where(m => !valid.Contains(m)).ToList();
 		if (unknown.Count > 0)
 		{

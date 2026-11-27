@@ -73,6 +73,12 @@ public enum ZipSheet
 /// <see cref="DeflateChunkedLevel2_1"/> to <see cref="DeflateChunkedLevel2_16"/>: the same chunks at zlib's level 2, the
 /// level decision 33 gives parallel deflate on .NET 10, so that the base window times what step 9 will ship.
 /// </description></item>
+/// <item><description>
+/// <see cref="PackageWriter_Threads_2"/> to <see cref="PackageWriter_Threads_16"/>: what step 9 shipped, the own zip
+/// writer's chunked entry on 2, 4, 8 or 16 deflate threads beside the writing thread: the XML cut in 1 MB chunks, each
+/// deflated at zlib's level 2 on .NET 10, the chunks written in order with their CRCs combined, and the entry's
+/// descriptor and the directory after. Their bytes are the same at every count.
+/// </description></item>
 /// </list>
 /// <para>
 /// The chunked methods' setup checks once that the chunks joined, deflated on 16 threads at either level, inflate to the
@@ -263,6 +269,26 @@ public class ExcelZipBenchmarks
 	[Benchmark]
 	public long DeflateChunkedLevel2_16() => Chunked(16, new CountingStream(keep: false), level2: true);
 
+	/// <summary>The own zip writer's chunked entry (Phase 9's step 9) on 2 deflate threads beside the writing thread.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	public long PackageWriter_Threads_2() => PackageThreads(2);
+
+	/// <summary>The own zip writer's chunked entry on 4 deflate threads.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	public long PackageWriter_Threads_4() => PackageThreads(4);
+
+	/// <summary>The own zip writer's chunked entry on 8 deflate threads.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	public long PackageWriter_Threads_8() => PackageThreads(8);
+
+	/// <summary>The own zip writer's chunked entry on 16 deflate threads.</summary>
+	/// <returns>The bytes written.</returns>
+	[Benchmark]
+	public long PackageWriter_Threads_16() => PackageThreads(16);
+
 	/// <summary>
 	/// Deflates the XML in chunks on <see cref="CheckThreads"/> threads at a level, and checks that the chunks joined
 	/// inflate to it byte for byte.
@@ -374,6 +400,25 @@ public class ExcelZipBenchmarks
 		var output = new CountingStream(keep: false);
 		var package = new PackageWriter(output, leaveOpen: true, level);
 		var entry = SyncOrAsync.Result(package.OpenPartAsync(SheetPart, false, CancellationToken.None));
+		WriteInPieces(entry, 0, xml.Length);
+		SyncOrAsync.Wait(PackageWriter.CloseAsync(entry, false));
+		SyncOrAsync.Wait(package.DisposeAsync(false));
+
+		return output.Count;
+	}
+
+	/// <summary>
+	/// Writes the XML into a chunked entry of the library's own zip writer (<see cref="PackageWriter"/> with threads, the
+	/// entry opened chunked, as a sheet's is), synchronously, in 64 KB writes, to a stream that can't seek, and disposes the
+	/// package. Each write is copied into the entry's deflate stage, where a sheet's writer hands its buffer over uncopied.
+	/// </summary>
+	/// <param name="threads">The deflate threads beside the writing thread.</param>
+	/// <returns>The bytes written.</returns>
+	private long PackageThreads(int threads)
+	{
+		var output = new CountingStream(keep: false);
+		var package = new PackageWriter(output, leaveOpen: true, CompressionLevel.Fastest, threads);
+		var entry = SyncOrAsync.Result(package.OpenPartAsync(SheetPart, true, false, CancellationToken.None));
 		WriteInPieces(entry, 0, xml.Length);
 		SyncOrAsync.Wait(PackageWriter.CloseAsync(entry, false));
 		SyncOrAsync.Wait(package.DisposeAsync(false));

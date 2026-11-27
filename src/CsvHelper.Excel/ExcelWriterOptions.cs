@@ -46,6 +46,39 @@ public sealed record ExcelWriterOptions
 	public CompressionLevel CompressionLevel { get; init; } = CompressionLevel.Fastest;
 
 	/// <summary>
+	/// The threads that deflate the package's sheets and shared strings beside the writing thread: 1, the default, deflates
+	/// on the writing thread; more deflates on up to that many threads, but no more than one per processor
+	/// (<see cref="Environment.ProcessorCount"/>, and at least 2); and -1 on one per processor. Ignored at
+	/// <see cref="CompressionLevel.NoCompression"/>. 0, or less than -1, throws <see cref="ArgumentOutOfRangeException"/>
+	/// when the writer is created.
+	/// </summary>
+	/// <remarks>
+	/// <para>
+	/// On .NET 8 and later, a sheet's XML, the lists sheet's and the shared strings' are cut every 1 MB, by byte count, and
+	/// each chunk is deflated on its own, on one of the threads, and written in order. At
+	/// <see cref="CompressionLevel.Fastest"/> the chunks are deflated at zlib's level 2 on .NET 10, whose output is smaller
+	/// than its level 1's, the one a part deflated on the writing thread takes; on .NET 8 at level 1, as there. A part
+	/// under 1 MB is one chunk, deflated as the part ends, on the writing thread. The bytes depend on the XML alone: a
+	/// workbook written with 2 threads or 16 has the same bytes, but not those of 1, whose parts are deflated whole (the
+	/// parts read back the same).
+	/// </para>
+	/// <para>
+	/// On .NET Framework and .NET Standard, any count above 1 deflates each of those parts on one thread beside the writing
+	/// thread, with the same bytes as 1.
+	/// </para>
+	/// <para>
+	/// The parallel write methods (<c>ParallelWriteRecords</c> and <c>ParallelWrite</c> on a sheet's writer) deflate their
+	/// sheet on as many threads as their degree when it is the larger, within the same bound. The other parts, written
+	/// whole (styles, the workbook, relationships, tables), are deflated on the writing thread, whatever the count.
+	/// </para>
+	/// <para>
+	/// A part's threads start as its chunks wait for them, and end when the part ends: disposing the writer ends them. A
+	/// writer that is never disposed leaves them waiting, as background threads, until the process ends.
+	/// </para>
+	/// </remarks>
+	public int CompressionThreads { get; init; } = 1;
+
+	/// <summary>
 	/// What a record past a sheet's last row, 1,048,576, does: throw (<see cref="ExcelRowLimit.Throw"/>, the default),
 	/// since Excel opens no workbook with a row past its last, or go on in a new sheet with the header repeated.
 	/// </summary>
@@ -99,8 +132,8 @@ public sealed record ExcelWriterOptions
 	/// </exception>
 	/// <exception cref="ArgumentOutOfRangeException">
 	/// <see cref="Strings"/>, <see cref="CompressionLevel"/>, <see cref="RowLimit"/>, <see cref="LongNumbers"/>,
-	/// <see cref="DateTimeOffsets"/>, <see cref="OutOfRangeDates"/> or <see cref="Links"/> is not a value of its enum, or
-	/// <see cref="Csv"/> has a value out of range.
+	/// <see cref="DateTimeOffsets"/>, <see cref="OutOfRangeDates"/> or <see cref="Links"/> is not a value of its enum,
+	/// <see cref="CompressionThreads"/> is 0 or less than -1, or <see cref="Csv"/> has a value out of range.
 	/// </exception>
 	internal void Validate(string paramName)
 	{
@@ -138,6 +171,11 @@ public sealed record ExcelWriterOptions
 		if (CompressionLevel is < CompressionLevel.Optimal or > Last)
 		{
 			throw new ArgumentOutOfRangeException(paramName, CompressionLevel, "ExcelWriterOptions.CompressionLevel is not a CompressionLevel value.");
+		}
+
+		if (CompressionThreads is 0 or < -1)
+		{
+			throw new ArgumentOutOfRangeException(paramName, CompressionThreads, "ExcelWriterOptions.CompressionThreads must be -1 or at least 1.");
 		}
 
 		if (RowLimit is not (ExcelRowLimit.Throw or ExcelRowLimit.NewSheet))

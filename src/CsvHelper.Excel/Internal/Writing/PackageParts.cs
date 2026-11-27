@@ -47,12 +47,12 @@ internal static class PackageParts
 		IReadOnlyList<(int Sheet, ExcelRange Range)> filters, int tables, (string SheetName, ValidationLists Lists)? lists, bool async, CancellationToken cancellationToken)
 	{
 		var sheets = sheetNames.Count + (lists is null ? 0 : 1);
-		using var xml = new XmlOutput(4096);
 		if (strings is not null)
 		{
-			await WriteSharedStringsAsync(package, strings, xml, async, cancellationToken).ConfigureAwait(false);
+			await WriteSharedStringsAsync(package, strings, async, cancellationToken).ConfigureAwait(false);
 		}
 
+		using var xml = new XmlOutput(4096);
 		Start(xml);
 		WriteStyles(xml, styles);
 		await package.WritePartAsync("xl/styles.xml", xml, async, cancellationToken).ConfigureAwait(false);
@@ -85,24 +85,49 @@ internal static class PackageParts
 	}
 
 	/// <summary>
+	/// Writes a streamed part's buffer to its entry and empties it: handed over uncopied (<see cref="XmlOutput.Detach"/>)
+	/// when the entry takes segments (<see cref="PackageWriter.TakesSegments"/>), which takes them whatever happens, and
+	/// otherwise written from the buffer, which is then emptied.
+	/// </summary>
+	/// <param name="entry">The part's entry, from <see cref="PackageWriter.OpenPartAsync(string, bool, bool, CancellationToken)"/>.</param>
+	/// <param name="xml">The buffer: its bytes are the next of the part.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
+	/// <returns>A task that completes when the bytes are written.</returns>
+	internal static async ValueTask WriteOutAsync(Stream entry, XmlOutput xml, bool async, CancellationToken cancellationToken)
+	{
+		if (PackageWriter.TakesSegments(entry))
+		{
+			await PackageWriter.AppendAsync(entry, xml.Detach(xml.Length), async, cancellationToken).ConfigureAwait(false);
+
+			return;
+		}
+
+		await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
+		xml.Truncate(0);
+	}
+
+	/// <summary>
 	/// Writes the shared strings, streamed: each string's <c>si</c>, in the order of its index, with the buffer written out
-	/// whenever it passes 64 KB.
+	/// whenever it passes 64 KB (<see cref="WriteOutAsync"/>), into an entry opened chunked, which deflates off the writing
+	/// thread when the package has threads. The buffer is the part's own, of a sheet's size, which a detached buffer goes
+	/// on in.
 	/// </summary>
 	/// <param name="package">The package.</param>
 	/// <param name="strings">The strings.</param>
-	/// <param name="xml">The buffer.</param>
 	/// <param name="async">Whether to write asynchronously.</param>
 	/// <param name="cancellationToken">Cancels an asynchronous write.</param>
 	/// <returns>A task that completes when the part is written.</returns>
-	private static async ValueTask WriteSharedStringsAsync(PackageWriter package, SharedStringTable strings, XmlOutput xml, bool async, CancellationToken cancellationToken)
+	private static async ValueTask WriteSharedStringsAsync(PackageWriter package, SharedStringTable strings, bool async, CancellationToken cancellationToken)
 	{
+		using var xml = new XmlOutput(SheetSink.FlushSize + 4096);
 		Start(xml);
 		xml.Append("<sst xmlns=\"http://schemas.openxmlformats.org/spreadsheetml/2006/main\" count=\""u8);
 		xml.AppendNumber(strings.References);
 		xml.Append("\" uniqueCount=\""u8);
 		xml.AppendNumber(strings.Count);
 		xml.Append("\">"u8);
-		var entry = await package.OpenPartAsync("xl/sharedStrings.xml", async, cancellationToken).ConfigureAwait(false);
+		var entry = await package.OpenPartAsync("xl/sharedStrings.xml", chunked: true, async, cancellationToken).ConfigureAwait(false);
 		try
 		{
 			for (var i = 0; i < strings.Count; i++)
@@ -112,13 +137,12 @@ internal static class PackageParts
 				xml.Append("</si>"u8);
 				if (xml.Length >= SheetSink.FlushSize)
 				{
-					await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
-					xml.Truncate(0);
+					await WriteOutAsync(entry, xml, async, cancellationToken).ConfigureAwait(false);
 				}
 			}
 
 			xml.Append("</sst>"u8);
-			await xml.WriteToAsync(entry, xml.Length, async, cancellationToken).ConfigureAwait(false);
+			await WriteOutAsync(entry, xml, async, cancellationToken).ConfigureAwait(false);
 		}
 		finally
 		{
