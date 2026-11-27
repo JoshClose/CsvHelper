@@ -51,6 +51,12 @@ public sealed partial class CsvWriter
 	/// destination. An exception, from the enumeration or from a record, is thrown after the records before it are
 	/// written. Do not use this writer otherwise until the call returns.
 	/// </para>
+	/// <para>
+	/// A sheet's writer (CsvHelper.Excel) writes in parallel too, and the sheet is the one
+	/// <see cref="WriteRecords{T}(IEnumerable{T})"/> writes: the workers format the cells of batches of records, and this
+	/// thread adds each batch to the sheet in input order. The sheet may have this thread write more of the first records
+	/// before the workers start, or every record, and may refuse a batch, whose records this thread then writes again.
+	/// </para>
 	/// </remarks>
 	/// <typeparam name="T">
 	/// The <see cref="CsvRecordAttribute"/> type, or a type of dynamic records (see <see cref="WriteRecords{T}(IEnumerable{T})"/>).
@@ -261,6 +267,11 @@ public sealed partial class CsvWriter
 	/// from the callback, is thrown after the records of the items before it are written. Do not use this writer otherwise
 	/// until the call returns.
 	/// </para>
+	/// <para>
+	/// A sheet's writer (CsvHelper.Excel) writes in parallel too, and the sheet is the one the loop writes. The sheet may
+	/// refuse a batch, and this thread then writes its items again: <paramref name="write"/> is called a second time for
+	/// each of them, with this writer, so a callback with side effects must allow for that.
+	/// </para>
 	/// </remarks>
 	/// <typeparam name="T">The type of the items.</typeparam>
 	/// <param name="items">The items, enumerated once, on this thread; the workers read an array or a <see cref="List{T}"/> in place.</param>
@@ -278,14 +289,22 @@ public sealed partial class CsvWriter
 		ArgumentNullException.ThrowIfNull(items);
 		ArgumentNullException.ThrowIfNull(write);
 		var degree = ParallelDegree(maxDegreeOfParallelism);
-		var source = new ParallelSource<T>(items, null, default);
+		sink?.BeginParallel(degree);
 		try
 		{
-			ParallelWriteItems(source, CallbackItemWriter(write), degree, records, 0);
+			var source = new ParallelSource<T>(items, null, default);
+			try
+			{
+				ParallelWriteItems(source, CallbackItemWriter(write), degree, records, 0);
+			}
+			finally
+			{
+				source.Dispose();
+			}
 		}
 		finally
 		{
-			source.Dispose();
+			sink?.EndParallel();
 		}
 	}
 
@@ -347,6 +366,12 @@ public sealed partial class CsvWriter
 		return ParallelWriteCoreAsync(null, items, write, degree, cancellationToken);
 	}
 
+	/// <summary>
+	/// The cell sink this writer writes to, or <see langword="null"/> for CSV: for CsvHelper.Excel, which tells a sheet's
+	/// writer and its workers' writers apart from CSV writers by it.
+	/// </summary>
+	internal CsvCellSink? CellSink => sink;
+
 	/// <summary>Checks the arguments shared by the parallel methods and returns the number of workers.</summary>
 	private int ParallelDegree(int maxDegreeOfParallelism)
 	{
@@ -361,9 +386,9 @@ public sealed partial class CsvWriter
 			throw new InvalidOperationException("The writer passed to a ParallelWrite callback writes the records of one item; it cannot start a parallel write.");
 		}
 
-		if (sink is not null)
+		if (sink is not null && !sink.SupportsParallel)
 		{
-			// The workers would format CSV text: a cell sink takes its fields on this writer only.
+			// The workers would format CSV text: a cell sink that takes no chunks takes its fields on this writer only.
 			throw new NotSupportedException("Parallel writes are not supported by this destination; write the records with WriteRecords.");
 		}
 
@@ -372,49 +397,65 @@ public sealed partial class CsvWriter
 
 	private void ParallelWriteWith<T>(CsvRecordWriter<T> recordWriter, IEnumerable<T> records, int degree)
 	{
-		if (NeedsHeader())
-		{
-			WriteHeaderFields(recordWriter);
-			EndRecord();
-		}
-
-		var source = new ParallelSource<T>(records, null, default);
+		sink?.BeginParallel(degree);
 		try
 		{
-			ParallelWriteItems(source, RecordItemWriter(recordWriter), degree, this.records, 0);
+			if (NeedsHeader())
+			{
+				WriteHeaderFields(recordWriter);
+				EndRecord();
+			}
+
+			var source = new ParallelSource<T>(records, null, default);
+			try
+			{
+				ParallelWriteItems(source, RecordItemWriter(recordWriter), degree, this.records, 0);
+			}
+			finally
+			{
+				source.Dispose();
+			}
 		}
 		finally
 		{
-			source.Dispose();
+			sink?.EndParallel();
 		}
 	}
 
 	private void ParallelWriteDynamic<T>(IEnumerable<T> records, int degree)
 	{
-		var source = new ParallelSource<T>(records, null, default);
+		sink?.BeginParallel(degree);
 		try
 		{
-			if (!source.MoveNext())
+			var source = new ParallelSource<T>(records, null, default);
+			try
 			{
-				return;
-			}
+				if (!source.MoveNext())
+				{
+					return;
+				}
 
-			// The columns are those of the first record, which is written here, before the workers start.
-			var first = source.Current ?? throw NullRecord(nameof(records));
-			var names = DynamicNames(first);
-			if (NeedsHeader())
+				// The columns are those of the first record, which is written here, before the workers start.
+				var first = source.Current ?? throw NullRecord(nameof(records));
+				var names = DynamicNames(first);
+				if (NeedsHeader())
+				{
+					WriteHeader(names);
+				}
+
+				var write = DynamicItemWriter<T>(names, (first as CsvDynamicRecord)?.Schema);
+				var recordBase = this.records;
+				WriteSerialItem(write, first);
+				ParallelWriteItems(source, write, degree, recordBase, 1);
+			}
+			finally
 			{
-				WriteHeader(names);
+				source.Dispose();
 			}
-
-			var write = DynamicItemWriter<T>(names, (first as CsvDynamicRecord)?.Schema);
-			var recordBase = this.records;
-			WriteSerialItem(write, first);
-			ParallelWriteItems(source, write, degree, recordBase, 1);
 		}
 		finally
 		{
-			source.Dispose();
+			sink?.EndParallel();
 		}
 	}
 
@@ -429,8 +470,9 @@ public sealed partial class CsvWriter
 	/// <param name="itemsBefore">The number of items already written.</param>
 	private void ParallelWriteItems<T>(ParallelSource<T> items, Action<CsvWriter, T> write, int degree, long recordBase, long itemsBefore)
 	{
-		// The workers must not decide the field count or finish an open record: what does is written here.
-		while (fieldCount > 0 || (validate && expectedFields < 0))
+		// The workers must not decide the field count or finish an open record: what does is written here, and so is what
+		// a cell sink takes on this writer before its workers can start.
+		while (fieldCount > 0 || (validate && expectedFields < 0) || (sink is not null && !sink.ReadyForWorkers))
 		{
 			if (!items.MoveNext())
 			{
@@ -446,27 +488,35 @@ public sealed partial class CsvWriter
 
 	private async ValueTask ParallelWriteRecordsCoreAsync<T>(IEnumerable<T>? items, IAsyncEnumerable<T>? asyncItems, CsvRecordWriter<T>? recordWriter, int degree, CancellationToken cancellationToken)
 	{
-		var source = new ParallelSource<T>(items, asyncItems, cancellationToken);
+		sink?.BeginParallel(degree);
 		try
 		{
-			if (recordWriter is null)
+			var source = new ParallelSource<T>(items, asyncItems, cancellationToken);
+			try
 			{
-				await ParallelWriteDynamicAsync(source, degree, cancellationToken).ConfigureAwait(false);
-			}
-			else
-			{
-				if (NeedsHeader())
+				if (recordWriter is null)
 				{
-					WriteHeaderFields(recordWriter);
-					await EndRecordAsync(cancellationToken).ConfigureAwait(false);
+					await ParallelWriteDynamicAsync(source, degree, cancellationToken).ConfigureAwait(false);
 				}
+				else
+				{
+					if (NeedsHeader())
+					{
+						WriteHeaderFields(recordWriter);
+						await EndRecordAsync(cancellationToken).ConfigureAwait(false);
+					}
 
-				await ParallelWriteItemsAsync(source, RecordItemWriter(recordWriter), degree, records, 0, cancellationToken).ConfigureAwait(false);
+					await ParallelWriteItemsAsync(source, RecordItemWriter(recordWriter), degree, records, 0, cancellationToken).ConfigureAwait(false);
+				}
+			}
+			finally
+			{
+				await source.DisposeAsync().ConfigureAwait(false);
 			}
 		}
 		finally
 		{
-			await source.DisposeAsync().ConfigureAwait(false);
+			sink?.EndParallel();
 		}
 	}
 
@@ -497,14 +547,22 @@ public sealed partial class CsvWriter
 
 	private async ValueTask ParallelWriteCoreAsync<T>(IEnumerable<T>? items, IAsyncEnumerable<T>? asyncItems, Action<CsvWriter, T> write, int degree, CancellationToken cancellationToken)
 	{
-		var source = new ParallelSource<T>(items, asyncItems, cancellationToken);
+		sink?.BeginParallel(degree);
 		try
 		{
-			await ParallelWriteItemsAsync(source, CallbackItemWriter(write), degree, records, 0, cancellationToken).ConfigureAwait(false);
+			var source = new ParallelSource<T>(items, asyncItems, cancellationToken);
+			try
+			{
+				await ParallelWriteItemsAsync(source, CallbackItemWriter(write), degree, records, 0, cancellationToken).ConfigureAwait(false);
+			}
+			finally
+			{
+				await source.DisposeAsync().ConfigureAwait(false);
+			}
 		}
 		finally
 		{
-			await source.DisposeAsync().ConfigureAwait(false);
+			sink?.EndParallel();
 		}
 	}
 
@@ -517,7 +575,7 @@ public sealed partial class CsvWriter
 	/// <param name="cancellationToken">Cancels waiting for the workers and writing to the destination.</param>
 	private async ValueTask ParallelWriteItemsAsync<T>(ParallelSource<T> items, Action<CsvWriter, T> write, int degree, long recordBase, long itemsBefore, CancellationToken cancellationToken)
 	{
-		while (fieldCount > 0 || (validate && expectedFields < 0))
+		while (fieldCount > 0 || (validate && expectedFields < 0) || (sink is not null && !sink.ReadyForWorkers))
 		{
 			if (!await items.MoveNextAsync().ConfigureAwait(false))
 			{
@@ -588,16 +646,47 @@ public sealed partial class CsvWriter
 		return pos >= flushThreshold ? FlushBufferAsync(cancellationToken) : default;
 	}
 
-	/// <summary>A writer for a worker thread: it formats batches into buffers that it hands over, and never flushes.</summary>
-	private CsvWriter CreateParallelWorker() => new(options, leaveOpen: true)
+	/// <summary>
+	/// A writer for a worker thread: it formats batches into buffers that it hands over, or into chunks of a worker sink
+	/// that this writer's sink makes, and never flushes.
+	/// </summary>
+	private CsvWriter CreateParallelWorker()
 	{
-		parallelWorker = true,
-		flushThreshold = int.MaxValue,
-		expectedFields = expectedFields,
-		recordWriter = recordWriter,
-	};
+		if (sink is null)
+		{
+			return new(options, leaveOpen: true)
+			{
+				parallelWorker = true,
+				flushThreshold = int.MaxValue,
+				expectedFields = expectedFields,
+				recordWriter = recordWriter,
+			};
+		}
 
-	/// <summary>Formats the items of <paramref name="batch"/> on this worker writer, into a buffer that it hands to the batch.</summary>
+		// The initializer runs after the sink constructor's flushThreshold and expectedFields, so these win.
+		var worker = sink.CreateWorker();
+		try
+		{
+			return new(worker, options)
+			{
+				parallelWorker = true,
+				flushThreshold = int.MaxValue,
+				expectedFields = expectedFields,
+				recordWriter = recordWriter,
+			};
+		}
+		catch
+		{
+			// Each worker sink is released once: this one has no writer to be released with.
+			sink.ReleaseWorker(worker);
+			throw;
+		}
+	}
+
+	/// <summary>
+	/// Formats the items of <paramref name="batch"/> on this worker writer, into a buffer that it hands to the batch, or
+	/// into its sink's chunk.
+	/// </summary>
 	private void FormatBatch<T>(ParallelWriteBatch<T> batch, ParallelWriteRun<T> run)
 	{
 		if (buffer.Length == 0)
@@ -612,6 +701,7 @@ public sealed partial class CsvWriter
 		var count = batch.Count;
 		// Records are numbered as if every item wrote one, which is exact for records.
 		var first = run.RecordBase + batch.FirstItem;
+		sink?.BeginChunk(first);
 		var finished = 0L;
 		var i = 0;
 		try
@@ -632,6 +722,16 @@ public sealed partial class CsvWriter
 		}
 
 		batch.Completed = i;
+		if (sink is not null)
+		{
+			// The chunk is the output, its records the ones that ended. The buffer holds only their line endings, so this
+			// writer keeps it.
+			batch.Chunk = sink.TakeChunk(out batch.Length);
+			batch.Records = finished;
+
+			return;
+		}
+
 		batch.Records = finished;
 		batch.Buffer = buffer;
 		batch.Length = pos;
@@ -789,8 +889,14 @@ public sealed partial class CsvWriter
 		/// <summary>The output of the batch, its first <see cref="Length"/> bytes; empty until the batch is formatted.</summary>
 		public byte[] Buffer = [];
 
-		/// <summary>The number of bytes of output in <see cref="Buffer"/>.</summary>
+		/// <summary>The number of bytes of output in <see cref="Buffer"/>, or the size of <see cref="Chunk"/> that its sink reported.</summary>
 		public int Length;
+
+		/// <summary>
+		/// The output of a worker of a cell sink instead of <see cref="Buffer"/>: its sink's chunk, until the calling thread
+		/// hands it to the sink (<see cref="CsvCellSink.WriteChunk"/>) or drops it (<see cref="CsvCellSink.DiscardChunk"/>).
+		/// </summary>
+		public object? Chunk;
 
 		/// <summary>The number of records in the output.</summary>
 		public long Records;
@@ -887,6 +993,8 @@ public sealed partial class CsvWriter
 
 			try
 			{
+				// A cell sink makes ready what its workers' sinks read before the first of them can be made.
+				owner.sink?.BeginWorkers();
 				Publish(first);
 				var ended = false;
 				while (true)
@@ -949,6 +1057,7 @@ public sealed partial class CsvWriter
 
 			try
 			{
+				owner.sink?.BeginWorkers();
 				Publish(first);
 				var ended = false;
 				while (true)
@@ -1200,20 +1309,48 @@ public sealed partial class CsvWriter
 			}
 		}
 
-		/// <summary>Writes the output of a formatted batch to the destination, then throws its exception, if it has one.</summary>
+		/// <summary>
+		/// Writes the output of a formatted batch to the destination, or hands its chunk to the cell sink, which may refuse
+		/// it: the batch's items are then written again on the calling thread. Then throws the batch's exception, if it has
+		/// one and was not written again.
+		/// </summary>
 		private void WriteOut(ParallelWriteBatch<T> batch)
 		{
 			var error = batch.Error;
 			try
 			{
-				if (batch.Length > 0)
+				if (batch.Chunk is { } chunk)
 				{
-					// What the writer buffered (the header, the first record) goes before the first batch.
+					// What the writer wrote itself goes first, and the sink's flush that it asked for. From here on the
+					// chunk is the sink's, whatever it does with it.
 					owner.FlushBuffer();
-					owner.WriteToDestination(batch.Buffer, batch.Length);
+					batch.Chunk = null;
+					if (owner.sink!.WriteChunk(chunk))
+					{
+						owner.records += batch.Records;
+					}
+					else
+					{
+						// Nothing of the chunk was written: every item is written again, as a serial write writes it, and an
+						// exception is the one that write throws, not the worker's.
+						error = null;
+						for (var i = 0; i < batch.Count; i++)
+						{
+							owner.WriteSerialItem(Write, batch.Item(i));
+						}
+					}
 				}
+				else
+				{
+					if (batch.Length > 0)
+					{
+						// What the writer buffered (the header, the first record) goes before the first batch.
+						owner.FlushBuffer();
+						owner.WriteToDestination(batch.Buffer, batch.Length);
+					}
 
-				owner.records += batch.Records;
+					owner.records += batch.Records;
+				}
 			}
 			finally
 			{
@@ -1229,13 +1366,33 @@ public sealed partial class CsvWriter
 			var error = batch.Error;
 			try
 			{
-				if (batch.Length > 0)
+				if (batch.Chunk is { } chunk)
 				{
 					await owner.FlushBufferAsync(cancellationToken).ConfigureAwait(false);
-					await owner.WriteToDestinationAsync(batch.Buffer, batch.Length, cancellationToken).ConfigureAwait(false);
+					batch.Chunk = null;
+					if (await owner.sink!.WriteChunkAsync(chunk, cancellationToken).ConfigureAwait(false))
+					{
+						owner.records += batch.Records;
+					}
+					else
+					{
+						error = null;
+						for (var i = 0; i < batch.Count; i++)
+						{
+							await owner.WriteSerialItemAsync(Write, batch.Item(i), cancellationToken).ConfigureAwait(false);
+						}
+					}
 				}
+				else
+				{
+					if (batch.Length > 0)
+					{
+						await owner.FlushBufferAsync(cancellationToken).ConfigureAwait(false);
+						await owner.WriteToDestinationAsync(batch.Buffer, batch.Length, cancellationToken).ConfigureAwait(false);
+					}
 
-				owner.records += batch.Records;
+					owner.records += batch.Records;
+				}
 			}
 			finally
 			{
@@ -1245,7 +1402,10 @@ public sealed partial class CsvWriter
 			error?.Throw();
 		}
 
-		/// <summary>Counts the output of a batch for the size of the next ones and frees its slot.</summary>
+		/// <summary>
+		/// Counts the output of a batch for the size of the next ones and frees its slot, dropping its chunk if it was never
+		/// handed to the cell sink.
+		/// </summary>
 		private void Recycle(ParallelWriteBatch<T> batch)
 		{
 			outputBytes += batch.Length;
@@ -1260,6 +1420,11 @@ public sealed partial class CsvWriter
 			batch.Records = 0;
 			batch.Completed = 0;
 			batch.Error = null;
+			if (batch.Chunk is { } chunk)
+			{
+				batch.Chunk = null;
+				owner.sink!.DiscardChunk(chunk);
+			}
 		}
 
 		/// <summary>
@@ -1306,7 +1471,7 @@ public sealed partial class CsvWriter
 
 				while (idleWriters.TryPop(out var writer))
 				{
-					writer.Release();
+					ReleaseParallelWorker(writer);
 				}
 			}
 		}
@@ -1329,6 +1494,11 @@ public sealed partial class CsvWriter
 		/// <summary>An idle worker writer, or a new one; <see langword="null"/> with the exception when creating it threw.</summary>
 		private CsvWriter? TakeWriter(out ExceptionDispatchInfo? failure)
 		{
+			if (owner.sink is not null)
+			{
+				return TakeSinkWriter(out failure);
+			}
+
 			failure = null;
 			lock (freeLock)
 			{
@@ -1350,6 +1520,39 @@ public sealed partial class CsvWriter
 			}
 		}
 
+		/// <summary>
+		/// <see cref="TakeWriter"/> for a cell sink: a new writer is made under the lock, and none once the run is closed, so
+		/// that the sink makes its workers only while the call runs. A worker queued for a batch that another worker took can
+		/// start after the call ended; it gets <see langword="null"/> without an exception, and no batch is left for it.
+		/// </summary>
+		private CsvWriter? TakeSinkWriter(out ExceptionDispatchInfo? failure)
+		{
+			failure = null;
+			lock (freeLock)
+			{
+				if (idleWriters.TryPop(out var idle))
+				{
+					return idle;
+				}
+
+				if (closed)
+				{
+					return null;
+				}
+
+				try
+				{
+					return owner.CreateParallelWorker();
+				}
+				catch (Exception ex)
+				{
+					failure = ExceptionDispatchInfo.Capture(ex);
+
+					return null;
+				}
+			}
+		}
+
 		private void ReturnWriter(CsvWriter writer)
 		{
 			lock (freeLock)
@@ -1360,6 +1563,31 @@ public sealed partial class CsvWriter
 
 					return;
 				}
+			}
+
+			ReleaseParallelWorker(writer);
+		}
+
+		/// <summary>
+		/// Releases a worker writer, on any thread, also after the call returned: the worker sink of a cell sink's worker
+		/// first (<see cref="CsvCellSink.ReleaseWorker"/>), then the writer's buffers. A method of its own, so that
+		/// <see cref="Release"/>, which disposing a writer uses, keeps its code.
+		/// </summary>
+		/// <param name="writer">The worker writer.</param>
+		private void ReleaseParallelWorker(CsvWriter writer)
+		{
+			if (writer.sink is { } worker)
+			{
+				try
+				{
+					owner.sink!.ReleaseWorker(worker);
+				}
+				finally
+				{
+					writer.Release();
+				}
+
+				return;
 			}
 
 			writer.Release();

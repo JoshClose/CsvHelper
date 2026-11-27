@@ -115,6 +115,7 @@ public static class Program
 			  zip-stored   the same at NoCompression
 			  and, only when named:
 			  write-threads   write with CompressionThreads = {WriteMethods.ParallelDegree}: chunked deflate on .NET 8 and later, one deflate thread on .NET Framework
+			  write-parallel  the assets' rows through ParallelWrite, the orders through AddSheet<OrderRecord> and ParallelWriteRecords, at {WriteMethods.ParallelDegree} workers
 			Every write goes to a stream that counts its bytes and drops them, and can't seek.
 
 			Methods are separated by commas; the first is the ratios' base. Each round runs them in an order rotated by one

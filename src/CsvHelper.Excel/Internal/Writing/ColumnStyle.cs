@@ -47,6 +47,9 @@ internal sealed class ColumnStyle
 	/// <summary>Whether the column's text wraps.</summary>
 	public bool Wrap { get; }
 
+	/// <summary>The id of the column's format, which takes the place of its cells' own; -1 without one.</summary>
+	public int NumberFormatId => numberFormatId;
+
 	/// <summary>The widths of the column's format, read when a cell is first measured; <see langword="null"/> without a format.</summary>
 	public FormatWidth? FormatWidth => code is null ? null : formatWidth ??= new FormatWidth(code);
 
@@ -68,5 +71,59 @@ internal sealed class ColumnStyle
 		}
 
 		return lastStyle;
+	}
+}
+
+/// <summary>
+/// A column's style for a parallel write's worker (<see cref="SheetChunkSink"/>): a copy of a <see cref="ColumnStyle"/>'s
+/// format and wrap, which never change, whose lookups go through the view's snapshot of the workbook's cell formats
+/// (<see cref="StyleSnapshot"/>) and add nothing, with a cache of its own.
+/// </summary>
+internal sealed class ChunkColumnStyle
+{
+	private readonly StyleSnapshot styles;
+	// The format's number format id, or -1 to keep each cell's own.
+	private readonly int numberFormatId;
+	// The last cell format a cell had of its own, and the one it got.
+	private int lastOwn = -1;
+	private int lastStyle;
+
+	/// <summary>Creates a worker's copy of a column's style.</summary>
+	/// <param name="style">The column's style, of which only what never changes is read.</param>
+	/// <param name="styles">The view's snapshot of the workbook's cell formats.</param>
+	public ChunkColumnStyle(ColumnStyle style, StyleSnapshot styles)
+	{
+		this.styles = styles;
+		numberFormatId = style.NumberFormatId;
+		Wrap = style.Wrap;
+	}
+
+	/// <summary>Whether the column has a format, which takes the place of its cells' own.</summary>
+	public bool HasFormat => numberFormatId >= 0;
+
+	/// <summary>Whether the column's text wraps.</summary>
+	public bool Wrap { get; }
+
+	/// <summary>The cell format of a cell of the column, as <see cref="ColumnStyle.Of"/> gives it, when the workbook has it.</summary>
+	/// <param name="own">The cell format the cell has of its own, one of the snapshot's.</param>
+	/// <param name="style">Its cell format in the column; 0 when the snapshot lacks it.</param>
+	/// <returns>Whether the snapshot has it.</returns>
+	public bool TryOf(int own, out int style)
+	{
+		if (own != lastOwn)
+		{
+			var format = styles[own];
+			if (!styles.TryIndexOf(new CellXf(numberFormatId >= 0 ? numberFormatId : format.NumberFormatId, format.Font, Wrap), out style))
+			{
+				return false;
+			}
+
+			lastStyle = style;
+			lastOwn = own;
+		}
+
+		style = lastStyle;
+
+		return true;
 	}
 }

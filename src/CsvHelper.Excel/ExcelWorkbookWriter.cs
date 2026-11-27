@@ -116,6 +116,19 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 	internal static int TestThreads { get; set; }
 
 	/// <summary>
+	/// The length a parallel write's workers report for each chunk in place of its XML's (<see cref="SheetView.ChunkLength"/>),
+	/// which sizes core's batches: 0, the default, for its XML's; tests set it before a parallel write (a large one makes
+	/// batches of one item, 1 makes them of 4,096).
+	/// </summary>
+	internal int ParallelChunkLength { get; set; }
+
+	/// <summary>The workers' chunks the sheets' sinks appended, for tests: counted on the writing thread.</summary>
+	internal long ChunksAppended { get; set; }
+
+	/// <summary>The workers' chunks the sheets' sinks refused, whose batches were written again serially, for tests: counted on the writing thread.</summary>
+	internal long ChunksRedone { get; set; }
+
+	/// <summary>
 	/// The workbook's dropdown lists that don't go in their validations, which the lists sheet holds, written when the
 	/// workbook ends, after its other sheets (<see cref="ValidationLists"/>).
 	/// </summary>

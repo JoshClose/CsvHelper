@@ -27,6 +27,16 @@ internal sealed class ColumnFormat
 		Numbers = culture is null ? null : NumberCulture.For(culture);
 	}
 
+	/// <summary>Creates a copy of a column's format, with caches of its own, empty (<see cref="ForWorker"/>).</summary>
+	/// <param name="format">The column's format.</param>
+	private ColumnFormat(ColumnFormat format)
+	{
+		Format = format.Format;
+		Provider = format.Provider;
+		HasCulture = format.HasCulture;
+		Numbers = format.Numbers;
+	}
+
 	/// <summary>The member's format, or <see langword="null"/> for none (an empty one is .NET's default).</summary>
 	public string? Format { get; }
 
@@ -72,5 +82,37 @@ internal sealed class ColumnFormat
 		}
 
 		return style;
+	}
+
+	/// <summary>
+	/// A copy for a parallel write's worker (<see cref="SheetChunkSink"/>), built from what never changes (the format, the
+	/// provider and the culture's numbers), whose caches are its own: the format's translations, and their cell formats,
+	/// looked up in the view's snapshot (<see cref="TryStyle"/>).
+	/// </summary>
+	/// <returns>The copy.</returns>
+	public ColumnFormat ForWorker() => new(this);
+
+	/// <summary>
+	/// The cell format of the last translation, as <see cref="Style"/> gives it, when the workbook has it: looked up in a
+	/// parallel write's snapshot, which adds nothing. A worker's copy (<see cref="ForWorker"/>) keeps the one found.
+	/// </summary>
+	/// <param name="styles">The view's snapshot of the workbook's cell formats.</param>
+	/// <param name="index">Its index; 0 when the snapshot lacks it.</param>
+	/// <returns>Whether the snapshot has it.</returns>
+	public bool TryStyle(StyleSnapshot styles, out int index)
+	{
+		if (style < 0)
+		{
+			if (!styles.TryIndexOf(translation!.Code, out index))
+			{
+				return false;
+			}
+
+			style = index;
+		}
+
+		index = style;
+
+		return true;
 	}
 }

@@ -13,7 +13,7 @@ namespace CsvHelper.Excel.TargetRunner;
 /// <c>ExcelOrdersWrite.CsvHelper_Write</c> write them, at the defaults and stored (deflate's share is the difference); and
 /// the writer's sheet XML through a <see cref="ZipArchive"/> entry alone, as lane E's <c>archive</c> probe wrote it, for
 /// the zip's own share. When named: the default write with <see cref="ExcelWriterOptions.CompressionThreads"/> at
-/// <see cref="ParallelDegree"/>.
+/// <see cref="ParallelDegree"/>, and the parallel write at that degree.
 /// </summary>
 internal sealed class WriteMethods
 {
@@ -21,9 +21,9 @@ internal sealed class WriteMethods
 	public static readonly string[] Names = ["write", "write-stored", "zip", "zip-stored"];
 
 	/// <summary>The methods run only when named.</summary>
-	public static readonly string[] Optional = ["write-threads"];
+	public static readonly string[] Optional = ["write-threads", "write-parallel"];
 
-	/// <summary>The deflate threads of <c>write-threads</c>.</summary>
+	/// <summary>The deflate threads of <c>write-threads</c>, and the workers of <c>write-parallel</c>.</summary>
 	public const int ParallelDegree = 8;
 
 	/// <summary>The number of orders: a million, as <c>ExcelDataGenerator.OrderRows</c>.</summary>
@@ -89,6 +89,7 @@ internal sealed class WriteMethods
 			"write" => new Method(name, "bytes written", () => Write(Options(stored: false))),
 			"write-stored" => new Method(name, "bytes written", () => Write(Options(stored: true))),
 			"write-threads" => new Method(name, "bytes written", () => Write(Options(stored: false) with { CompressionThreads = ParallelDegree })),
+			"write-parallel" => new Method(name, "bytes written", WriteParallel),
 			"zip" => new Method(name, "bytes written", () => Zip(CompressionLevel.Fastest)),
 			"zip-stored" => new Method(name, "bytes written", () => Zip(CompressionLevel.NoCompression)),
 			_ => throw new ArgumentException($"Unknown write method '{name}'."),
@@ -202,6 +203,42 @@ internal sealed class WriteMethods
 
 			writer.EndRecord();
 		}
+	}
+
+	/// <summary>
+	/// Writes the workbook at the defaults with a parallel write of <see cref="ParallelDegree"/> workers, to a stream that
+	/// counts and drops its bytes: the package assets' header, then their rows through <c>ParallelWrite</c> (each row's
+	/// fields and its end, as <see cref="WriteTo"/>'s loop writes them); the orders through <c>ParallelWriteRecords</c> on
+	/// the sheet of <c>AddSheet&lt;OrderRecord&gt;</c>, as <c>WriteSheet</c> writes them serially.
+	/// </summary>
+	/// <returns>The bytes written.</returns>
+	private long WriteParallel()
+	{
+		var output = new DiscardStream();
+		using (var workbook = ExcelWorkbookWriter.Create(output, Options(stored: false), leaveOpen: true))
+		{
+			if (orders)
+			{
+				using var sheet = workbook.AddSheet<OrderRecord>(ExcelOrders.SheetName);
+				sheet.ParallelWriteRecords(orderRecords, ParallelDegree);
+			}
+			else
+			{
+				using var writer = workbook.AddSheet(PackageAssetData.SheetName);
+				writer.WriteHeader(PackageAssetData.Header);
+				writer.ParallelWrite(rows, static (w, row) =>
+				{
+					for (var i = 0; i < row.Length; i++)
+					{
+						w.WriteField(row[i]);
+					}
+
+					w.EndRecord();
+				}, ParallelDegree);
+			}
+		}
+
+		return output.Count;
 	}
 
 	/// <summary>Writes the captured sheet XML into a zip entry, in 64 KB writes, to a stream that counts and drops its bytes.</summary>

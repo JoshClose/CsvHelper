@@ -40,6 +40,10 @@ namespace CsvHelper.Excel;
 /// step 7: <c>LinkMemoryTests</c>). A record discarded takes the targets it added with it, so that records that fail,
 /// whose links the cap doesn't count, can't hold more.
 /// </para>
+/// <para>
+/// A parallel write's chunk of rows adds its links in one call, rebased from its records to their rows
+/// (<see cref="TryAdd"/>), or none when they would pass the cap, and the chunk is then written again serially.
+/// </para>
 /// </remarks>
 internal sealed class SheetLinks
 {
@@ -133,6 +137,31 @@ internal sealed class SheetLinks
 		}
 
 		links.Add(new Link((int)row, column, index));
+	}
+
+	/// <summary>
+	/// Adds the links of a parallel write's chunk of rows (<see cref="SheetChunk.Links"/>) as the current record's, each at
+	/// its record's row, in their order, as the serial write adds them: when they fit under Excel's cap. The sheet keeps
+	/// them once the chunk is appended (<see cref="EndRecord"/>), or drops them (<see cref="DiscardRecord"/>). When they
+	/// don't fit, it adds none, and the chunk is written again serially, whose URIs past the cap are text.
+	/// </summary>
+	/// <param name="chunkLinks">The chunk's links, each with its record in the chunk, from 0.</param>
+	/// <param name="firstRow">The row of the chunk's first record, from 1.</param>
+	/// <returns>Whether they fit, with the links before them, in <see cref="MaxLinks"/>, and were added.</returns>
+	public bool TryAdd(IReadOnlyList<ChunkLink> chunkLinks, long firstRow)
+	{
+		if (chunkLinks.Count > MaxLinks - links.Count)
+		{
+			return false;
+		}
+
+		for (var i = 0; i < chunkLinks.Count; i++)
+		{
+			var link = chunkLinks[i];
+			Add(firstRow + link.Record, link.Column, link.Target);
+		}
+
+		return true;
 	}
 
 	/// <summary>Keeps the current record's links and targets: the record has ended.</summary>

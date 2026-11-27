@@ -180,6 +180,19 @@ internal sealed class StyleRegistry
 		return unlocked;
 	}
 
+	/// <summary>
+	/// A copy of the cell formats as they are, whose lookups add nothing (<see cref="StyleSnapshot"/>): for a parallel
+	/// write's workers, made on the writing thread as the view is frozen, and again when a chunk written serially added a
+	/// cell format.
+	/// </summary>
+	/// <returns>The snapshot.</returns>
+	public StyleSnapshot Snapshot() => new(
+		new Dictionary<CellXf, int>(indexes),
+		formats.ToArray(),
+		(int[])fixedIndexes.Clone(),
+		(int[])unlockedIndexes.Clone(),
+		new Dictionary<string, int>(numberFormatIds, StringComparer.Ordinal));
+
 	/// <summary>The id of a number format code, a custom one added when it is first used.</summary>
 	/// <param name="code">The code, which Excel opens.</param>
 	/// <returns>Its id: 0 for General (in any case) or an empty code, a built-in format's, or a custom one's from 164.</returns>
@@ -349,7 +362,7 @@ internal sealed class StyleRegistry
 	/// </summary>
 	/// <param name="code">The code.</param>
 	/// <returns>The id, or -1.</returns>
-	private static int BuiltInId(string code) => code switch
+	internal static int BuiltInId(string code) => code switch
 	{
 		"0" => 1,
 		"0.00" => 2,

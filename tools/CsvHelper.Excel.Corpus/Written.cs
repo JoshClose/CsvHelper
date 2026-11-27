@@ -34,6 +34,11 @@ namespace CsvHelper.Excel.Corpus;
 /// carry that data's fingerprint (<see cref="CultureData"/>). It and <c>types-net.xlsx</c> use .NET's newer types, so
 /// .NET Framework has neither.
 /// </para>
+/// <para>
+/// The tests also write each workbook with the parallel write methods (<see cref="Write(WrittenWorkbook, WrittenParallel)"/>,
+/// Phase 9's step 10), and with its sheets' records repeated so that the workers write most of them
+/// (<see cref="WrittenWorkbook.Repeated"/>): each has the parts of its serial write.
+/// </para>
 /// </remarks>
 internal static partial class Written
 {
@@ -131,6 +136,21 @@ internal static partial class Written
 	private static readonly PropertyInfo MaxRows = typeof(ExcelWorkbookWriter).GetProperty("MaxRows", BindingFlags.Instance | BindingFlags.NonPublic)
 		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal MaxRows.");
 
+	/// <summary>
+	/// <see cref="ExcelWorkbookWriter"/>'s internal length that a parallel write's workers report for each chunk, which sizes
+	/// core's batches (<see cref="WrittenParallel.ChunkLength"/>).
+	/// </summary>
+	private static readonly PropertyInfo ParallelChunkLength = typeof(ExcelWorkbookWriter).GetProperty("ParallelChunkLength", BindingFlags.Instance | BindingFlags.NonPublic)
+		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal ParallelChunkLength.");
+
+	/// <summary><see cref="ExcelWorkbookWriter"/>'s internal count of the workers' chunks its sheets appended.</summary>
+	private static readonly PropertyInfo ChunksAppended = typeof(ExcelWorkbookWriter).GetProperty("ChunksAppended", BindingFlags.Instance | BindingFlags.NonPublic)
+		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal ChunksAppended.");
+
+	/// <summary><see cref="ExcelWorkbookWriter"/>'s internal count of the workers' chunks its sheets refused, whose batches were written again serially.</summary>
+	private static readonly PropertyInfo ChunksRedone = typeof(ExcelWorkbookWriter).GetProperty("ChunksRedone", BindingFlags.Instance | BindingFlags.NonPublic)
+		?? throw new InvalidOperationException("ExcelWorkbookWriter has no internal ChunksRedone.");
+
 	/// <summary>The workbooks, in the order the tool writes them.</summary>
 	public static IReadOnlyList<WrittenWorkbook> Workbooks { get; } =
 	[
@@ -204,6 +224,59 @@ internal static partial class Written
 				await sheet.WriteAsync(writer);
 			}
 		}
+
+		return stream.ToArray();
+	}
+
+	/// <summary>
+	/// Writes a workbook synchronously, into memory, with the parallel write methods (Phase 9's step 10): each sheet of
+	/// records by <see cref="CsvWriter.ParallelWriteRecords{T}(IEnumerable{T}, int)"/>, and each sheet written field by
+	/// field by <see cref="CsvWriter.ParallelWrite{T}(IEnumerable{T}, Action{CsvWriter, T}, int)"/>, at the mode's degree;
+	/// a template's sheet and a converted one as <see cref="Write(WrittenWorkbook)"/> writes them. The parts are those of
+	/// <see cref="Write(WrittenWorkbook)"/>: a sheet's XML is the serial write's.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="parallel">The degree and the batches' sizing, which takes what the workers did.</param>
+	/// <returns>Its bytes.</returns>
+	public static byte[] Write(WrittenWorkbook workbook, WrittenParallel parallel)
+	{
+		using var stream = new MemoryStream();
+		var writer = ExcelWorkbookWriter.Create(stream, workbook.Options, leaveOpen: true);
+		using (writer)
+		{
+			Prepare(writer, workbook, parallel);
+			foreach (var sheet in workbook.Sheets)
+			{
+				sheet.WriteInParallel(writer, parallel.Degree);
+			}
+		}
+
+		parallel.Add((long)ChunksAppended.GetValue(writer)!, (long)ChunksRedone.GetValue(writer)!);
+
+		return stream.ToArray();
+	}
+
+	/// <summary>
+	/// Writes a workbook asynchronously, into memory, with the parallel write methods' asynchronous forms, as
+	/// <see cref="Write(WrittenWorkbook, WrittenParallel)"/> does: the same parts as <see cref="Write(WrittenWorkbook)"/>.
+	/// </summary>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="parallel">The degree and the batches' sizing, which takes what the workers did.</param>
+	/// <returns>Its bytes.</returns>
+	public static async Task<byte[]> WriteAsync(WrittenWorkbook workbook, WrittenParallel parallel)
+	{
+		using var stream = new MemoryStream();
+		var writer = ExcelWorkbookWriter.Create(stream, workbook.Options, leaveOpen: true);
+		await using (writer)
+		{
+			Prepare(writer, workbook, parallel);
+			foreach (var sheet in workbook.Sheets)
+			{
+				await sheet.WriteInParallelAsync(writer, parallel.Degree);
+			}
+		}
+
+		parallel.Add((long)ChunksAppended.GetValue(writer)!, (long)ChunksRedone.GetValue(writer)!);
 
 		return stream.ToArray();
 	}
@@ -288,6 +361,19 @@ internal static partial class Written
 		{
 			ProtectionSalt.SetValue(writer, salt);
 		}
+	}
+
+	/// <summary>
+	/// Prepares a workbook's writer as <see cref="Prepare(ExcelWorkbookWriter, WrittenWorkbook)"/> does, and sets the length
+	/// its parallel writes' workers report for each chunk.
+	/// </summary>
+	/// <param name="writer">The writer.</param>
+	/// <param name="workbook">The workbook.</param>
+	/// <param name="parallel">The parallel writes' mode.</param>
+	private static void Prepare(ExcelWorkbookWriter writer, WrittenWorkbook workbook, WrittenParallel parallel)
+	{
+		Prepare(writer, workbook);
+		ParallelChunkLength.SetValue(writer, parallel.ChunkLength);
 	}
 
 	/// <summary>Appends a length to a hash's input, as 8 bytes, least significant first.</summary>
@@ -1176,8 +1262,55 @@ internal sealed class WrittenWorkbook
 	/// </summary>
 	public byte[]? Salt { get; init; }
 
+	/// <summary>
+	/// The workbook with its sheets' records repeated (<see cref="WrittenSheet.Repeated"/>), so that a parallel write has
+	/// enough of them to reach its workers: the set's sheets are small, and core writes a source that ends within its first
+	/// batch, 64 items, on the calling thread, as the sheet does auto-fit's held records. It isn't a workbook Excel answered
+	/// about: tests compare its parallel write with its serial write.
+	/// </summary>
+	/// <param name="records">The records each sheet of records, or of rows written by hand, has at least.</param>
+	/// <returns>The workbook, of the same name, options, row limit and salt.</returns>
+	public WrittenWorkbook Repeated(int records) => new(Name, Description, Options, [.. Sheets.Select(s => s.Repeated(records))], MaxRows) { Salt = Salt };
+
 	/// <inheritdoc/>
 	public override string ToString() => Name;
+}
+
+/// <summary>
+/// How the written set is written in parallel (<see cref="Written.Write(WrittenWorkbook, WrittenParallel)"/>): the
+/// degree, and the length the workers report for each chunk, which sizes core's batches; and what the workers did, added
+/// up over the writes made with it.
+/// </summary>
+/// <param name="degree">The degree of parallelism, or -1 for one worker per processor.</param>
+/// <param name="chunkLength">
+/// The length the workers report for each chunk (<c>ExcelWorkbookWriter.ParallelChunkLength</c>): 0 for its XML's, a large
+/// one for batches of one item, 1 for batches of 4,096.
+/// </param>
+internal sealed class WrittenParallel(int degree, int chunkLength = 0)
+{
+	/// <summary>The degree of parallelism, or -1 for one worker per processor.</summary>
+	public int Degree => degree;
+
+	/// <summary>The length the workers report for each chunk: 0 for its XML's.</summary>
+	public int ChunkLength => chunkLength;
+
+	/// <summary>The workers' chunks the sheets appended, over the writes made with this mode.</summary>
+	public long ChunksAppended { get; private set; }
+
+	/// <summary>The workers' chunks the sheets refused, whose batches were written again serially, over the writes made with this mode.</summary>
+	public long ChunksRedone { get; private set; }
+
+	/// <summary>Adds what a write's workers did.</summary>
+	/// <param name="appended">The chunks its sheets appended.</param>
+	/// <param name="redone">The chunks its sheets refused.</param>
+	public void Add(long appended, long redone)
+	{
+		ChunksAppended += appended;
+		ChunksRedone += redone;
+	}
+
+	/// <inheritdoc/>
+	public override string ToString() => $"degree {degree}, chunks of {(chunkLength == 0 ? "their XML's length" : chunkLength.ToString(CultureInfo.InvariantCulture))}";
 }
 
 /// <summary>
@@ -1263,6 +1396,55 @@ internal sealed class WrittenSheet
 	public bool IsTemplate { get; private init; }
 
 	/// <summary>
+	/// Writes it with a parallel write method at a degree, or <see langword="null"/> for a sheet that has none: a template's
+	/// or a converted one.
+	/// </summary>
+	private Action<ExcelWorkbookWriter, int>? InParallel { get; init; }
+
+	/// <summary>Writes it with a parallel write method's asynchronous form at a degree, or <see langword="null"/> for a sheet that has none.</summary>
+	private Func<ExcelWorkbookWriter, int, Task>? InParallelAsync { get; init; }
+
+	/// <summary>Makes it again with its records repeated to a number, or <see langword="null"/> for a sheet that isn't repeated.</summary>
+	private Func<int, WrittenSheet>? Repeat { get; init; }
+
+	/// <summary>
+	/// Writes it with the parallel write methods at a degree: a sheet of records by
+	/// <see cref="CsvWriter.ParallelWriteRecords{T}(IEnumerable{T}, int)"/>, its ranges merged before the header and after the
+	/// records; a sheet written field by field by <see cref="CsvWriter.ParallelWrite{T}(IEnumerable{T}, Action{CsvWriter, T}, int)"/>,
+	/// a call for the rows between two places that merge ranges, since a callback's writer can't merge cells; a template's
+	/// or a converted sheet as <see cref="Write"/> does.
+	/// </summary>
+	/// <param name="workbook">The workbook's writer.</param>
+	/// <param name="degree">The degree of parallelism, or -1 for one worker per processor.</param>
+	public void WriteInParallel(ExcelWorkbookWriter workbook, int degree)
+	{
+		if (InParallel is { } parallel)
+		{
+			parallel(workbook, degree);
+		}
+		else
+		{
+			Write(workbook);
+		}
+	}
+
+	/// <summary>Writes it with the parallel write methods' asynchronous forms at a degree, as <see cref="WriteInParallel"/> does.</summary>
+	/// <param name="workbook">The workbook's writer.</param>
+	/// <param name="degree">The degree of parallelism, or -1 for one worker per processor.</param>
+	/// <returns>A task that completes when the sheet is written.</returns>
+	public Task WriteInParallelAsync(ExcelWorkbookWriter workbook, int degree) => InParallelAsync is { } parallel ? parallel(workbook, degree) : WriteAsync(workbook);
+
+	/// <summary>
+	/// The sheet with its records repeated, in order, until it has a number of them: a sheet of records, or of rows written
+	/// by hand after its header; a sheet that merges ranges, whose ranges name its rows, a template's, a converted one, and
+	/// one with as many records already, as it is. A repeated sheet's <see cref="Names"/> are its own name alone, and its
+	/// look's <see cref="WrittenLook.Shows"/> are the first records' only.
+	/// </summary>
+	/// <param name="records">The number of records.</param>
+	/// <returns>The sheet.</returns>
+	public WrittenSheet Repeated(int records) => Rows.Count - 1 < records && Repeat is { } repeat ? repeat(records) : this;
+
+	/// <summary>
 	/// A sheet of records, written by <typeparamref name="T"/>'s record writer with its header: a column per public property,
 	/// in declaration order, with its <see cref="CsvFormatAttribute"/>, <see cref="CsvCultureAttribute"/> and
 	/// <see cref="ExcelColumnAttribute"/>. Without merged ranges it is written by <see cref="ExcelWorkbookWriter.WriteSheet"/>;
@@ -1323,10 +1505,32 @@ internal sealed class WrittenSheet
 			}
 		}
 
+		void WriteParallel(ExcelWorkbookWriter workbook, int degree)
+		{
+			using var writer = workbook.AddSheet<T>(name, given.Options);
+			Merge(writer, given, 0);
+			writer.ParallelWriteRecords(records, degree);
+			Merge(writer, given, rows.Count);
+		}
+
+		async Task WriteParallelAsync(ExcelWorkbookWriter workbook, int degree)
+		{
+			var writer = workbook.AddSheet<T>(name, given.Options);
+			await using (writer)
+			{
+				Merge(writer, given, 0);
+				await writer.ParallelWriteRecordsAsync(records, degree);
+				Merge(writer, given, rows.Count);
+			}
+		}
+
 		return new WrittenSheet(name, names, columns, rows, given, typeof(T).GetCustomAttribute<ExcelSheetAttribute>(), Write, WriteAsync)
 		{
 			Fill = fill ?? [],
 			Import = fill is null ? null : ImportAs<T>(),
+			InParallel = WriteParallel,
+			InParallelAsync = WriteParallelAsync,
+			Repeat = given.Merges.Count == 0 && records.Count > 0 ? count => Records(name, RepeatRecords(records, count), null, look, fill) : null,
 		};
 	}
 
@@ -1416,7 +1620,63 @@ internal sealed class WrittenSheet
 			}
 		}
 
-		return new WrittenSheet(name, names, columns, rows, given, null, Write, WriteAsync);
+		// The rows between two places that merge ranges, in a parallel call each, the ranges merged between them on the
+		// sheet's writer, as the serial write merges them before its rows.
+		void WriteParallel(ExcelWorkbookWriter workbook, int degree)
+		{
+			using var writer = workbook.AddSheet(name, given.Options);
+			var start = 0;
+			foreach (var before in MergePoints(given, rows.Count))
+			{
+				if (before > start)
+				{
+					writer.ParallelWrite(Slice(rows, start, before), WriteRecord, degree);
+					start = before;
+				}
+
+				Merge(writer, given, before);
+			}
+
+			if (rows.Count > start)
+			{
+				writer.ParallelWrite(Slice(rows, start, rows.Count), WriteRecord, degree);
+			}
+
+			Merge(writer, given, rows.Count);
+		}
+
+		async Task WriteParallelAsync(ExcelWorkbookWriter workbook, int degree)
+		{
+			var writer = workbook.AddSheet(name, given.Options);
+			await using (writer)
+			{
+				var start = 0;
+				foreach (var before in MergePoints(given, rows.Count))
+				{
+					if (before > start)
+					{
+						await writer.ParallelWriteAsync(Slice(rows, start, before), WriteRecord, degree);
+						start = before;
+					}
+
+					Merge(writer, given, before);
+				}
+
+				if (rows.Count > start)
+				{
+					await writer.ParallelWriteAsync(Slice(rows, start, rows.Count), WriteRecord, degree);
+				}
+
+				Merge(writer, given, rows.Count);
+			}
+		}
+
+		return new WrittenSheet(name, names, columns, rows, given, null, Write, WriteAsync)
+		{
+			InParallel = WriteParallel,
+			InParallelAsync = WriteParallelAsync,
+			Repeat = given.Merges.Count == 0 && rows.Count > 1 ? count => Fields(name, RepeatRows(rows, count), null, look) : null,
+		};
 	}
 
 	/// <summary>
@@ -1463,6 +1723,42 @@ internal sealed class WrittenSheet
 		{
 			writer.MergeCells(range);
 		}
+	}
+
+	/// <summary>The places before rows where a look merges ranges, in order: the indexes of the rows they come before, the header's 0.</summary>
+	/// <param name="look">The look.</param>
+	/// <param name="count">The number of rows; the ranges merged after them aren't among the places.</param>
+	/// <returns>The places.</returns>
+	private static IEnumerable<int> MergePoints(WrittenLook look, int count) => look.Merges.Select(m => m.Before).Where(b => b < count).Distinct().OrderBy(b => b);
+
+	/// <summary>Some of a sheet's rows, which a parallel write's workers read in place.</summary>
+	/// <param name="rows">The rows.</param>
+	/// <param name="start">The first row's index.</param>
+	/// <param name="end">The index after the last row's.</param>
+	/// <returns>The rows.</returns>
+	private static List<IReadOnlyList<object?>> Slice(IReadOnlyList<IReadOnlyList<object?>> rows, int start, int end) => [.. rows.Skip(start).Take(end - start)];
+
+	/// <summary>Records repeated in order until there are a number of them.</summary>
+	/// <typeparam name="T">The record type.</typeparam>
+	/// <param name="records">The records, one or more.</param>
+	/// <param name="count">The number of records.</param>
+	/// <returns>The records.</returns>
+	private static T[] RepeatRecords<T>(IReadOnlyList<T> records, int count) => [.. Enumerable.Range(0, count).Select(i => records[i % records.Count])];
+
+	/// <summary>A sheet's rows with those after its header repeated in order until there are a number of them.</summary>
+	/// <param name="rows">The rows, the header first, and one or more after it.</param>
+	/// <param name="count">The number of rows after the header.</param>
+	/// <returns>The rows, the header first.</returns>
+	private static List<IReadOnlyList<object?>> RepeatRows(IReadOnlyList<IReadOnlyList<object?>> rows, int count) =>
+		[rows[0], .. Enumerable.Range(0, count).Select(i => rows[1 + i % (rows.Count - 1)])];
+
+	/// <summary>Writes a row's values as fields, and ends the record: a parallel write's callback.</summary>
+	/// <param name="writer">The writer the callback got: the sheet's, or a worker's.</param>
+	/// <param name="row">The values.</param>
+	private static void WriteRecord(CsvWriter writer, IReadOnlyList<object?> row)
+	{
+		WriteRow(writer, row);
+		writer.EndRecord();
 	}
 
 	/// <summary>Writes a row's values as fields.</summary>

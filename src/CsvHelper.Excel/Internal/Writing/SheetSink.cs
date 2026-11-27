@@ -111,6 +111,16 @@ namespace CsvHelper.Excel;
 /// ranges but the title's. So no I/O happens in <see cref="WriteField"/>, and the switch is sync or async as the caller
 /// is.
 /// </para>
+/// <para>
+/// A parallel write (<see cref="CsvWriter.ParallelWriteRecords{T}(IEnumerable{T}, int)"/> and the other parallel methods)
+/// writes the sheet's XML of a serial write. The header and the first records are written here, serially, until the sheet
+/// is ready for workers (<see cref="ReadyForWorkers"/>); then workers write the rows of batches of records
+/// (<see cref="SheetChunkSink"/>) over a view frozen from the sheet (<see cref="Freeze"/>), and the sink appends each
+/// batch's rows in order (<see cref="WriteChunk"/>), after the empty rows before its first cell, and adds up its used
+/// range, its flag and its links. A batch whose rows could differ from the serial write's (a cell format or the link style
+/// the view lacks, an error of the sheet's rules, the row limit, the links' cap) is refused, and written again here,
+/// serially, in the serial write's order; the view is frozen again when that adds a cell format or the link style.
+/// </para>
 /// </remarks>
 internal sealed class SheetSink : CsvCellSink
 {
@@ -279,6 +289,16 @@ internal sealed class SheetSink : CsvCellSink
 	private bool measuring;
 	private bool startWritten;
 	private bool completed;
+	// A parallel write's views of the sheet for its workers, null outside one; and the last view's number in it, and what
+	// it was frozen from: the cell formats' count, the link style, and whether the sheet's links were full. And the last
+	// view frozen while they were full, whose workers wrote a URI as text: a chunk written with it or before it waits for
+	// the sheet's links to be full (declared last, after the serial write's fields).
+	private SheetViewSlot? views;
+	private int viewVersion;
+	private int frozenStyles;
+	private int frozenLinkStyle;
+	private bool frozenLinksFull;
+	private int fullLinksVersion;
 
 	/// <summary>Starts a sheet.</summary>
 	/// <param name="workbook">The workbook writer, which is told when the sheet completes.</param>
@@ -2322,6 +2342,301 @@ internal sealed class SheetSink : CsvCellSink
 		await output.WriteToAsync(entry, count, async, cancellationToken).ConfigureAwait(false);
 		output.RemoveFirst(count);
 		recordStart -= count;
+	}
+
+	/// <summary>
+	/// Freezes what a parallel write's workers read of the sheet (<see cref="SheetView"/>), on the writing thread, between
+	/// records below the header, once the columns' widths are known: copies of the columns' formats, styles, default
+	/// styles, starts and placeholders, a snapshot of the cell formats, the link style, and the columns' types. It adds
+	/// nothing to the workbook, so that <c>styles.xml</c> stays the serial write's.
+	/// </summary>
+	/// <param name="version">The view's number in its parallel write, from 1 (<see cref="SheetView.Version"/>).</param>
+	/// <returns>The view.</returns>
+	internal SheetView Freeze(int version) => new()
+	{
+		Options = options,
+		Culture = culture,
+		ColumnFormats = (ColumnFormat?[]?)columnFormats?.Clone(),
+		ColumnStyles = (ColumnStyle?[]?)columnStyles?.Clone(),
+		ColumnDefaults = (int[]?)columnDefaults?.Clone(),
+		UnlockedColumns = unlockedColumns,
+		Styling = styling,
+		StylesColumns = stylesColumns,
+		ColumnStarts = (byte[]?[]?)columnStarts?.Clone(),
+		Placeholders = (byte[]?[]?)placeholders?.Clone(),
+		Styles = styles.Snapshot(),
+		LinkStyle = linkStyle,
+		LinksFull = links is { IsFull: true },
+		ColumnTypes = (Type?[])columnTypes.Clone(),
+		ColumnKinds = (CellKind[])columnKinds.Clone(),
+		ChunkLength = workbook.ParallelChunkLength,
+		Version = version,
+	};
+
+	/// <summary>
+	/// Parallel writes run on a sheet: workers write the rows of batches of records over a view of it
+	/// (<see cref="SheetChunkSink"/>), which this sink appends in order, or refuses (<see cref="WriteChunk"/>).
+	/// </summary>
+	public override bool SupportsParallel => true;
+
+	/// <summary>
+	/// Whether workers may write the next records, read on the writing thread before each record of a parallel write's
+	/// serial start. Never with <see cref="ExcelStrings.Shared"/>, whose strings' indexes follow the order the strings are
+	/// first used in, so the whole write is serial. Otherwise between records below the header (whose end resolves the
+	/// columns), once the columns' widths are known, so after the records auto-fit measures; with
+	/// <see cref="ExcelSheetOptions.Protect"/>, once the sheet's start is written too, since the first flush adds the
+	/// columns' unlocked styles to the cell formats, which must come before any that a refused batch adds; and while the
+	/// sheet has room for the next record and no full sheet's end waits in the buffer (<see cref="ExcelRowLimit.NewSheet"/>),
+	/// so that the records that start a new sheet or throw are written here. (Below the header and no sheet's end waiting
+	/// follow from the widths and the writer's flush after each record; they state the rule.)
+	/// </summary>
+	public override bool ReadyForWorkers =>
+		strings is null &&
+		widthsKnown &&
+		(protection is null || startWritten) &&
+		column == 0 &&
+		row > headerRowNumber &&
+		row <= maxRows &&
+		sheetEnd < 0;
+
+	/// <summary>The parallel write's views, or <see langword="null"/> outside one, for tests of the view the workers read.</summary>
+	internal SheetViewSlot? Views => views;
+
+	/// <summary>The sheet's entry once a flush has opened it, or <see langword="null"/>, for tests of a parallel write's entry.</summary>
+	internal Stream? Entry => entry;
+
+	/// <summary>
+	/// What a worker's chunk adds up, for tests that a refused one adds nothing: the current row, the last row with a cell
+	/// and the last column, the flag of text like a number, the links, the field limit, and the bytes buffered.
+	/// </summary>
+	internal (long Row, long LastRow, int LastColumn, bool NumberLikeText, int Links, int FieldLimit, int Buffered) ChunkState =>
+		(row, lastRow, lastColumn, numberLikeText, links?.Count ?? 0, fieldLimit, output.Length);
+
+	/// <summary>
+	/// A parallel write begins, on the writing thread: a slot for its views, which its workers read; the package's chunked
+	/// entries deflate on as many threads as it has workers at least (<see cref="PackageWriter.ParallelThreads"/>), within
+	/// <see cref="ExcelWriterOptions.CompressionThreads"/>' bound (one per processor, and at least 2), the next sheets' of
+	/// <see cref="ExcelRowLimit.NewSheet"/> too; and the sheet's entry, when a flush has opened it, is chunked from here on
+	/// (<see cref="PackageWriter.UseChunks"/>).
+	/// </summary>
+	/// <param name="degree">The most workers the write runs.</param>
+	public override void BeginParallel(int degree)
+	{
+		Volatile.Write(ref views, new SheetViewSlot());
+		viewVersion = 0;
+		fullLinksVersion = 0;
+		package.ParallelThreads = Math.Min(degree, Math.Max(Environment.ProcessorCount, 2));
+		if (entry is not null)
+		{
+			try
+			{
+				PackageWriter.UseChunks(entry);
+			}
+			catch
+			{
+				// Core calls EndParallel only once BeginParallel returns: nothing of the parallel write stays set.
+				package.ParallelThreads = 0;
+				Volatile.Write(ref views, null);
+
+				throw;
+			}
+		}
+	}
+
+	/// <summary>
+	/// Whether a parallel write runs on the sheet, from <see cref="BeginParallel"/> to <see cref="EndParallel"/>: a
+	/// <c>ParallelWrite</c> callback's <see cref="ExcelWriterExtensions.MergeCells"/> is refused then, on this writer too.
+	/// </summary>
+	internal bool InParallelWrite => Volatile.Read(ref views) is not null;
+
+	/// <summary>
+	/// The workers are about to start, on the writing thread, once the sheet is ready for them: its view is frozen and
+	/// published (<see cref="Freeze"/>), which adds nothing to the workbook.
+	/// </summary>
+	public override void BeginWorkers() => PublishView();
+
+	/// <summary>A worker's sink, over the parallel write's views: on a worker thread, reading only the views' slot.</summary>
+	/// <returns>The worker's sink, a <see cref="SheetChunkSink"/>.</returns>
+	/// <exception cref="InvalidOperationException">No parallel write runs on the sheet.</exception>
+	public override CsvCellSink CreateWorker() =>
+		new SheetChunkSink(Volatile.Read(ref views) ?? throw new InvalidOperationException("No parallel write runs on the sheet."));
+
+	/// <summary>
+	/// Appends a worker's chunk of rows after the records written before it, or refuses it, appending and counting nothing,
+	/// so that its batch is written again serially (<see cref="WriteChunkAsync(SheetChunk, bool, CancellationToken)"/>). On
+	/// the writing thread, in order.
+	/// </summary>
+	/// <param name="chunk">A <see cref="SheetChunk"/> of one of the sheet's workers, which the sink takes whatever happens.</param>
+	/// <returns>Whether the chunk is appended.</returns>
+	public override bool WriteChunk(object chunk) => SyncOrAsync.Result(WriteChunkAsync((SheetChunk)chunk, false, CancellationToken.None));
+
+	/// <summary>Appends a worker's chunk of rows, or refuses it, as <see cref="WriteChunk"/> does, writing asynchronously.</summary>
+	/// <param name="chunk">A <see cref="SheetChunk"/> of one of the sheet's workers, which the sink takes whatever happens.</param>
+	/// <param name="cancellationToken">Cancels writing: before the chunk is appended, it is dropped, and nothing of it is added.</param>
+	/// <returns>A task whose result is whether the chunk is appended.</returns>
+	public override ValueTask<bool> WriteChunkAsync(object chunk, CancellationToken cancellationToken) =>
+		WriteChunkAsync((SheetChunk)chunk, true, cancellationToken);
+
+	/// <summary>Drops a worker's chunk that won't be appended, returning its XML to the pool: on any thread.</summary>
+	/// <param name="chunk">A <see cref="SheetChunk"/> of one of the sheet's workers.</param>
+	public override void DiscardChunk(object chunk) => ((SheetChunk)chunk).Release();
+
+	/// <summary>Releases a worker's sink (<see cref="SheetChunkSink.Release"/>): on any thread, also after the parallel write has ended.</summary>
+	/// <param name="worker">A sink from <see cref="CreateWorker"/>.</param>
+	public override void ReleaseWorker(CsvCellSink worker) => ((SheetChunkSink)worker).Release();
+
+	/// <summary>
+	/// A parallel write ends, on the writing thread: the package's entries take their own threads again, and the views' slot
+	/// is dropped (workers still being released may hold it). The sheet's entry stays chunked until it closes.
+	/// </summary>
+	public override void EndParallel()
+	{
+		package.ParallelThreads = 0;
+		Volatile.Write(ref views, null);
+	}
+
+	/// <summary>
+	/// Appends a worker's chunk of rows, or refuses it. First the view is frozen again when a cell format or the link style
+	/// has been added, or the sheet's links have filled or have room again, since it was last frozen (a batch written again
+	/// serially does that), so that the workers' next batches have them. The chunk is refused, with nothing appended or
+	/// counted but <see cref="ExcelWorkbookWriter.ChunksRedone"/>, when its worker flagged it (<see cref="SheetChunk.Redo"/>);
+	/// when its records would pass the sheet's last row, so that <see cref="ExcelWriterOptions.RowLimit"/> decides the first
+	/// record past it; when its worker read a view of a sheet whose links were full, and the sheet's links have room now (a
+	/// new sheet of <see cref="ExcelRowLimit.NewSheet"/>), so that its URIs may be text where the serial write links them;
+	/// or when its links would pass Excel's <see cref="SheetLinks.MaxLinks"/>. Otherwise its rows follow the sink's whole
+	/// records (<see cref="AppendRowsAsync"/>), and the sheet's last row with a cell and last column, its flag of text like
+	/// a number, its links, at their rows, and its records are added up. A chunk without a cell writes nothing: its records
+	/// are rows without a value, which the next record with one writes.
+	/// </summary>
+	/// <param name="chunk">The chunk, which the sink takes whatever happens: released unless the entry has taken its XML.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous write, until the sink's whole records are written.</param>
+	/// <returns>A task whose result is whether the chunk is appended.</returns>
+	private async ValueTask<bool> WriteChunkAsync(SheetChunk chunk, bool async, CancellationToken cancellationToken)
+	{
+		try
+		{
+			cancellationToken.ThrowIfCancellationRequested();
+			var linksFull = links is { IsFull: true };
+			if (styles.Count != frozenStyles || linkStyle != frozenLinkStyle || linksFull != frozenLinksFull)
+			{
+				PublishView();
+			}
+
+			if (chunk.Redo != SheetChunkRedo.None || row + chunk.Records - 1 > maxRows || (chunk.DiscardedFields && row + chunk.Records > maxRows) || (chunk.ViewVersion <= fullLinksVersion && !linksFull) || !AddLinks(chunk))
+			{
+				workbook.ChunksRedone++;
+
+				return false;
+			}
+
+			if (chunk.FirstCellRecord >= 0)
+			{
+				try
+				{
+					await AppendRowsAsync(chunk, async, cancellationToken).ConfigureAwait(false);
+				}
+				catch
+				{
+					// Its links go with it, as a record's that fails.
+					links?.DiscardRecord();
+
+					throw;
+				}
+
+				lastRow = row + chunk.LastCellRecord;
+				lastColumn = Math.Max(lastColumn, chunk.LastColumn);
+			}
+
+			links?.EndRecord();
+			numberLikeText |= chunk.NumberLikeText;
+			row += chunk.Records;
+			if (row > maxRows)
+			{
+				fieldLimit = 0;
+			}
+
+			workbook.ChunksAppended++;
+
+			return true;
+		}
+		finally
+		{
+			chunk.Release();
+		}
+	}
+
+	/// <summary>
+	/// Adds a chunk's links, at their rows, as the current record's, which <see cref="WriteChunkAsync(SheetChunk, bool, CancellationToken)"/>
+	/// keeps once the chunk is appended (<see cref="SheetLinks.EndRecord"/>): when they fit under Excel's cap.
+	/// </summary>
+	/// <param name="chunk">The chunk, whose first record is the current row.</param>
+	/// <returns>Whether they fit, and were added: always for a chunk without links.</returns>
+	private bool AddLinks(SheetChunk chunk)
+	{
+		if (chunk.Links is not { Count: > 0 } chunkLinks)
+		{
+			return true;
+		}
+
+		var sheetLinks = links ?? new SheetLinks();
+		if (!sheetLinks.TryAdd(chunkLinks, row))
+		{
+			return false;
+		}
+
+		links = sheetLinks;
+
+		return true;
+	}
+
+	/// <summary>
+	/// Writes a chunk's rows to the entry after the sink's whole records: those first, as a flush writes them (opening the
+	/// entry and writing the sheet's start when they wait), with the call's token; then the empty rows before the chunk's
+	/// first record with a cell (the sheet's after its last row with a cell, and the chunk's before its first), and the
+	/// chunk's XML, which the entry takes uncopied, without the token, so that a cancellation leaves the sheet as the flush
+	/// it cancels does, never with empty rows written and the rows after them not.
+	/// </summary>
+	/// <param name="chunk">The chunk, which has a record with a cell; its XML is the entry's once this is called.</param>
+	/// <param name="async">Whether to write asynchronously.</param>
+	/// <param name="cancellationToken">Cancels writing the sink's whole records.</param>
+	/// <returns>A task that completes when the rows are written.</returns>
+	private async ValueTask AppendRowsAsync(SheetChunk chunk, bool async, CancellationToken cancellationToken)
+	{
+		await FlushAsync(async, cancellationToken).ConfigureAwait(false);
+		var empty = row + chunk.FirstCellRecord - lastRow - 1;
+		if (empty > 0)
+		{
+			for (; empty > 0; empty--)
+			{
+				output.Append("<row/>"u8);
+			}
+
+			recordStart = output.Length;
+			await WriteBufferAsync(recordStart, async, CancellationToken.None).ConfigureAwait(false);
+		}
+
+		var xml = chunk.Xml;
+		chunk.Xml = default;
+		await PackageWriter.AppendAsync(entry!, xml, async, CancellationToken.None).ConfigureAwait(false);
+	}
+
+	/// <summary>
+	/// Freezes the sheet's view for the workers (<see cref="Freeze"/>) and publishes it, the next number in the parallel
+	/// write, noting what it was frozen from.
+	/// </summary>
+	private void PublishView()
+	{
+		var view = Freeze(++viewVersion);
+		frozenStyles = styles.Count;
+		frozenLinkStyle = linkStyle;
+		frozenLinksFull = view.LinksFull;
+		if (view.LinksFull)
+		{
+			fullLinksVersion = view.Version;
+		}
+
+		views!.Publish(view);
 	}
 
 	/// <summary>A sheet's parts to write once its entry is closed.</summary>

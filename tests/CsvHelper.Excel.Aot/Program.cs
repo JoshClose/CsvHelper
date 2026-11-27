@@ -16,7 +16,9 @@ namespace CsvHelper.Excel.Aot;
 /// header's row and by finding it. Published with NativeAOT, a member the trimmer dropped would lose its look or its value.
 /// Phase 6's conversions too: the orders as CSV converted to a sheet, its columns' types inferred and through
 /// <see cref="Order"/>, and each sheet back to CSV. And Phase 9's segment scanning: a sheet read under
-/// <c>ParallelEnumerate</c>, its rows past the first megabyte in segments on threads of their own.
+/// <c>ParallelEnumerate</c>, its rows past the first megabyte in segments on threads of their own; and its parallel deflate
+/// and parallel writing: the same sheet written with <see cref="ExcelWriterOptions.CompressionThreads"/>, and by
+/// <c>ParallelWriteRecords</c> and <c>ParallelWrite</c>.
 /// </summary>
 internal static class Program
 {
@@ -77,13 +79,15 @@ internal static class Program
 		Convert(problems, orders);
 		Template(problems);
 		Shown(problems);
-		var lines = ReadInParallel(problems);
+		var lines = Lines();
+		ReadInParallel(problems, lines);
+		WriteInParallel(problems, lines);
 		foreach (var problem in problems)
 		{
 			Console.Error.WriteLine(problem);
 		}
 
-		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, wrote a template and imported a sheet of it, read and converted a sheet's shown text, and read a sheet of {lines:N0} rows in parallel." : $"{problems.Count} problems.");
+		Console.WriteLine(problems.Count == 0 ? $"Wrote and read back {orders.Length} orders, with their look, in {bytes.Length:N0} bytes, converted them from CSV and back, wrote a template and imported a sheet of it, read and converted a sheet's shown text, and read a sheet of {lines.Length:N0} rows in parallel and wrote it in chunks and in parallel." : $"{problems.Count} problems.");
 
 		return problems.Count == 0 ? 0 : 1;
 	}
@@ -253,15 +257,12 @@ internal static class Program
 	}
 
 	/// <summary>
-	/// Phase 9's segment scanning, as NativeAOT runs it. The internal switches that force small segments aren't visible to
-	/// the app, so the sheet is large enough for the defaults: 60,000 <see cref="Line"/>s, written without references as
-	/// CsvHelper.Excel writes every sheet, about 5 MB, whose rows past the first megabyte are cut into segments of 256 KB
-	/// and scanned on threads of their own. Read under <c>ParallelEnumerate</c> at degree 4, as text and as records, the
-	/// sheet gives the rows the sequential read gives, in order.
+	/// The lines of the sheet that Phase 9's parallel read reads and its parallel writes write: 60,000 of them, about 5 MB
+	/// of XML, large enough for the defaults, since the internal switches that force small segments and chunks aren't
+	/// visible to the app.
 	/// </summary>
-	/// <param name="problems">Takes what isn't as read sequentially.</param>
-	/// <returns>The number of rows read.</returns>
-	private static int ReadInParallel(List<string> problems)
+	/// <returns>The lines, numbered from 1.</returns>
+	private static Line[] Lines()
 	{
 		var lines = new Line[60_000];
 		for (var i = 0; i < lines.Length; i++)
@@ -269,6 +270,19 @@ internal static class Program
 			lines[i] = new Line { Id = i + 1, Name = "line " + (i + 1).ToString(CultureInfo.InvariantCulture), Amount = (i + 1) * 0.25m };
 		}
 
+		return lines;
+	}
+
+	/// <summary>
+	/// Phase 9's segment scanning, as NativeAOT runs it: the sheet of <see cref="Line"/>s, written without references as
+	/// CsvHelper.Excel writes every sheet, whose rows past the first megabyte are cut into segments of 256 KB and scanned on
+	/// threads of their own. Read under <c>ParallelEnumerate</c> at degree 4, as text and as records, the sheet gives the
+	/// rows the sequential read gives, in order.
+	/// </summary>
+	/// <param name="problems">Takes what isn't as read sequentially.</param>
+	/// <param name="lines">The lines.</param>
+	private static void ReadInParallel(List<string> problems, Line[] lines)
+	{
 		using var stream = new MemoryStream();
 		using (var workbook = ExcelWorkbookWriter.Create(stream, leaveOpen: true))
 		{
@@ -312,8 +326,94 @@ internal static class Program
 				problems.Add($"Read in parallel as records, {read.Count:N0} lines of {lines.Length:N0}, {wrong:N0} of them not as written.");
 			}
 		}
+	}
 
-		return lines.Length;
+	/// <summary>
+	/// Phase 9's parallel deflate and parallel writing, as NativeAOT runs them: the sheet of <see cref="Line"/>s written
+	/// serially; with <see cref="ExcelWriterOptions.CompressionThreads"/> 4, which deflates it in chunks of 1 MB on threads
+	/// beside the writing thread; and by <c>ParallelWriteRecords</c> and <c>ParallelWrite</c> at degree 4 with the same
+	/// option, whose workers write its XML. Every package has the serial write's parts; the chunked ones have each other's
+	/// bytes, since a chunk's bytes depend on its XML alone, and not the serial write's.
+	/// </summary>
+	/// <param name="problems">Takes what isn't as written serially.</param>
+	/// <param name="lines">The lines.</param>
+	private static void WriteInParallel(List<string> problems, Line[] lines)
+	{
+		var serial = WriteLines(lines, 1, 0, false);
+		var chunked = WriteLines(lines, 4, 0, false);
+		var parts = Parts(serial);
+		foreach (var (how, callback) in new[] { ("by ParallelWriteRecords", false), ("by ParallelWrite", true) })
+		{
+			var parallel = WriteLines(lines, 4, 4, callback);
+			if (Parts(parallel) != parts)
+			{
+				problems.Add($"The sheet of lines written {how} has other parts than the serial write's.");
+			}
+
+			if (!parallel.AsSpan().SequenceEqual(chunked))
+			{
+				problems.Add($"The sheet of lines written {how} has other bytes than the one written serially in chunks.");
+			}
+		}
+
+		if (Parts(chunked) != parts)
+		{
+			problems.Add("The sheet of lines written with CompressionThreads 4 has other parts than the serial write's.");
+		}
+
+		if (chunked.AsSpan().SequenceEqual(serial))
+		{
+			problems.Add("The sheet of lines written with CompressionThreads 4 has the serial write's bytes: it wasn't deflated in chunks.");
+		}
+	}
+
+	/// <summary>Writes the sheet of lines.</summary>
+	/// <param name="lines">The lines.</param>
+	/// <param name="threads">The threads that deflate it (<see cref="ExcelWriterOptions.CompressionThreads"/>).</param>
+	/// <param name="degree">The degree of a parallel write, or 0 for <see cref="ExcelWorkbookWriter.WriteSheet{T}(string, IEnumerable{T}, ExcelSheetOptions)"/>.</param>
+	/// <param name="callback">Whether the parallel write is <c>ParallelWrite</c>'s callbacks, after the header, rather than <c>ParallelWriteRecords</c>.</param>
+	/// <returns>The workbook's bytes.</returns>
+	private static byte[] WriteLines(Line[] lines, int threads, int degree, bool callback)
+	{
+		using var stream = new MemoryStream();
+		using (var workbook = ExcelWorkbookWriter.Create(stream, new ExcelWriterOptions { CompressionThreads = threads }, leaveOpen: true))
+		{
+			if (degree == 0)
+			{
+				workbook.WriteSheet("Lines", lines);
+			}
+			else
+			{
+				using var sheet = workbook.AddSheet<Line>("Lines");
+				if (callback)
+				{
+					sheet.WriteHeader<Line>();
+					sheet.ParallelWrite(lines, (writer, line) => writer.WriteRecord(line), degree);
+				}
+				else
+				{
+					sheet.ParallelWriteRecords(lines, degree);
+				}
+			}
+		}
+
+		return stream.ToArray();
+	}
+
+	/// <summary>A package's parts as text: each entry's name and text, in the zip's order.</summary>
+	/// <param name="package">The package's bytes.</param>
+	/// <returns>The parts, each its name, a line break and its text.</returns>
+	private static string Parts(byte[] package)
+	{
+		using var archive = new ZipArchive(new MemoryStream(package), ZipArchiveMode.Read);
+		var parts = new StringBuilder();
+		foreach (var entry in archive.Entries)
+		{
+			using var reader = new StreamReader(entry.Open());
+			parts.Append(entry.FullName).Append('\n').Append(reader.ReadToEnd()).Append('\n');
+		}
+
+		return parts.ToString();
 	}
 
 	/// <summary>A record's line and fields as text, to compare reads.</summary>

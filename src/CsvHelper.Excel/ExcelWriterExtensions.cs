@@ -8,6 +8,9 @@ namespace CsvHelper.Excel;
 /// </summary>
 public static class ExcelWriterExtensions
 {
+	/// <summary>Why <see cref="MergeCells"/> is refused from a <c>ParallelWrite</c> callback, on a worker's writer or the sheet's.</summary>
+	private const string ParallelMerge = "MergeCells can't merge cells from a ParallelWrite callback, whose CsvWriter writes a batch of the sheet's rows on a worker thread. Merge the cells with the sheet's own writer, after the ParallelWrite call, or write the sheet serially (WriteRecords, or a loop over the items with the sheet's writer).";
+
 	/// <summary>
 	/// Writes a formula as the next field: a formula cell in a workbook, which Excel computes when it opens it; its text,
 	/// <c>=</c> and the formula, in CSV (as text, so that <see cref="CsvWriterOptions.Injection"/> applies there). See
@@ -57,6 +60,11 @@ public static class ExcelWriterExtensions
 	/// columns at or below its header.
 	/// </exception>
 	/// <exception cref="InvalidOperationException">The writer writes CSV, not a sheet.</exception>
+	/// <exception cref="NotSupportedException">
+	/// The writer is the one a <see cref="CsvWriter.ParallelWrite{T}(System.Collections.Generic.IEnumerable{T}, Action{CsvWriter, T}, int)"/>
+	/// callback got, on a worker thread, which writes a batch of the sheet's rows without knowing where they go; or the
+	/// sheet's own writer while that parallel write runs, which the callback gets for the items written serially.
+	/// </exception>
 	/// <exception cref="ObjectDisposedException">The sheet is complete: its writer has been disposed.</exception>
 	public static void MergeCells(this CsvWriter writer, string range)
 	{
@@ -64,7 +72,20 @@ public static class ExcelWriterExtensions
 		ArgumentNullException.ThrowIfNull(range);
 		if (ExcelWorkbookWriter.SinkOf(writer) is not { } sink)
 		{
+			if (writer.CellSink is SheetChunkSink)
+			{
+				throw new NotSupportedException(ParallelMerge);
+			}
+
 			throw new InvalidOperationException("MergeCells merges a sheet's cells, and this CsvWriter writes CSV: use a writer from ExcelWorkbookWriter.AddSheet.");
+		}
+
+		if (sink.InParallelWrite)
+		{
+			// A callback runs on the sheet's own writer for the items written serially (before the workers start, and in a
+			// batch written again) and on a worker's for the rest: refused on both, so that a call doesn't depend on where
+			// the batches fall.
+			throw new NotSupportedException(ParallelMerge);
 		}
 
 		if (!ExcelRange.TryParse(range, out var cells))
