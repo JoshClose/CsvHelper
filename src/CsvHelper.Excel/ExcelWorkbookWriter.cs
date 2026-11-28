@@ -945,6 +945,10 @@ public sealed class ExcelWorkbookWriter : IDisposable, IAsyncDisposable
 				await NewSheet("Sheet1", CheckName("Sheet1", "name"), SheetSettings.Empty, null, null, null, null, Options.Csv).CompleteAsync(async).ConfigureAwait(false);
 			}
 
+			// The lists sheet and the shared strings hold what the sheets wrote: after a parallel write they deflate on its
+			// threads, as its sheet did.
+			package.UseParallelPeak();
+
 			// The lists sheet comes last, after the sheets added, under a name none of them has.
 			string? listsSheet = null;
 			if (lists is { Count: > 0 })

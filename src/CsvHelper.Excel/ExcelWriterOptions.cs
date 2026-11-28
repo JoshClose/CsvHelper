@@ -68,8 +68,9 @@ public sealed record ExcelWriterOptions
 	/// </para>
 	/// <para>
 	/// The parallel write methods (<c>ParallelWriteRecords</c> and <c>ParallelWrite</c> on a sheet's writer) deflate their
-	/// sheet on as many threads as their degree when it is the larger, within the same bound. The other parts, written
-	/// whole (styles, the workbook, relationships, tables), are deflated on the writing thread, whatever the count.
+	/// sheet on as many threads as their degree when it is the larger, within the same bound, and so the lists sheet and
+	/// the shared strings, which are written as the package closes, on as many as the largest degree. The other parts,
+	/// written whole (styles, the workbook, relationships, tables), are deflated on the writing thread, whatever the count.
 	/// </para>
 	/// <para>
 	/// A part's threads start as its chunks wait for them, and end when the part ends: disposing the writer ends them. A

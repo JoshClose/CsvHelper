@@ -85,13 +85,38 @@ internal sealed class PackageWriter
 
 	/// <summary>
 	/// The threads a chunked part takes at least while a parallel write runs on a sheet (<see cref="ZipWriter.ParallelThreads"/>):
-	/// set by the sheet's sink as the write begins, and back to 0 as it ends.
+	/// set by the sheet's sink as the write begins, and back to 0 as it ends (<see cref="EndParallel"/>); and, as the package
+	/// closes, the most a parallel write took (<see cref="UseParallelPeak"/>).
 	/// </summary>
 	internal int ParallelThreads
 	{
 		get => zip.ParallelThreads;
 		set => zip.ParallelThreads = value;
 	}
+
+	/// <summary>
+	/// The most threads a parallel write on one of the package's sheets took (<see cref="ParallelThreads"/> as it ended), or 0
+	/// when none ran: what the chunked parts written as the package closes deflate on at least (<see cref="UseParallelPeak"/>).
+	/// </summary>
+	internal int ParallelPeak { get; private set; }
+
+	/// <summary>
+	/// A parallel write on a sheet ends, on the writing thread: its threads are kept as <see cref="ParallelPeak"/> when they
+	/// are the most so far, and the package's entries take their own threads again (<see cref="ParallelThreads"/> 0).
+	/// </summary>
+	internal void EndParallel()
+	{
+		ParallelPeak = Math.Max(ParallelPeak, zip.ParallelThreads);
+		zip.ParallelThreads = 0;
+	}
+
+	/// <summary>
+	/// The parts after the sheets begin, as the package closes: the chunked ones, the lists sheet and the shared strings,
+	/// deflate on at least <see cref="ParallelPeak"/> threads. Their XML holds what the sheets wrote, so after a parallel
+	/// write they deflate as under <see cref="ExcelWriterOptions.CompressionThreads"/> of its degree, and a package whose
+	/// sheets were all written in parallel has the bytes of a serial write at that count.
+	/// </summary>
+	internal void UseParallelPeak() => zip.ParallelThreads = Math.Max(zip.ParallelThreads, ParallelPeak);
 
 	/// <summary>Opens a part's entry, after the entry before it was closed. It writes nothing yet.</summary>
 	/// <param name="partName">The part's name, such as <c>xl/worksheets/sheet1.xml</c>: ASCII.</param>

@@ -580,7 +580,8 @@ internal static class ParallelWrites
 /// <see cref="ExcelRowLimit.NewSheet"/> and <see cref="ExcelRowLimit.Throw"/> at a few hundred rows, links past the cap
 /// as text, and a style that comes late, whose batch is written again serially, its callback called twice. Errors: the
 /// sheet's own (a long text, a long number, an early date, a field past XFD) are the serial write's, with their cells;
-/// user code's are its own exception objects, after the rows before them. Shared strings are written serially;
+/// user code's are its own exception objects, after the rows before them. Shared strings are written serially, and they
+/// and the lists sheet, written as the package closes, deflate on the write's threads;
 /// <see cref="ExcelSheetOptions.Protect"/>, dynamic records, a sheet serial writes began, cancellation, and
 /// <see cref="ExcelWriterExtensions.MergeCells"/> from a callback, which refuses.
 /// </summary>
@@ -977,6 +978,65 @@ public class ParallelWritingTests
 		ParallelWrites.AssertSameParts(serial.Bytes, parallel.Bytes);
 		Assert.Equal(0, parallel.ChunksAppended);
 		Assert.Equal(0, parallel.ChunksRedone);
+		ParallelWrites.AssertReleased(parallel);
+	}
+
+	[Theory]
+	[MemberData(nameof(Modes))]
+	public async Task DeflatesTheSharedStringsOnItsThreads(bool async)
+	{
+		// The shared strings are written as the package closes, after the parallel write has ended: they deflate on its
+		// threads all the same, as CompressionThreads of its degree deflates them, so the package has that write's bytes. In
+		// chunks of 4 KB, so that on .NET 8 too, whose chunks deflate at the level of a part deflated whole, a part deflated
+		// whole on the writing thread would have other bytes.
+		var orders = ParallelWrites.Orders(1500);
+		var method = async ? ParallelMethod.RecordsAsync : ParallelMethod.Records;
+		Task Write(ExcelWorkbookWriter book, int degree)
+		{
+			book.ChunkSize = 4096;
+
+			return ParallelWrites.Rethrow(ParallelWrites.WriteOrdersAsync(book, orders, method, degree));
+		}
+
+		var serial = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 0), async, new ExcelWriterOptions { Strings = ExcelStrings.Shared, CompressionThreads = 3 });
+		var parallel = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 3), async, new ExcelWriterOptions { Strings = ExcelStrings.Shared });
+
+		Assert.True(Written.Entry(parallel.Bytes, "xl/sharedStrings.xml").Length > 4096 * 4, "The shared strings fill fewer than four chunks.");
+		ParallelWrites.AssertSameParts(serial.Bytes, parallel.Bytes);
+		ParallelWrites.AssertSameBytes(serial.Bytes, parallel.Bytes);
+		ParallelWrites.AssertReleased(parallel);
+	}
+
+	[Theory]
+	[MemberData(nameof(Modes))]
+	public async Task DeflatesTheListsSheetOnItsThreads(bool async)
+	{
+		// A list too long for its validation is written to the lists sheet, as the package closes, after the parallel write
+		// has ended: it deflates on the write's threads all the same, so the package has the bytes of CompressionThreads of
+		// its degree. In chunks of 4 KB, as above.
+		var orders = ParallelWrites.Orders(1500);
+		var look = new ExcelSheetOptions
+		{
+			Columns = new Dictionary<string, ExcelColumnOptions>
+			{
+				["Name"] = new ExcelColumnOptions { List = [.. Enumerable.Range(0, 2000).Select(i => "value " + i.ToString(CultureInfo.InvariantCulture))] },
+			},
+		};
+		var method = async ? ParallelMethod.RecordsAsync : ParallelMethod.Records;
+		Task Write(ExcelWorkbookWriter book, int degree)
+		{
+			book.ChunkSize = 4096;
+
+			return ParallelWrites.Rethrow(ParallelWrites.WriteOrdersAsync(book, orders, method, degree, look));
+		}
+
+		var serial = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 0), async, new ExcelWriterOptions { CompressionThreads = 3 });
+		var parallel = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 3), async);
+
+		Assert.True(Written.Entry(parallel.Bytes, "xl/worksheets/sheet2.xml").Length > 4096 * 4, "The lists sheet fills fewer than four chunks.");
+		ParallelWrites.AssertSameParts(serial.Bytes, parallel.Bytes);
+		ParallelWrites.AssertSameBytes(serial.Bytes, parallel.Bytes);
+		Assert.True(parallel.ChunksAppended >= 1, "The workers wrote no chunk of the sheet.");
 		ParallelWrites.AssertReleased(parallel);
 	}
 

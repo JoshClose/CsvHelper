@@ -167,7 +167,8 @@ internal sealed class ZipWriter
 
 	/// <summary>
 	/// The threads a chunked entry takes at least while a parallel write runs on a sheet: its degree, which the sheet's
-	/// sink sets as the write begins and sets back to 0 as it ends. An entry opened chunked meanwhile deflates on
+	/// sink sets as the write begins and sets back to 0 as it ends; and, as the package closes, the most a parallel write
+	/// took (<see cref="PackageWriter.UseParallelPeak"/>). An entry opened chunked meanwhile deflates on
 	/// <c>Math.Max(</c><see cref="Threads"/><c>, ParallelThreads)</c> threads, and an entry already open switches when its
 	/// sink asks (<see cref="ZipEntryStream.UseChunks"/>).
 	/// </summary>

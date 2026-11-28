@@ -809,12 +809,45 @@ public class SheetSinkParallelTests
 
 			// A sheet whose entry isn't open yet opens it as its first flush asks.
 			Assert.Null(sheet.Sink.Entry);
+			Assert.Equal(0, book.Package.ParallelPeak);
 			Owner.EndParallel(sheet.Sink);
 			Assert.Equal(0, book.Package.ParallelThreads);
+			Assert.Equal(Math.Min(6, Math.Max(Environment.ProcessorCount, 2)), book.Package.ParallelPeak);
 			Assert.Null(sheet.Sink.Views);
 			Assert.Throws<InvalidOperationException>(() => Owner.CreateWorker(sheet.Sink));
 			await sheet.DisposeAsync();
 		}, false, Options());
+	}
+
+	[Fact]
+	public async Task KeepsTheMostThreadsOfItsParallelWritesForThePartsAfterTheSheets()
+	{
+		// Two sheets' parallel writes, at 6 and then at 2: the sheets between and after them take their own threads, and
+		// the parts written as the package closes, the most the writes took.
+		var most = Math.Min(6, Math.Max(Environment.ProcessorCount, 2));
+		ExcelWorkbookWriter? closed = null;
+		await Written.WorkbookAsync(async (book, a) =>
+		{
+			closed = book;
+			var first = new HandSheet(book, a);
+			await first.WriteAsync([Header, Record(0)]);
+			Owner.BeginParallel(first.Sink, 6);
+			Owner.EndParallel(first.Sink);
+			await first.DisposeAsync();
+
+			var second = new HandSheet(book, a, "Second");
+			await second.WriteAsync([Header, Record(0)]);
+			Assert.Equal(0, book.Package.ParallelThreads);
+			Owner.BeginParallel(second.Sink, 2);
+			Assert.Equal(2, book.Package.ParallelThreads);
+			Owner.EndParallel(second.Sink);
+			Assert.Equal(0, book.Package.ParallelThreads);
+			Assert.Equal(most, book.Package.ParallelPeak);
+			await second.DisposeAsync();
+		}, false, Options());
+
+		Assert.Equal(most, closed!.Package.ParallelPeak);
+		Assert.Equal(most, closed.Package.ParallelThreads);
 	}
 
 	[Theory]
@@ -1212,13 +1245,14 @@ public class SheetSinkParallelTests
 	/// <summary>A sheet written by hand: its workbook's writer, its own writer and sink, and records written as the mode says.</summary>
 	private sealed class HandSheet
 	{
-		/// <summary>Adds a sheet, <c>Data</c>, to a workbook.</summary>
+		/// <summary>Adds a sheet to a workbook.</summary>
 		/// <param name="book">The workbook's writer.</param>
 		/// <param name="async">Whether to write asynchronously.</param>
-		public HandSheet(ExcelWorkbookWriter book, bool async)
+		/// <param name="name">The sheet's name.</param>
+		public HandSheet(ExcelWorkbookWriter book, bool async, string name = "Data")
 		{
 			Async = async;
-			Writer = book.AddSheet("Data");
+			Writer = book.AddSheet(name);
 			Sink = book.OpenSheet!;
 		}
 

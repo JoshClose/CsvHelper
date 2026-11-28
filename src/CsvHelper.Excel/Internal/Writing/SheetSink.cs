@@ -2486,12 +2486,13 @@ internal sealed class SheetSink : CsvCellSink
 	public override void ReleaseWorker(CsvCellSink worker) => ((SheetChunkSink)worker).Release();
 
 	/// <summary>
-	/// A parallel write ends, on the writing thread: the package's entries take their own threads again, and the views' slot
+	/// A parallel write ends, on the writing thread: the package's entries take their own threads again, but for the parts
+	/// written as the package closes, which take the write's (<see cref="PackageWriter.EndParallel"/>); and the views' slot
 	/// is dropped (workers still being released may hold it). The sheet's entry stays chunked until it closes.
 	/// </summary>
 	public override void EndParallel()
 	{
-		package.ParallelThreads = 0;
+		package.EndParallel();
 		Volatile.Write(ref views, null);
 	}
 
