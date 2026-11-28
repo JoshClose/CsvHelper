@@ -420,6 +420,39 @@ public class ParallelWriteTests
 	}
 
 	[Fact]
+	public async Task TheAsyncCallbacksWriteNothingSynchronously()
+	{
+		// Without a header, the items up to the first record are written on the calling thread, and the first writes 20,000
+		// records, past the buffer: its own EndRecord calls don't flush, and the buffer is written out asynchronously after
+		// it. The stream throws on a synchronous write.
+		var items = Enumerable.Range(0, 20_000).ToArray();
+		var options = new CsvWriterOptions { HasHeader = false };
+		var expected = Capture(w =>
+		{
+			foreach (var item in items)
+			{
+				WriteItem(w, item);
+			}
+		}, options);
+		var stream = new AsyncOnlyStream();
+		await using (var writer = CsvWriter.Create(stream, options, leaveOpen: true))
+		{
+			await writer.ParallelWriteAsync(items, WriteItem, 4);
+		}
+
+		Assert.Equal(expected.Text, Encoding.UTF8.GetString(stream.ToArray()));
+
+		static void WriteItem(CsvWriter writer, int item)
+		{
+			var count = item == 0 ? 20_000 : 1;
+			for (var i = 0; i < count; i++)
+			{
+				writer.WriteRecord(item.ToString(CultureInfo.InvariantCulture), "parcel " + i.ToString(CultureInfo.InvariantCulture));
+			}
+		}
+	}
+
+	[Fact]
 	public void ChecksItsArguments()
 	{
 		using var writer = CsvWriter.Create(new MemoryStream());
@@ -448,6 +481,33 @@ public class ParallelWriteTests
 			writer.WriteField(record.Id);
 			writer.WriteField(record.Name);
 		}
+	}
+
+	/// <summary>A stream that throws on a synchronous write, as some network streams do.</summary>
+	private sealed class AsyncOnlyStream : MemoryStream
+	{
+		public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException("A synchronous write.");
+
+		// MemoryStream's own asynchronous writes call its virtual Write: these write through the base's instead.
+		public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+		{
+			base.Write(buffer, offset, count);
+
+			return Task.CompletedTask;
+		}
+
+#if NET
+		public override void Write(ReadOnlySpan<byte> buffer) => throw new InvalidOperationException("A synchronous write.");
+
+		public override ValueTask WriteAsync(ReadOnlyMemory<byte> buffer, CancellationToken cancellationToken = default)
+		{
+			// MemoryStream's span Write goes through the array one in a derived stream.
+			var bytes = buffer.ToArray();
+			base.Write(bytes, 0, bytes.Length);
+
+			return default;
+		}
+#endif
 	}
 
 	/// <summary>A stream that throws once more than <c>limit</c> bytes have been written to it.</summary>

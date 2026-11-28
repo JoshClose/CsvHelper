@@ -136,6 +136,18 @@ internal sealed class PackageWriter
 	/// <returns>A task whose result is the entry's stream, which deflates what is written to it.</returns>
 	public ValueTask<Stream> OpenPartAsync(string partName, bool chunked, bool async, CancellationToken cancellationToken) => new(zip.Open(partName, chunked));
 
+	/// <summary>
+	/// Opens a sheet's entry chunked, after the entry before it was closed, deflated on at least <paramref name="threads"/>
+	/// threads (<see cref="ZipWriter.Open(string, bool, int)"/>): a parallel write's, whose rows it holds though the write
+	/// has ended. It writes nothing yet.
+	/// </summary>
+	/// <param name="partName">The part's name, such as <c>xl/worksheets/sheet1.xml</c>: ASCII.</param>
+	/// <param name="threads">The threads it takes at least, or 0 for the package's.</param>
+	/// <param name="async">Whether to open it asynchronously.</param>
+	/// <param name="cancellationToken">Cancels an asynchronous open.</param>
+	/// <returns>A task whose result is the entry's stream, which deflates what is written to it.</returns>
+	public ValueTask<Stream> OpenPartAsync(string partName, int threads, bool async, CancellationToken cancellationToken) => new(zip.Open(partName, true, threads));
+
 	/// <summary>Whether an entry takes segments uncopied (<see cref="ZipEntryStream.TakesSegments"/>).</summary>
 	/// <param name="entry">The entry's stream, from <see cref="OpenPartAsync(string, bool, bool, CancellationToken)"/>.</param>
 	/// <returns>Whether it does.</returns>

@@ -850,6 +850,39 @@ public class SheetSinkParallelTests
 		Assert.Equal(most, closed.Package.ParallelThreads);
 	}
 
+	[Fact]
+	public async Task OpensTheEntryOnTheWritesThreadsWhenTheWriteEndedBeforeAFlush()
+	{
+		// A parallel write that ends before the sheet's first flush leaves its rows in the buffer: the next write-out opens
+		// the entry on the write's threads, and the sheets NewSheet begins after it on the package's own (1 here).
+		var most = Math.Min(6, Math.Max(Environment.ProcessorCount, 2));
+		await Written.WorkbookAsync(async (book, a) =>
+		{
+			book.MaxRows = 100;
+			var sheet = new HandSheet(book, a);
+			await sheet.WriteAsync([Header, Record(0)]);
+			Owner.BeginParallel(sheet.Sink, 6);
+			Owner.EndParallel(sheet.Sink);
+			Assert.Null(sheet.Sink.Entry);
+			Assert.Equal(most, sheet.Sink.HeldThreads);
+
+			// Past the first sheet's 100 rows: its flush opens its entry, and the next sheet's.
+			await sheet.WriteAsync([.. Enumerable.Range(1, 100).Select(Record)]);
+			Assert.Equal(0, sheet.Sink.HeldThreads);
+			Assert.Equal(0, book.Package.ParallelThreads);
+
+			// Past the second sheet's: the third's entry opens on the package's thread.
+			await sheet.WriteAsync([.. Enumerable.Range(101, 100).Select(Record)]);
+			Assert.NotNull(sheet.Sink.Entry);
+			if (!TestThreads.Chunked)
+			{
+				Assert.False(PackageWriter.TakesSegments(sheet.Sink.Entry), "A sheet NewSheet began after the parallel write's rows were out was chunked.");
+			}
+
+			await sheet.DisposeAsync();
+		}, false, Options(ExcelRowLimit.NewSheet));
+	}
+
 	[Theory]
 	[MemberData(nameof(Modes))]
 	public async Task ChunksTheSheetsEntryWhenAFlushHasOpenedIt(bool async)

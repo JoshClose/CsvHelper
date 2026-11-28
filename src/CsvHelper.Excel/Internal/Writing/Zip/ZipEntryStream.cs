@@ -84,7 +84,8 @@ internal sealed class ZipEntryStream : Stream
 	/// <param name="writer">The package's writer.</param>
 	/// <param name="name">The entry's name, ASCII.</param>
 	/// <param name="chunked">Whether the entry is deflated off the writing thread when the writer has threads (<see cref="ZipWriter.Open(string, bool)"/>).</param>
-	public ZipEntryStream(ZipWriter writer, string name, bool chunked = false)
+	/// <param name="atLeast">The threads a chunked entry takes at least, besides the writer's (<see cref="ZipWriter.Open(string, bool, int)"/>), or 0.</param>
+	public ZipEntryStream(ZipWriter writer, string name, bool chunked = false, int atLeast = 0)
 	{
 		this.writer = writer;
 		Name = name;
@@ -94,7 +95,7 @@ internal sealed class ZipEntryStream : Stream
 		if (!stored)
 		{
 			sink = new DeflaterSink(data);
-			var count = Math.Max(writer.Threads, writer.ParallelThreads);
+			var count = Math.Max(Math.Max(writer.Threads, writer.ParallelThreads), atLeast);
 			if (chunked && count > 1)
 			{
 				chunking = true;

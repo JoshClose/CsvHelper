@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using CsvHelper.Excel.Tests.Package;
 using CsvHelper.Excel.Tests.Security;
 using CsvHelper.Excel.Tests.Writing;
 
@@ -1037,6 +1038,103 @@ public class ParallelWritingTests
 		ParallelWrites.AssertSameParts(serial.Bytes, parallel.Bytes);
 		ParallelWrites.AssertSameBytes(serial.Bytes, parallel.Bytes);
 		Assert.True(parallel.ChunksAppended >= 1, "The workers wrote no chunk of the sheet.");
+		ParallelWrites.AssertReleased(parallel);
+	}
+
+	[Theory]
+	[InlineData(ExcelStrings.Inline, false)]
+	[InlineData(ExcelStrings.Inline, true)]
+	[InlineData(ExcelStrings.Shared, false)]
+	public async Task DeflatesASheetUnderOneFlushOnItsThreads(ExcelStrings strings, bool async)
+	{
+		// 50 orders: core writes them all on the calling thread, and the sheet's entry opens only as it closes, after the
+		// parallel write has ended. It deflates on the write's threads all the same, as CompressionThreads of its degree
+		// deflates it. In chunks of 4 KB, as above.
+		var orders = ParallelWrites.Orders(50);
+		var method = async ? ParallelMethod.RecordsAsync : ParallelMethod.Records;
+		Task Write(ExcelWorkbookWriter book, int degree)
+		{
+			book.ChunkSize = 4096;
+
+			return ParallelWrites.Rethrow(ParallelWrites.WriteOrdersAsync(book, orders, method, degree));
+		}
+
+		var serial = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 0), async, new ExcelWriterOptions { Strings = strings, CompressionThreads = 3 });
+		var parallel = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 3), async, new ExcelWriterOptions { Strings = strings });
+
+		Assert.True(Written.Entry(parallel.Bytes, "xl/worksheets/sheet1.xml").Length > 4096 * 2, "The sheet fills fewer than two chunks.");
+		Assert.Equal(0, parallel.ChunksAppended);
+		ParallelWrites.AssertSameParts(serial.Bytes, parallel.Bytes);
+		ParallelWrites.AssertSameBytes(serial.Bytes, parallel.Bytes);
+		ParallelWrites.AssertReleased(parallel);
+	}
+
+	[Theory]
+	[InlineData(ExcelStrings.Inline, CompressionLevel.Fastest, null)]
+	[InlineData(ExcelStrings.Inline, CompressionLevel.NoCompression, null)]
+	[InlineData(ExcelStrings.Inline, CompressionLevel.Fastest, "milliseconds")]
+	[InlineData(ExcelStrings.Shared, CompressionLevel.Fastest, null)]
+	[InlineData(ExcelStrings.Shared, CompressionLevel.NoCompression, null)]
+	public async Task WritesNothingSynchronouslyThroughACallbacksAsyncForm(ExcelStrings strings, CompressionLevel level, string? late)
+	{
+		// The callback runs on the calling thread for the items before the workers start, for every item under Shared, and
+		// for a batch written again: its own EndRecord calls don't flush the sheet, which the write flushes asynchronously
+		// after each item. The stream throws on a synchronous write or flush.
+		var orders = late is null ? ParallelWrites.Orders(4000) : ParallelWrites.PlainOrders(4000);
+		if (late == "milliseconds")
+		{
+			orders[Late].Placed = new DateTime(2024, 5, 6, 7, 8, 9, 123);
+		}
+
+		var options = new ExcelWriterOptions { Strings = strings, CompressionLevel = level };
+		var serial = await ParallelWrites.WorkbookAsync((book, _) => ParallelWrites.Rethrow(ParallelWrites.WriteOrdersAsync(book, orders, ParallelMethod.CallbackAsync, 0)), true, options);
+
+		var stream = new ZipTestStream(seekable: false) { ForbidSync = true };
+		var writer = ExcelWorkbookWriter.Create(stream, options, leaveOpen: true);
+		await using (writer)
+		{
+			await ParallelWrites.Rethrow(ParallelWrites.WriteOrdersAsync(writer, orders, ParallelMethod.CallbackAsync, 4));
+		}
+
+		Assert.NotEmpty(stream.Writes);
+		Assert.All(stream.Writes, w => Assert.True(w.Async, "A write was synchronous."));
+		ParallelWrites.AssertSameParts(serial.Bytes, stream.ToArray());
+		if (late is not null)
+		{
+			Assert.True(writer.ChunksRedone >= 1, "No batch was written again.");
+		}
+	}
+
+	[Theory]
+	[MemberData(nameof(Modes))]
+	public async Task GoesOnInNewSheetsFromOneItemOfACallback(bool async)
+	{
+		// One item writes 600 records, past two sheets of 250 rows, on the calling thread under Shared. In the asynchronous
+		// form its records are written out only after it, so the first full sheet goes out as the second fills.
+		var orders = ParallelWrites.Orders(1200);
+		var options = new ExcelWriterOptions { Strings = ExcelStrings.Shared, RowLimit = ExcelRowLimit.NewSheet };
+		var method = async ? ParallelMethod.CallbackAsync : ParallelMethod.Callback;
+		void WriteItem(CsvWriter writer, ParallelOrder order)
+		{
+			var count = order.Id == 1 ? 600 : order.Id <= 600 ? 0 : 1;
+			for (var i = 0; i < count; i++)
+			{
+				writer.WriteRecord(orders[order.Id == 1 ? i : order.Id - 1]);
+			}
+		}
+
+		Task Write(ExcelWorkbookWriter book, int degree)
+		{
+			book.MaxRows = 250;
+
+			return ParallelWrites.Rethrow(ParallelWrites.WriteOrdersAsync(book, orders, method, degree, write: WriteItem));
+		}
+
+		var serial = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 0), async, options);
+		var parallel = await ParallelWrites.WorkbookAsync((book, _) => Write(book, 3), async, options);
+
+		Assert.Equal(["Data", "Data (2)", "Data (3)", "Data (4)", "Data (5)"], parallel.SheetNames);
+		ParallelWrites.AssertSameParts(serial.Bytes, parallel.Bytes);
 		ParallelWrites.AssertReleased(parallel);
 	}
 

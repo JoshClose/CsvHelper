@@ -213,11 +213,24 @@ internal sealed class ZipWriter
 	/// <returns>The entry's stream.</returns>
 	/// <exception cref="InvalidOperationException">Another entry is open, or the name isn't ASCII or is longer than 65,535 characters.</exception>
 	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
-	public ZipEntryStream Open(string name, bool chunked)
+	public ZipEntryStream Open(string name, bool chunked) => Open(name, chunked, 0);
+
+	/// <summary>
+	/// Opens an entry, as <see cref="Open(string, bool)"/> does, whose data, when chunked, is deflated on at least
+	/// <paramref name="threads"/> threads besides the writer's own: a sheet that a parallel write wrote, whose entry opens
+	/// only after the write has ended (<see cref="PackageWriter.OpenPartAsync(string, int, bool, CancellationToken)"/>).
+	/// </summary>
+	/// <param name="name">The entry's name, ASCII.</param>
+	/// <param name="chunked">Whether the entry's data is deflated off the writing thread when the writer has threads.</param>
+	/// <param name="threads">The threads it takes at least, or 0 for the writer's.</param>
+	/// <returns>The entry's stream.</returns>
+	/// <exception cref="InvalidOperationException">Another entry is open, or the name isn't ASCII or is longer than 65,535 characters.</exception>
+	/// <exception cref="ObjectDisposedException">The writer has been disposed.</exception>
+	public ZipEntryStream Open(string name, bool chunked, int threads)
 	{
 		if (Faulted)
 		{
-			return new ZipEntryStream(this, name, chunked);
+			return new ZipEntryStream(this, name, chunked, threads);
 		}
 
 		ObjectDisposedException.ThrowIf(disposed, this);
@@ -239,7 +252,7 @@ internal sealed class ZipWriter
 			}
 		}
 
-		open = new ZipEntryStream(this, name, chunked);
+		open = new ZipEntryStream(this, name, chunked, threads);
 
 		return open;
 	}

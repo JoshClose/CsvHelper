@@ -630,9 +630,15 @@ public sealed partial class CsvWriter
 		}
 	}
 
-	/// <summary>Writes the records of an item with this writer, on this thread, flushing asynchronously.</summary>
+	/// <summary>
+	/// Writes the records of an item with this writer, on this thread, flushing asynchronously: the callback's own
+	/// <see cref="EndRecord"/> calls don't flush while it runs, so that nothing is written synchronously (a cell sink would
+	/// flush after every record), and the buffer, which grows meanwhile, is written out after it.
+	/// </summary>
 	private ValueTask WriteSerialItemAsync<T>(Action<CsvWriter, T> write, T item, CancellationToken cancellationToken)
 	{
+		var threshold = flushThreshold;
+		flushThreshold = int.MaxValue;
 		try
 		{
 			write(this, item);
@@ -641,6 +647,10 @@ public sealed partial class CsvWriter
 		{
 			DiscardRecord();
 			throw;
+		}
+		finally
+		{
+			flushThreshold = threshold;
 		}
 
 		return pos >= flushThreshold ? FlushBufferAsync(cancellationToken) : default;

@@ -249,6 +249,10 @@ internal sealed class SheetSink : CsvCellSink
 	// The part of the sheet being written, and its entry once a flush opened it.
 	private string partName;
 	private Stream? entry;
+	// The threads of a parallel write that has ended, until the buffer is next written out: the entries that write-out
+	// opens hold the write's rows, so they deflate on as many (EndParallel). A sheet under one flush is chunked so, as a
+	// serial write at CompressionThreads of the write's degree chunks it.
+	private int heldThreads;
 	// The fields a record has before WriteField looks at the limits: Excel's columns, or 0 once the sheet is full.
 	private int fieldLimit = CellReference.MaxColumns;
 	// The header's row as each new sheet repeats it (repeatsHeader): its XML, its references to shared strings, its last
@@ -793,6 +797,14 @@ internal sealed class SheetSink : CsvCellSink
 	/// </summary>
 	private void StartNextSheet()
 	{
+		if (sheetEnd >= 0)
+		{
+			// A full sheet waits in the buffer still: one item of a ParallelWriteAsync callback filled it and this one too,
+			// and the writer writes an item's records out only after it. It goes first, synchronously, so that the buffer
+			// holds one sheet's end. Its widths are known: a full sheet knows them.
+			SyncOrAsync.Wait(FlushAsync(false, CancellationToken.None));
+		}
+
 		AppendEnd();
 		sheetEnd = output.Length;
 		var (name, part) = workbook.ContinueSheet(Location.Name);
@@ -2291,11 +2303,15 @@ internal sealed class SheetSink : CsvCellSink
 		{
 			await WriteBufferAsync(recordStart, async, cancellationToken).ConfigureAwait(false);
 		}
+
+		// The rows of a parallel write that ended are out, in entries it opened on the write's threads.
+		heldThreads = 0;
 	}
 
 	/// <summary>
 	/// Writes the buffer's first bytes to the entry, opening it (chunked: deflated off the writing thread when the package
-	/// has threads) and writing the XML before the rows first. An entry that takes segments
+	/// has threads, or a parallel write that ended had them, <see cref="heldThreads"/>) and writing the XML before the rows
+	/// first. An entry that takes segments
 	/// (<see cref="PackageWriter.TakesSegments"/>) is handed the buffer's array that holds them, uncopied
 	/// (<see cref="XmlOutput.Detach"/>), and takes it whatever happens, so the bytes leave the buffer first; any other entry
 	/// is written from the buffer, which drops the bytes once they are written.
@@ -2306,7 +2322,7 @@ internal sealed class SheetSink : CsvCellSink
 	/// <returns>A task that completes when they are written.</returns>
 	private async ValueTask WriteBufferAsync(int count, bool async, CancellationToken cancellationToken)
 	{
-		entry ??= await package.OpenPartAsync(partName, chunked: true, async, cancellationToken).ConfigureAwait(false);
+		entry ??= await package.OpenPartAsync(partName, heldThreads, async, cancellationToken).ConfigureAwait(false);
 		if (!startWritten)
 		{
 			using var start = new XmlOutput(Start.Length + 256 + (((columnWidths?.Length ?? 0) + (columnOptions?.Length ?? 0)) * 96));
@@ -2405,6 +2421,9 @@ internal sealed class SheetSink : CsvCellSink
 	/// <summary>The sheet's entry once a flush has opened it, or <see langword="null"/>, for tests of a parallel write's entry.</summary>
 	internal Stream? Entry => entry;
 
+	/// <summary>The threads of a parallel write that ended, until the buffer is next written out (<see cref="heldThreads"/>), for tests.</summary>
+	internal int HeldThreads => heldThreads;
+
 	/// <summary>
 	/// What a worker's chunk adds up, for tests that a refused one adds nothing: the current row, the last row with a cell
 	/// and the last column, the flag of text like a number, the links, the field limit, and the bytes buffered.
@@ -2487,11 +2506,13 @@ internal sealed class SheetSink : CsvCellSink
 
 	/// <summary>
 	/// A parallel write ends, on the writing thread: the package's entries take their own threads again, but for the parts
-	/// written as the package closes, which take the write's (<see cref="PackageWriter.EndParallel"/>); and the views' slot
-	/// is dropped (workers still being released may hold it). The sheet's entry stays chunked until it closes.
+	/// written as the package closes, which take the write's (<see cref="PackageWriter.EndParallel"/>), and the entries the
+	/// sheet's next write-out opens, which hold the write's rows (<see cref="heldThreads"/>); and the views' slot is dropped
+	/// (workers still being released may hold it). The sheet's entry stays chunked until it closes.
 	/// </summary>
 	public override void EndParallel()
 	{
+		heldThreads = package.ParallelThreads;
 		package.EndParallel();
 		Volatile.Write(ref views, null);
 	}
